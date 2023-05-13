@@ -1,3 +1,15 @@
+WARNING! This directory is outdated and the code here certainly crashes a lot.
+If you are interested in Aoz Studio, you can find more information on Aoz's official web-site: https://aoz./studio
+
+I Keep it as a memory and will be happy to look at it in a few years. :)
+
+Francois
+----------------------------------------------------------------------------
+
+
+
+
+
 ## AOZ Studio Source Code
 
 #### Welcome to the first official release of the source code of AOZ Studio.
