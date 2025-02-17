@@ -1,0 +1,437 @@
+#clean: true
+#manifest: "aoz" // Change this to "amiga" if you like.  "aoz" is the default value.
+// You'll ALSO have to comment the #displayWidth line below for it to work properly in the Amiga manifest.
+#displayWidth: 1448 ' Added a few extra pixels so text won't over-write the right border.
+
+#splashScreen: false
+
+'-------------------------------------------------------------------------------|
+' Gamepad Tester - by Brian Flanagan (aka ising4jesus)							|
+'																				|
+' Tests Gamepad(0) buttons, axes, and digital emulation 						|
+' Shows up to 39 buttons and 20 axes			  								|
+' Change the manifest above to see in Amiga mode.								|
+'																				|
+' Works consistently with most browsers including Chrome, Firefox, Safari,		|
+' Opera, Edge, Vivaldi, Brave, and Seamonkey.  Results may be unexpected when	|
+' used with browers or gamepads with unusual configurations.					|
+'																				|
+' Some browsers report the wrong number of buttons and/or axes.  This is not	|
+' the fault of AOZ, but of the browsers' implementations of the Gamepad API.  	|
+' AOZ Automatically adjusts for the primary axes' differences on Firefox and	|
+' Seamonkey.  For other differences, you'll need to compensate in your code.	|
+'																				|
+' MOST controllers / browsers:				Firefox/Seamonkey:					|
+'	Axis 0 is left & right						Axis 1 is left & right			|
+'	Axis 1 is up & down							Axis 2 is up & down				|
+'	Button 0 is Fire															|
+'	Button 1 is Fire2															|
+'																				|
+' v0.99 Corrected button & axis labels not showing.  Made cNum Global.			|
+'-------------------------------------------------------------------------------|
+  //
+ // Set globals
+//
+Global GID$, GName$, VendProd$, charHeight#, BrowseName$, Version$, VendID$, ProdID$
+Global buttonsPerRow, buttonRows, axesPerRow, axisRows, Version$
+Global Vend$,Prod$,Name$,cNum // BJF New version (added cNum 1/1/23)
+
+Version$="v0.99"
+cNum=0 ' Default controller number to test (0) - moved this up here.  1/1/23
+
+GetInfo[cNum] ' Get GID$, Vend$, Prod$, Name$
+
+GName$="" : VendProd$=""
+buttonsPerRow=13 : axesPerRow=5 // How many will fit in a 40 column line width? (13,5)
+
+  //
+ // Set platform specific things
+//
+If Manifest$="amiga"
+	charHeight# = Y Graphic(1) ' 8px
+	charWidth#  = X Graphic(1) ' 8px
+	// A standard Amiga 320 x 256 (PAL) display is 40 cols x 32 rows with 8x8 pixel chars.
+	Screen Open 0,324,256,32,Lowres
+	Palette $000,$FFF,$777,$BBB,$F00,$0F0,$00F,$FF0,$0FF,$F0F
+Else // Standard AOZ size = 24 x 43.2 pixels
+	charWidth# = X Graphic(1)  ' Width of 1 char
+	charHeight# = Y Graphic(1) ' Height of 1 char
+	scrWidth#=966 ' 960 px needed for 40 columns
+	scrHeight#=1383 ' 43.2 pixel height * 32 lines = 1382.4 (round up) WORKS!
+	If scrHeight# > Int(scrHeight#) Then scrHeight#=Int(scrHeight#)+1 ' Round up.
+	Screen Open 0,scrWidth#,scrHeight#,32,Lowres,lines=32
+	Screen Scale 1.5,0.78
+	Palette $000000,$FFFFFF,$777777,$BBBBBB,$FF0000,$00FF00,$0000FF,$FFFF00,$00FFFF,$FF00FF
+End If
+
+Activate_GP ' Initial activation of gamepad.
+/*
+	To make your joystick / gamepad more sensitive, set the threshold smaller:
+		Gamepad Threshold 0.1 // Change 20% default to 10%
+
+	To make your joystick / gamepad less sensitive, set the threshold larger:
+		Gamepad Threshold 0.3 // Change 20% default to 30%
+*/
+ReStart:
+	BrowseName$=Browser Name$ ' Chrome
+	GetInfo[cNum]	// Set Vend$, Prod$, Name$, GID$
+	DrawStatic // Redraw static display elements for Joystick.
+  //
+ // Main Program Loop
+//
+Do
+
+	If Not Gamepad Connected(cNum)	// Handle Joystick disconnection.
+		Gamepad_Disconnected
+		GetInfo[cNum]
+		Gamepad_Changed
+	End If
+
+	If (GID$ <> Gamepad Name$(cNum)) // Handle Joystick changed.
+		GetInfo[cNum]
+		Gamepad_Changed
+	End If
+
+	Pen 7
+	UP=jUp(cNum)				: DOWN=jDown(cNum)
+	LEFT=jLeft(cNum)			: RIGHT=jRight(cNum)
+	UPLEFT=jUpLeft(cNum)		: UPRIGHT=jUpRight(cNum)
+	DOWNLEFT=jDownLeft(cNum)	: DOWNRIGHT=jDownRight(cNum)
+
+	Locate 23,4 : Show_Button[UP]
+	Locate 23,6 : Show_Button[DOWN]
+	Locate 21,4 : Show_Button[UPLEFT]
+	Locate 21,5 : Show_Button[LEFT]
+	Locate 21,6 : Show_Button[DOWNLEFT]
+	Locate 25,4 : Show_Button[UPRIGHT]
+	Locate 25,5 : Show_Button[RIGHT]
+	Locate 25,6 : Show_Button[DOWNRIGHT]
+	  //
+	 // Test Fire Buttons
+	//
+	FI=Fire(cNum) : FI2=Gamepad Button(cNum,1) ' Buttons 0 and 1 are usually Fire and Fire2
+	Pen 2 : Locate 7,4 : Show_Button[FI]
+			Locate 7,6 : Show_Button[FI2]
+	  //
+	 // Test All Buttons
+	//
+	Pen 7
+	buttonRows# = Gamepad Buttons(cNum)/buttonsPerRow
+	buttonRows=RoundUp(Gamepad Buttons(cNum)/buttonsPerRow)
+
+	Pen 4: Locate 1,9 : Print "Buttons: "; : Pen 1 : Print Using "##";Gamepad Buttons(0) : Pen 7
+	Show_Button_Labels[1] ' Offset vertical pos by 1
+
+	c=0 : r=0
+	For bt = 0 To Gamepad Buttons(cNum)-1
+		c = bt mod buttonsPerRow
+		gb = Gamepad Button(cNum,bt)
+		Locate c*3+1,10+r*2+1 : Show_Button[gb]
+		If (bt mod buttonsPerRow) = (buttonsPerRow-1) Then Inc r
+	Next bt
+	  //
+	 // Test Axes
+	//
+	axisRows = RoundUp(Gamepad Axes(cNum)/axesPerRow)
+	Pen 4: Locate 1,17 : Print "Axes: "; : Pen 1 : Print Using "##";Gamepad Axes(cNum) : Pen 7
+	Show_Axis_Labels[4]
+
+	r=0 : c=0 ' row, column
+	gt# = Gamepad Threshold
+	For ax = 0 To Gamepad Axes(cNum)-1 ' BJF - WAS Gamepad Axes(0)-1'
+		Axis#=Gamepad Axis(cNum,ax)
+		If (Abs(Axis#) < gt#) Then Pen 2 Else Pen 7
+		c = ax mod axesPerRow
+		Locate c*8+1,15+r*2+4 : If Axis# > -2 Then Print Using "+#.####";Gamepad Axis(cNum,ax)
+		If (ax mod axesPerRow)=(axesPerRow-1) Then Inc r
+		Wait Vbl
+	Next ax
+	Wait Vbl
+
+	GetInfo[cNum]
+
+	VendProd$="Vendor: "+Vend$+" Product: "+Prod$
+	Show_Header[Name$,VendProd$]
+	Show_Footer[BrowseName$]
+	Show_Notes
+/*
+	TO DO:
+
+	ky$=Inkey$
+	If ky$="Z" Then ' Set AOZ mode & restart App.
+	If ky$="A" Then ' Set Amiga mode & restart App.
+	' Also, add an input box for the Threshhold setting.
+*/
+Loop
+
+GoTo ReStart
+
+Procedure DrawStatic
+	  //
+	 // Show labels for joystick display.
+	//
+	Pen 8
+	Locate 14,3 : Print "jUpLeft  jUp  jUpRight"
+	Locate 12,7: Print "jDownLeft jDown jDownRight"
+	Locate 16,5 : Print "jLeft"
+	Locate 28,5 : Print "jRight"
+	// Fire label
+	Locate 1,4 : Print "Fire:"
+	// Gray since Fire2 is not a command.
+	Pen 2
+	Locate 1,6 : Print "Fire2:"
+End Procedure
+
+Procedure Gamepad_Disconnected
+	Cls 0 : Flash Off : Curs Off
+	Pen 1 : Paper 0
+	Edges
+	Locate 1,1 : Centre "(Gamepad Disconnected)"
+	If (Not GamePad Connected(cNum))
+	Repeat
+	Until GamePad Connected(cNum)
+	End If
+	Locate 1,1 : Print Space$(38)
+End Procedure
+
+Procedure Edges // Draw vertical lines down left & right edges of screen.
+	I = Ink ' Save Ink
+	Ink 2
+	Draw 0,0 To 0,Screen Height-1
+	Draw Screen Width-1,0 To Screen Width-1, Screen Height-1
+	Ink I ' Restore Ink
+End Procedure
+
+Procedure Activate_GP ' Get initial click to activate gamepad.
+	Cls 0 : Flash Off : Curs Off
+	Pen 1 : Paper 0
+	Edges
+	Locate 1,1 : Print "(Click button on controller to start.)"
+	If (Not GamePad Connected(0))
+		Repeat
+		Until GamePad Connected(0)
+	End If
+	Locate 1,1 : Print Space$(38)
+End Procedure
+
+Procedure Show_Notes
+	p=Pen ' Save Pen
+	Pen 2
+	iStart = Int(Screen Height/charHeight#)-6
+	Locate 1,iStart
+	Locate 1,iStart		: Print "Axis(,0):-left, +right (,1):-up, +down"
+	Locate 1,iStart+1	: Print "A"; : Pen 1 : Print Using "###.##%";Gamepad Threshold*100
+	Locate 10,iStart+1	: Pen 8 : Print "Gamepad Threshold"; : Pen 2 : Print " will trigger"
+	Locate 1,iStart+2	: Print "the digital pad emulation functions."
+	Pen p ' Restore Pen
+End Proc
+
+Procedure Show_Button[b]
+	If b=0 Then Pen 2 Else Pen 7
+	Print Using "-#";b
+End Procedure
+
+Procedure Show_Button_Labels[yOfs]
+	p=Pen ' Save Pen
+	Pen 5
+	r=0 : c=0
+	For bt = 0 To Gamepad Buttons(cNum)-1
+		c = bt mod buttonsPerRow
+		Locate c*3+1,9+r*2+yOfs : Print Using "##";bt
+		If (bt mod buttonsPerRow) = (buttonsPerRow-1) Then Inc r
+	Next bt
+	Pen p // Restore Pen
+End Procedure
+
+Procedure Show_Axis_Labels[yOfs]
+	p=Pen ' Save Pen
+	Pen 5
+	r = 0 : c = 0
+	For ax = 0 To Gamepad Axes(cNum)-1
+		c = ax mod axesPerRow
+		Locate c*7+2,14+r*2+yOfs : Print Using "####";ax
+		If (ax mod axesPerRow)=(axesPerRow-1) Then Inc r
+	Next ax
+	Pen p // Restore Pen
+End Procedure
+
+Procedure Gamepad_Changed
+	Cls 0 ' Start over!
+	Edges
+	GName$ = GID$ // =Gamepad Name$()
+	  //
+	 // Describe GamePad
+	//
+	GName$=Gamepad Name$(cNum) : BrowseName$ = Browser Name$
+	If BrowseName$="Firefox" Or BrowseName$="SeaMonkey" Or BrowseName$="Safari"
+		VE=Instr(GName$,"-") // end of Vendor ID
+		If VE>0
+			Vendor$=Left$(GName$,VE-1)
+			Temp$=Right$(GName$,Len(GName$)-VE) // BJF DEBUG!!! +1 added
+			PR=Instr(Temp$,"-") // End of Product ID
+			If PR>0
+				Product$=Left$(Temp$,PR-1) // BJF DEBUG!!! -1 added
+				GName$=Right$(GName$,Len(GName$)-Len(Vendor$)-Len(Product$)-2)
+			Else
+				Product$=""
+				GName$=Right$(GName$,Len(GName$)-VE)
+			End If
+		Else
+			Vendor$="" : Product$=""
+		End If
+		If Len(Product$) < 4 Then Product$=String$("0",4-Len(Product$))+Product$
+		If Len(Vendor$) < 4 Then Vendor$=String$("0",4-Len(Vendor$))+Vendor$
+	Else // Chrome and everybody else
+		Vendor$="" : Product$=""
+		VendProd$=Right$(GName$,Len(GName$)-Instr(GName$,"(")+1)
+		If Len(VendProd$)>3
+			VS=Instr(VendProd$,": ") ' Start of Vendor ID
+			Vendor$=Mid$(VendProd$,VS+2,4)
+			VendProd$=Right$(VendProd$,Len(VendProd$)-VS-6)
+			PS=Instr(VendProd$,": ") ' Start of Product ID
+			Product$=Mid$(VendProd$,PS+2,4)
+			If Len(GID$)>0 Then GName$=Left$(GID$,Instr(GID$,"(")-1) Else GName$=GID$
+		Else
+			Vendor$="" : Product$=""
+		End If
+	End If
+	VendProd$="Vendor: "+Vendor$+" Product: "+Product$
+	DrawStatic
+	Show_Header[GName$,VendProd$]
+	Show_Footer[BrowseName$]
+	Show_Notes
+End Procedure
+
+Procedure Show_Header[GName$,VendProd$]
+	i=Ink : p=Pen ' Save Pen & Ink
+	  //
+	 // Clear the heading area.
+	//
+	Ink 3 ' dark gray
+	Bar 1,0 To Screen Width-2,charHeight#*2 // Clear 1st 2 lines
+	  //
+  	 // Show heading with gamepad Name, Vendor ID & Product ID
+  	//
+	Pen 3 : Paper 0
+	Inverse On
+	// Trim trailing spaces from name
+	strt=Len(GName$)
+	While (strt>0) And (Mid$(GName$,strt,1)=" ")
+		Dec strt
+	Wend
+	Locate 1,0 : Centre Left$(GName$,strt)
+	Locate 1,1 : Centre VendProd$
+	Ink i : Pen p ' Restore Pen & Ink
+End Procedure
+
+Procedure Show_Footer[BrowseName$]
+	i=Ink : p=Pen ' Save Pen & Ink
+	  //
+	 // Clear the footer area.
+	//
+	Ink 3 : SH = Screen Height : SW = Screen Width
+	Bar 1,SH-charHeight# To SW-2,SH-charHeight#*3
+	  //
+	 // Show footer with browers name
+	//
+	Pen 3 ' Light gray
+	Inverse On
+	Locate 1,Int(SH/charHeight#)-3 : Centre "Gamepad/Joystick Tester "+Version$
+	Locate 1,Int(SH/charHeight#)-2 : Centre "Shows up to"+Str$(buttonsPerRow*3)+" buttons &"+Str$(axesPerRow*4)+" axes."
+	Inverse Off : Pen 9 ' Magenta
+	Locate 0,Int(SH/charHeight#)-1 : Print "Browser: ";BrowseName$;
+	MF$ = "Manifest: "+Manifest$   : Locate 40-Len(MF$)-1 : Print MF$;
+	Ink i : Pen p ' Restore Pen & Ink
+End Procedure
+
+Function "VendorID$",_n
+	VID$=""
+	G$=Gamepad Name$(_n)
+	VS=Instr(G$,"Vendor: ")
+	If VS>0 // Chrome/Edge/Opera/Brave
+		VS=VS+8
+		VE=Instr(G$," ",VS)
+		If VE>0
+			VID$=Mid$(G$,VS,VE-VS+1)
+		Else
+			VID$=Right$(G$,VS)
+		End If
+	Else // Firefox/SeaMonkey/Safari
+		VE=Instr(G$,"-")
+		If VE>0
+			VID$=Left$(G$,VE-1)
+		Else
+			VID$=G$
+		End If
+	End If
+End Function(VID$)
+
+Function "ProductID$",_n
+	PID$=""
+	G$=Gamepad Name$(_n)
+	PS=Instr(G$,"Product: ")
+	If PS>0 // Chrome,Edge,Brave,Opera
+		PS=PS+9
+		PE=Instr(G$,")")
+		If PE>0
+			PID$=Mid$(G$,PS,Len(G$)-PS)
+		Else
+			PID$=Right$(G$,Len(G$)-PS)
+		End If
+	Else // Firefox,Seamonkey,Safari
+		PS=Instr(G$,"-")
+		If PS>0
+			PS=PS+1
+			PE=Instr(G$,"-",PS)
+			If PE>0
+				PID$=Mid$(G$,PS,(PE-PS))
+			Else
+				PID$=Right$(G$,PS)
+			End If
+		Else
+			PID$=G$
+		End If
+	End If
+End Function(PID$)
+
+Function GamepadName$,_n
+	gName$=""
+	G$=Gamepad Name$(_n)
+	PS=Instr(G$," (")
+	If PS > 0	// Chrome, Edge, Brave, Opera, Vivaldi
+		gName$=Left$(G$,PS-1)
+	Else // Firefox, Seamonkey, Safari
+		VPE=Instr(G$,"-")
+		If VPE>0
+			VPE=Instr(G$,"-",VPE+1)
+			If VPE>0
+				gName$=Right$(G$,Len(G$)-VPE)
+			Else
+				gName$=G$
+			End If
+		Else
+			gName$=G$
+		End If
+	End If
+End Function(gName$)
+
+Function "RoundUp", _n# ' re-wrote function without JavaScript call
+	i = Int(_n#)
+	result#=i
+	If _n#-i > 0
+		result#=i+1
+	End If
+End Function(result#)
+
+/*
+Function "RoundUp", _n# // This used to work, but no more.
+End Function ( Int( { Math.ceil(this.vars._n_) } ))
+*/
+
+Procedure GetInfo[c] ' Set Gamepad Info dynamically
+' c = controller ID.  Changed variable name to ensure no conflict 1/1/2023
+	GID$=Gamepad Name$(c)
+	Vend$ = VendorID$(c)
+	Prod$ = ProductID$(c)
+	Name$ = GamepadName$(c)
+End Procedure

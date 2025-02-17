@@ -1,0 +1,26 @@
+<i>Set Rainbow</i>
+<b>Set Rainbow</b> xxxxxxx
+=
+Try the next example before analysing how it works:
+```
+Set Rainbow 0,1,16,"(1,1,15)",,
+Rainbow 0,56,1,255
+Curs Off : Flash Off
+Locate ,12 : Centre "RED STRIPE"
+```
+Up to four different rainbows may be set up for later use, and SET RAINBOW is followed by an identification index.
+
+The next parameter is the colour index that is to be changed, and only colours 0 to 15 can be affected. In practice,
+this colour can be assigned a different value for each horizontal screen scan line, if necessary.
+
+Following this, the height parameter sets the size of the table to be used for colour storage, in other words, it sets the height of the rainbow in units, with each unit ready to hold one scan line of colour. The size of this table can range from 16 to 65500, but only the first 280 or so lines can be displayed on screen at once.
+So if your table is less than the physical height of your rainbow, the colour pattern will be repeated on the screen.
+
+Finally, the Red, Blue and Green components of the rainbow colours are set up as strings, each within their own
+brackets. The last example leaves out any reference to the Green and Blue components, which is why the resulting
+effect is completely in the Red. These strings will be cycled to produce the final rainbow pattern, and their format comprises three values contained in each relevant pair of brackets, as follows:
+
+(number,step,count)
+
+Number refers to the number of scan lines assigned to one colour value. Think of it as controlling the "speed" of the sequence. Step is a value to be added to the colour, which controls the colour change. Count is simply the number of times this whole process is performed.
+

@@ -1,0 +1,18 @@
+<i>WebSocket Send Message</i>
+<b>WebSocket Send Message</b> xxxxxxx
+=
+The WebSocket channel must be of course connnected for this instruction to work. The message is send without any verification of reception, it might get lost or some parts of it deleted in case of a bad connection.
+It is suggested for important data, to ask for a confirmation feed-back from the server side.
+
+Example:
+@code
+URL$ = "ws://my_url.me:3000"
+WebSocket Open 1, URL$
+Repeat
+Wait Vbl
+Until WebSocket Is Connected( 1 )
+WebSocket Send Message 1, "Hello"
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+@code
+

@@ -1,0 +1,35 @@
+<i>Instr</i>
+<b>Instr</b> xxxxxxx
+=
+INSTR allows you to search for all instances of one string inside another.
+
+In the following examples, the "host" strings are searched for the first occurrence of the "guest" strings you are seeking. If the relevant string is found, its
+location will be reported in the form of the number of characters from the left-hand side of the host string. If the
+search is unsuccessful, a result of zero will be given.
+
+@code
+Print Instr("AMOS Professional","AMOS")
+Print Instr("AMOS Professional","O")
+Print Instr("AMOS Professional","o")
+Print Instr("AMOS Professional","Provisional")
+@code
+
+@code
+Do
+Input "Type in a host string:";H$
+Input "Type in a guest string to be found:";G$
+X=Instr(H$,G$)
+If X=0 Then Print G$;" Not found"
+If X<>0 Then Print G$;" Found at position ";X
+Loop
+@code
+Normally, the search will begin from the first character at the extreme left-hand side of the host string, but you may
+begin searching from any position by specifying an optional number of characters from the beginning of the host
+string. The optional start-of-search position can range from zero to the maximum number of characters in the host
+string to be searched. For example:
+
+@code
+Print Instr("AMOS PROFESSIONAL","O",0)
+Print Instr("AMOS PROFESSIONAL","O",4)
+@code
+

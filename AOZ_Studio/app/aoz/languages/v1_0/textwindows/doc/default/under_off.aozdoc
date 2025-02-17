@@ -1,0 +1,15 @@
+<i>Under Off</i>
+<b>Under Off</b> xxxxxxx
+=
+To underline text when printed on screen like this, use the UNDER instructions, as follows:
+@code
+Under On : Print "This is where we draw the line"
+Under Off: "That is groundle
+@code
+In Section 11.1 there is a full explanation of how to take advantage of any number of different type faces or fonts, by
+making use of what is known as "graphic text". For the time being, try the next example:
+@code
+Cls: For S=0 To 7: Set Text S
+Text 100,S*20+20,AOZ Studio" : Next
+@code
+

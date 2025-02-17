@@ -1,0 +1,27 @@
+<i>WebSocket Message$</i>
+<b>WebSocket Message$</b> xxxxxxx
+=
+If a message is available in the pile of received messages, this function unpiles the last one and returns it.
+As several messages can be received in a short period of time, or if your application leaves the main loop for a moment, you should unpile all the messages and ensure that the message pile stays empty.
+(use the "WebSocket Is Message()" function to get this information)
+
+The next examples opens a connection, send a message, then wait and print incoming messages. If the incoming messages is equl to quit, then it quits!
+@code
+URL$ = "ws://my_url.me:3000"
+WebSocket Open 1, URL$
+Repeat
+Wait Vbl
+Until WebSocket Is Connected( 1 )
+
+WebSocket Send Message 1, "Hello"
+Repeat
+If WebSocket Is Message( 1 )
+message$ = WebSocket Message$( 1 )
+If message$ = "quit" Then Exit
+End If
+Wait Vbl
+Until Inkey$ <> ""
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+@code
+

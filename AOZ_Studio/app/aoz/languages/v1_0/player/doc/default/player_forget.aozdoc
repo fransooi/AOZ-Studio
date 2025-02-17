@@ -1,0 +1,7 @@
+<i>Player Forget</i>
+<b>Player Forget</b> xxxxxxx
+=
+After using the "Player Initialise", there will be a stored player in the browser application storage. The stored player is used to login each time the "Player Initialise" is used.
+
+Use this command to remove the stored player from the browser application storage and to create a new guest account.
+

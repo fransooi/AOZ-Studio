@@ -1,0 +1,26 @@
+{
+  "context-menu": {
+    "atom-text-editor": [
+      {
+        "label": "Start Local Web Server",
+        "command": "local-web-server:start"
+      }
+    ]
+  },
+  "menu": [
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "Local Web Server",
+          "submenu": [
+            {
+              "label": "Start",
+              "command": "local-web-server:start"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

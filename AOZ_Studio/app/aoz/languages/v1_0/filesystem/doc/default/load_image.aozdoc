@@ -1,0 +1,29 @@
+<i>Load Image</i>
+<b>Load Image</b> xxxxxxx
+=
+This instruction loads an image into a screen.
+
+If you do not specify the index of a screen, then the image is loaded in the current screen.
+
+If you specify it, AOZ weill first check if the screen exists, if yes it will load the image into it, if not it will create the new screen at the dimensions of the image.
+
+You can use tags to specify how to load the image:
+
+- Horizontal alignment tags: #left #center #right
+- Vertical alignment tags: #top:, #middle, #bottom
+- Resize the image to fit the screen dimensions:  #fit
+- Does not resize the image (default behavior): #paste
+
+This example demonstrates the powert of the Load Image instruction...
+@code
+// A very simple image viewer
+Screen Open 0, 1920, 1080
+file$ = Dir First$( "*.png" )
+While file$ <> ""
+Load Image file$, 0, "#fit"
+Wait Key
+file$ = Dir Next$
+Wend
+@code
+
+

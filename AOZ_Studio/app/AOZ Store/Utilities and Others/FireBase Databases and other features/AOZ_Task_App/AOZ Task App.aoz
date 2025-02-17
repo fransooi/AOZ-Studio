@@ -1,0 +1,1017 @@
+// ############################################################################
+// AOZ Task App V1.0
+// By Phil Bell
+// Created April 2022
+// phil@aozwithphil.com
+// ############################################################################
+// Uses The Google Firebase Platform for authentication and data storage
+// The Google Firestore Database is a NoSQL cloud database
+//
+// Login to your Firebase console here (you can create a free account)
+// https://console.firebase.google.com/
+//
+// Check out the Firebase documentation here:
+// https://firebase.google.com/docs/firestore
+//
+// Download the following guide for help with setting up a Firebase project
+// https://aozwithphil.com/download/AOZFirebaseQuickStartGuide.pdf
+// ############################################################################
+
+#useAssetsResources:False
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#fps:false
+#clean:true
+#googleFont:"permanent marker"
+
+//Load CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+
+Break Off: Curs Off
+
+Load Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+Load Asset "resources/assets/styles.css"
+
+// Initialise Firebase
+// *********************************************************************
+// ** IMPORTANT !! DO NOT USE THESE CREDENTIALS IN YOUR OWN PROJECTS  **
+// *********************************************************************
+Firebase Init apiKey$ = "AIzaSyB8GE9-8gnRSecItZIzbzdfYoH9aT935Io", authDomain$ = "aoz-to-do.firebaseapp.com", projectId$ = "aoz-to-do", storageBucket$ = "aoz-to-do.appspot.com", messagingSenderId$ = "591344219024", appId$ = "1:591344219024:web:4b13d2f89d02e15d4d3915"
+
+DEFAULT_PROFILE_IMAGE$ = "data:image/png;base64,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"
+
+TASK_DOCUMENT_ID$ = ""						// Holds the Firebase document ID for a selected task
+TASK_QUERY_REF$ = ""						// Reference to a query for retrieving a users task list
+PROJECT_QUERY_REF$ = ""						// .....retrieving a users project list
+ATTACHMENT_QUERY_REF$ = ""					// .....retrieving a task attachments
+ATTACHMENT_DOC_ID$ = ""						// Holds the Firebase document ID for a selected task attachment
+PROJECT_ID$ = ""							// Holds the Firebase document ID for the selected project
+PROFILE_IMAGE$ = DEFAULT_PROFILE_IMAGE$		// Holds the dataUrl string for the user profile image
+PROFILE_FULLNAME$ = ""						// Holds the logged in users profile name
+PAGE_INDEX = 0								// Used for paging the tasks
+PAGE_MAX = 0								// ----------""-------------
+BUSY_STATE = false							// Used in the logic to show Firebase API is busy
+
+DW = 1920: DH = 1080
+FRAME_WIDTH = 1728: FRAME_HEIGHT = 974
+FRAME_X = (DW / 2) - (FRAME_WIDTH / 2)
+FRAME_Y = (DH / 2) - (FRAME_HEIGHT / 2)
+Global DW, DH, FRAME_X, FRAME_Y, FRAME_WIDTH, FRAME_HEIGHT
+
+Global TASK_DOCUMENT_ID$, TASK_QUERY_REF$, PROJECT_QUERY_REF$, PROJECT_ID$, PAGE_INDEX, PAGE_MAX, DEFAULT_PROFILE_IMAGE$
+Global PROFILE_IMAGE$, PROFILE_FULLNAME$, ATTACHMENT_QUERY_REF$, ATTACHMENT_DOC_ID$
+
+If FirebaseAuth AuthState() = false
+	// User is not signed in
+	Goto SIGN_IN
+End If
+
+MAIN:
+	// Retrieve the logged in users profile document from the Firebase 'profiles' collection
+	Firebase DocumentGet collection$="profiles", docId$=FirebaseAuth UserID$(), onData$="ON_GOT_PROFILE_DATA"
+	GetProjectDocuments
+
+	Do
+		If FirebaseAuth AuthState() = false
+			// User is not signed in or has signed out
+			Goto SIGN_IN
+		End If
+
+		// Show an overlay when Firebase is busy
+		If Firebase IsBusy() = true And BUSY_STATE = false
+			BUSY_STATE = true
+			BusyScreen
+		End If
+
+		// Hide the overlay
+		If Firebase IsBusy() = false And BUSY_STATE = true
+			BUSY_STATE = false
+			UI Delete "txtBusyBackground"
+			UI Delete "imgBusy"
+		End If
+
+		Wait Vbl
+	Loop
+
+SIGN_IN:
+	UI Cls
+	UI TextBlock "txtMainTitle", x=0, y=150, width=1920, height=100, fontSize=60, content$="AOZ Task List App", fontName$="permanent marker", class$="text-center text-warning"
+	// Uses a built in user interface to sign in and also registers new users
+	FirebaseAuth SignInWithBuiltInUI signInFlow$="popup", provider$="google,email", class$="built-in-ui", termsOfServiceUrl$ = "https://aozwithphil.com/privacypolicy.html", privacyPolicyUrl$ = "https://aozwithphil.com/privacypolicy.html"
+
+	// Wait here until the user is signed in
+	Do
+		If FirebaseAuth AuthState() = true
+			Goto MAIN
+		End If
+
+		Wait Vbl
+	Loop
+
+Procedure ON_GOT_PROFILE_DATA[ERROR$, EXISTS, DOCUMENT_REF$]
+	// The DOCUMENT_REF$ variable is used to access the document fields
+	If ERROR$ = "" And EXISTS = True
+		PROFILE_IMAGE$ = Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="profileImageUrl")
+		PROFILE_FULLNAME$ = Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="fullname")
+		// Remove the document from memory
+		Firebase DocumentDispose DOCUMENT_REF$
+	End If
+End Proc
+
+Procedure ON_SIGN_OUT_CLICK[ID$]
+    FirebaseAuth SignOut
+End Proc
+
+Procedure DisplayTitle
+	Paste Image 0, 0, "background"
+	// Get the logged in users display name, this was provided when the user registered an account using the built in UI (Firebase SignInWithBuiltInUI)
+	name$ = FirebaseAuth UserDisplayName$()
+
+	If PROFILE_FULLNAME$ <> "" Then name$ = PROFILE_FULLNAME$
+	UI TextBlock "txtMainTitle", x=320, y=0, width=1580, height=100, fontSize=60, content$=name$ + "'s Task List", fontName$="permanent marker", class$="text-center"
+	UI TextBlock "lblFooter", x=1637, y=1040, width=265, fontSize=15, content$="Developed in AOZ Studio By Phil Bell", class$="text-muted text-end"
+End Proc
+
+Procedure DisplayProfileImage
+	UI Image "imgProfile", x=10, y=10, width=80, height=80, src$=PROFILE_IMAGE$
+
+	// Add class to image, UI Image needs extending !!
+	{
+		var el =  document.getElementById('imgProfile');
+		el.setAttribute('class', 'user-profile-image');
+	}
+End Proc
+
+Procedure ON_NEW_PROJECT[ID$]
+	UI Prompt$ "Enter a project name", value$="My Project", onConfirm$="ON_CONFIRM_NEW_PROJECT", closeButton$="Cancel", confirmButton$="OK"
+End Proc
+
+Procedure ON_CONFIRM_NEW_PROJECT[VALUE$]
+	If VALUE$ <> ""
+		// Create a new Firebase document (held in memory) and return a reference to it, this can then be used to access the document fields
+		docRef$ = Firebase NewDocument$()
+
+		// Set the document field values
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "projectName", value$ = VALUE$
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "userId", value$ = FirebaseAuth UserID$()
+		Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "timestamp"
+
+		// Add the document to the Firebase 'projects' collection
+		Firebase DocumentAdd collection$ = "projects", docRef$ = docRef$, onCompleted$ = "ON_SAVE_PROJECT_COMPLETED"
+
+		// Remove the document from memory
+		Firebase DocumentDispose docRef$
+	End If
+End Proc
+
+Procedure ON_SAVE_PROJECT_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		PROJECT_ID$ = DOCUMENT_ID$
+		PAGE_INDEX = 0
+		UI Cls
+		GetProjectDocuments
+	End If
+End Proc
+
+Procedure ON_EDIT_PROJECT[ID$]
+	project_name$ = Firebase QueryGetString$(PROJECT_QUERY_REF$, UI Value$("ddlProject"), "projectName")
+    UI Prompt$ "Update project name", value$=project_name$, onConfirm$="ON_CONFIRM_EDIT_PROJECT", closeButton$="Cancel", confirmButton$="OK"
+End Proc
+
+Procedure ON_CONFIRM_EDIT_PROJECT[VALUE$]
+	If VALUE$ <> ""
+		// Create a new Firebase document (held in memory)
+		docRef$ = Firebase NewDocument$()
+
+		// Set the document fields
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "projectName", value$ = VALUE$
+		Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastUpdated"
+
+		// Update the document in the Firebase database
+		Firebase DocumentUpdate collection$ = "projects", docRef$ = docRef$, docId$ = PROJECT_ID$, onCompleted$ = "ON_UPDATE_PROJECT_COMPLETED"
+
+		// Remove the document from memory
+		Firebase DocumentDispose docRef$
+	End If
+End Proc
+
+Procedure ON_UPDATE_PROJECT_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		UI Cls
+		GetProjectDocuments
+	End If
+End Proc
+
+Procedure GetProjectDocuments
+	// Removes the previous query from memory if exists
+	Firebase QueryDispose PROJECT_QUERY_REF$
+
+	// Get a reference to a new collection query (use 'Firebase QueryDispose' to release from memory after use)
+	PROJECT_QUERY_REF$ = Firebase NewQuery$ (collection$ = "projects", onData$="ON_PROJECTS_DATA")
+
+	// Filter the documents by adding a where clause
+	Firebase QueryAddWhere queryRef$ = PROJECT_QUERY_REF$, field$ = "userId", operator$ = "=", value$ = FirebaseAuth UserID$()
+
+	// Order the documents
+	Firebase QueryAddOrderBy queryRef$ = PROJECT_QUERY_REF$, field$ = "projectName", direction$ = "asc"
+
+	// Read the documents from the database
+	Firebase QueryGet PROJECT_QUERY_REF$
+End Proc
+
+Procedure ON_PROJECT_CHANGE[ID$, VALUE$]
+	PAGE_INDEX = 0
+    PROJECT_ID$ = VALUE$
+	UI Cls
+	DisplayTitle
+	DisplayProfileImage
+	MainScreen
+	DisplayProjectSelector
+	GetToDoListItems
+End Proc
+
+Procedure ON_PROJECTS_DATA[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		If DOCUMENT_COUNT = 0
+			FirstProject
+		Else
+			If PROJECT_ID$ = ""
+				PROJECT_ID$ = Firebase QueryGetDocumentID$(PROJECT_QUERY_REF$, 0)
+			End If
+			MainScreen
+			DisplayTitle
+			DisplayProjectSelector
+			GetToDoListItems
+		End If
+	End If
+End Proc
+
+Procedure GetToDoListItems
+	// Removes any previous query from memory
+	Firebase QueryDispose TASK_QUERY_REF$
+
+	// Get a reference to a new collection query (use 'Firebase QueryDispose' to release from memory after use)
+	TASK_QUERY_REF$ = Firebase NewQuery$ (collection$ = "todolist", onData$="ON_TODO_DATA")
+
+	// Filter the documents by adding where clause
+	Firebase QueryAddWhere queryRef$ = TASK_QUERY_REF$, field$ = "userId", operator$ = "=", value$ = FirebaseAuth UserID$()
+	Firebase QueryAddWhere queryRef$ = TASK_QUERY_REF$, field$ = "projectId", operator$ = "=", value$ = PROJECT_ID$
+
+	// Order the documents
+	Firebase QueryAddOrderBy queryRef$ = TASK_QUERY_REF$, field$ = "done", direction$ = "asc"
+	Firebase QueryAddOrderBy queryRef$ = TASK_QUERY_REF$, field$ = "dueDate", direction$ = "asc"
+	Firebase QueryAddOrderBy queryRef$ = TASK_QUERY_REF$, field$ = "priority", direction$ = "asc"
+
+	// Read the documents from the Firebase database
+	Firebase QueryGet TASK_QUERY_REF$
+End Proc
+
+Procedure ON_TODO_DATA[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		DisplayToDoList
+	End If
+End Proc
+
+Procedure DisplayProjectSelector
+	// Get the number of documents that have been retrieved using 'Firebase QueryGet'
+	DOCUMENT_COUNT = Firebase QueryGetDocumentCount(PROJECT_QUERY_REF$)
+
+	items$ = ""
+	If DOCUMENT_COUNT > 0
+		For i = 0 To DOCUMENT_COUNT -1
+			docId$ = Firebase QueryGetDocumentID$(PROJECT_QUERY_REF$, i)
+			items$ = items$ + docId$ + ":"
+			items$ = items$ + Firebase QueryGetString$(PROJECT_QUERY_REF$, docId$, "projectName") + ","
+		Next i
+		items$ = Left$(items$, Len(items$) - 1)
+	End If
+
+	// Set the project items and select the current project
+	UI Select "ddlProject", value$=PROJECT_ID$, items$=items$
+End Proc
+
+Procedure ON_PREVIOUS_PAGE[ID$]
+    If PAGE_INDEX > 0
+		Add PAGE_INDEX, -1
+		UI Cls
+		MainScreen
+		DisplayTitle
+		DisplayProjectSelector
+		DisplayToDoList
+	End If
+End Proc
+
+Procedure ON_NEXT_PAGE[ID$]
+	If PAGE_INDEX < PAGE_MAX
+		Add PAGE_INDEX, 1
+		UI Cls
+		MainScreen
+		DisplayTitle
+		DisplayProjectSelector
+		DisplayToDoList
+	End If
+End Proc
+
+Procedure DisplayToDoList
+	// Get the number of documents that have been retrieved using 'Firebase QueryGet'
+	COUNT = Firebase QueryGetDocumentCount(TASK_QUERY_REF$)
+	PAGE_MAX = Int(COUNT / 10)
+	If COUNT mod 10 > 0 Then Add PAGE_MAX, 1
+	Add PAGE_MAX, -1
+
+	to_do_count = 0
+
+	If COUNT > 0
+
+		page_start = PAGE_INDEX * 10
+		ypos = 0
+
+		For row = 0 To COUNT-1
+			// Get the Firebase document ID for a specific row in the query results
+			// We then use the document ID to access the document fields
+			docId$ = Firebase QueryGetDocumentID$(TASK_QUERY_REF$, row)
+
+			// Read the document fields using the Firebase document ID as a reference
+			toDoText$ = Firebase QueryGetString$(TASK_QUERY_REF$, docId$, "title")
+			done = Firebase QueryGetValue(TASK_QUERY_REF$, docId$, "done")
+
+			// Setup the UI
+			If done = true
+				class$ = "fst-italic text-decoration-line-through text-secondary"
+			else
+				Add to_do_count, 1
+				class$ = ""
+			End If
+
+			If (row >= page_start) And (row < page_start + 10)
+
+				UI TextBlock "txtToDoText" + docId$, x=320, y=190 + ypos * 70, width=1600, height=70, fontSize=40, content$=toDoText$, class$=class$, fontName$="permanent marker"
+
+				// Get the dueDate field
+				due_date$ = Firebase QueryGetDate$(TASK_QUERY_REF$, docId$, "dueDate", "DD MMM YYYY")
+
+				UI TextBlock "txtDueDate" + docId$, x=100, y=200 + ypos * 70, width=250, content$=due_date$, fontSize=25, class$=class$, fontName$="permanent marker"
+
+				priority = Firebase QueryGetValue(TASK_QUERY_REF$, docId$, "priority")
+
+				class$ = "priority-badge rounded-pill text-center"
+
+				If priority = 1
+					priority_class$="bg-danger text-light"
+					content$ = "High"
+				Else If priority = 2
+					priority_class$="bg-warning text-dark"
+					content$ = "Medium"
+				Else If priority = 3
+					priority_class$="bg-primary text-light"
+					content$ = "Low"
+				End If
+
+				If done = true
+					class$ = class$ + " fst-italic text-decoration-line-through text-white-50 bg-secondary"
+				Else
+					class$ = class$ + " " + priority_class$
+				End If
+
+				UI TextBlock "txtPriority" + docId$, x=20, y=210 + ypos * 70, width=65, height=30, fontSize=14, content$=content$, class$=class$
+
+				// Set the id for the button to the Firebase document ID, when the button is clicked we know which document we are editing
+				UI Button docId$, x=0, y=200 + ypos * 70, width=1920, height=50, content$="", class$="btn", onClick$="ON_EDIT_CLICK"
+
+				Add ypos, 1
+			End If
+		Next row
+
+	End If
+
+	UI TextBlock "txtRecords", x=320, y=90, width=1580, content$=Str$(to_do_count) + " /" + Str$(COUNT) + " Tasks", class$="text-center", fontSize=20
+	UI Progress "prgItems", x=1040, y=130, height=15, class$="progress-bar bg-success", value = 100 - ((to_do_count / COUNT) * 100), width=150
+	UI Value "lblPageInfo", "Page" + Str$(Max(PAGE_INDEX + 1, 1)) + " of" + Str$(Max(PAGE_MAX + 1, 1))
+
+	DisplayProfileImage
+End Proc
+
+Procedure ON_ADD_NEW_CLICK[ID$]
+	UI Cls
+	DisplayTitle
+	Paste Image 0, 0, "background_ui"
+	AddNewItem
+	DisplayProfileImage
+	UI Focus "txtTitle"
+End Proc
+
+Procedure ON_EDIT_CLICK[ID$]
+	UI Cls
+	DisplayTitle
+	Paste Image 0, 0, "background_ui"
+	DisplayProfileImage
+
+	// The ID$ of the clicked button is the Firebase document ID - see DisplayToDoList
+	TASK_DOCUMENT_ID$ = ID$
+	DisplayEditTask
+End Proc
+
+Procedure DisplayEditTask
+	EditItem
+	// Setup the UI
+	UI Value "txtTitle", value$=Firebase QueryGetString$(TASK_QUERY_REF$, TASK_DOCUMENT_ID$, "title")
+	UI Value "txtDetails", value$=Firebase QueryGetString$(TASK_QUERY_REF$, TASK_DOCUMENT_ID$, "details")
+	UI TextBox "txtDueDate", value$=Firebase QueryGetDate$(TASK_QUERY_REF$, TASK_DOCUMENT_ID$, "dueDate", "YYYY-MM-DD")
+	UI Value "ddlPriority", value$=Trim$(Str$(Firebase QueryGetValue(TASK_QUERY_REF$, TASK_DOCUMENT_ID$, "priority")))
+
+	UI Value "lblCreated", value$=Firebase QueryGetDate$(TASK_QUERY_REF$, TASK_DOCUMENT_ID$, "timestamp", "DD MMM YYYY HH:mm:ss")
+
+	done = Firebase QueryGetValue(TASK_QUERY_REF$, TASK_DOCUMENT_ID$, "done")
+
+	If done = True
+		UI CheckBox "chkDone", value$="true"
+		UI Value "lblDoneDate", value$=Firebase QueryGetDate$(TASK_QUERY_REF$, TASK_DOCUMENT_ID$, "doneDate", "DD MMM YYYY HH:mm:ss")
+	Else
+		UI CheckBox "chkDone", value$="false"
+		UI Hide "lblDoneLabel"
+		UI Hide "lblDoneDate"
+	End If
+
+	UI Focus "txtTitle"
+End Proc
+
+Procedure ON_TASKDETAILS_CLICK[ID$]
+	UI Cls
+	DisplayTitle
+	Paste Image 0, 0, "background_ui"
+	DisplayProfileImage
+	DisplayEditTask
+End Proc
+
+Procedure ON_ATTACHMENTS_CLICK[ID$]
+	UI Cls
+	DisplayTitle
+	Paste Image 0, 0, "background_ui"
+	DisplayProfileImage
+	EditAttachments
+	GetToDoListAttachments
+End Proc
+
+Procedure GetToDoListAttachments
+	// Removes any previous query from memory
+	Firebase QueryDispose ATTACHMENT_QUERY_REF$
+
+	// Get a reference to a new collection query
+	ATTACHMENT_QUERY_REF$ = Firebase NewQuery$ (collection$ = "attachments", onData$="ON_ATTACHMENTS_DATA")
+
+	// Filter the documents by adding where clause
+	Firebase QueryAddWhere queryRef$ = ATTACHMENT_QUERY_REF$, field$ = "todolistId", operator$ = "=", value$ = TASK_DOCUMENT_ID$
+
+	// Read the documents from the Firebase database
+	Firebase QueryGet ATTACHMENT_QUERY_REF$
+End Proc
+
+Procedure ON_ATTACHMENTS_DATA[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		DisplayToDoListAttachments
+	End If
+End Proc
+
+Procedure DisplayToDoListAttachments
+	// Get the number of documents that have been retrieved using 'Firebase QueryGet'
+	COUNT = Firebase QueryGetDocumentCount(ATTACHMENT_QUERY_REF$)
+
+	If COUNT > 0
+		For row = 0 To COUNT-1
+			docId$ = Firebase QueryGetDocumentID$(ATTACHMENT_QUERY_REF$, row)
+			filename$ = Firebase QueryGetString$(ATTACHMENT_QUERY_REF$, docId$, "name")
+			type$ = Firebase QueryGetString$(ATTACHMENT_QUERY_REF$, docId$, "type")
+
+			UI Button docId$ + "_btnDeleteAttachment" + docId$, x=320, y=340 + row * 50, width=50, height=50, content$="", iconClass$="bi bi-trash-fill", class$="btn text-danger", onClick$="ON_DELETE_ATTACHMENT_CLICK"
+
+			icon$ = "bi bi-box-arrow-down"
+
+			If Instr(type$, "image") >= 0 Or Instr(type$, "pdf") >= 0
+				icon$ = "bi bi-binoculars-fill"
+			End If
+
+			UI Button docId$ + "_btnViewAttachment" + docId$, x=370, y=339 + row * 50, width=50, height=50, content$="", iconClass$=icon$, class$="btn", onClick$="ON_VIEW_ATTACHMENT_CLICK"
+			UI TextBlock docId$ + "_txtAttachmentName", x=430, y=344 + row * 50, width=1000, height=50, content$=filename$
+
+		Next Row
+	End If
+End Proc
+
+Procedure ON_ADD_ATTACHMENT_CLICK[ID$]
+	// Opens a file selector
+	Firebase SelectFile onSelected$ = "FILE_SELECTED"
+End Proc
+
+Procedure FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file size is not greater than 10Mb
+	If SIZE >= 10485760
+		UI Popup "ErrorPopup", content$="File too large, must be 10Mb or less", placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Set the Firebase storage path (needs to be unique, else file is overwritten)
+		storagePath$ = FirebaseAuth UserID$() + "/" + PROJECT_ID$ + "/" + TASK_DOCUMENT_ID$ + "/" + FILE_REF$ + "_" + NAME$
+
+		// Upload the file to Firebase storage
+		Firebase UploadFile fileRef$ = FILE_REF$, storagePath$ = storagePath$, onCompleted$ = "ON_FILE_UPLOADED"
+	End If
+End Proc
+
+Procedure ON_FILE_UPLOADED[ERROR$, FILE_REF$, DOWNLOAD_URL$, STORAGE_PATH$, SIZE, TYPE$, NAME$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Create and return a reference to a new document (held in memory)
+		docRef$ = Firebase NewDocument$()
+
+		// Set the document field values
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "userId", value$ = FirebaseAuth UserID$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "todolistId", value$ = TASK_DOCUMENT_ID$
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "projectId", value$ = PROJECT_ID$
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "downloadUrl", value$ = DOWNLOAD_URL$
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "storagePath", value$ = STORAGE_PATH$
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "name", value$ = NAME$
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "type", value$ = TYPE$
+		Firebase SetDocumentValue docRef$ = docRef$, field$ = "size", value = SIZE
+		Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+
+		// Add the document to the 'todolist' Firebase collection
+		Firebase DocumentAdd collection$ = "attachments", docRef$ = docRef$, onCompleted$ = "ON_ADD_ATTACHMENT_COMPLETED"
+
+		// Remove the document from memory
+		Firebase DocumentDispose docRef$
+
+		// Remove the file from memory
+		Firebase FileDispose fileRef$ = FILE_REF$
+
+	End If
+End Proc
+
+Procedure ON_ADD_ATTACHMENT_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		UI Cls
+		DisplayTitle
+		Paste Image 0, 0, "background_ui"
+		DisplayProfileImage
+		EditAttachments
+
+		// Retrieve the attachment documents to refresh the UI
+		Firebase QueryGet ATTACHMENT_QUERY_REF$
+	End If
+End Proc
+
+Procedure ON_VIEW_ATTACHMENT_CLICK[ID$]
+	// The ID of the button contains the Firebase document ID for the attachment document
+    ATTACHMENT_DOC_ID$ =  Mid$(ID$, 0, Instr(ID$, "_"))
+
+	// Get the required fields from the attachment document
+	downloadUrl$ = Firebase QueryGetString$(ATTACHMENT_QUERY_REF$, ATTACHMENT_DOC_ID$, "downloadUrl")
+	type$ = Firebase QueryGetString$(ATTACHMENT_QUERY_REF$, ATTACHMENT_DOC_ID$, "type")
+	name$ = Firebase QueryGetString$(ATTACHMENT_QUERY_REF$, ATTACHMENT_DOC_ID$, "name")
+
+	// Image and PDF files can be viewed in iFrame
+	If Instr(type$, "image") >= 0 Or Instr(type$, "pdf") >= 0
+		SHOW_FRAME[downloadUrl$]
+	Else
+		DOWNLOAD_URL[downloadUrl$, name$]
+	End If
+End Proc
+
+Procedure DOWNLOAD_URL[url$, name$]
+	// Download file
+	{
+		var link = document.createElement("a");
+		link.download = vars.name$;
+		link.href = vars.url$;
+		link.target = "_blank";
+		document.body.append(link);
+		link.click();
+		document.body.removeChild(link);
+		delete link;
+	}
+End Proc
+
+Procedure SHOW_FRAME[url$]
+	UI TextBlock "txtBackground", x=0, y=0, width=DW, height=DH, content$="TextBlock Content", class$="fade-background layer2"
+	UI Button "btnCloseFrame", x=1665, y=0, width=160, height=65, content$="Close", class$="btn btn-light layer3", onClick$="CLOSE_FRAME_CLICK"
+	UI IFrame "frame", x=FRAME_X, y=FRAME_Y, width=FRAME_WIDTH, height=FRAME_HEIGHT, class$="frame-view layer3", src$=url$
+End Proc
+
+Procedure CLOSE_FRAME_CLICK[ID$]
+	UI Delete "frame"
+	UI Delete "btnCloseFrame"
+	UI Delete "txtBackground"
+End Proc
+
+Procedure ON_DELETE_ATTACHMENT_CLICK[ID$]
+	// The ID of the button contains the Firebase document ID for the attachment document
+    ATTACHMENT_DOC_ID$ =  Mid$(ID$, 0, Instr(ID$, "_"))
+	UI Confirm "Delete attachment?", "Are you sure?", closeButton$="No", confirmButton$="Yes", onConfirm$="CONFIRM_DELETE_ATTACHMENT"
+End Proc
+
+Procedure CONFIRM_DELETE_ATTACHMENT
+	// Get the storagePath so we can delete the file from Firebase storage
+	path$ = Firebase QueryGetString$(ATTACHMENT_QUERY_REF$, ATTACHMENT_DOC_ID$, "storagePath")
+
+	// Delete the file from Firebase storage
+	Firebase DeleteFile storagePath$ = path$, onCompleted$="ON_DELETE_FILE_COMPLETED"
+End Proc
+
+Procedure ON_DELETE_FILE_COMPLETED[ERROR$]
+	// File has been deleted from Firebase storage so delete the attachment document
+	Firebase DocumentDelete collection$ = "attachments", docId$ = ATTACHMENT_DOC_ID$, onCompleted$ = "ON_ATTACHMENT_DELETED"
+End Proc
+
+Procedure ON_ATTACHMENT_DELETED[ERROR$]
+	UI Cls
+	DisplayTitle
+	Paste Image 0, 0, "background_ui"
+	DisplayProfileImage
+	EditAttachments
+
+	// Rerieve the attachment documents to refresh the UI
+	Firebase QueryGet ATTACHMENT_QUERY_REF$
+End Proc
+
+Procedure ON_SAVE_NEW_ITEM[ID$]
+
+	If UI Value$("txtTitle") = ""
+		UI Popup "ErrorPopup", content$="Please enter a title", placement$="top-center", delay=5000, class$="text-white bg-danger"
+		Pop Proc
+	End If
+
+	If UI Value$("txtDueDate") = ""
+		UI Popup "ErrorPopup", content$="Please enter the Due Date", placement$="top-center", delay=5000, class$="text-white bg-danger"
+		Pop Proc
+	End If
+
+	// Create and return a reference to a new document (held in memory)
+    docRef$ = Firebase NewDocument$()
+
+	// Set the document field values
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "title", value$ = UI Value$("txtTitle")
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "details", value$ = UI Value$("txtDetails")
+	Firebase SetDocumentDate docRef$ = docRef$, field$ = "dueDate", value$ = UI Value$("txtDueDate")
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "userId", value$ = FirebaseAuth UserID$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "projectId", value$ = PROJECT_ID$
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "done", value = false
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "priority", value = Val(UI Value$("ddlPriority"))
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "timestamp"
+
+	// Add the document to the 'todolist' Firebase collection
+	Firebase DocumentAdd collection$ = "todolist", docRef$ = docRef$, onCompleted$ = "ON_SAVE_COMPLETED"
+
+	// Remove the document from memory
+	Firebase DocumentDispose docRef$
+
+	UI Cls
+End Proc
+
+Procedure ON_UPDATE_ITEM[ID$]
+
+	If UI Value$("txtTitle") = ""
+		UI Popup "ErrorPopup", content$="Please enter a title", placement$="top-center", delay=5000, class$="text-white bg-danger"
+		Pop Proc
+	End If
+
+	If UI Value$("txtDueDate") = ""
+		UI Popup "ErrorPopup", content$="Please enter the Due Date", placement$="top-center", delay=5000, class$="text-white bg-danger"
+		Pop Proc
+	End If
+
+	// Get a reference to a new document
+	docRef$ = Firebase NewDocument$()
+
+	// Set the document fields
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "title", value$ = UI Value$("txtTitle")
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "details", value$ = UI Value$("txtDetails")
+	Firebase SetDocumentDate docRef$ = docRef$, field$ = "dueDate", value$ = UI Value$("txtDueDate")
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "priority", value = Val(UI Value$("ddlPriority"))
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastUpdated"
+
+	done = false
+
+	If UI Value$("chkDone") = "true"
+		done = true
+
+		// Check if changing task to done
+		If Firebase QueryGetValue(TASK_QUERY_REF$, TASK_DOCUMENT_ID$, "done") = false
+			Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "doneDate"
+		End If
+	End If
+
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "done", value = done
+
+	// Update the existing document
+	Firebase DocumentUpdate collection$ = "todolist", docId$ = TASK_DOCUMENT_ID$, docRef$ = docRef$, onCompleted$ = "ON_SAVE_COMPLETED"
+
+	// Remove the document from memory
+	Firebase DocumentDispose docRef$
+
+	UI Cls
+End Proc
+
+Procedure ON_SAVE_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		MainScreen
+		DisplayTitle
+		DisplayProjectSelector
+		Firebase QueryGet TASK_QUERY_REF$
+	End If
+End Proc
+
+Procedure ON_CANCEL[ID$]
+    UI Cls
+	MainScreen
+	DisplayTitle
+	DisplayToDoList
+	DisplayProjectSelector
+End Proc
+
+Procedure ON_DELETE[ID$]
+	UI Confirm "Delete item?", "Are you sure?", closeButton$="No", confirmButton$="Yes", onConfirm$="CONFIRM_DELETE"
+End Proc
+
+Procedure CONFIRM_DELETE
+	// Get all the attachment documents for the task being deleted
+
+	// Get a reference to a new collection query to retrieve all the attachment documents for the selected task
+	REF$ = Firebase NewQuery$ (collection$ = "attachments", onData$="ON_ATTACHMENTS_DATA_FOR_DELETE")
+	Firebase QueryAddWhere queryRef$ = REF$, field$ = "todolistId", operator$ = "=", value$ = TASK_DOCUMENT_ID$
+	Firebase QueryGet REF$
+End Proc
+
+Procedure ON_ATTACHMENTS_DATA_FOR_DELETE[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+
+		If DOCUMENT_COUNT > 0
+			For row = 0 To DOCUMENT_COUNT-1
+				docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+				storagePath$ = Firebase QueryGetString$(QUERY_REF$, docId$, "storagePath")
+
+				// Delete the attachment document
+				Firebase DocumentDelete collection$ = "attachments", docId$
+
+				// Delete the file from Firebase storage
+				Firebase DeleteFile storagePath$
+			Next Row
+		End If
+
+		// Delete the task document
+		Firebase DocumentDelete collection$ = "todolist", docId$ = TASK_DOCUMENT_ID$, onCompleted$ = "ON_ITEM_DELETED"
+	End If
+End Proc
+
+Procedure ON_ITEM_DELETED[ERROR$]
+	UI Cls
+	MainScreen
+	DisplayTitle
+	DisplayProjectSelector
+	PAGE_INDEX = 0
+	Firebase QueryGet TASK_QUERY_REF$
+End Proc
+
+Procedure ON_EDIT_PROFILE[ID$]
+    UI Cls
+	DisplayTitle
+	Paste Image 0, 0, "background_ui"
+	Firebase DocumentGet collection$="profiles", docId$=FirebaseAuth UserID$(), onData$="ON_PROFILE_DATA"
+End Proc
+
+Procedure ON_PROFILE_DATA[ERROR$, EXISTS, DOCUMENT_REF$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Show UI
+		EditProfile
+
+		If EXISTS = False
+			// No profile document exists so create and add a new document to the Firebase database
+
+			// Get reference to a new Firebase document
+			docRef$ = Firebase NewDocument$()
+
+			// Set the document fields
+			Firebase SetDocumentString docRef$ = docRef$, field$ = "fullname", value$ = FirebaseAuth UserDisplayName$()
+			Firebase SetDocumentString docRef$ = docRef$, field$ = "profileImageUrl", value$ = DEFAULT_PROFILE_IMAGE$
+			Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+
+			// Adds a document to the 'profiles' collection using a custom Firebase document ID (logged in userID)
+			Firebase DocumentSet collection$ = "profiles", docId$ = FirebaseAuth UserID$(), docRef$ = docRef$
+
+			// Remove the document from memory
+			Firebase DocumentDispose docRef$
+
+			UI Value "txtFullname", FirebaseAuth UserDisplayName$()
+			UI Image "imgProfileImage", src$=DEFAULT_PROFILE_IMAGE$
+		Else
+			UI Value "txtFullname", Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="fullname")
+
+			// Profile image is stored as a base64 string
+			image$ = Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="profileImageUrl")
+			UI Image "imgProfileImage", src$=image$
+
+			// Remove the retrieved document from memory
+			Firebase DocumentDispose DOCUMENT_REF$
+		End If
+
+		UI Value "lblEmail", FirebaseAuth UserEmail$()
+
+		{
+			var el =  document.getElementById('imgProfileImage');
+			el.setAttribute('class', 'user-profile-image');
+		}
+	End If
+
+End Proc
+
+Procedure ON_UPLOAD_PROFILE_CLICK[ID$]
+	// Opens a file selector
+	Firebase SelectFile onSelected$ = "PROFILE_FILE_SELECTED"
+End Proc
+
+Procedure PROFILE_FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file is an image
+	If Instr(TYPE$, "image") >= 0
+		// Read the image file and return a dataUrl (base64) string
+		// when specifying the maxSize (optional), the image file will be resized to fit the value in pixels
+		Firebase ReadFileImageDataUrl fileRef$ = FILE_REF$, onRead$ = "ON_FILE_DATA_READ", maxSize = 250
+	Else
+		UI Popup "ErrorPopup", content$="Not a valid image file", placement$="top-center", delay=5000, class$="text-white bg-danger"
+	End If
+End Proc
+
+Procedure ON_FILE_DATA_READ[FILE_REF$, DATA_URL$]
+	PROFILE_IMAGE$ = DATA_URL$
+
+	// Update the users profile document with the DATA_URL$
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "profileImageUrl", value$ = DATA_URL$
+	Firebase DocumentUpdate collection$ = "profiles", docId$ = FirebaseAuth UserID$(), docRef$ = docRef$, onCompleted$ = "ON_SAVE_PROFILE_IMAGE_COMPLETED"
+
+	// Remove the document from memory
+	Firebase DocumentDispose docRef$
+
+	// Remove the file from memory
+	Firebase FileDispose fileRef$ = FILE_REF$
+End Proc
+
+Procedure ON_SAVE_PROFILE_IMAGE_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		UI Image "imgProfileImage", src$ = PROFILE_IMAGE$
+	End If
+End Proc
+
+Procedure ON_UPDATE_PROFILE[ID$]
+	If UI Value$("txtFullname") = ""
+		UI Popup "ErrorPopup", content$="Please enter your name", placement$="top-center", delay=5000, class$="text-white bg-danger"
+		Pop Proc
+	End If
+
+	// Update the users profile document
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "fullname", value$ = UI Value$("txtFullname")
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastUpdated"
+	Firebase DocumentUpdate collection$ = "profiles", docId$ = FirebaseAuth UserID$(), docRef$ = docRef$, onCompleted$ = "ON_SAVE_PROFILE_COMPLETED"
+	Firebase DocumentDispose docRef$
+
+	PROFILE_FULLNAME$ = UI Value$("txtFullname")
+End Proc
+
+Procedure ON_SAVE_PROFILE_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		DisplayTitle
+		Paste Image 0, 0, "background_ui"
+	End If
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure MainScreen
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI Button "btnSignOut", x=240, y=87, width=39, height=50, fontSize=25, content$="", tooltip$="Sign Out", tooltipPlacement$="top", iconClass$="bi bi-box-arrow-right", class$="btn layer2", onClick$="ON_SIGN_OUT_CLICK"
+UI Button "btnAdd", x=320, y=140, width=156, height=45, content$="New Task", iconClass$="bi bi-plus-lg", class$="btn layer2 text-start", onClick$="ON_ADD_NEW_CLICK"
+UI Button "btnEditProfile", x=200, y=87, width=36, height=50, fontSize=25, content$="", tooltip$="Update Profile", tooltipPlacement$="top", iconClass$="bi bi-person-fill", class$="btn layer2", onClick$="ON_EDIT_PROFILE"
+UI Select "ddlProject", x=10, y=140, width=267, class$="form-select layer2", onChange$="ON_PROJECT_CHANGE"
+UI Button "btnNewProject", x=10, y=91, width=143, height=45, padding=0, content$="New Project", iconClass$="bi bi-plus-lg", class$="layer2 btn text-start", onClick$="ON_NEW_PROJECT"
+UI Button "btnPreviousPage", x=980, y=960, width=53, height=70, fontSize=34, content$="", iconClass$="bi bi-arrow-left-circle-fill", class$="btn", onClick$="ON_PREVIOUS_PAGE"
+UI Button "btnNextPage", x=1180, y=960, width=53, height=72, fontSize=35, content$="", iconClass$="bi bi-arrow-right-circle-fill", class$="btn", onClick$="ON_NEXT_PAGE"
+UI TextBlock "lblPageInfo", x=1040, y=975, width=132, content$="", class$="text-center"
+UI Button "btnEditProject", x=167, y=87, width=36, height=50, fontSize=25, content$="", tooltip$="Edit Project", tooltipPlacement$="top", iconClass$="bi bi-gear", class$="btn layer2", onClick$="ON_EDIT_PROJECT"
+UI Button "btnEditProfile2", x=10, y=10, width=70, height=70, fontSize=25, content$="", tooltipPlacement$="auto", class$="btn layer2", onClick$="ON_EDIT_PROFILE"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure AddNewItem
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtTitle", x=500, y=260, width=890, class$="form-control"
+UI TextArea "txtDetails", x=500, y=320, width=890, padding=8, rows=5, class$="form-control"
+UI Select "ddlPriority", x=500, y=520, width=150, value$="2", class$="form-select", items$="3:Low,2:Medium,1:High"
+UI TextBox "txtDueDate", x=820, y=520, width=240, type$="date", class$="form-control"
+UI Button "btnSaveItem", x=500, y=580, width=150, height=50, content$="SAVE", class$="btn btn-success", onClick$="ON_SAVE_NEW_ITEM"
+UI Button "btnCancel", x=320, y=200, width=150, height=50, content$="BACK", iconClass$="bi bi-arrow-left", class$="btn btn-light", onClick$="ON_CANCEL"
+UI TextBlock "lblDetails", x=320, y=320, width=102, content$="Details"
+UI TextBlock "lblTitle", x=320, y=260, width=121, content$="Title"
+UI TextBlock "lblPriority", x=320, y=520, width=102, content$="Priority"
+UI TextBlock "lblDueDate", x=680, y=520, width=102, content$="Due Date"
+UI TextBlock "lblNewTask", x=320, y=120, width=269, height=71, fontSize=40, content$="New Task", class$="fw-bold"
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure EditItem
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtTitle", x=500, y=300, width=890, class$="form-control"
+UI TextArea "txtDetails", x=500, y=380, width=890, rows=5, class$="form-control"
+UI Select "ddlPriority", x=500, y=580, width=150, value$="2", class$="form-select", items$="3:Low,2:Medium,1:High"
+UI TextBox "txtDueDate", x=820, y=580, width=240, type$="date", class$="form-control"
+UI CheckBox "chkDone", x=500, y=640, value$="false", class$="form-check-input"
+UI Button "btnSaveItem", x=500, y=720, width=150, height=50, content$="SAVE", class$="btn btn-success", onClick$="ON_UPDATE_ITEM"
+UI Button "btnCancel", x=320, y=200, width=150, height=50, content$="BACK", iconClass$="bi bi-arrow-left", class$="btn btn-light", onClick$="ON_CANCEL"
+UI Button "btnDelete", x=1232, y=720, width=150, height=50, content$="DELETE", class$="btn btn-danger", onClick$="ON_DELETE"
+UI TextBlock "lblDone", x=320, y=640, width=65, content$="Done"
+UI TextBlock "lblTitle", x=320, y=300, width=102, content$="Title"
+UI TextBlock "lblPriority", x=320, y=580, width=102, content$="Priority"
+UI TextBlock "lblDetails", x=320, y=380, width=102, content$="Details"
+UI TextBlock "lblDueDate", x=680, y=580, width=102, content$="Due Date"
+UI TextBlock "lblUpdateTask", x=320, y=120, width=269, height=81, fontSize=40, content$="Update Task", class$="fw-bold"
+UI TextBlock "lblCreatedLabel", x=680, y=640, width=93, content$="Created"
+UI TextBlock "lblCreated", x=820, y=640, width=231, content$="#", class$="fw-bold"
+UI TextBlock "lblDoneLabel", x=1080, y=640, width=108, content$="Done"
+UI TextBlock "lblDoneDate", x=1140, y=640, width=237, content$="#", class$="fw-bold text-end"
+UI Button "btnTaskDetails", x=1092, y=200, width=150, height=50, content$="Task Details", class$="border-top border-bottom border-start rounded-start border-end text-light bg-primary", onClick$="ON_TASKDETAILS_CLICK"
+UI Button "btnAttachments", x=1240, y=200, width=150, height=50, content$="Attachments", class$="border-bottom border-top border-end bg-light rounded-end border-start", onClick$="ON_ATTACHMENTS_CLICK"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure EditAttachments
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "lblUpdateTask", x=320, y=120, width=269, height=81, fontSize=40, content$="Update Task", class$="fw-bold"
+UI Button "btnCancel", x=320, y=200, width=150, height=50, content$="BACK", iconClass$="bi bi-arrow-left", class$="btn btn-light", onClick$="ON_CANCEL"
+UI Button "btnTaskDetails", x=1092, y=200, width=150, height=50, content$="Task Details", class$="border-top border-bottom border-start rounded-start border-end bg-light", onClick$="ON_TASKDETAILS_CLICK"
+UI Button "btnAttachments", x=1240, y=200, width=150, height=50, content$="Attachments", class$="border-bottom border-top border-end rounded-end border-start text-light bg-primary", onClick$="ON_ATTACHMENTS_CLICK"
+UI Button "btnAddAttachment", x=320, y=260, width=224, height=50, content$="Upload Attachment", iconClass$="bi bi-plus-lg", class$="btn", onClick$="ON_ADD_ATTACHMENT_CLICK"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure FirstProject
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI Button "btnNewProject", x=800, y=300, width=308, height=50, content$="New Project", iconClass$="bi bi-folder-plus", class$="btn btn-primary", onClick$="ON_NEW_PROJECT"
+UI TextBlock "lblWelcome", x=34, y=160, width=1857, height=77, fontSize=25, content$="Welcome to the AOZ Task App, lets create your first project...", class$="text-warning text-center"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure EditProfile
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtImageBack", x=320, y=280, width=136, height=130, content$="", class$="border rounded bg-light"
+UI TextBlock "lblEditProfile", x=320, y=120, width=269, height=77, fontSize=40, content$="User Profile", class$="fw-bold"
+UI TextBlock "lblFullname", x=320, y=500, width=162, content$="Display Name"
+UI TextBox "txtFullname", x=560, y=500, width=444, class$="form-control"
+UI Image "imgProfileImage", x=330, y=288, width=115, height=115, src$="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAIAAABZ+cloAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVJaROwg4pChdrIgKuIoVSyChdJWaNXB5NIvaGJIUlwcBdeCgx+LVQcXZ10dXAVB8APEzc1J0UVK/F9SaBHjwXE/3t173L0DhGaNqWbPOKBqlpFJJsR8YUUMvCKIAYQRRUxipp7KLuTgOb7u4ePrXZxneZ/7c4SVoskAn0g8y3TDIl4nnt60dM77xBFWkRTic+Ixgy5I/Mh12eU3zmWHBZ4ZMXKZOeIIsVjuYrmLWcVQiaeIo4qqUb6Qd1nhvMVZrdVZ+578haGitpzlOs0RJLGIFNIQIaOOKmqwEKdVI8VEhvYTHv5hx58ml0yuKhg55rEBFZLjB/+D392apckJNymUAHpfbPtjFAjsAq2GbX8f23brBPA/A1dax7/RBGY+SW90tOgR0L8NXFx3NHkPuNwBhp50yZAcyU9TKJWA9zP6pgIweAsEV93e2vs4fQBy1NXSDXBwCMTKlL3m8e6+7t7+PdPu7wepk3K9I4Jo0QAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+UKEQ0nD2rqNG0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAACb0lEQVRIx8VWS08TURQ+d1oBUyIJDWLsQly4cMESN0bjwrgyDdHEpb/CH6CufSXVFRijiWKMRBKND2RhKIJ9maG2hVb6fsgwnc7Q18x0Zu51ISW19HFN2nhWc+/Md7+cc75vzkWX7dPT9ksnJ04AAAABQPWHFoEASZLU7m1T8LzwYm7BfP7s1LWrdkoMABTEAiGUHyPd0Bmb7Rj96f8YZGzMykB/A/WbAP4fAepRY8wt9qrbTGKe43MDxy+OnLpQF26PMkBEZ7Yeo2qYqPxu5Hl1O9zjEhG1hGrc/lIR4z0mQIcshLHsLwcs4/SKpMvANEAmrgNzGAANjZ8btk1S+AnWk7kbbz7dXXQWZbV7k8noaTxy26qppsFhGqMkBfHeVy8G4GRlKRC5MjXZXabENGgaOkJzelFWHctuXF8u/IznS5WeGU0z8JMVD6eoDdWCxWCksR+dCPJV5cEqO+sJqrrRsqvv2JCHLzTtfoilOanUnSApFm85fV5h98t2/tWPMGm2C3yPp+fD0ZbS+RgIk3oSTEtVsLmdm6usWNP3ABl+JZ5p5MiIxUcuFrWR5lIqmy1IrQkwoM9biTu+kIZJo8JnAtGosIcpK7WHy64axh3K+96/SQ4SaBi/ZDeebiYPugYDOLwhUVYNQp6teTNVuXP/nTkuxYt/+aCs6TOegE/YbYcRatqsL3hUk9d+5Wk09ta/cWbEYv6jLb4iO1z+eEXpjFkXS2I2TSnib1we5QUzAIoJ0n1PUNJ0qj8OoR0UCMCdypndae418RukT3MfmGgsYRDcp4kPpbIZuB3scqFRKy2K48DQaW46jKyQdPY3y604RoGcD/YAAAAASUVORK5CYII="
+UI Button "btnSaveProfile", x=560, y=560, width=140, height=50, content$="SAVE", class$="btn btn-success", onClick$="ON_UPDATE_PROFILE"
+UI Button "btnCancel", x=320, y=200, width=140, height=50, content$="BACK", iconClass$="bi bi-arrow-left", class$="btn btn-light", onClick$="ON_CANCEL"
+UI Button "btnUploadProfileImage", x=560, y=360, width=140, height=50, content$="UPLOAD", class$="btn btn-primary", onClick$="ON_UPLOAD_PROFILE_CLICK"
+UI TextBlock "lblEmailLabel", x=320, y=440, width=162, content$="Email"
+UI TextBlock "lblEmail", x=560, y=440, width=162, content$=""
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure BusyScreen
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtBusyBackground", x=0, y=0, width=1920, height=1080, content$="", class$="layer2 fade-in-text"
+UI Image "imgBusy", x=1860, y=10, width=50, height=50, src$="resources/assets/loading.gif"
+End Proc

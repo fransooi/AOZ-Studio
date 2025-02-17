@@ -1,0 +1,56 @@
+<i>Set Pattern</i>
+<b>Set Pattern</b> xxxxxxx
+=
+Use this command to select from a range of pattern styles. The default status fills shapes with the current ink colour,
+and is set with a zero, like this:
+@code
+Set Pattern 0
+@code
+If SET PATTERN is followed by a positive number from 1 to 34, shapes are filled from a ready- made selection of
+patterns.View them now, by running this routine:
+@code
+Do
+For N=0 To 34
+Set Pattern N
+Ink 0,1,2: Set Paint 1
+Bar 50,50 To 150,150
+Locate 0,0: Print N ;" "
+Wait 50
+Next N
+Loop
+@code
+If SET PATTERN is followed by a negative number, shapes will be filled with a pattern grabbed from a Sprite or
+Bob image, taken from the Image Bank (memory bank 1). Because these patterns can be very complex, AOZ Studio will simplify them automatically, as follows.
+
+The width of the image is clipped to 16 pixels, and the height is rounded to the nearest power of two (2, 4, 8, 16, 32
+and so on.)
+
+The original colours of the image are discarded, and the pattern is drawn using the current ink and paper colours.
+Two-colour patterns are drawn as monochrome images.
+
+If multi-coloured images are required using the original Object colours, the INK must first be set up, as follows:
+@code
+Ink 15,0
+Set Pattern -1
+Paint 100,100
+@code
+That example fills the screen area around the given coordinates with any of the Object colours, except the
+transparent colour zero. The colour index number 15 acts as a mask, defining which colours are to be used, and sets
+the range from 1 to 15. If the INK command is changed to the following line, the Object will be drawn with the
+normally transparent colour filled by colour 1:
+@code
+Ink 15,1
+@code
+Before making use of sprite images as fill patterns, remember to use GET SPRITE PALETTE to avoid messy
+displays. Here is an example:
+@code
+Flash Off : Cls 0
+Load "AMOSPro_Tutorial:Objects/Pattern.Abk"
+Get Sprite Palette
+Box 1,1 To 319,199
+Ink 15,0
+Set Pattern -1
+Paint 102,102
+@code
+
+

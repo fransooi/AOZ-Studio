@@ -1,0 +1,12 @@
+<i>Set Dir</i>
+<b>Set Dir</b> xxxxxxx
+=
+The DIR command is used to examine the directory of the current disc and list all of its files on screen, like this:
+@code
+Dir
+@code
+Any folders in the listing will be distinguished by a leading asterisk character *.
+
+The listing can be stopped at any time by pressing the [Space-bar] and then started again in the same way.
+
+

@@ -1,0 +1,5 @@
+<i>Map Height</i>
+<b>Map Height</b> xxxxxxx
+=
+Please note that this function returns the height of the MAP and not the map view. Use "View Height" to get the height of the view.
+

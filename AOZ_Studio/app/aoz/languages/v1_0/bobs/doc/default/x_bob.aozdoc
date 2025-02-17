@@ -1,0 +1,18 @@
+<i>X Bob</i>
+<b>X Bob</b> xxxxxxx
+=
+It is not difficult to keep track of Bobs under normal circumstances, but if Bobs are moved with movements objects or even AMAL, their coordinates can vary unpredictably.
+In which case, the X BOB and Y BOB functions may be used to get a snapshot of their current position, by returning the screen coordinates of your selected Bob.
+Specify the index of the chosen Bob on screen, and the appropriate coordinate will be returned, as measured from the top left-hand corner of the screen to the hot spot of the current image. For example:
+@code
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Cls 0		// Set up screen
+Do
+// Move Bob1 with mouse
+Bob 1, X Screen( X Mouse ), Y Screen( Y Mouse ),1
+
+// Print new location on screen
+Locate 0,0 : Print X Bob(1);" ";Y Bob(1);" ";
+Loop
+@code
+

@@ -1,0 +1,12 @@
+<i>Input$</i>
+<b>Input$</b> xxxxxxx
+=
+This function loads a given number of characters into a string variable, waiting for the user to enter each character in
+turn. Although characters will not appear on the screen, similar to INKEY$, the two instructions are totally different.
+
+Here is an example:
+@code
+Clear Key : Print "Please type in ten characters"
+V$=Input$(10) : Print "You typed: ";V$
+@code
+

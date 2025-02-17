@@ -1,0 +1,15 @@
+<i>Start</i>
+<b>Start</b> xxxxxxx
+=
+Use the START function to reveal the address of the memory area allocated to a bank, whose number is specified in brackets. The address will usually remain fixed for the duration of a program, but it can be changed by a BANK SWAP command.
+
+If the specified bank number does not exist, AOZ Studio will give a "Bank not reserved" error report. This
+can be avoided by checking the status of a bank with the LENGTH function, like this:
+@code
+If Length( N )>0: Rem give N a suitable bank number
+Print "Address of the bank is ";Start(N)
+Else
+Print "This bank does not exist!"
+End If
+@code
+

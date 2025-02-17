@@ -1,0 +1,10 @@
+<i>function:tests if an actor exists</i>
+value=<b>Actor Exists</b>(number)
+value=<b>Actor Exists</b>(name$)
+=
+@code
+Cls 0
+Actor 1, Image$="my_image"
+Print Str$( Actor Exists( 1 ) )
+@code
+

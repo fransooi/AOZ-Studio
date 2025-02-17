@@ -1,0 +1,157 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Renderer Extension
+ *
+ * Command to control Aoz renderers
+ * Filters, display, emulation of the display etc.
+ *
+ *
+ * @author FL
+ * @date first pushed on 13/01/2022
+ */
+#noWarning:"instruction_not_implemented"
+
+{
+}
+
+/**doc
+@name:Aoz Renderer extension
+@keywords:renderer,rendering,graphics,canvas,display
+@author:Francois Lionet
+@since:Beta 11
+@last:0.9.5.1
+doc*/
+
+// Filters
+/////////////////////////////////////////////////////////////////////////////////
+
+/**api
+@name:Renderer Filter
+@description:Set or add a graphical filter to the whole application
+@param:filterName$:string:Name of the filter to use (see list)
+@param:value1#:number:First value to use, a percentage or a number of pixels, depending on the filter
+@param:value2#:number:Second value to use, a percentage or a number of pixels, , depending on the filter
+@param:value3#:number:Third value to use, a percentage or a number of pixels, , depending on the filter
+@param:value4#:number:Fourth value to use, a percentage or a number of pixels (or a color), depending on the filter
+@content:
+This instruction applies one of the filters offered by Javascript and Aoz to the whole rendering system, thus
+the whole display of the application. All the graphical elements will be affected, including the ones with already 
+a filter. For example, if your applicatiohn has a screen that is already blurred and you also blur the 
+renderer, then the screenm wiull become even more blurred to the pooint of becoming un-readable.
+
+Some filter perform relatively quickly, like invert, allowing you to create impressive effects of screen-flashing 
+for example during an explosion.
+
+The name, so the effect of the filter is specified in the first parameter, filterName$, and can be one of 
+the following list, allong with the first, second third and fourth parameter, which value and type depend on the filter itself.
+
+- "blur": Applies a Gaussian blur. The parameter defines the value of the standard deviation 
+  to the Gaussian function, i.e., how many pixels on the screen blend into each other; 
+  thus, a larger value will create more blur. A value of 0 leaves the input unchanged. 
+
+- "brightness": Applies a linear multiplier, making it appear brighter or darker. 
+  A value under 100% darkens the image, while a value over 100% brightens it. 
+  A value of 0% will create an image that is completely black, while a value of 100% leaves the input unchanged.  
+  
+- "contrast": Adjusts the contrast. A value of 0% will create a drawing that is completely black. 
+  A value of 100% leaves the drawing unchanged. 
+
+- "grayscale": Converts to grayscale. A value of 100% is completely grayscale. 
+  A value of 0% leaves the drawing unchanged. 
+
+- "hue-rotate": Applies a hue rotation. The value is expressed in degrees. 0 leaves the input unchanged. 
+
+- "invert": Inverts. A value of 100% means complete inversion. 
+  A value of 0% leaves the drawing unchanged. 
+
+- "opacity": Applies transparency. Your applicaiton will "vanish" in the color of the background, usually black.
+  A value of 0% means completely transparent. A value of 100% leaves the drawing unchanged. 
+
+- "saturate": Saturates. A value of 0% means completely un-saturated. 
+  A value of 100% leaves the drawing unchanged. 
+
+- "sepia": Converts to sepia. A value of 100% means completely sepia. 
+  A value of 0% leaves the drawing unchanged. 
+
+Multiple filters can be used at the same time. For example, it is possible to display a blurred sepia version
+of a cicle, with two Set Filter commands in chain before the actual drawing. Use Filter Del to remove 
+one or all filters.
+
+Please note tha tthe drop-shadow effect cannnot be applied. If you try, it will not generate
+an error but will have no effect.
+
+~~~
+// Big negative flash !
+Renderer Filter "invert", 100		// Invert all 
+Wait 0.2							// Wait for 0.2 seconds
+Renderer Filter Del					// Restore to normal
+~~~
+
+api*/
+Instruction Renderer Filter, name$='', param1#=0, param2#=0, param3#=0, param4#=0
+{
+	#errors
+	aoz.renderer.setFilter({name:%name$,parameters:[%param1#,%param2#,%param3#,%param4#]});
+}
+End Instruction
+
+/**api
+@name:Renderer Filter Del
+@description:Remove a specific or all filters.
+@param:filterName$:string:Name of the filter to use (see list in the Renderer Filter instruction)
+@content:
+This instruction if used wihthout parameters will restore the display to normal. 
+If you specify the name of a filter, and if this filter is used, then it will be removed, 
+preserving eventual other filters already in place.
+api*/
+Instruction Renderer Filter Del, name$
+{
+	#errors
+	aoz.renderer.delFilter({name:%name$});
+}
+End Instruction
+
+/**api
+@name:Renderer Filter$
+@description:Returns the CSS string used by Javascript in the context.filter property. 
+@return:string:The CSS string
+@content:
+This function is intended to be used by advanced developers, and returns the actual string
+to set in the Javascript context before drawing. 
+api*/
+Function Renderer Filter$
+{
+	#errors
+}
+End Function({aoz.renderer.getFilterString()})
+
+/**api
+@name:Renderer Filter
+@description:Return the current value of the given filter
+@param:name$:The name of the filter in question
+@param:paramNumber:integer:Optional parameter indicating the number of the parameter to return. 1 as a default (used by most filters), 1 to 4 for the drop-shadow filter.
+@return:number:The current value of the given filter
+api*/
+Function Renderer Filter, name$, position = 1
+{
+	#errors
+}
+End Function({aoz.renderer.getFilter({name:%name$,position:%position})})
+

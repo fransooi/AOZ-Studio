@@ -1,0 +1,435 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The 3D Extension
+ * By Baptiste Bideaux
+ *
+ * @author BB
+ * @date first pushed on 20/03/2020
+ *
+ */
+#basicRemarks:false
+
+#need_javascript_file:"aozjs/aoz3d/aoz3d.api.js"
+#need_javascript_file:"aozjs/aoz3d/aoz3d.back.js"
+
+#need_javascript_file:"threejs/build/three.min.js"
+#need_javascript_file:"threejs/libs/inflate.min.js"
+
+#need_javascript_file:"threejs/loaders/OBJLoader.js"
+#need_javascript_file:"threejs/loaders/FBXLoader.js"
+#need_javascript_file:"threejs/loaders/ColladaLoader.js"
+#need_javascript_file:"threejs/loaders/GLTFLoader.js"
+#need_javascript_file:"threejs/loaders/DRACOLoader.js"
+#need_javascript_file:"threejs/loaders/VOXLoader.js"
+
+#need_javascript_file:"threejs/libs/ammo.js"
+
+#need_javascript_file:"threejs/effects/AnaglyphEffect.js"
+#need_javascript_file:"threejs/effects/AsciiEffect.js"
+#need_javascript_file:"threejs/effects/OutlineEffect.js"
+#need_javascript_file:"threejs/effects/StereoEffect.js"
+
+#need_javascript_file:"threejs/controls/build/FirstPersonControls.js"
+#need_javascript_file:"threejs/controls/build/OrbitControls.js"
+#need_javascript_file:"threejs/controls/build/DeviceOrientationControls.js"
+#need_javascript_file:"threejs/controls/build/PointerLockControls.js"
+#need_javascript_file:"threejs/controls/build/TrackballControls.js"
+#need_javascript_file:"threejs/controls/build/TransformControls.js"
+#need_javascript_file:"threejs/controls/build/FlyControls.js"
+#need_javascript_file:"threejs/controls/build/DragControls.js"
+
+#need_javascript_file:"threejs/math/Capsule.js"
+#need_javascript_file:"threejs/math/Octree.js"
+
+#need_javascript_file:"aoz/3d/controls/FPSControls.js"
+
+#need_module: "asset"
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:The 3D Extension
+@description:Instructions and functions to display any 3D Scenes
+@author:Baptiste Bideaux
+doc*/
+
+//
+// Initialization
+//
+{
+    this.aoz.TD = this;
+	this.aoz.TD.utilities = aoz.utilities;
+	this.aoz.TD.banks = aoz.banks;	
+	this.context = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+}
+
+/**doc
+@name:3D Instructions Set
+doc*/
+
+/**api
+@name:Td Init
+@description:Initialise le moteur 3D
+api*/
+Instruction Td Init
+{
+	#errors	
+	_td_init_3d( this.aoz.TD );
+}
+End Instruction
+
+/**api
+@name:Screen 3D Open
+@description:Ouvre un écran pour afficher et manipuler des objets 3D. Il est possible d'ouvrir 
+@description:plusieurs écrans et de les afficher simultanément. Par exemple, pour faire un jeu multi-joueur
+@description:chaque joueur ayant son propre écran (par exemple Mario Kart)
+@syntax:Screen 3D Open <nom ou numéro de l'écran>,SceneID=<nom ou numéro de la scene 3D>,X=<positionX de l'écran>, Y=<position Y de l'écran>,Width=<largeur de l'écran>,Height=<hauteur de l'écran>
+@param:Index:index:Nom ou numéro de l'écran
+@param:SceneID:index:Nom ou numéro de la scène 3D à utiliser
+@param:*X:integer:Position X sur l'écran. 0 Par défaut.
+@param:*Y:integer:Position Y sur l'écran. 0 Par défaut.
+@param:*Width:integer:Largeur de l'écran. Celle de l'application Par défaut.
+@param:*Height:integer:Hauteur de l'écran. Celle de l'application Par défaut.
+@param:*Effect$:string:HNom de l'effet qui seraappliqué sur le rendu. Peut être : "stereo", "anaglyph", "ascii"
+api*/
+Instruction Td Screen Open, Index = (index), SceneID= (index), X = -1, Y = -1, Width =-1, Height = -1,Effect$=""
+{
+	#errors		
+	_screen_3d_open( 
+	{
+		index: %Index,
+		sceneId: %SceneID,
+		x: %X,
+		y: %Y,
+		width: %Width,
+		height: %Height,
+		effect: %Effect$
+	} );
+}
+End Instruction
+
+/**api
+@name:Td Start
+@description:Active le moteur 3D
+@syntax:Td Start
+api*/
+Instruction Td Start
+{
+	#errors	
+	_start_3d();
+}
+End Instruction 
+
+/**api
+@name:Td Stop
+@description:Désactive le moteur 3D.
+@syntax:Td Stop
+api*/
+Instruction Td Stop
+{
+	#errors		
+	_stop_3d();
+}
+End Instruction 
+
+/**api
+@name:Td Screen Update
+@description:Met à jour un écran 3D
+@syntax:Td Screen Update "screen1"
+@param:Index:index:Numéro ou nom de l'écran 3D
+api*/
+Instruction Td Screen Update, Index = (index)
+{
+	#errors		
+	_screen_3d_update( %Index );
+}
+End Instruction 
+
+/**api
+@name:Td Set Background
+@description:Applique une image de fond à l'écran 3D en cours
+@syntax:Td Set Background "moon"
+@param:Image$:string:Nom de l'image à utiliser en fond
+api*/
+Instruction Td Set Background, Image$
+{
+	#errors		
+	_set_background_3d( %Image$ );
+}
+End Instruction
+
+/**api
+@name:Td Copy
+@description:Duplique un objet 3D et ajoute la copie à la scene en cours sous un autre nom
+@syntax:Td Copy SourceName$="Porte_1", CopyName$="Porte_2"
+@param:SourceName$:string:Nom de l'objet à copier
+@param:CopyName$:string:Nom de la copie
+api*/
+Instruction Td Copy, SourceName$, CopyName$
+{
+	#errors		
+	_copy_3d( %SourceName$, %CopyName$ );
+}
+End Instruction
+
+/**api
+@name:Td Group Add
+@description:Création d'un objet de type "Groupe" et l'ajoute à l'objet Parent.
+@syntax:Td Group Add ObjectName$="GroupB", ParentName$="GroupA"
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:ParentName$:string:Nom de l'objet parent dans lequel sera ajouter l'objet créé
+api*/
+Instruction Td Group Add, ObjectName$, ParentName$
+{
+	#errors		
+	_add_3d_group( %ObjectName$, %ParentName$ );
+}
+End Instruction
+
+/**api
+@name:Td Visible
+@description:Rend un objet 3D Visible ou Invisible
+@syntax:Td Visible ObjectName$="Player1", Visible=False
+@param:ObjectName$:string:Nom de l'objet 3D concerné
+@param:Visible:bool:Si True, l'objet sera visible, sinon il sera invisible.
+api*/
+Instruction Td Visible, ObjectName$, Visible
+{
+	#errors		
+	_td_visible( %ObjectName$, %Visible );
+}
+End Instruction
+
+/**api
+@name:Td Cube Add
+@description:Création d'un cube 3D et l'ajoute à l'objet Parent.
+@syntax:Td Cube Add ObjectName$="my_cube", ParentName$="GroupA",Size#=2.0,Image$="wood",Color$="#FFFFFF" 
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:ParentName$:string:Nom de l'objet parent dans lequel sera ajouter l'objet créé
+@param:*Image$:string:Nom de l'image qui sera utilisée comme texture
+@param:*Size#:float:Taille de l'objet. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Color$:string:Couleur HTML utilisé pour l'objet. Si non renseignée, "#FFFFFF" est utilisée par défaut.
+@param:*RepX:int:Répétition de la texture dans l'axe X.
+@param:*RepY:int:Répétition de la texture dans l'axe Y.
+api*/
+Instruction Td Cube Add, ObjectName$, ParentName$, Image$ = "", Size# = 1.0, Color$ = "#FFFFFF", RepX = 1, RepY = 1
+{
+	#errors		
+	_add_3d_box( %ObjectName$, %ParentName$, %Image$, %Size#, %Size#, %Size#, %Color$, %RepX, %RepY );
+}
+End Instruction
+
+/**api
+@name:Td Box Add
+@description:Création d'une boite 3D et l'ajoute à l'objet Parent.
+@syntax:Td Box Add ObjectName$="my_cube", ParentName$="GroupA",Width#=2.0,Height=2.0,Depth#=1.0,Image$="wood",Color$="#FFFFFF" 
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:ParentName$:string:Nom de l'objet parent dans lequel sera ajouter l'objet créé
+@param:*Image$:string:Nom de l'image qui sera utilisée comme texture
+@param:*Width#:float:Largeur de l'objet. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Height#:float:Hauteur de l'objet. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Depth#:float:Taille de l'objet. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Color$:string:Couleur HTML utilisé pour l'objet. Si non renseignée, "#FFFFFF" est utilisée par défaut.
+@param:*RepX:int:Répétition de la texture dans l'axe X.
+@param:*RepY:int:Répétition de la texture dans l'axe Y.
+api*/
+Instruction Td Box Add, ObjectName$, ParentName$, Image$ = "", Width# = 1.0, Height# = 1.0, Depth# = 1.0, Color$="#FFFFFF", RepX = 1, RepY = 1
+{
+	#errors		
+	_add_3d_box( %ObjectName$, %ParentName$, %Image$, %Width#, %Height#, %Depth#, %Color$, %RepX, %RepY );
+}
+End Instruction
+
+/**api
+@name:Td Sphere Add
+@description:Création d'une sphere 3D et l'ajoute à l'objet Parent.
+@syntax:Td Sphere Add ObjectName$="my_sphere", ParentName$="GroupA",Radius#=2.0,Image$="wood",Color$="#FFFFFF" 
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:ParentName$:string:Nom de l'objet parent dans lequel sera ajouter l'objet créé
+@param:*Image$:string:Nom de l'image qui sera utilisée comme texture
+@param:*Radius#:float:Rayon de la sphere. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Color$:string:Couleur HTML utilisé pour l'objet. Si non renseignée, "#FFFFFF" est utilisée par défaut.
+@param:*RepX:int:Répétition de la texture dans l'axe X.
+@param:*RepY:int:Répétition de la texture dans l'axe Y.
+api*/
+Instruction Td Sphere Add, ObjectName$, ParentName$, Image$ = "", Radius# = 1.0, Color$="#FFFFFF", RepX = 1, RepY = 1
+{
+	#errors		
+	_add_3d_sphere( %ObjectName$, %ParentName$, %Image$, %Radius#, %Color$, %RepX, %RepY );
+}
+End Instruction
+
+/**api
+@name:Td Cone Add
+@description:Création d'un cône 3D et l'ajoute à l'objet Parent.
+@syntax:Td Cone Add ObjectName$="my_cone", ParentName$="GroupA",Radius#=2.0,Height=2.0,Image$="wood",Color$="#FFFFFF" 
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:ParentName$:string:Nom de l'objet parent dans lequel sera ajouter l'objet créé
+@param:*Image$:string:Nom ou numéro de l'image qui sera utilisée comme texture
+@param:*Radius#:float:Rayon de la base du cône. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Height#:float:Hauteur de l'objet. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Color$:string:Couleur HTML utilisé pour l'objet. Si non renseignée, "#FFFFFF" est utilisée par défaut.
+@param:*RepX:int:Répétition de la texture dans l'axe X.
+@param:*RepY:int:Répétition de la texture dans l'axe Y.
+api*/
+Instruction Td Cone Add, ObjectName$, ParentName$, Image$ = "", Radius# = 1.0, Height# = 1.0, Color$="#FFFFFF", RepX = 1, RepY = 1
+{
+	#errors		
+	_add_3d_cone( %ObjectName$, %ParentName$, %Image$, %Radius#, %Height#, %Color$, %RepX, %RepY );
+}
+End Instruction
+
+/**api
+@name:Td Plane Add
+@description:Création d'un plan 3D et l'ajoute à l'objet Parent.
+@syntax:Td Plane Add ObjectName$="my_plan", ParentName$="GroupA",Width#=2.0,Height=2.0,Image$="wood",Color$="#FFFFFF" 
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:ParentName$:string:Nom de l'objet parent dans lequel sera ajouter l'objet créé
+@param:*Image$:string:Nom ou numéro de l'image qui sera utilisée comme texture
+@param:*Width#:float:Rayon de la base du cône. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Height#:float:Hauteur de l'objet. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Color$:string:Couleur HTML utilisé pour l'objet. Si non renseignée, "#FFFFFF" est utilisée par défaut.
+@param:*RepX:int:Répétition de la texture dans l'axe X.
+@param:*RepY:int:Répétition de la texture dans l'axe Y.
+api*/
+Instruction Td Plane Add, ObjectName$, ParentName$, Image$ = "", Width# = 1.0, Height# = 1.0, Color$="#FFFFFF", RepX = 1, RepY = 1
+{
+	#errors		
+	_add_3d_plane( %ObjectName$, %ParentName$, %Image$, %Width#, %Height#, %Depth#, %Color$, %RepX, %RepY );
+}
+End Instruction
+
+/**api
+@name:Td Cylinder Add
+@description:Création d'un cylindre 3D et l'ajoute à l'objet Parent.
+@syntax:Td Cylinder Add ObjectName$="my_cylinder", ParentName$="GroupA",RadiusTop#=2.0,RadiusBottom#=2.0,Height=2.0,Image$="wood",Color$="#FFFFFF" 
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:ParentName$:string:Nom de l'objet parent dans lequel sera ajouter l'objet créé
+@param:*Image$:string:Nom ou numéro de l'image qui sera utilisée comme texture
+@param:*RadiusTop#:float:Rayon de la hauteur du cône. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*RadiusBottom#:float:Rayon de la base du cône. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Height#:float:Hauteur de l'objet. Si non renseignée, 1.0 est utilisé par défaut.
+@param:*Filled:bool:Si True, le cylindre sera plein. Si False, le cylindre sera évidé. Si non renseignée, False est utilisé par défaut.
+@param:*Color$:string:Couleur HTML utilisé pour l'objet. Si non renseignée, "#FFFFFF" est utilisée par défaut.
+@param:*RepX:int:Répétition de la texture dans l'axe X.
+@param:*RepY:int:Répétition de la texture dans l'axe Y.
+api*/
+Instruction Td Cylinder Add, ObjectName$, ParentName$, Image$ = "", RadiusTop#=1.0, RadiusBottom# = 1.0, Height# = 1.0, Filled = False, Color$="#FFFFFF", RepX = 1, RepY = 1
+{
+	#errors		
+	_add_3d_cylinder( %ObjectName$, %ParentName$, %Image$, %RadiusTop#, %RadiusBottom#, %Height#, %Color$, %RepX, %RepY );
+}
+End Instruction
+
+/**api
+@name:Td Move
+@description:Positionne un objet 3D sur les 3 axes X,Y et Z.
+@syntax:Td Move ObjectName$="Player", X#=5.2
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:*X#:float:Nouvelle position X de l'objet
+@param:*Y#:float:Nouvelle position Y de l'objet
+@param:*Z#:float:Nouvelle position Z de l'objet
+api*/
+Instruction Td Move, ObjectName$, X# = -0.1010, Y# = -0.1010, Z# = -0.1010
+{
+	#errors		
+	_move_3d( %ObjectName$, %X#, %Y#, %Z# );
+}
+End Instruction
+
+/**api
+@name:Td Rotate
+@description:Rotation d'un objet 3D sur les 3 axes X,Y et Z.
+@syntax:Td Rotate ObjectName$="Player", X#=5.2
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:*X#:float:Nouvel angle X de l'objet
+@param:*Y#:float:Nouvel angle Y de l'objet
+@param:*Z#:float:Nouvel angle Z de l'objet
+api*/
+Instruction Td Rotate, ObjectName$, X# = -0.1010, Y# = -0.1010, Z# = -0.1010
+{
+	#errors		
+	_rotate_3d( %ObjectName$, %X#, %Y#, %Z# );
+}
+End Instruction
+
+/**api
+@name:Td Scale
+@description:Redimensionne un objet 3D sur les 3 axes X,Y et Z.
+@syntax:Td Scale ObjectName$="Player", X#=3.0, Y#=3.0, Z=3.0
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:*X#:float:Nouvelle échelle X de l'objet
+@param:*Y#:float:Nouvelle échelle Y de l'objet
+@param:*Z#:float:Nouvelle échelle Z de l'objet
+api*/
+Instruction Td Scale, ObjectName$, X# = -0.1010, Y# = -0.1010, Z# = -0.1010
+{
+	#errors		
+	_scale_3d( %ObjectName$, %X#, %Y#, %Z# );
+}
+End Instruction
+
+/**api
+@name:Td Backward
+@description:Déplace un objet 3D sur l'axe Z vers l'angle opposé à l'axe Y (marche arrière).
+@syntax:Td Backward ObjectName$="Player", Speed#=1.0
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:*Speed#:float:Vitesse de déplacement. 0.4 par défaut.
+api*/
+Instruction Td Backward, ObjectName$, Speed# = 0.4
+{
+	#errors		
+	_backward_3d( %ObjectName$, %Speed );
+}
+End Instruction
+
+/**api
+@name:Td Foreward
+@description:Déplace un objet 3D sur l'axe Z vers l'angle de l'axe Y (marche avant).
+@syntax:Td Foreward ObjectName$="Player", Speed#=1.0
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:*Speed#:float:Vitesse de déplacement. 0.4 par défaut.
+api*/
+Instruction Td Foreward, ObjectName$, Speed# = 0.4
+{
+	#errors		
+	_foreward_3d( %ObjectName$, %Speed );
+}
+End Instruction
+
+/**api
+@name:Td Delete
+@description:Supprime un objet 3D de la scene ou d'un groupe d'objet.
+@syntax:Td Delete ObjectName$="Child1", ParentName$="scene"
+@param:ObjectName$:string:Nom de l'objet à créer
+@param:ParentName$:string:Nom de l'objet parent qui contient l'objet à supprimer
+api*/
+Instruction Td Delete, ObjectName$, ParentName$
+{
+	#errors
+	_delete_3d( %ObjectName$, %ParentName$ );
+}
+End Instruction
+
+Instruction Td Set Camera, CameraName$
+{
+	#errors
+	_set_3d_camera( %CameraName$ );
+}
+End Instruction

@@ -1,0 +1,17 @@
+<i>UI Value</i>
+<b>UI Value</b> xxxxxxx
+=
+UI Value can be used to update an existing components value.
+@code
+// TextBox example
+UI TextBox "MyTextBox"
+UI Value "MyTextBox", value$="Updated Value..."
+
+// Select example
+UI Select "MySelect", items$="1:This is item 1,2:This is item 2,3:This is item 3"
+UI Value "MySelect", value$="2"
+
+UI CheckBox "MyCheckBox"
+UI Value "MyCheckBox", value$="true"
+@code
+

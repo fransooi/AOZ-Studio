@@ -1,0 +1,1052 @@
+{
+    globales_aoz_instructions:
+    { 
+        name: "Global AOZ Instructions"
+        intro:""
+        conclusion:""
+        commands:
+        {
+            "instruction":
+            [
+                A range of useful Test instructions is available, and they all use the same general syntax, as follows:
+""
+INSTRUCTION condition : list of statements"
+""
+The statements after the condition will only be executed if the condition is True, otherwise the following commands
+will be completely ignored and the program will jump directly to the next line of this Environment routine:
+
+                '''
+                ```                
+		AMAL Environment Command 	Notes
+		IF SCREEN number 		True if the screen has been opened
+		IF NOT SCREEN number 		True if the screen is currently closed
+		IF BANK number 			True if the bank has been reserved
+		IF NOT BANK number 		True if the bank is not reserved
+		IF REG number,value 		True if Reg A to Z or 0 to 25 equals value
+                ```
+                '''
+To get you started, type in these texts:
+                '''
+                ```                
+		   Screen Open 0,320,200,16,Lowres
+		   Double Buffer
+		   Load "AMOSPro_Tutorial:Objects/Bobs.Abk",1
+		   Channel To Bob 0,1
+		   Screen 0
+		   Bob 1,100,100,1
+		   AMAL Channel 0
+		   Let X=0;
+		   Let Y=0;
+		   L:
+		   Let X=X+1;
+		   Let Y=Y+1;
+		   Pause;
+		   Jump;
+                ```
+                '''
+            ]
+            "end_instruction":
+            [
+                "TODO"
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "function":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "end_function":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "mod":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "to":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "not":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "swap":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "def_fn":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "fn":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "resume_next":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "every_on":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "every_off":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "as":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "for":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "repeat":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "until":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "while":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "wend":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "do":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "loop":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "exit_if":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "exit":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "goto":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "gosub":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "if":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "then":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "else_if":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "else":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "end_if":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "on_error":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "on_break_proc":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "on_menu":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "on":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "resume_label":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "resume":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "pop_proc":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "every":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "step":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "return":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "pop":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "procedure":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "proc":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "end_proc":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "shared":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "global":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "param#":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "param$":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "error":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "errn":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "data":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "read":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "restore":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "print_using":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "print":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "lprint":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "input":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "line_input":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "mid$":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "left$":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "right$":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "dim":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "rem":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "sort":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "match":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "edit":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "direct":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "default_palette":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "palette":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "colour_back":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "timer":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "picture":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "polyline":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "polygon":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "trap":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "include":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "channel":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "amreg":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "rain":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "field":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "dir$":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "stop_transparent":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "set_alpha":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "inc":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "dec":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "add":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "end":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "wait_vbl":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "wait_key":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "wait":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "stop":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "error":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "break_off":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "break_on":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "areg":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "dreg":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "vdialog":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "vdialog$":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "set_font":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "key$":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "x_mouse":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "y_mouse":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "bset":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "bclr":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+
+            "bchg":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "btst":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+
+            "ror.b":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "ror.w":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "ror.l":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "rol.b":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "rol.w":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+            "rol.l":
+            [
+                  
+                '''
+                ```                
+
+                ```
+                '''
+            ]
+           
+        }
+    }
+}

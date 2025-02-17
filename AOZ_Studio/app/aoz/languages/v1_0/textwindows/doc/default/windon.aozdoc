@@ -1,0 +1,12 @@
+<i>Windon</i>
+<b>Windon</b> xxxxxxx
+=
+Before using windows in your programs, you will need to refer to their identification numbers. This function returns
+the value of the current window. For example:
+@code
+Do
+Cls : Wind Open Rnd(99)+1,1,1,25,5,1
+Print "Window number ";Windon : Wait Key
+Loop
+@code
+

@@ -1,0 +1,7 @@
+<i>Dialog Clr</i>
+<b>Dialog Clr</b> xxxxxxx
+=
+The DIALOG CLR instruction erases all zones and shuts down the dialogue box completely, leaving the specified channel open. The Interface program can now be re-run from the beginning, using a further call to the DIALOG RUN command. As always, if the background area has been saved using the SA option, it will be restored to its
+original position
+
+

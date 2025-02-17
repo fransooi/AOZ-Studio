@@ -1,0 +1,40 @@
+<i>Dialog Box</i>
+<b>Dialog Box</b> xxxxxxx
+=
+To display a requester or dialogue box, the DIALOG BOX function is used to handle your Interface commands from the specified Interface string. This dialogue now waits for either an appropriate button to be selected, or until a specific period of time has elapsed. The system then returns to the AOZ Studio main program, returning the value of the button. The dialogue box can be quit at any time by pressing [Ctrl]+[C]. If this is done, a value of zero will be returned
+
+The Interface$ parameter is a normal AOZ Studio string, containing the Interface program. This may be
+followed by various optional parameters
+
+The optional value parameter contains a value that is loaded straight into the internal variable array. It can then be accessed using the VA function, from the dialogue box, or requester
+
+Parameter$ holds an optional string parameter which will be forwarded to the Interface program. It will be saved as
+item 1 of the variable array (1 VA)
+
+Finally, the optional coordinates x,y are given, to position the dialogue box on screen. These coordinates may be
+overridden by a BAse command inside the Interface program, and this is explained later. Here are some examples
+@code
+A$=A$+"SetVar 1,'The answer is', set variable one to a message"
+A$=A$+"SetVar0,42; variable zero is loaded with forty two"
+A$,A$+"PRint 0,100,1 VA,2; print the message"
+A$=A$+"PRint 0,110,0 VA #,2; print the answer"
+A$=A$+"EXit; leave the interface program"
+Print Dialog Box(A$)
+B$=B$+"PRint 0,0,1 VA,2; PRint 0,10,0 VA #,2; EXit;"
+D=Dialog Box(B$,42,"The Answer")
+D=Dialog Box(B$,42,"The Answer",100,100)
+@code
+Please note that if the Interface program is to wait for user input, a RunUntil command must be included before the
+final EXit, otherwise the dialogue box will jump directly to the main AOZ Studio program after the last
+Interface program instruction. RunUntil is explained in detail below
+
+The DIALOG BOX facility is only intended for simple requesters. To control the dialogue directly from an AMOS
+Professional program, the DIALOG OPEN and DIALOG RUN commands must be used instead. These are fully
+explained at the beginning of Chapter 9.3, which is devoted to advanced control panels
+
+Creating a simple requester
+If a large requester with a lot of graphics is to be generated, it can be very difficult to keep track of all of the
+coordinates. You can simplify things enormously by entering all of the coordinates relative to the top left-hand
+corner of the requester box
+
+

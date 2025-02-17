@@ -1,0 +1,10 @@
+<i>Erase</i>
+<b>Erase</b> xxxxxxx
+=
+The ERASE command clears the memory space used by the specified bank number, and returns this memory to the main program, for future use. For example:"
+@code
+Reserve as Work 5,1000: Rem Reserve temporary work bank 5
+Wait Key
+Erase 5
+@code
+

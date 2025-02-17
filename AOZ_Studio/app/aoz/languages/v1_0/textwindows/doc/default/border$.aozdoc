@@ -1,0 +1,15 @@
+<i>Border$</i>
+<b>Border$</b> xxxxxxx
+=
+This works in much the same way as ZONES, by returning a string of characters that create a border around the
+required string of text. The AOZ Studio programmer can use it with ZONES to set up special "buttons" for
+alert windows and control consoles. In this case, the text held in the string will start at the current text cursor position. Border numbers can range from 1
+to 16, for example:
+@code
+Locate 1,1: Print Border$("AOZ Studio",2)
+@code
+The control sequence returned by BORDER has the following:
+@code
+Chr$(27) + "B0" + border + Chr$(13) + Chr$(27) + "B1" + text + Chr$(13)
+@code
+

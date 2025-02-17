@@ -1,0 +1,21 @@
+<i>Return</i>
+<b>Return</b> xxxxxxx
+=
+When a program obeys a GOSUB instruction, it must be instructed to RETURN to the main program after the subroutine
+has been executed. It should be noted that a single GOSUB statement can be linked to several RETURN
+commands, allowing exits from any number of different points in the routine, depending on the circumstances. After
+the RETURN, a jump is made back to the instruction immediately after the original GOSUB.
+
+For example:
+@code
+Print "I am the main program"
+For N=1 To 3
+Gosub TEST
+Next N
+End
+TEST:
+Print "Here we go GOSUB" : Wait 50
+Print "Number =";N
+Return
+@code
+

@@ -1,0 +1,10 @@
+<i>Logbase</i>
+<b>Logbase</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The LOGBASE function allows expert programmers to access the Amiga's screen memory directly. The current
+screen is made up of six possible bit-planes, and after LOGBASE has been called, the address of the required plane
+is returned, or zero is given if it does not exist.
+
+

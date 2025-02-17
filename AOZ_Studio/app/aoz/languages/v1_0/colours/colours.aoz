@@ -1,0 +1,828 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Colour and Colour animations Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Colour Palette
+@description:Instructions and functions to animate and manage colours
+@intro:
+@conclusion:
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Get Palette
+@description:Grab the palette of another screen in the current screen
+@param:index:index:The index of the source screen
+@param:mask:integer:A mask of bits in which bits set to one will enforce the copy of the colour and 0 will ignore the color. Only for the first 32 colours (optional)
+@examples:instructions:i_38
+@compatible: aoz, stos, amos
+@content:
+This instruction only has an effect if the screen has been opened in paletted mode, and may invoke a remapping process of all the pixels of the screen that might induce a delay.
+
+It copies the colours from a specified screen, and loads them into the current screen. This is useful
+when data is being moved from one screen to another with a SCREEN COPY command, and the same colour
+settings need to be shared for both screens. An optional mask can be added after the screen number, allowing only
+selected colours to be loaded.
+api*/
+Instruction Get Palette, index=(index), mask, tags
+{
+	aoz.currentScreen.getPalette(%index,%mask,%tags);
+}
+End Instruction
+
+/**api
+@name:Get Images Palette
+@description:Copy the colour palette from the Images bank to the current screen
+@param:mask:integer:Mask of bits where each bit set to 1 represent a colour to copy and 0 a colour to ignore, up to 32 (optional)
+@compatible: aoz, stos, amos
+@content:
+This instruction only has an effect if the screen has been opened in paletted mode, and will invoke a remapping process of all the pixels of the screen that might induce a delay.
+api*/
+Instruction Get Images Palette, mask, tags
+{
+	#errors
+	aoz.currentScreen.getImagePalette('images',%mask,%tags);
+}
+End Instruction
+
+/**api
+@name:Colour Back
+@description:Assign a colour to the screen background
+@param:number:integer:The number of the colour in the palette if between brackets or a RGRGGBB hexadecimal value
+@compatible: aoz, stos, amos
+@examples:instructions:i_5
+@content:
+This command is used to assign your choice of RGB components for the screen's background colour, which fills
+unused areas at the top and bottom of the visible screen. Such area usually appear when a fixed proportion image is displayed in a windowed browser and the proportions of the browser's window do not match the one of the application.
+they are usually called "black bars".
+
+Alternatively, existing colours may also be specified when enclosed in brackets.
+api*/
+
+/**api
+@name:Colour
+@description:Set the RGB value of a colour in the palette the current screen
+@param:number:integer:The number of the colour in the palette
+@param:rgb:rgb:The RGB value of the new colour (example: $FF0000 will change the color to RED)
+@compatible: aoz, stos, amos
+@examples:instructions:i_5
+@content:
+Used as an instruction, COLOUR allows you to assign the RGB components of a colour to an entry in the screen palette.
+For example, if you wanted to load colour number 1 with a subtle shade of pig's feet, you would use this:
+~~~
+Cls : Colour 1,$AA7744
+~~~
+api*/
+Instruction Colour, index=(index), rgb
+{
+	#errors
+	aoz.currentScreen.setColour(%index,%rgb);
+}
+End Instruction
+
+/**api
+@name:Color
+@description:Set the RGB value of a colour in the palette the current screen
+@param:number:integer:The number of the color in the palette
+@param:rgb:rgb:The RGB value of the new color (example: $FF0000 will change the color to RED)
+@compatible: aoz
+@examples:instructions:i_5
+@content:
+Used as an instruction, COLOR allows you to assign the RGB components of a colour to an entry in the screen palette.
+For example, if you wanted to load colour number 1 with a subtle shade of pig's feet, you would use this:
+~~~
+Cls : Color 1,$AA7744
+~~~
+api*/
+Instruction Color, index=(index), rgb
+{
+	#errors
+	aoz.currentScreen.setColour(%index,%rgb);
+}
+End Instruction
+
+
+/**api
+@name:Colour
+@description:Return the RGB value of a colour from the palette of the current screen
+@param:number:integer:The number of the colour in the palette
+@return:rgb:The RGB value of the new colour (example: will return $FF0000 for RED)
+@compatible: aoz, stos, amos
+@content:
+It is not difficult to find which colours are occupying the colour index, and analyse how much Red, Green and Blue is used to make up each shade.
+The COLOUR function can take an index number from 0 to 31, and returns the colour value assigned to that number. Hex$ is used for this purpose, as follows
+~~~
+Line width 10
+For C=0 To 15: Ink C
+	Print Hex$(Colour(C),6)
+	Circle 960,540,(C+1)*15
+Next C
+
+~~~
+
+api*/
+Function Colour, number=(index)
+{
+	#errors
+}
+End Function( { aoz.currentScreen.getColour(%number) } )
+/**api
+@name:Shade
+@param:intensity:integer:Colour intensity value to be applied to the current ink colour as a percentage of it's current value.
+@description:Changes the current ink colour value of any colour from the palette of the current screen .
+@compatible: aoz
+@content:
+Use the instruction to change the RGB value of any palette colour. Once set, all subsequent drawing operations will have the Shade value
+applied to the ink colour used as a percentage. To restore to normal, use 'Shade' on it's own or 'Shade 100'. Acceptable values from 0% to 25500%
+~~~
+For f=1 to 10
+	ink 39
+	shade f*10
+	disc 50+f*80,50+f*80,90
+next f
+~~~
+api*/
+Instruction Shade, intensity
+{
+	#errors
+	aoz.currentScreen.setShade( %intensity );
+}
+End Instruction
+
+Function Shade, number=(index), intensity
+{
+	#errors
+
+}
+End Function ( { aoz.utilities.adjustColor( aoz.currentScreen.vars.palette[ %number ], (%intensity) / 100, 1 ) } )
+
+/**api
+@name:Color
+@description:Return the RGB value of a colour from the palette of the current screen
+@param:number:index:The index of the color in the palette
+@return:rgb:The RGB value of the new color (example: will return $FF0000 for RED)
+@compatible: aoz, stos, amos
+@examples:instructions:i_5
+@content:
+It is not difficult to find which colours are occupying the colour index, and analyse how much Red, Green and Blue is used to make up each shade.
+The COLOR function can take an index number from 0 to 31, and returns the colour value assigned to that number. Hex$ is used for this purpose, as follows
+~~~
+For C=0 To 15: Ink C
+	Print Hex$(Color(C),3)
+	Circle 160,75,(C+1)*4
+Next C
+~~~
+api*/
+Function Color, number=(index)
+{
+	#errors
+}
+End Function( { aoz.currentScreen.getColour(%number) } )
+
+/**api
+@name:RGB$
+@description:Return a string with the given RGB colors
+@param:red:integer:The value of the red component, from 0 to 255
+@param:green:integer:The value of the green component, from 0 to 255
+@param:blue:integer:The value of the blue component, from 0 to 255
+@return:string:The RGB string in the form: "RRGGBB"
+@compatible: aoz
+@content:
+~~~
+Print RGB$( 28, 127, 89 )
+> 1C7F59
+~~~
+
+You can also use a string with the name of one of the colors defined in the Javascript standard. For example:
+~~~
+Print RGB$( "AntiqueWhite" )		// Will print "$FAEBD7"
+~~~
+api*/
+Function RGB$, red, green, blue
+{
+	#errors
+}
+End Function( {aoz.utilities.getRGBAString(%red,%green,%blue).substring(1)} )
+
+/**api
+@name:RGB$
+@description:Return a string with the RGB values of a Javascript color
+@param:color$:string:The exact name of a Javascript color
+@return:string:The RGB string in the form: "RRGGBB"
+@compatible: aoz
+@content:
+~~~
+Print RGB$( "AntiqueWhite" )		// Will print "$FAEBD7"
+~~~
+
+List of supported colors and their values:
+
+- aliceblue: "F0F8FF",
+- antiquewhite: "FAEBD7",
+- aqua: "00FFFF",
+- aquamarine: "7FFFD4",
+- azure: "F0FFFF",
+- beige: "F5F5DC",
+- bisque: "FFE4C4",
+- black: "000000",
+- blanchedalmond: "FFEBCD",
+- blue: "0000FF",
+- blueviolet: "8A2BE2",
+- brown: "A52A2A",
+- burlywood: "DEB887",
+- cadetblue: "5F9EA0",
+- chartreuse: "7FFF00",
+- chocolate: "D2691E",
+- coral: "FF7F50",
+- cornflowerblue: "6495ED",
+- cornsilk: "FFF8DC",
+- crimson: "DC143C",
+- cyan: "00FFFF",
+- darkblue: "00008B",
+- darkcyan: "008B8B",
+- darkgoldenrod: "B8860B",
+- darkgray: "A9A9A9",
+- darkgrey: "A9A9A9",
+- darkgreen: "006400",
+- darkkhaki: "BDB76B",
+- darkmagenta: "8B008B",
+- darkolivegreen: "556B2F",
+- darkorange: "FF8C00",
+- darkorchid: "9932CC",
+- darkred: "8B0000",
+- darksalmon: "E9967A",
+- darkseagreen: "8FBC8F",
+- darkslateblue: "483D8B",
+- darkslategray: "2F4F4F",
+- darkslategrey: "2F4F4F",
+- darkturquoise: "00CED1",
+- darkviolet: "9400D3",
+- deeppink: "FF1493",
+- deepskyblue: "00BFFF",
+- dimgray: "696969",
+- dimgrey: "696969",
+- dodgerblue: "1E90FF",
+- firebrick: "B22222",
+- floralwhite: "FFFAF0",
+- forestgreen: "228B22",
+- fuchsia: "FF00FF",
+- gainsboro: "DCDCDC",
+- ghostwhite: "F8F8FF",
+- gold: "FFD700",
+- goldenrod: "DAA520",
+- gray: "808080",
+- grey: "808080",
+- green: "008000",
+- greenyellow: "ADFF2F",
+- honeydew: "F0FFF0",
+- hotpink: "FF69B4",
+- indianred: "CD5C5C",
+- indigo: "4B0082",
+- ivory: "FFFFF0",
+- khaki: "F0E68C",
+- lavender: "E6E6FA",
+- lavenderblush: "FFF0F5",
+- lawngreen: "7CFC00",
+- lemonchiffon: "FFFACD",
+- lightblue: "ADD8E6",
+- lightcoral: "F08080",
+- lightcyan: "E0FFFF",
+- lightgoldenrodyellow: "FAFAD2",
+- lightgray: "D3D3D3",
+- lightgrey: "D3D3D3",
+- lightgreen: "90EE90",
+- lightpink: "FFB6C1",
+- lightsalmon: "FFA07A",
+- lightseagreen: "20B2AA",
+- lightskyblue: "87CEFA",
+- lightslategray: "778899",
+- lightslategrey: "778899",
+- lightsteelblue: "B0C4DE",
+- lightyellow: "FFFFE0",
+- lime: "00FF00",
+- limegreen: "32CD32",
+- linen: "FAF0E6",
+- magenta: "FF00FF",
+- maroon: "800000",
+- mediumaquamarine: "66CDAA",
+- mediumblue: "0000CD",
+- mediumorchid: "BA55D3",
+- mediumpurple: "9370DB",
+- mediumseagreen: "3CB371",
+- mediumslateblue: "7B68EE",
+- mediumspringGreen: "00FA9A",
+- mediumturquoise: "48D1CC",
+- mediumvioletRed: "C71585",
+- midnightblue: "191970",
+- mintcream: "F5FFFA",
+- mistyrose: "FFE4E1",
+- moccasin: "FFE4B5",
+- navajowhite: "FFDEAD",
+- navy: "000080",
+- oldlace: "FDF5E6",
+- olive: "808000",
+- olivedrab: "6B8E23",
+- orange: "FFA500",
+- orangered: "FF4500",
+- orchid: "DA70D6",
+- palegoldenrod: "EEE8AA",
+- palegreen: "98FB98",
+- paleturquoise: "AFEEEE",
+- palevioletred: "DB7093",
+- papayawhip: "FFEFD5",
+- peachpuff: "FFDAB9",
+- peru: "CD853F",
+- pink: "FFC0CB",
+- plum: "DDA0DD",
+- powderblue: "B0E0E6",
+- purple: "800080",
+- rebeccapurple: "663399",
+- red: "FF0000",
+- rosybrown: "BC8F8F",
+- royalblue: "4169E1",
+- saddlebrown: "8B4513",
+- salmon: "FA8072",
+- sandybrown: "F4A460",
+- seagreen: "2E8B57",
+- seashell: "FFF5EE",
+- sienna: "A0522D",
+- silver: "C0C0C0",
+- skyblue: "87CEEB",
+- slateblue: "6A5ACD",
+- slategray: "708090",
+- slategrey: "708090",
+- snow: "FFFAFA",
+- springgreen: "00FF7F",
+- steelblue: "4682B4",
+- tan: "D2B48C",
+- teal: "008080",
+- thistle: "D8BFD8",
+- tomato: "FF6347",
+- turquoise: "40E0D0",
+- violet: "EE82EE",
+- wheat: "F5DEB3",
+- white: "FFFFFF",
+- whitesmoke: "F5F5F5",
+- yellow: "FFFF00",
+- yellowgreen: "9ACD32"
+api*/
+Function RGB$, name$
+{
+	#errors
+	var c = aoz.utilities.getRGBColors( aoz.utilities.getJavascriptColor(%name), aoz.useShortColors );
+}
+End Function( {aoz.utilities.getRGBAString(c.r, c.g, c.b).substring(1)} )
+
+/**api
+@name:RGB
+@description:Return a number with the RGB value encoded
+@param:res:integer:The value of the red component, from 0 to 255
+@param:green:integer:The value of the green component, from 0 to 255
+@param:blue:integer:The value of the blue component, from 0 to 255
+@return:integer:The RGB value to use in Set Color
+@compatible: aoz
+@content:
+~~~
+Print RGB( 28, 127, 89 )
+> 1867609
+~~~
+api*/
+Function RGB, red, green, blue
+{
+	#errors
+}
+End Function( {aoz.utilities.getAOZRGB(%red,%green,%blue)} )
+/**api
+@name:RGBA
+@description:Return a number with the RGBA value encoded
+@param:red:integer:The value of the red component, from 0 to 255
+@param:green:integer:The value of the green component, from 0 to 255
+@param:blue:integer:The value of the blue component, from 0 to 255
+@param:alpha:integer:The value of the alpha component, from 0 to 255
+@return:integer:The RGBA value to use in Set Color
+@compatible: aoz
+@content:
+~~~
+Print RGBA( 28, 127, 89, 128 )
+> 1867609
+~~~
+api*/
+Function RGBA, red, green, blue, alpha
+{
+	#errors
+}
+End Function( {aoz.utilities.getRGBA(%red,%green,%blue,%alpha)} )
+/**api
+@name:RGB
+@description:Return a number with the RGB value of a Javascript color encoded
+@param:color$:string:The exact name of a Javascript color
+@return:integer:The RGB value as an integer
+@compatible: aoz
+@content:
+~~~
+Print Hex$( RGB$( "AntiqueWhite" ), 32 )		// Will print "$FAEBD7"
+~~~
+
+List of supported colors and their values:
+
+- aliceblue: $F0F8FF,
+- antiquewhite: $FAEBD7,
+- aqua: $00FFFF,
+- aquamarine: $7FFFD4,
+- azure: $F0FFFF,
+- beige: $F5F5DC,
+- bisque: $FFE4C4,
+- black: $000000,
+- blanchedalmond: $FFEBCD,
+- blue: $0000FF,
+- blueviolet: $8A2BE2,
+- brown: $A52A2A,
+- burlywood: $DEB887,
+- cadetblue: $5F9EA0,
+- chartreuse: $7FFF00,
+- chocolate: $D2691E,
+- coral: $FF7F50,
+- cornflowerblue: $6495ED,
+- cornsilk: $FFF8DC,
+- crimson: $DC143C,
+- cyan: $00FFFF,
+- darkblue: $00008B,
+- darkcyan: $008B8B,
+- darkgoldenrod: $B8860B,
+- darkgray: $A9A9A9,
+- darkgrey: $A9A9A9,
+- darkgreen: $006400,
+- darkkhaki: $BDB76B,
+- darkmagenta: $8B008B,
+- darkolivegreen: $556B2F,
+- darkorange: $FF8C00,
+- darkorchid: $9932CC,
+- darkred: $8B0000,
+- darksalmon: $E9967A,
+- darkseagreen: $8FBC8F,
+- darkslateblue: $483D8B,
+- darkslategray: $2F4F4F,
+- darkslategrey: $2F4F4F,
+- darkturquoise: $00CED1,
+- darkviolet: $9400D3,
+- deeppink: $FF1493,
+- deepskyblue: $00BFFF,
+- dimgray: $696969,
+- dimgrey: $696969,
+- dodgerblue: $1E90FF,
+- firebrick: $B22222,
+- floralwhite: $FFFAF0,
+- forestgreen: $228B22,
+- fuchsia: $FF00FF,
+- gainsboro: $DCDCDC,
+- ghostwhite: $F8F8FF,
+- gold: $FFD700,
+- goldenrod: $DAA520,
+- gray: $808080,
+- grey: $808080,
+- green: $008000,
+- greenyellow: $ADFF2F,
+- honeydew: $F0FFF0,
+- hotpink: $FF69B4,
+- indianred: $CD5C5C,
+- indigo: $4B0082,
+- ivory: $FFFFF0,
+- khaki: $F0E68C,
+- lavender: $E6E6FA,
+- lavenderblush: $FFF0F5,
+- lawngreen: $7CFC00,
+- lemonchiffon: $FFFACD,
+- lightblue: $ADD8E6,
+- lightcoral: $F08080,
+- lightcyan: $E0FFFF,
+- lightgoldenrodyellow: $FAFAD2,
+- lightgray: $D3D3D3,
+- lightgrey: $D3D3D3,
+- lightgreen: $90EE90,
+- lightpink: $FFB6C1,
+- lightsalmon: $FFA07A,
+- lightseagreen: $20B2AA,
+- lightskyblue: $87CEFA,
+- lightslategray: $778899,
+- lightslategrey: $778899,
+- lightsteelblue: $B0C4DE,
+- lightyellow: $FFFFE0,
+- lime: $00FF00,
+- limegreen: $32CD32,
+- linen: $FAF0E6,
+- magenta: $FF00FF,
+- maroon: $800000,
+- mediumaquamarine: $66CDAA,
+- mediumblue: $0000CD,
+- mediumorchid: $BA55D3,
+- mediumpurple: $9370DB,
+- mediumseagreen: $3CB371,
+- mediumslateblue: $7B68EE,
+- mediumspringGreen: $00FA9A,
+- mediumturquoise: $48D1CC,
+- mediumvioletRed: $C71585,
+- midnightblue: $191970,
+- mintcream: $F5FFFA,
+- mistyrose: $FFE4E1,
+- moccasin: $FFE4B5,
+- navajowhite: $FFDEAD,
+- navy: $000080,
+- oldlace: $FDF5E6,
+- olive: $808000,
+- olivedrab: $6B8E23,
+- orange: $FFA500,
+- orangered: $FF4500,
+- orchid: $DA70D6,
+- palegoldenrod: $EEE8AA,
+- palegreen: $98FB98,
+- paleturquoise: $AFEEEE,
+- palevioletred: $DB7093,
+- papayawhip: $FFEFD5,
+- peachpuff: $FFDAB9,
+- peru: $CD853F,
+- pink: $FFC0CB,
+- plum: $DDA0DD,
+- powderblue: $B0E0E6,
+- purple: $800080,
+- rebeccapurple: $663399,
+- red: $FF0000,
+- rosybrown: $BC8F8F,
+- royalblue: $4169E1,
+- saddlebrown: $8B4513,
+- salmon: $FA8072,
+- sandybrown: $F4A460,
+- seagreen: $2E8B57,
+- seashell: $FFF5EE,
+- sienna: $A0522D,
+- silver: $C0C0C0,
+- skyblue: $87CEEB,
+- slateblue: $6A5ACD,
+- slategray: $708090,
+- slategrey: $708090,
+- snow: $FFFAFA,
+- springgreen: $00FF7F,
+- steelblue: $4682B4,
+- tan: $D2B48C,
+- teal: $008080,
+- thistle: $D8BFD8,
+- tomato: $FF6347,
+- turquoise: $40E0D0,
+- violet: $EE82EE,
+- wheat: $F5DEB3,
+- white: $FFFFFF,
+- whitesmoke: $F5F5F5,
+- yellow: $FFFF00,
+- yellowgreen: $9ACD32
+api*/
+Function RGB, colorName$
+{
+	#errors
+}
+End Function( {aoz.utilities.getJavascriptColor(%colorName$)} )
+
+/**api
+@name:Flash Off
+@description:Turns off the flashing colours sequence
+@content:
+api*/
+Instruction Flash Off
+{
+	aoz.setFlash(false);
+}
+End Instruction
+
+/**api
+@name:Flash
+@description:Set the flashing color sequence
+@param:number:integer:The index of the colour in the current screen palette
+@param:definition$:string:The definition of the flashing sequence
+@compatible:amos, stos
+@content:
+When FLASH is followed by the index number of any colour, that colour will display animated flashing every time it is used, until FLASH OFF is called.
+Up to 16 colours can be cycled to customise your flashing effects, and the rate of delay from one colour change to the next can be individually set. Try this
+~~~
+Flash 1 ,"(00AA00,10)(FF00FF,40)"
+~~~
+In that example, the colour to be affected is set to index number 1.
+After the comma, the set of quotation marks contains pairs of brackets, and each pair of brackets contains the colour that is next on the list to be flashed, and the time it will appear for.
+Colour is set in RGB component values. Delay time is set in units of a 50th of a second.
+So the last example has the effect of flashing colour number 1 between a green value and a violet value once every second. The next example is more subtle
+~~~
+Cls : Centre "SILENT MOVIES"
+Flash 1,"(111,4)(333,4)(555,4)(777,4)(555,7)(333,7)
+Curs Off : Wait 250 : Flash Off
+~~~
+
+api*/
+Instruction Flash, number=(index), definition$
+{
+	aoz.setFlash(true);
+}
+End Instruction
+
+/**api
+@name:Shift Off
+@description:Turn off all colour shifts for current screen
+@compatible: amos, stos
+@content:
+Use this command to terminate all colour rotations previously set by the SHIFT UP and SHIFT DOWN instructions.
+api*/
+Instruction Shift Off
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Shift Up
+@description:Rotate the colour values of the current screen upwards
+@param:delay:integer:Number of 1/1000th of second between shifts (PC mode) and 1/50th of the second (Amiga and retro machine emulation)
+@param:firstColor:integer:Index of the first colour in the palette to shift
+@param:lastColor:integer:Index of the last colour in the palette to shift
+@param:*rotateLastColor:boolean:Flag indicate whether to copy the last color back to the first color (True) or discard it (false)
+@compatible: amos, stos
+@content:
+This command takes the values held in the colour registers and shunts them forwards. The delay between colour shifts is set in 50ths of a second, similarly to the FADE command
+
+Next the values of the colours to be affected are set, from the first colour to the last colour in the sequence.
+The first colour in the list will be copied to the second, the second to the third, and so on until the last colour in the series is reached.
+
+Finally, a flag is set to either 0 or 1. When this flag is set to zero, the last colour is discarded, and the rotation will cycle for the number of times it takes to replace all colours with the first colour in the list.
+
+Alternatively, if the flag is set to one, the last colour index in the list is copied into the first, causing the colours to rotate continuously on screen.
+
+Each of your screens can have its own set of animated colour rotations, and because they are executed in the background they will not affect the running of your programs...
+
+api*/
+Instruction Shift Up, delay, firstColor, lastColor, rotateLastColor
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Shift Down
+@description:Rotate the colour values of the current screen downwards
+@param:delay:integer:Number of 1/1000th of second between shifts (PC mode) and 1/50th of the second (Amiga and retro machine emulation)
+@param:firstColor:integer:Index of the first colour in the palette to shift
+@param:lastColor:integer:Index of the last colour in the palette to shift
+@param:rotateFirstColor:boolean:Flag indicate whether to copy the first color back to the last color (True) or discard it (false)
+@compatible: aoms, stos
+@content:
+This command is identical to SHIFT UP, except for the fact that colours are rotated in the opposite direction, so that
+the second colour is copied into the first, the third to the second, and so on. With the final flag set to zero, all colours
+are eventually replaced with the last colour in the list
+
+api*/
+Instruction Shift Down, delay, firstColor, lastColor, rotateFirstColor
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Fade
+@description:TODO! Blend the colours of the current screen to the values of the palette of another screen
+@param:delay:integer:Number of 1/1000th of second between changes (PC mode) and 1/50th of a second for Amiga and retro machine emulation
+@param:screenIndex:index:The index of the screen to fade the palette to
+@param:mask:integer:A mask of bits indicating which colour to fade, bits set to 1 beign taken into account by their number in the mask
+@compatible: amos, stos
+@content:
+The classic fade to black" movie effect takes the current palette and gradually fades all values to zero. Set the speed of the fade by choosing the number of vertical blank periods between each colour change. Try this
+~~~
+Flash Off : Curs Off
+Centre "GOOD NIGHT"
+Fade 5
+~~~
+Fade effects are executed using interrupts, so it is sensible to wait until the fade has ended before going on to the next program instruction. The length of wait required can be calculated with this formula
+~~~
+wait = fade speed * 15
+~~~
+So that last example is sure to work with the rest of your program if the third line is changed to this
+~~~
+Fade 5 : Wait 75
+~~~
+By adding a list of colour values, the fade effect will generate a new palette directly from your list, and it is used like this
+~~~
+Flash Off : Curs Off
+Centre "RED SKY AT NIGHT"
+Fade 10,$100,$F00,$300
+Wait 150
+~~~
+Any number of new colours can be set up like this, depending on the maximum number allowed in your current
+screen mode. Any settings that are omitted will leave those colours completely unaffected by the fade, as long as you
+include the right number of commas. For example
+~~~
+Fade 5,,$100,,,$200,$300
+~~~
+There is an even more powerful use of the FADE command, which takes the palette from another screen and fades it
+into the colours of the current screen. Set the speed of the fade as usual, then give the number of the screen whose
+palette is to be accessed. By using a negative number instead of a screen number, the palette from the sprite bank
+will be loaded instead
+
+There is one more parameter that can be added, and this creates a mask that only permits certain colours to be faded
+in. Each colour is associated with a single bit in the pattern, numbered from 0 to 15, and any bit that is set to 1 will be affected by a colour change. For example
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.Abk"
+Screen Open 1,320,90,16,Lowres
+Flash Off : Get Object Palette
+Paste Bob 100,0,1
+Wait 100
+Fade 1 To 0,%01111000011001010
+Wait 15
+~~~
+
+api*/
+
+/**api
+@name:Fade
+@description:Blend colours to new values
+@param:delay:integer:Number of 1/1000th of second between changes (PC mode) and 1/50th of a second for Amiga and retro machine emulation
+@param:colorList:integers:A list of RGB values, separated by commmas indicating the new colours to fade to (op[tional)
+@compatible: amos, stos
+api*/
+
+/**api
+@name:Default Palette
+@description:Set the default palette to be used in further "Screen Open" instructions
+@param:colorList:integers:A list of RGB value separated by a comma, defining the colours to use
+@examples:instructions:i_38
+@content:
+It is often necessary to open several screens using the same palette. To simplify this process, the DEFAULT
+PALETTE instruction is used to define a standard palette which will be used by all subsequent screens created by
+the SCREEN OPEN command. Colours are set using the $RGB values that are fully explained in the COLOUR
+section of Chapter 6.4. Up to 32 colours may be defined, depending on the screen mode, and any colours that are not
+re-set must have their appropriate commas in place.
+
+Here is an example line for eight colour screens:
+~~~
+Default Palette $000000,$111111,$AA6699,,,,,$FFFFFF
+~~~
+api*/
+
+/**api
+@name:Palette
+@description:Set the palette of the current screen
+@param:colorList:integers:A list of RGB value separated by a comma, defining the colours to use
+@compatible: aoz, stos, amos
+@examnples:tutorials:instructions/i_5
+@content:
+This is a much more powerful command than COLOUR, and it can be used to set as few or as many colours in your artist's palette as are needed. Your programs always begin using a list of default colour values,
+and these values may be changed as in the next example.
+
+Remember that only the colours specifically set with this command will be affected, and any others will retain their
+original values.
+~~~
+Palette $FFFFFF : Rem set colour 0 to white
+Palette ,,,,$FF0000,$D00000,$AA0000,$770000,$4400000 // colours 4 to 8 graded reds
+Palette $000000,,$000000		// colours 0 and 2 both black
+~~~
+api*/
+
+/**api
+@name:Default
+@description:Restore the display to the state it was when the application start. Close all screen, all windows, detroys all bobs and sprites and open the default screen
+@compatible: aoz, stos, amos
+@examples:instructions:i_38
+@content:
+The DEFAULT instruction closes all currently opened screens and restores the display back to the original default settings...
+
+api*/
+Instruction Default
+{
+	aoz.default();
+}
+End Instruction

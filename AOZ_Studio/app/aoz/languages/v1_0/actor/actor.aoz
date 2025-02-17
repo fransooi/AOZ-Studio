@@ -1,0 +1,757 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Actor Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 12/10/2020
+ */
+//
+// Initialization
+//
+#need_javascript_file:"aozjs/actor/actor.api.js"
+#need_javascript_file:"aozjs/actor/actor.back.js"
+#need_javascript_file:"aozjs/actor/actor.behaviors.js"
+
+#need_javascript_file:"threejs/libs/tween.umd.js"
+
+#need_javascript_file:"createjs/createjs.min.js"
+#need_javascript_file:"createjs/plugins/RelativePlugin.js"
+#need_javascript_file:"createjs/plugins/RotationPlugin.js"
+#need_javascript_file:"createjs/plugins/MotionGuidePlugin.js"
+#need_javascript_file:"createjs/plugins/MovieClipPlugin.js"
+#need_javascript_file:"createjs/plugins/ndgmr.Collision.js"
+
+#need_javascript_file:"physic2d/matter.min.js"
+#need_javascript_file:"physic2d/plugins/matter-springs.min.js"
+#need_javascript_file:"physic2d/plugins/matter-collision-events.min.js"
+#need_javascript_file:"physic2d/aoz.bodies.js"
+
+#need_module: "collisions"
+#need_module: "assets"
+#noWarning:"instruction_not_implemented"
+{
+	actor_initialize( this );
+}
+
+/**doc
+@name:Animate Actor
+@description:Direct your sprites like actors on a theater stage. Give them directions, give them movements and they will execute themselves automatically.
+@keywords:graphic,design,image,sprite,character,layout,screen,display,show,actor,bob,draw
+doc*/
+
+/**api
+@name:Actor
+@description:Image manipulation on the screen.
+@description_file:actor.aozdoc
+@param:index:index:Index of the Actor
+@param:*x:integer:Actor horizontal position on the screen. If not set, 0 by default
+@param:*y:integer:Actor vertical position on the screen. if not set, 0 by default
+@param:*z:integer:Actor depth position on the screen. if not set, 0 by default
+@param:*startx:integer:Actor horizontal start position on the screen for a moving. If not set, the "x" position is used.
+@param:*starty:integer:Actor vertical start position on the screen for a moving. If not set, the "y" position is used.
+@param:*startz:integer:3D Actor depth start position on the 3D scene for a moving. If not set, the "z" position is used.
+@param:*endx:integer:Actor horizontal end position on the screen for a moving. If not set, the "x" position is used.
+@param:*endy:integer:Actor vertical end position on the screen for a moving. If not set, the "y" position is used.
+@param:*endz:integer:3D Actor depth end position on the 3D scene for a moving. If not set, the "z" position is used.
+@param:*image:index:Index of the image of Actor.
+@param:*video$:string:Name of the video loaded by Load Asset used like an image for this Actor
+@param:*videoplay:bool:Play the video associated at this actor. True by default
+@param:*videoloop:bool:Play the video associated at this actor in loop. True by default
+@param:*duration:integer:Length in milliseconds of the Actor moving. If not set, 1000 by default (1 second)
+@param:*onchange$:string:Name of the AOZ procedure to call when the Actor change (position, alpha, scale...)
+@param:*transition$:string:Name of the transition when the Actor moves. If not set, "linear" is used. Visit https://www.createjs.com/demos/tweenjs/tween_sparktable to see the differents effects availables.
+@param:*scale:integer:Modification of the Actor size in height and width. If not set, the last scaling value is used.
+@param:*startscale:integer:Modification of the Actor start size in height and width for a Actor moving. If not set, the last scaling value is used.
+@param:*endscale:integer:Modification of the Actor end size in height and width for a Actor moving. If not set, the last scaling value is used.
+@param:*scalex:integer:Modification of the Actor size in width. If not set, the last horizontal scaling value is used.
+@param:*startscalex:integer:Modification of the Actor start size in width for a Actor moving. If not set, the last horizontal scaling value is used.
+@param:*endscalex:integer:Modification of the Actor end size in width for a Actor moving. If not set, the last horizontal scaling value is used.
+@param:*scaley:integer:Modification of the Actor size in height. If not set, the last horizontal scaling value is used.
+@param:*startscaley:integer:Modification of the Actor start size in height for a Actor moving. If not set, the last vertical scaling value is used.
+@param:*endscaley:integer:Modification of the Actor end size in height for a Actor moving. If not set, the last vertical scaling value is used.
+@param:*angle:integer:Modification of the Actor angle of rotation. If not set, the last angle is used.
+@param:*startangle:integer:Modification of the Actor start angle of rotation for a Actor moving. If not set, the last angle value is used.
+@param:*endangle:integer:Modification of the Actor end angle of rotation for a Actor moving. If not set, the last angle value is used.
+@param:*anglex:integer:Modification of the 3D Actor X angle of rotation. If not set, the last angle is used.
+@param:*startanglex:integer:Modification of the 3D Actor start X angle of rotation for a Actor moving. If not set, the last angle value is used.
+@param:*endanglex:integer:Modification of the 3D Actor end X angle of rotation for a Actor moving. If not set, the last angle value is used.
+@param:*angley:integer:Modification of the 3D Actor Y angle of rotation. If not set, the last angle is used.
+@param:*startangley:integer:Modification of the 3D Actor start Y angle of rotation for a Actor moving. If not set, the last angle value is used.
+@param:*endangley:integer:Modification of the 3D Actor end Y angle of rotation for a Actor moving. If not set, the last angle value is used.
+@param:*anglez:integer:Modification of the 3D Actor Z angle of rotation. If not set, the last angle is used.
+@param:*startanglez:integer:Modification of the 3D Actor start Z angle of rotation for a Actor moving. If not set, the last angle value is used.
+@param:*endanglez:integer:Modification of the 3D Actor end Z angle of rotation for a Actor moving. If not set, the last angle value is used.
+@param:*alpha:integer:Modification of the Actor alpha value. If not set, the last alpha value is used.
+@param:*startalpha:integer:Modification of the Actor start alpha value for a Actor moving. If not set, the last alpha value is used.
+@param:*endalpha:integer:Modification of the Actor end alpha value for a Actor moving. If not set, the last alpha is used.
+@param:*skewx:integer:Modification of the Actor horizontal skewing. If not set, the last alpha value is used.
+@param:*startskewx:integer:Modification of the Actor start horizontal skewing for a Actor moving. If not set, the last horizontal skewing value is used.
+@param:*endskewx:integer:Modification of the Actor end horizontal skewing for a Actor moving. If not set, the last horizontal skewing value is used.
+@param:*skewy:integer:Modification of the Actor vertical skewing. If not set, the last alpha value is used.
+@param:*startskewy:integer:Modification of the Actor start vertical skewing for a Actor moving. If not set, the last vertical skewing value is used.
+@param:*endskewy:integer:Modification of the Actor end vetical skewing for a Actor moving. If not set, the last vertical skewing value is used.
+@param:*visible:bool:Set the Actor visibility. If not set, True by default is used.
+@param:*spritesheet$:string:Name of the spritesheet loaded with the Load Asset instruction to animate the Actor.
+@param:*anim$:string:Name of the animation provided by the spritesheet to play.
+@param:*loopanim:bool:Set if the animation should play to the infinite, or not. If not set, False by default is used.
+@param:*hotspot$:string:Set the hot spot of the Actor. les valeurs suivantes sont acceptées : "top-left", "top-middle", "top-right", "left", "middle", "right", "bottom-left", "bottom-middle", "bottom-right". If not set, "top-left" is used by default ( top-left corner ).
+@param:*hotspotx:integer:Set the horizontal hot spot position of the Actor. If not set, 0 is used by default ( left ).
+@param:*hotspoty:integer:Set the vertical hot spot position of the Actor. If not set, 0 is used by default ( top ).
+@param:*onanimchange$:string:Name of the AOZ procedure to call when the Actor animation change ( number of frame, state,...)
+@param:*oncollision$:string:Name of the AOZ procedure to call when the Actor enter in collision with an other object.
+@param:*loopmove:bool:Set if the moving should play to the infinite, or not. If not set, False by default is used.
+@param:*actionmove$:string:Action for the moving. May be "play" (by default is not set) or "pause".
+@param:*control$:string:Set one or more controls that will allow the user to interact with the Actor (keyboard, mouse or joystick).
+@param:*oncontrol$:string:Name of the AOZ procedure to call when a control is activated for the Actor (keyboard, mouse or joystick).
+@param:*hrev:bool:Set if the horizontal flipping of the Actor. If True, the Actor is flipped horizontaly. If not set, False by default is used.
+@param:*vrev:bool:Set if the vertical flipping of the Actor. If True, the Actor is flipped verticaly. If not set, False by default is used.
+@param:*leftlimit:integer:Set the left limitation for the Actor.
+@param:*toplimit:integer:Set the top limitation for the Actor.
+@param:*uplimit:integer:Alias of toplimit.
+@param:*rightlimit:integer:Set the right limitation for the Actor.
+@param:*bottomlimit:integer:Set the bottom limitation for the Actor.
+@param:*downlimit:integer:Alias of bottomlimit.
+@param:*onlimit$:string:Name of the AOZ procedure to call when the Actor touch a limit.
+@param:*lookat$:string:Name of the object the actor has to look at. This can be the position of the mouse, another actor or a point on the screen.
+@param:*auto$:string:Defined an automatic movement of the actor. It uses the same parameters as for the Control$ property: offsetX, offsetY, angle, forward and backward.
+@param:*onmouse$:string:Name of the AOZ procedure that will be called at each mouse action on the actor.
+@param:*onmouseclick$:string:Name of the AOZ procedure that will be called at each mouse click on the actor.
+@param:*onmousedblclick$:string:Name of the AOZ procedure that will be called at each mouse doubleclick on the actor.
+@param:*onmousedown$:string:Name of the AOZ procedure that will be called at each mouse button down on the actor.
+@param:*onmouseup$:string:Name of the AOZ procedure that will be called at each mouse button up on the actor.
+@param:*onmouseenter$:string:Name of the AOZ procedure that will be called when the mouse pointer enters over of the actor.
+@param:*onmouseexit$:string:Name of the AOZ procedure that will be called when the mouse pointer outs over of the actor.
+@param:*onkeypress$:string:Name of the AOZ procedure that will be called at each key pressed.
+@param:*onkeydown$:string:Name of the AOZ procedure that will be called at each key down.
+@param:*onkeyup$:string:Name of the AOZ procedure that will be called at each key up.
+@param:*oncontrollerconnect$:string:Name of the AOZ procedure that will be called at each mouse doubleclick on the actor.
+@param:*oncontrollerdisconnect$:string:Name of the AOZ procedure that will be called at each mouse button down on the actor.
+@param:*oncontrollerbutton$:string:Name of the AOZ procedure that will be called at each mouse button up on the actor.
+@param:*oncontrolleraxis$:string:Name of the AOZ procedure that will be called at each mouse doubleclick on the actor.
+@param:*oncontrollerdirection$:string:Name of the AOZ procedure that will be called at each mouse button up on the actor.
+@param:*enable:bool:Enables or disables an actor. If False, the Actor will still be displayed on the screen, but the controls, animations and mouse actions will be disabled.
+@param:*Group$:string:Assigns the actor to a custom group. A custom group can be assigned to several Actor. By example: "Enemy", "Platform", "Item", "Player"...
+@param:*collision:bool:Enables or disables all collisions with this actor. If False, no collision effects will be applied.
+@param:*animplay:bool:Enabled or disables the current animation
+@param:*Text$:string:Text displays by the Actor. Warning! Text$ replace the image.
+@param:*FontName$:string:Name of the image font to use.
+@param:*FontSize:integer:Size of the font
+@param:*FontSpacing:integer:Spacing between each character. (0 = spacing by default)
+@param:*UserData$:string:Specific Data defined by the coder for his program.
+@compatible: aoz
+api*/
+
+Instruction Actor, index = (index), x =-1001.0, y=-1001.0, z=-1001.0, text$="-255.0001", FontName$="fnt_default", FontSize=-1, FontSpacing=-1001, startx=-1001.0, starty=-1001.0, startz=-1001.0, endx=-1001.0, endy=-1001.0, endz=-1001.0, image = (index), Object$="", video$="", videoplay=True, videoloop=True,duration=1000, onchange$="", transition$="", scale=-0.001, startscale=-0.001, endscale=-0.001, scalex=-0.001, startscalex=-0.001, endscalex=-0.001, scaley=-0.001, startscaley=-0.001, endscaley=-0.001, scalez=-0.001, startscalez=-0.001, endscalez=-0.001, angle=-1001.0, startangle=-1001.0, endangle=-1001.0, anglex=-1001.0, startanglex=-1001.0, endanglex=-1001.0, angley=-1001.0, startangley=-1001.0, endangley=-1001.0, anglez=-1001.0, startanglez=-1001.0, endanglez=-1001.0, alpha=1.0, startalpha=-0.001, endalpha=-0.001, skewx=-1001.0, startskewx=-1001.0, endskewx=-1001.0, skewy=-1001.0, startskewy=-1001.0, endskewy=-1001.0, visible=-1001, spritesheet$="", anim$="-255", loopanim=-1001, hotspot$="none", hotspotx=-1001.0, hotspoty=-1001.0, onanimchange$="", oncollision$="", loopmove=-1001, actionmove$="", control$="", oncontrol$="", hrev=-255, vrev=-255, leftlimit=-1001, toplimit=-1001, uplimit=-1001, rightlimit=-1001, bottomlimit=-1001, downlimit=-1001, onlimit$="", lookat$="", auto$="", onmouse$="",onmouseclick$="", onmousedblclick$="",onmousedown$="", onmouseup$="", onmouseenter$="", onmouseexit$="", onkeypress$="", onkeydown$="",onkeyup$="",oncontrollerconnect$="",oncontrollerdisconnect$="",oncontrollerbutton$="", oncontrolleraxis$="",enable=-1001.0,Collision=-1001.0,Group$="", Physic$="", PhysicParam$ = "", AnimPlay=-255, Behavior$="-255", UserData$="-1001.0"
+{
+	#errors
+	#addToFileSystem:"image:%image"
+	Actor
+	( 
+		{
+			Id: %index,
+			X: %x,
+			Y: %y,
+			Z: %z,
+			StartX: %startx,
+			StartY: %starty,
+			StartZ: %startz,
+			EndX: %endx,
+			EndY: %endy,
+			EndZ: %endz,
+			Image: aoz.checkIndex( %image ),
+			Object: %Object$,
+			Text: %text$,
+			FontName: %FontName$,
+			FontSize: %FontSize,
+			FontSpacing: %FontSpacing,
+			Video: %video$,
+			VideoPlay: %videoplay,
+			VideoLoop: %videoloop,
+			Duration: %duration,
+			OnChange: %onchange$,
+			Transition: %transition$,
+			Hotspot: %hotspot$,
+			HotspotX: %hotspotx,
+			HotspotY: %hotspoty,
+			Scale: %scale,
+			StartScale: %startscale,
+			EndScale: %endscale,
+			ScaleX: %scalex,
+			StartScaleX: %startscalex,
+			EndScaleX: %endscalex,                       
+			ScaleY: %scaley,
+			StartScaleY: %startscaley,
+			EndScaleY: %endscaley,            
+			ScaleZ: %scalez,
+			StartScaleZ: %startscalez,
+			EndScaleZ: %endscalez,
+			Angle: %angle,
+			StartAngle: %startangle,
+			EndAngle: %endangle,
+			AngleX: %anglex,
+			StartAngleX: %startanglex,
+			EndAngleX: %endanglex,
+			AngleY: %angley,
+			StartAngleY: %startangley,
+			EndAngleY: %endangley,
+			AngleZ: %anglez,
+			StartAngleZ: %startanglez,
+			EndAngleZ: %endanglez,						
+			Alpha: %alpha,
+			StartAlpha: %startalpha,
+			EndAlpha: %endalpha,
+			SkewX: %skewx,
+			StartSkewX: %startskewx,
+			EndSkewX: %endskewx,
+			SkewY: %skewy,
+			StartSkewY: %startskewy,
+			EndSkewY: %endskewy,
+			Visible: %visible,
+			SpriteSheet: %spritesheet$,
+			Anim: %anim$,
+			LoopAnim: %loopanim,
+			OnAnimChange: %onanimchange$,
+			OnCollision: %oncollision$,
+			LoopMove: %loopmove,
+			ActionMove: %actionmove$,
+			Controls: %control$,
+			OnControl: %oncontrol$,
+			HRev: %hrev,
+			VRev: %vrev,
+			X1: %leftlimit,
+			Y1: %toplimit,
+			Y1alias: %uplimit,
+			X2: %rightlimit,
+			Y2: %bottomlimit,
+			Y2alias: %downlimit,
+			OnLimit: %onlimit$,
+			LookAt: %lookat$,
+			Auto: %auto$,
+			OnMouse: %onmouse$,
+			OnMouseClick: %onmouseclick$,
+			OnMouseDblClick: %onmousedblclick$,
+			OnMouseDown: %onmousedown$,
+			OnMouseUp: %onmouseup$,
+			OnMouseEnter: %onmouseenter$,
+			OnMouseExit: %onmouseexit$,
+			OnKeyPress: %onkeypress$,
+			OnKeyDown: %onkeydown$,
+			OnKeyUp: %onkeyup$,
+			OnControllerConnect: %oncontrollerconnect$,
+			OnControllerDisconnect: %oncontrollerdisconnect$,
+			OnControllerButton: %oncontrollerbutton$,
+			OnControllerAxis: %oncontrolleraxis$,
+			Enable: %enable,
+			Group: %Group$,
+			Collision: %Collision,
+			animPlay: %AnimPlay,
+			behavior: %Behavior$,
+			userData: %UserData$
+		} );	
+}
+End Instruction
+
+/**api
+@name:Actor Alpha
+@description:Returns the value of the Actor's Alpha
+@description_file:actor_alpha.aozdoc
+@syntax:=Actor Alpha( number or name of the actor )
+@param:index:index:Index of the actor
+@return:float:Value of the alpha-blending.
+api*/
+Function Actor Alpha, index = (index)
+{
+	#errors
+}
+End Function( { Actor_Alpha( %index ) } )
+
+/**api
+@name:Actor Angle
+@description:Returns the value of the Actor's Angle
+@description_file:actor_angle.aozdoc
+@syntax:=Actor Angle( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:float:Value of the angle of rotation.
+api*/
+Function Actor Angle, index = (index)
+{
+	#errors
+}
+End Function( { Actor_Angle( %index ) } )
+
+/**api
+@name:Actor Anim$
+@description:Returns the name of the Actor's Animation
+@description_file:actor_anim$.aozdoc
+@syntax:=Actor Anim$( number or name of the actor )
+@param:index:index:Index of the actor
+@return:string:Name of the image.
+api*/
+Function "Actor Anim$", index = (index)
+{
+	#errors
+}
+End Function( { Actor_Anim( %index ) } )
+
+/**api
+@name:Actor Anim Frame
+@description:Returns the number of the frame of the Actor's Animation
+@description_file:actor_anim_frame.aozdoc
+@syntax:=Actor Anim Frame( number or name of the actor )
+@param:index:index:Index of the actor
+@return:integer:Number of the frame.
+api*/
+Function "Actor Anim Frame", index = (index)
+{
+	#errors
+}
+End Function( { Actor_Anim_Frame( %index ) } )
+
+/**api
+@name:Actor Col
+@description:Tests the collision between 2 actors
+@description_file:actor_col.aozdoc
+@syntax:=Actor Col( number or name of the actor 1, number or name of the actor 2 )
+@param:index:index:Index of the actor 1
+@param:index2:index:Index of the actor 2
+@return:bool:True if a collision exists, else false.
+api*/
+Function Actor Col, index = (index), index2 = (index)
+{
+	#errors
+	#addToFileSystem:"image:%index2"
+}
+End Function( { Actor_Col( { index: %index, index2: %index2 } ) } )
+
+Function Actor Col, index = (index), image$ = ""
+{
+	#errors
+}
+End Function( { Actor_Col( { index: %index, image: %image$ } ) } )
+
+Function Actor Col, index = (index), group$ = ""
+{
+	#errors
+}
+End Function( { Actor_Col( { index: %index, group: %group$ } ) } )
+
+/**api
+@name:Actor Del
+@description::Delete an actor
+@description_file:actor_del.aozdoc
+@syntax:Actor Del ( number, name of the actor or "*" for all )
+@param:index:index:Index of the Actor. If "*" is used, all the actors will been removed.
+api*/
+Instruction "Actor Del", index = (index)
+{
+	Actor_Del( %index );	
+	
+}
+End Instruction
+
+/**api
+@name:Actor Exists
+@description:Tests if an actor exists
+@description_file:actor_exists.aozdoc
+@syntax:=Actor Exists( number or name of the actor )
+@param:index:index:Index of the actor
+@return:bool:True or False.
+api*/
+Function "Actor Exists", index = (index)
+{
+	#errors
+}
+End Function( { Actor_Exists( %index ) } )
+
+/**api
+@name:Actor Group$
+@description:Returns the Group value of the Actor
+@description_file:actor_group.aozdoc
+@syntax:=Actor Group$( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:string:Value of the group.
+
+api*/
+Function Actor Group$, index = (index)
+{
+	#errors
+}
+End Function( { Actor_Group( %index ) } )
+
+/**api
+@name:Actor Height
+@description:Returns the height of the Actor
+@description_file:actor_height.aozdoc
+@syntax:=Actor Height( number or name of the actor )
+@param:index:index:Index of the actor
+@return:float:Value of the height.
+api*/
+Function Actor Height, index = (index)
+{
+	#errors
+}
+End Function( { Actor_Height( %index ) } )
+
+/**api
+@name:Actor Image
+@description:Returns the number of the image used by the actor
+@description_file:actor_image.aozdoc
+@syntax:=Actor Image( number or name of the actor )
+@param:index:index:Index of the actor
+@return:integer:Value of the image.
+api*/
+Function "Actor Image", index = (index)
+{
+	#errors
+}
+End Function( { Actor_Image( %index ) } )
+
+/**api
+@name:Actor Image$
+@description:Returns the name of the image used by the actor
+@description_file:actor_image$.aozdoc
+@syntax:=Actor Image$( number or name of the actor )
+@param:index:index:Index of the actor
+@return:string:Name of the image.
+api*/
+Function "Actor Image$", index = (index)
+{
+	#errors
+}
+End Function( { Actor_Image( %index ) } )
+
+/**api
+@name:Actor IsEnable
+@description:Tests if an actor is enabled
+@description_file:actor_isenable.aozdoc
+@syntax:=Actor IsEnable( number or name of the actor )
+@param:index:index:Index of the actor
+@return:bool:True or False.
+api*/
+Function "Actor IsEnable", index = (index)
+{
+	#errors
+}
+End Function( { Actor_IsEnable( %index ) } )
+
+/**api
+@name:Actor IsHRev
+@description:Tests if an actor is horizontaly reversed
+@description_file:actor_ishrev.aozdoc
+@syntax:=Actor IsHRev( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:bool:True if the Actor is flipped horizontaly, else False.
+api*/
+Function Actor IsHRev, index = (index)
+{
+	#errors
+}
+End Function( { Actor_IsHRev( %index ) } )
+
+/**api
+@name:Actor IsVisible
+@description:Tests if an actor is visible
+@description_file:actor_isvisible.aozdoc
+@syntax:=Actor IsVisible( number or name of the actor )
+@param:index:index:Index of the actor
+@return:bool:True or False.
+api*/
+Function "Actor IsVisible", index = (index)
+{
+	#errors
+}
+End Function( { Actor_IsVisible( %index ) } )
+
+/**api
+@name:Actor IsVRev
+@description:Tests if an actor is verticaly reversed
+@description_file:actor_isvrev.aozdoc
+@syntax:=Actor IsVRev( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:bool:True if the Actor is flipped verticaly, else False.
+api*/
+Function Actor IsVRev, index = (index)
+{
+	#errors
+}
+End Function( { Actor_IsVRev( %index ) } )
+
+/**api
+@name:Actor Reset
+@description:Reset all properties of one or all the actor
+@description_file:actor_reset.aozdoc
+@syntax:Actor Reset ( number, name of the actor or "*" for all )
+@param:index:index:Index of the Actor. If "*" is used, all the actors will been reseted.
+api*/
+Instruction "Actor Reset", index = (index)
+{
+	#errors
+	Actor_Reset( %index );
+}
+End Instruction
+
+/**api
+@name:Actor ScaleX
+@description:Returns the factor X of the scaling
+@description_file:actor_scalex.aozdoc
+@syntax:=Actor ScaleX( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:float:Value of the horizontal scaling.
+api*/
+Function Actor ScaleX, index = (index)
+{
+	#errors
+}
+End Function( { Actor_ScaleX( %index ) } )
+
+/**api
+@name:Actor ScaleY
+@description:Returns the factor Y of the scaling
+@description_file:actor_scaley.aozdoc
+@syntax:=Actor ScaleY( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:float:Value of the vertical scaling.
+api*/
+Function Actor ScaleY, index = (index)
+{
+	#errors
+}
+End Function( { Actor_ScaleY( %index ) } )
+
+/**api
+@name:Actor SkewX
+@description:Returns the factor X of the skew
+@description_file:actor_skewx.aozdoc
+@syntax:=Actor SkewX( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:float:Value of the horizontal distortion.
+api*/
+Function Actor SkewX, index = (index)
+{
+	#errors
+}
+End Function( { Actor_SkewX( %index ) } )
+
+/**api
+@name:Actor SkewY
+@description:Returns the factor Y of the skew
+@description_file:actor_scaley.aozdoc
+@syntax:=Actor SkewY( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:float:Value of the vertical distortion.
+api*/
+Function Actor SkewY, index = (index)
+{
+	#errors
+}
+End Function( { Actor_SkewY( %index ) } )
+
+/**api
+@name:Actor Width
+@description:Returns the width of an actor
+@description_file:actor_width.aozdoc
+@syntax:=Actor Width( number or name of the actor )
+@param:index:index:Index of the actor
+@return:float:Value of the width.
+api*/
+Function Actor Width, index = (index)
+{
+	#errors
+}
+End Function( { Actor_Width( %index ) } )
+
+/**api
+@name:Actor X
+@description:Returns the X position of an actor
+@description_file:actor_x.aozdoc
+@syntax:=Actor X( number or name of the actor )
+@param:index:index:Index of the Actor
+@return:integer:Value of the horizontal position.
+api*/
+Function Actor X, index = (index)
+{
+	#errors
+}
+End Function( { Actor_X( %index ) } )
+
+/**api
+@name:Actor Y
+@description:Returns the Y position of an actor
+@description_file:actor_y.aozdoc
+@syntax:=Actor Y( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:integer:Value of the depth position.
+api*/
+Function Actor Y, index = (index)
+{
+	#errors
+}
+End Function( { Actor_Y( %index ) } )
+
+/**api
+@name:Actor Z
+@description:Returns the Z position of an actor
+@description_file:actor_z.aozdoc
+@syntax:=Actor Z( number or name of the actor )
+@param:index:index:Index of the sprite
+@return:integer:Value of the depth position.
+
+api*/
+Function Actor Z, index = (index)
+{
+	#errors
+}
+End Function( { Actor_Z( %index ) } )
+
+/**api
+@name:Actor UserData$
+@description:Returns the User Data of an actor
+@description_file:actor_userdata$.aozdoc
+@syntax:=Actor UserData$( number or name of the actor )
+@param:index:index:Index of the actor
+@return:string:Value of the user data.
+
+api*/
+Function Actor UserData$, index = (index)
+{
+	#errors
+}
+End Function( { Actor_UserData( %index ) } )
+
+/**api
+@name:Del Actor
+@description:Delete an actor
+@deprecated:This instruction will disappear in a future version. It is recommended to use the <a href="javascript:openAPI('Actor Del');">Actor Del</a> instruction.
+@description_file:del_actor.aozdoc
+@syntax:Del Actor ( number or name of the actor )
+@param:index:index:Index of the Actor
+api*/
+Instruction "Del Actor", index = (index)
+{
+	Actor_Del( %index );	
+	
+}
+End Instruction
+
+/**api
+@name:Del All Actors
+@description:Delete all the actors
+@deprecated:This instruction will disappear in a future version. It is recommended to use the <a href="javascript:openAPI('Actor Del');">Actor Del</a> instruction.
+@description_file:del_all_actors.aozdoc
+@syntax:Del All Actors
+api*/
+Instruction "Del All Actors"
+{
+	Actor_Del( -255 );	
+}
+End Instruction
+
+/**api
+@name:Reset Actor
+@description:Reset all the properties of an Actor
+@deprecated:This instruction will disappear in a future version. It is recommended to use the <a href="javascript:openAPI('Actor Reset');">Actor Reset</a> instruction.
+@description_file:reset_actor.aozdoc
+@syntax:Reset Actor ( number or name of the actor )
+@param:index:index:Index of the Actor
+api*/
+Instruction "Reset Actor", index = (index)
+{
+	Reset_Actor( %index );
+}
+End Instruction
+
+/**api
+@name:Set Gravity
+@description:Set the Gravity to apply on all Actors
+@description_file:set_gravity.aozdoc
+@syntax:Set Gravity GravityX=<Gravity in X>, GravityY=<Gravity in Y> 
+@param:*X:float:Global gravity value in X. 0.0 by default.
+@param:*Y:float:Global gravity value in Y. 1.0 by default.
+api*/ 
+Instruction Set Gravity, X=0.0, Y=1.0
+{
+	#errors
+	Set_Gravity( { x: %X, y: %Y } );
+	
+}
+End Instruction
+
+
+/**api
+@name:Show Physic Bodies
+@description:Show each physic body on the screen
+@description_file:show_physic_bodies.aozdoc
+@syntax:Show Physic Bodies 
+api*/ 
+Instruction Show Physic Bodies
+{
+	#errors
+	Show_Physic_Bodies();
+	
+}
+End Instruction
+
+/**api
+@name:Hide Physic Bodies
+@description:Hide each physic body on the screen
+@description_file:show_physic_bodies.aozdoc
+@syntax:Hide Physic Bodies 
+api*/ 
+Instruction Hide Physic Bodies
+{
+	#errors
+	Hide_Physic_Bodies();
+	
+}
+End Instruction
+
+/**api
+@name:Actor Animation
+@description:Addt an animation sequence for an Actor
+@param:Index:index:Number or name of the Actor
+@param:Anim$:string:Name of the animation
+@param:Sequence$:string:Images organisation
+@param:*LoopMove:bool:If True, the animation will be played in loop.
+@param:*ReverseMove:bool:If True, the animation will be played with an "ping-pong" effect, in loop.
+@syntax:Actor Animation "lucie", Anim$="run", Sequence$="1,2,3,4,5,6,L"
+api*/
+Instruction Actor Animation, Anim$, Sequence$, LoopMove=-1001, ReverseMove=-1001
+{
+	#errors
+	Actor_animation(
+	{
+		animation: %Anim$,
+		sequence: %Sequence$,
+		loopMove: %LoopMove,
+		reverseMove: %ReverseMove
+	} );
+}
+End Instruction
+
+Instruction Actor Behavior, Name$, InitProc$ = "", RenderProc$="", Control$=""
+{
+	#errors
+	Actor_behavior(
+		{
+			name: %Name$,
+			initProc: %InitProc$,
+			renderProc: %RenderProc$,
+			controls: %Control$
+		}
+	);
+}
+End Instruction

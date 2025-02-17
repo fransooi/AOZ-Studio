@@ -1,0 +1,9 @@
+<i>Show HTML</i>
+<b>Show HTML</b> xxxxxxx
+=
+
+@code
+Load Asset "resources/assets/home.html", "home"
+Show HTML "home"
+@code
+

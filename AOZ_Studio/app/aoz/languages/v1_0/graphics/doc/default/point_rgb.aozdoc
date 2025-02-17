@@ -1,0 +1,10 @@
+<i>Point RGB</i>
+<b>Point RGB</b> xxxxxxx
+=
+Use this function to find the RGB value of the colour occupying your chosen coordinates, like this:
+@code
+Cls : Plot 160,100
+Print "The colour is ";Point RGB(160,100)
+@code
+
+

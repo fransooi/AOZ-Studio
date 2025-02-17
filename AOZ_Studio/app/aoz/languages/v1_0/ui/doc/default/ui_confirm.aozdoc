@@ -1,0 +1,15 @@
+<i>UI Confirm</i>
+<b>UI Confirm</b> xxxxxxx
+=
+@code
+// Display a default confirmation popup box
+UI Confirm
+
+// Override the defaults and call a procedure if the user pressed the confirm button
+UI Confirm "Delete Account?", "Are you sure?", closeButton$="No", confirmButton$="Yes", onConfirm$="CONFIRM"
+
+Procedure CONFIRM
+Print "You pressed the confirm botton"
+End Proc
+@code
+

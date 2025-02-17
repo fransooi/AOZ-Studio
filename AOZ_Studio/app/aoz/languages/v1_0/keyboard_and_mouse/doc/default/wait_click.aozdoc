@@ -1,0 +1,8 @@
+<i>Wait Click</i>
+<b>Wait Click</b> xxxxxxx
+=
+This simple command waits for a single mouse button-press before acting on the next instruction. For example:
+@code
+Print "Please press a mouse button or touch the screen" : Wait Click : Print "Thank you!"
+@code
+

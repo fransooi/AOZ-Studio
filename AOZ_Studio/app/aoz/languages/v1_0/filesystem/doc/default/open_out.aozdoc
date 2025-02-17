@@ -1,0 +1,5 @@
+<i>Open Out</i>
+<b>Open Out</b> xxxxxxx
+=
+Use this command to open a sequential file, ready for data to be added to its end. Give the channel number and filename, as explained above. If the file already exists, it will be erased.
+

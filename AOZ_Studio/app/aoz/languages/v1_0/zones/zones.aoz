@@ -1,0 +1,249 @@
+
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Zone Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Zones Commands
+@description:Instructions and functions to handle and detect zones
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Reserve Zone
+@description:Reserve memory to store graphical detection zones in the current screen
+@param:*number:integer:The number of zones to allocate. If ommited all zones will be erased (not deprecated without parameter)
+@examples:instructions:i_21
+@content:
+The RESERVE ZONE instruction must be used to allocate enough memory for the exact number of zones required,
+before a SET ZONE command is given. There is no limit to the number that can be specified, apart from the amount
+of available memory.
+
+To erase all current zone definitions and restore the allocated memory to the main program, simply give the
+RESERVE ZONE command without any number parameter.
+
+api*/
+Instruction Reserve Zone, number
+{
+	#errors
+	aoz.currentScreen.reserveZone(%number);
+}
+End Instruction
+
+
+/**api
+@name:Reset Zone
+@description:Erase the definition of a zone, making it non-detectable
+@param:*index:index:The index of the zone to reset, if ommited all zones will be reset
+@compatible: aoz, stos, amos
+@content:
+This command is used to nullify a zone created by the SET ZONE instruction. On its own, RESET ZONE
+permanently de-activates all zone settings, but if it is qualified by a zone number, only that zone will be erased.
+api*/
+Instruction Reset Zone, index=(index)
+{
+	#errors
+	aoz.currentScreen.resetZone(%index);
+}
+End Instruction
+
+/**api
+@name:Zone$
+@description:Return a magical string to use in the Print instruction when printing text, allowing you to define a zone around the text included as a parameter
+@param:text$:string:The text to print, the zone will de defined from the top-left corner of the first character to the bottom-right corner of the last character. Warning: impredictible result if the text does not fit in one single line
+@param:index:index:The index of the zone to set
+@examples:instructions:i_21,instructions:i_23
+@compatible: aoz, stos, amos
+@content:
+The AOZ Studio programmer is allowed to create powerful dialogue boxes and on- screen control panels
+without the need to employ complex programming. The ZONES function surrounds a section of text with its own
+screen zone, so that the presence of the mouse pointer can be detected using the ZONE function. Simply supply the
+two parameters in brackets, which are the string of text for one of your control "buttons", followed by the number of
+the screen zone to be defined.
+
+The maximum number of zones will be limited by the value specified in a previous RESERVE ZONE command.
+The format for the control string is as follows (please notice that the string is different than the one used in AMOS):
+~~~
+Chr$(27)+"Z1" + index + '\r' + A$ + Chr$(27) + "Z2\r"
+~~~
+api*/
+Function Zone$, text$, index=(index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.zone$(%text$,%index)} )
+
+/**api
+@name:Set Zone
+@description:Define a new zone in the current screen
+@param:index:index:The index of the zone to set
+@param:x1:integer:The horizontal coordinate of the top-left corner of the zone rectangle
+@param:y1:integer:The vertical coordinate of the top-left corner of the zone rectangle
+@param:x2:integer:The horizontal coordinate of the bottom-right corner of the zone rectangle
+@param:y2:integer:The vertical coordinate of the bottom-right corner of the zone rectangle
+@examples:instructions:i_21
+@compatible: aoz, stos, amos
+@content:
+After memory has been allocated with the RESERVE ZONE command, SET ZONE is used to define a rectangular
+area of the screen which can be tested by the various ZONE functions. The command is followed by the number of
+the new zone, followed by its coordinates from top left to bottom right-hand corner.
+api*/
+Instruction Set Zone, index=(index), x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.setZone(%index,{x:%x1,y:%y1,x2:%x2,y2:%y2});
+}
+End Instruction
+
+Instruction Set Zone, index=(index), x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.setZone(%index,{x:%x1,y:%y1,width:%width,height:%height});
+}
+End Instruction
+
+/**api
+@name:Zone
+@description:Check if a given coordinate lays inside of a pre-defined zone
+@param:index:index:The index of the zone to test
+@param:x:integer:Horizontal coordinate to test
+@param:y:integer:Vertical coordinate to test
+@return:boolean:True if the given coordinate lay inside of the zone, False if not
+@examples:instructions:i_23
+@compatible: aoz, stos, amos
+@content:
+The ZONE function is used to give the number of the screen zone at the specified screen coordinates x,y. These
+coordinates are normally relative to the current screen, but an optional screen number can be included before the
+coordinates.
+
+After the ZONE function has been called, the number of the first zone at these coordinates will be returned, or False will be given if no zone is detected.
+
+This function can be used with the X BOB and Y BOB functions to detect whether or not a Bob has entered a specific screen zone, as follows:
+~~~
+N=Zone(X Bob(n),Y Bob(n))
+~~~
+api*/
+Function Zone, index=(index), x, y
+{
+	#errors
+}
+End Function( {aoz.currentScreen.zone(%index,{x:%x,y:%y})} )
+
+Function Zone, x, y
+{
+	#errors
+}
+End Function( {aoz.currentScreen.zone(undefined,{x:%x,y:%y})} )
+
+/**api
+@name:Mouse Zone
+@description:Return the index of a predefined zone (with "Set Zone") under the mouse
+@return:integer:-1 if the coordinate lay outside of all the zones, or the index of the zone if they lay inside of one
+@compatible: aoz, stos, amos
+api*/
+Function Mouse Zone
+{
+	#errors
+}
+End Function( {aoz.currentScreen.hZone2({x:aoz.xMouse,y:aoz.yMouse})} )
+
+/**api
+@name:Zone On
+@description:Enable a zone in the current screen
+@param:index:index:The index of the zone to enable
+@compatible: aoz
+@examples:instructions:i_23
+@content:
+This instruction restores the detection of a specific zone after it has been disabled.
+api*/
+Instruction Zone On, index=(index)
+{
+	#errors
+	aoz.currentScreen.zoneEnable( %index, true );
+}
+End Instruction
+
+/**api
+@name:Zone Off
+@description:Disable a zone in the current screen
+@param:index:index:The index of the zone to disabled
+@compatible: aoz
+@examples:instructions:i_23
+@content:
+This instruction allow you to turn off a specific zone: after using it, the zone will not be detected anymore.
+
+api*/
+Instruction Zone Off, index=(index)
+{
+	#errors
+	aoz.currentScreen.zoneEnable( %index, false );
+}
+End Instruction
+
+/**api
+@name:Zones Length
+@description:Returns the number of zones defined for the current screen.
+@return:integer:Returns the number of zones defined for the current screen.
+@compatible: aoz
+@examples:instructions:i_23
+api*/
+Function Zones Length
+{
+	#errors
+}
+End Function( {aoz.currentScreen.zonesLength()} )
+
+/**api
+@name:Zone Enabled
+@description:Return True if the zone is enabled, or False
+@param:index:index:The index of the zone to test
+@return:bool:Return True if the zone is enabled, or False
+@compatible: aoz
+@examples:instructions:i_23
+@content:
+~~~
+Reserve Zone 10
+Print "Hello" + Zone$( "AOZ", 1 )
+Print Zone Enabled( 1 )			// Will print "True"
+Wait Key
+Zone Off 1
+Print Zone Enabled( 1 )			// Will print "False"
+~~~
+api*/
+Function Zone Enabled, index=(index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.isZoneEnabled( %index )} )

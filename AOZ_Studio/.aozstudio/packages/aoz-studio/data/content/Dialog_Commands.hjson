@@ -1,0 +1,271 @@
+{
+    dialog_commands:
+    { 
+        name: "Dialog Commands"
+        intro: "TODO"
+        conclusion: "TODO"
+        commands:
+        {
+
+
+            "dialog_box":
+            [
+                To display a requester or dialogue box, the DIALOG BOX function is used to handle your Interface commands from the specified Interface string. This dialogue now waits for either an appropriate button to be selected, or until a specific period of time has elapsed. The system then returns to the AOZ Studio main program, returning the value of the button. The dialogue box can be quit at any time by pressing [Ctrl]+[C]. If this is done, a value of zero will be returned  
+""
+The Interface$ parameter is a normal AOZ Studio string, containing the Interface program. This may be
+followed by various optional parameters  
+""
+The optional value parameter contains a value that is loaded straight into the internal variable array. It can then be accessed using the VA function, from the dialogue box, or requester  
+""
+Parameter$ holds an optional string parameter which will be forwarded to the Interface program. It will be saved as
+item 1 of the variable array (1 VA)  
+""
+Finally, the optional coordinates x,y are given, to position the dialogue box on screen. These coordinates may be
+overridden by a BAse command inside the Interface program, and this is explained later. Here are some examples  
+                '''
+                ~~~  
+		   A$=A$+"SetVar 1,'The answer is', set variable one to a message"
+		   A$=A$+"SetVar0,42; variable zero is loaded with forty two"
+		   A$,A$+"PRint 0,100,1 VA,2; print the message"
+		   A$=A$+"PRint 0,110,0 VA #,2; print the answer"
+		   A$=A$+"EXit; leave the interface program"
+		   Print Dialog Box(A$)
+		   B$=B$+"PRint 0,0,1 VA,2; PRint 0,10,0 VA #,2; EXit;"
+		   D=Dialog Box(B$,42,"The Answer")
+		   D=Dialog Box(B$,42,"The Answer",100,100)
+                ~~~
+                '''
+Please note that if the Interface program is to wait for user input, a RunUntil command must be included before the
+final EXit, otherwise the dialogue box will jump directly to the main AOZ Studio program after the last
+Interface program instruction. RunUntil is explained in detail below  
+""
+The DIALOG BOX facility is only intended for simple requesters. To control the dialogue directly from an AMOS
+Professional program, the DIALOG OPEN and DIALOG RUN commands must be used instead. These are fully
+explained at the beginning of Chapter 9.3, which is devoted to advanced control panels  
+""
+Creating a simple requester
+If a large requester with a lot of graphics is to be generated, it can be very difficult to keep track of all of the
+coordinates. You can simplify things enormously by entering all of the coordinates relative to the top left-hand
+corner of the requester box  
+
+            ]
+            "dialog_open":
+            [
+The DIALOG OPEN command opens a "communication channel" to the new program, and loads it with a list of
+Interface commands. If there are any problems, an appropriate error message will appear, and mistakes can be
+located using a simple call to the error function EDIALOG, which is explained below  
+""
+The parameters for a DIALOG OPEN instruction are given as follows: firstly, the number of the channel to be
+opened, starting from 1. Providing that there is enough memory, you may open as many channels as you wish. A
+string should be specified next, containing one or more Interface programs to be initialised. If this string contains
+several programs, each routine should begin with a LAbel instruction and end with an EXit command  
+""
+Normally AOZ Studio provides enough space to hold up to 17 different values in every Interface channel (0
+VA to 16 VA). If more channels are needed, this array can be expanded via an optional nvar parameter, and each
+extra variable will take up four bytes of memory. There is a final optional parameter that allocates bytes for an
+internal memory buffer used by Interface programs. This array holds all of the information that is required to display dialogue boxes and selectors on screen. As a default, 1k is reserved for each channel that has been defined, but if the requirements are very complex, this value may have to increase. An error message will appear automatically if the current allocation is too small  
+""
+Note that the DIALOG OPEN command only initialises the communication channel, and it does not start the
+program running or generate any graphics on the screen. To accomplish this, the following function is used  
+            ]
+            "dialog_close":
+            [
+                This command closes one or more dialogue channels on the screen  
+
+            ]
+            "dialog":
+            [
+                This function provides a simple method of testing whether or not an option from a control panel has been selected.
+Simply specify the number of the open channel that is to be tested.
+After this function has been performed, one of the following values for the tested button will be returned:
+- <0 A negative value means that the current channel is inactive, either because it has not been
+assigned to a dialogue box, or because the user has left the box via an exit button.
+- =0 A value of zero indicates that there has been no user-input since the previous test.
+- >0 If a positive value is returned, it indicates the number of the last button that was
+selected by
+the user. In the case of edit zones, a value will only be returned when the [Return] key is
+pressed.
+""
+Once the value of the contents held by the DIALOG function has been checked, it will be re-set to zero.
+Here is an example of a simple check:
+
+                '''
+                ~~~                
+		   Do
+		      D=Dialog(1)
+		      Exit If D<0
+			If   0
+			   On D Gosub BUTTON1,BUTTON2
+			   Wait Vbl
+			Endif
+		   Loop
+                ~~~
+                '''
+            ]
+            "rdialog":
+            [
+This function is used to read the position of a particular button or selector. Specify the number of an open Interface channel, and then give the number of the button or zone to be tested. There is also an optional parameter which can be specified to check one of several objects that have been assigned to a current zone number. If this object number is omitted, then the status of the first object defined in the current zone number will be returned. Object numbers are arranged according to the order in which they have been defined in the Interface program, so the first button has an object number of zero, the second will be read as 1, and so on  
+""
+The result returned by the RDIALOG function depends on the type of zone being scrutinised. In the case of a simple
+button, its current value will be given, but there are special numerical edit zones (explained later) which will return a
+new value entered by the user. If a text zone is checked in this way, a result of zero will given, and the RDIALOG$
+function should be used instead. This is explained next  
+            ]
+            "rdialog$":
+            [
+                Use this function to return a string of text Assigned to a zone. If the selected zone does not contain any text, an empty string will be presented. Please see the Interface EDit command for more details  
+
+            ]
+            "edialog":
+            [
+                Whenever an error occurs in an Interface program, its position can be found with a quick call to the EDIALOG function. The relevant section of the Interface string will be displayed on screen, enabling you to discover what has gone wrong. In practice, the most common mistakes are caused by missing or wrongly-used semi-colon characters!"
+""
+Here is a small error handler that may be useful if included in your own programs  
+                '''
+                ~~~                
+		   On ErrOr Goto TRAP: Rem Add this line before a DIALOG OPEN command
+		   ...: Rem The rest of your program goes here
+		   TRAP: Print Mid$(DB$,Edialog,80) : Wait Key : End : Rem Error handler
+                ~~~
+                '''
+            ]
+            "dialog_clr":
+            [
+                The DIALOG CLR instruction erases all zones and shuts down the dialogue box completely, leaving the specified channel open. The Interface program can now be re-run from the beginning, using a further call to the DIALOG RUN command. As always, if the background area has been saved using the SA option, it will be restored to its
+original position  
+
+            ]
+            "dialog_update":
+            [
+                This instruction enables AOZ Studio programs to force the Interface to re-draw a zone on the screen. It is especially useful for selectors, which often need to interact directly with the main program. These can include file selectors that need to read a new search path and update the file list, as well as EDit routines that must load a selection window with a new value entered by the user  
+""
+The DIALOG UPDATE parameters are given in the following order: first the channel number of an active dialogue
+channel to be updated. This is followed by the number of the zone to be affected. There are also three parameters
+held inside their own set of square brackets, and the effect of these parameters varies, depending on the type of the
+zone. Parameter I affects any of the different zone types, whereas Parameters 2 and 3 affect active lists and sliders
+only. Here is a table of the possibilities  
+                '''
+                ~~~                
+		Parameter 1
+		Button 		Enters a new status position
+		Active 		List Sets the number of the first string displayed
+		Slider 		Moves the slider
+		Digit 		Replaces the existing number zone
+		Edit 		Inserts a new string into the edit zone
+                ~~~
+                '''
+                '''
+                ~~~                
+		Parameter 2
+		Active List 	Changes the currently selected string
+		Slider 		Changes the size of the slider window
+                ~~~
+                '''
+                '''
+                ~~~                
+		Parameter 3
+		Active List 	Chooses the last element of the array that can be selected. Normally this parameter is equal to the size of the array, but it can be restricted for certain applications.
+		Slider 		Changes the "total" parameter
+                ~~~
+                '''
+            ]
+            "dialog_freeze":
+            [
+                This command is used to freeze all input from one or more active dialogue channels. The number of a single dialogue routine that is to be suspended is specified in square brackets. If this number is omitted all current channels will be frozen  
+
+            ]
+            "dialog_unfreeze":
+            [
+                Use this instruction to re-activate one or more dialogue channels from the point at which they were frozen  
+              
+            ]
+            "resource_bank":
+            [
+                This command is used to tell AOZ Studio in which bank the resources to be used by Interface programs are kept. The number parameter holds the number of the memory bank to be allocated. If this bank does not exist, the Editor's internal resource bank will be used as a default. This means that after this command has been called, you can return to the Editor resources by employing a dummy value, such as zero. Here is an example:
+
+                '''
+                ~~~                
+		   Load "Resource.Abk",16 : Rem This can be any filename
+		   Resource Bank 16: Rem Set resources to Bank 16
+                ~~~
+                '''
+            ]
+            "resource$":
+            [
+                The RESOURCE$ function returns one of the messages from the current Resource Bank, to be used by an AOZ Studio program. If the bank has not been defined, the standard Editor messages will be made available from
+the Configuration file  
+""
+Each national grouping is provided with its own set of messages in the appropriate language, and these messages can
+be used to generate multi-language programs. The message number parameter enters the number of the message.
+Here is an example  
+                '''
+                ~~~                
+		   For A=1 To 7
+		     Print Resource$(A)
+		   Next A
+                ~~~
+                '''
+The following list shows the strings related to the various numbers  
+                '''
+                ~~~                
+		Number 			Message
+		>0 			String from the Resource bank
+		0 			Full pathname of APSystem folder
+		<0 			Configuration system strings, as follows:
+		-1 to -9 		Default file names
+		-10 to -36 		All 26 extensions
+		38, -38 		Communication ports
+		-40 			Default cursor flashing
+		2001 to -2044 		Miscellaneous strings used by Editor
+		-2045 to -2049 		Editor system files
+                ~~~
+                '''
+            ]
+            "resource_screen_open":
+            [
+                This instruction opens a screen using the settings that are stored in the Resource Bank. These screen settings include
+the number of colours, the resolution and the entire colour palette  
+""
+The parameters are given in the following order: the number of the screen to be defined from zero to 7, the width of
+this screen in pixels and the height of the screen in lines. Finally a simple flag is set for the flash feature, with a value of zero to turn off the flash, or any other appropriate value to assign the flash effect to that colour index
+number  
+""
+The new screen will be installed with the colour palette held in the Resource Bank  
+""
+The following example opens a screen using the settings from the internal Resource Bank, just like the Editor screen, where the flashing colour is index number 2  
+                '''
+                ~~~                
+		   Resource Screen Open 0,640,200,2
+                ~~~
+                '''
+            ]
+            "resource_unpack": //resource_uppack ? TODO
+            [
+                This AOZ Studio command unpacks a single element from the current Resource Bank and displays it on the screen  
+""
+The number parameter refers to the number of the element to be displayed, and the x,y- coordinates specify the
+position of the new image on screen  
+""
+The instruction can be used directly in games programs to hold the various graphics components in a very compact
+format. These images can be saved in the Resource Bank using the Resource Bank Maker, and installed into
+memory along the following lines  
+                '''
+                ~~~                
+		   Load "Resource.Abk",l6 : Rem This can be any filename
+		   Resource Bank 16 : Rem set the resources to bank 16
+                ~~~
+                '''
+            ]
+            "zdialog":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            
+        }
+    }
+}

@@ -1,0 +1,9 @@
+<i>Set Buffer</i>
+<b>Set Buffer</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The SET BUFFER command can be used inside a program to set the new size of the variable area. Simply follow the command with the number of kilobytes required, and you are recommended to increase this value by 5k at a
+time, until enough space has been reserved in the buffer area. It is important to note that the SET BUFFER
+command must be the very first instruction in your program, apart from any REM messages.
+

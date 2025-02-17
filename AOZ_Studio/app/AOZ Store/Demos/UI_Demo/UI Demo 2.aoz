@@ -1,0 +1,963 @@
+// ################################################################################################
+// UI Demo V1.0
+// By Phil Bell
+// Created July 2021
+// phil@aozwithphil.com
+// ################################################################################################
+//
+// All parameters for the components are optional except for the id$
+//
+// UI Button id$, content$, class$, x, y, width, fontSize, padding, onClick$, iconClass$, fontName$, tooltip$, tooltipPlacement$
+// UI ColorPicker id$, x, y, width, height, value$, onChange$, class$
+// UI Slider id$, x, y, width, min, max, step, value, onChange$, class$
+// UI Select id$, x, y, width, items$, fontSize, padding, class$, value$, fontName$
+// UI CheckBox id$, x, y, width, height, value$, class$, onChange$
+// UI Radio id$, x, y, items$, fontSize, value$, onChange$, fontName$, class$, padding
+// UI TextBox id$, value$, placeHolder$, class$, x, y, width, fontSize, padding, type$, fontName$, min, max, onChange$
+// UI TextBlock id$, x, y, width, height, content$, fontSize, padding, class$, fontName$
+// UI TextArea id$, value$, placeHolder$, class$, x, y, width, rows, fontSize, padding, fontName$
+// UI Progress id$, x, y, value, width, height, class$
+// UI Confirm title$, content$, confirmButton$, closeButton$, onConfirm$
+// UI Popup id$, content$, placement$, delay, class$
+
+// UI Delete id$
+// UI Value id$, value$
+// UI Value$(id$)
+// UI Cls
+// ################################################################################################
+
+#useAssetsResources:False
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#googleFont:"baloo"
+#googleFont:"allerta stencil"
+#fps:false
+#clean:true
+
+VERSION$ = "V1.0"
+Global VERSION$
+
+{
+	document.title = "UI Demo - By Phil Bell"
+}
+
+
+// For the button icons I am using Bootstrap, you could also use Fontawesome (https://fontawesome.com/)
+// Boostrap Icons classes for the button iconClass$ param can be found here: https://icons.getbootstrap.com/
+Load CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+
+{
+	window.copyToClipboard = function (text) {
+	    if (window.clipboardData && window.clipboardData.setData) {
+	        return window.clipboardData.setData("Text", text);
+
+	    }
+	    else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+	        var textarea = document.createElement("textarea");
+	        textarea.textContent = text;
+	        textarea.style.position = "fixed";
+	        document.body.appendChild(textarea);
+	        textarea.select();
+	        try {
+	            return document.execCommand("copy");
+	        }
+	        catch (ex) {
+	            return false;
+	        }
+	        finally {
+	            document.body.removeChild(textarea);
+	        }
+	    }
+	}
+}
+
+Curs Off: Flash Off
+Cls: Pen 5: Ink 5: Paper 1
+Set Font "baloo", 40
+{ debugger; }
+TEXT_CONTENT$ = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+Global TEXT_CONTENT$
+
+ANIMATE_PROGRESS = 0
+Global ANIMATE_PROGRESS
+V = 0: VS = 10: LAST_TIME# = Timer
+
+BUTTON_CLICK["btnUIButton"]
+
+Do
+	If ANIMATE_PROGRESS = 1 and Timer - LAST_TIME# > 0.5
+		LAST_TIME# = Timer
+		V = Val(UI Value$("txtUIProgress6"))
+		If V > 100 or V < 0: VS = -VS: End If: Add V, VS
+		UI Progress "txtUIProgress6", value = V
+	End If
+
+	Wait Vbl
+Loop
+
+
+Procedure BUTTON_CODE_CLICK[ID$]
+
+	UI Popup "popupCodeCopied", content$="The AOZ code has been copied to the clipboard.", delay=3000, placement$="top-center", class$="text-white bg-success"
+
+	If ID$="txtUIButton1Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton1');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton2Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton2", content$="Larger Button", fontSize=50, width=400');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton3Code"
+		{
+			window.copyToClipboard('#googleFont:"allerta stencil"\nUI Button "txtUIButton3",content$="Allerta Stencil Font", width=300, fontName$="allerta stencil"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton4Code"
+		{
+			window.copyToClipboard('// Boostrap Icons classes for the button iconClass$ param can be found here: https://icons.getbootstrap.com/\nLoad CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"\nUI Button "txtUIButton4", content$="Icon Button", iconClass$="bi bi-emoji-heart-eyes-fill", width=150');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton5Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton5", content$="Bootstrap Primary", width=200, class$="btn btn-primary"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton6Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton6", content$="Bootstrap Secondary", width=200, class$="btn btn-secondary"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton7Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton7", content$="Bootstrap Success", width=200, class$="btn btn-success"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton8Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton8", content$="Bootstrap Danger", width=200, class$="btn btn-danger"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton9Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton9", content$="Bootstrap Warning", width=200, class$="btn btn-warning"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton10Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton10", content$="Bootstrap Info", width=200, class$="btn btn-info"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton11Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton11", content$="Bootstrap Light", width=200, class$="btn btn-light"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton12Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton12", content$="Bootstrap Dark", width=200, class$="btn btn-dark"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton13Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton13", content$="Bootstrap Link", width=200, class$="btn btn-link"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton14Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton14", content$="Bootstrap Outline Primary", width=300, class$="btn btn-outline-primary"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton15Code"
+		{
+			window.copyToClipboard('// Boostrap Icons classes for the button iconClass$ param can be found here: https://icons.getbootstrap.com/\nLoad CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"\nUI Button "justIconButton1", content$="", x=670, y=850, class$="btn btn-info", fontSize=50, iconClass$="bi bi-controller", width=80\nUI Button "justIconButton2", content$="", x=770, y=850, class$="btn btn-warning", fontSize=50, iconClass$="bi bi-cloud-lightning-rain", width=80\nUI Button "justIconButton3", content$="", x=870, y=850, class$="btn btn-dark", fontSize=50, iconClass$="bi bi-emoji-heart-eyes-fill", width=80\nUI Button "justIconButton4", content$="", x=670, y=950, class$="btn btn-outline-info", fontSize=50, iconClass$="bi bi-hand-thumbs-up-fill", width=80\nUI Button "justIconButton5", content$="", x=770, y=950, class$="btn btn-outline-warning", fontSize=50, iconClass$="bi bi-image", width=80\nUI Button "justIconButton6", content$="", x=870, y=950, class$="btn btn-outline-dark", fontSize=50, iconClass$="bi bi-cart-fill", width=80');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton16Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton16", x=1270, y=250, content$="Button Event Handler", width=300, class$="btn btn-success", onClick$="BUTTON_EVENT"\nProcedure BUTTON_EVENT[ID$]\n	UI TextBlock "txtUIButton16event", x=1200, y=300, content$="You Clicked The Button"\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIButton17Code"
+		{
+			window.copyToClipboard('UI Button "txtUIButton17", x=1270, y=350, content$="Tooltip Top", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Top", tooltipPlacement$="top"\nUI Button "txtUIButton18", x=1270, y=400, content$="Tooltip Right", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Right", tooltipPlacement$="right"\nUI Button "txtUIButton19", x=1270, y=450, content$="Tooltip Left", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Left",tooltipPlacement$="left"\nUI Button "txtUIButton20", x=1270, y=500, content$="Tooltip Bottom", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Bottom", tooltipPlacement$="bottom"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox1Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox1"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox2Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox2", placeHolder$="Placeholder Text..."');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox3Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox3", value$="Prefilled Text"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox4Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox4", placeHolder$="Password....", type$="password"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox5Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox5", type$="date"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox6Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox6", type$="time"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox7Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox7", placeHolder$="Bootstrap Style", class$="form-control"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox8Code"
+		{
+			window.copyToClipboard('#googleFont:"baloo"\nUI TextBox "txtUITextBox8", placeHolder$="Google Font Baloo...", class$="form-control", fontName$="baloo", fontSize=40, width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox9Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox9", x=670, y=250, placeHolder$="Enter text here....."\nProcedure GET_ENTERED_TEXT[ID$]\n	UI TextBlock "txtUITextBox9GetEvent", x=600, y=300, content$="You entered: " + UI Value$("txtUITextBox9")\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBox10Code"
+		{
+			window.copyToClipboard('UI TextBox "txtUITextBox10", x=670, y=400, value$="10", min=5, max=99, type$="number", width=200, class$="form-control", fontSize=30, onChange$="NUMBER_TEXT_CHANGED"\nProcedure NUMBER_TEXT_CHANGED[ID$, VALUE$]\nUI TextBlock "txtUITextBox10event", x=600, y=470, width=500, content$="TextBox Value: " + VALUE$\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock1Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock1", content$="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock2Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock2", height=250, content$="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock3Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock3", height=200, class$="border border-5 rounded-3", content$="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock4Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock4", height=200, class$="border border-5 rounded-3 bg-info", content$="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock5Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock5", height=200, class$="bg-danger border border-5 border-warning text-center lh-lg", content$="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock6Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock6", content$="Text with line underneath", class$="text-decoration-underline", width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock7Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock7", content$="Text with bold weight", class$="fw-bold", width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock8Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock8", content$="Text with line through weight", class$="text-decoration-line-through", width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock9Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock9", content$="Text with light weight", class$="fw-light", width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock10Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock10", content$="Text with light weight", class$="fst-italic", width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock11Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock11", content$="Warning Text Style Dark Background", class$="text-warning bg-dark", width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock12Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock12", content$="Info Text Style Dark Background", class$="text-info bg-dark", width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextBlock13Code"
+		{
+			window.copyToClipboard('UI TextBlock "txtUITextBlock13", content$="Rounded Pill TextBlock Style", class$="badge rounded-pill bg-warning text-dark", width=600');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextArea1Code"
+		{
+			window.copyToClipboard('UI TextArea "txtUITextArea1"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextArea2Code"
+		{
+			window.copyToClipboard('UI TextArea "txtUITextArea2" class$="form-control", value$="Bootstrap Style with 5 rows of text", rows=5');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextArea3Code"
+		{
+			window.copyToClipboard('#googleFont:"baloo"\nUI TextArea "txtUITextArea3", value$="A larger text area using google font Baloo", rows=5, width=500, fontSize=35, fontName$="baloo"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUITextArea4Code"
+		{
+			window.copyToClipboard('#googleFont:"baloo"\nUI TextArea "txtUITextArea4", value$="Styled using bootstrap !!!!", rows=5, width=500, fontName$="baloo", class$="text-info bg-dark"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUISlider1Code"
+		{
+			window.copyToClipboard('UI Slider "txtUISlider1"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUISlider2Code"
+		{
+			window.copyToClipboard('UI Slider "txtUISlider2", x=100, y=360, onChange$="SLIDER2CHANGE"\nProcedure SLIDER2CHANGE[ID$, VALUE]\n	UI TextBlock "txtUISlider2event", x=30, y=400, content$="Slider (min=0 max=100 step=1) Value: " + Str$(VALUE)\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUISlider3Code"
+		{
+			window.copyToClipboard('UI Slider "txtUISlider3", x=100, y=510, onChange$="SLIDER3CHANGE", min=10, max=40, step=0.5, width=600\nProcedure SLIDER3CHANGE[ID$, VALUE]\n	UI TextBlock "txtUISlider3event", x=30, y=550, width=500, content$="Slider (min=10 max=40 step=0.5) Value:" + Str$(VALUE)\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUISelect1Code"
+		{
+			window.copyToClipboard('UI Select "txtUISelect1", items$="1:This is item 1,2:This is item 2,3:This is item 3"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUISelect2Code"
+		{
+			window.copyToClipboard('UI Select "txtUISelect2", items$="1:This is item 1,2:This is item 2,3:This is item 3", class$="form-select"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUISelect3Code"
+		{
+			window.copyToClipboard('#googleFont:"baloo"\nUI Select "txtUISelect3", x=100, y=450, width=500, fontName$="baloo", fontSize=35, items$="1:Using Google Font 1,2:This is item 2,3:This is item 3", class$="form-select"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUISelect4Code"
+		{
+			window.copyToClipboard('UI Select "txtUISelect4", x=100, y=550, items$="1:Change Event 1,2:This is item 2,3:This is item 3", onChange$="SELECT4CHANGE"\nProcedure SELECT4CHANGE[ID$, VALUE$]\n	UI TextBlock "txtUISelect4event", x=30, y=600, width=500, content$="Selected Value: " + VALUE$\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUICheckBox1Code"
+		{
+			window.copyToClipboard('UI CheckBox "txtUICheckBox1"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUICheckBox2Code"
+		{
+			window.copyToClipboard('UI CheckBox "txtUICheckBox2", class$="form-check-input"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUICheckBox3Code"
+		{
+			window.copyToClipboard('UI CheckBox "txtUICheckBox3", x=100, y=450, class$="form-check-input", width=30, height=30, value$="true"\nUI CheckBox "txtUICheckBox4", x=200, y=450, class$="form-check-input", width=50, height=50, value$="true"\nUI CheckBox "txtUICheckBox5", x=300, y=450, class$="form-check-input", width=80, height=80, value$="true"\nUI CheckBox "txtUICheckBox6", x=400, y=450, class$="form-check-input", width=150, height=150,value$="true"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUICheckBox7Code"
+		{
+			window.copyToClipboard('UI CheckBox "txtUICheckBox7", x=100, y=650, class$="form-check-input", width=80, height=80, onChange$="CHECK7CHANGE"\nProcedure CHECK7CHANGE[ID$, VALUE$]\n	UI TextBlock "txtUICheckBox7event", x=30, y=750, width=500, content$="Check Value: " + VALUE$\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIRadio1Code"
+		{
+			window.copyToClipboard('UI Radio "txtUIRadio1", items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", value$="2"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIRadio2Code"
+		{
+			window.copyToClipboard('UI Radio "txtUIRadio2", x=100, y=450, items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", value$="1", fontSize=60, fontName$="allerta stencil", onChange$="RADIO2CHANGE"\nProcedure RADIO2CHANGE[ID$, VALUE$]\n	UI TextBlock "txtUIRadio2event", x=30, y=800, width=500, content$="Radio Value: " + VALUE$\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIColorPicker1Code"
+		{
+			window.copyToClipboard('UI ColorPicker "txtUIColorPicker1"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIColorPicker2Code"
+		{
+			window.copyToClipboard('UI ColorPicker "txtUIColorPicker2", x=100, y=350, width=75, height=75, value$="#000000"\nUI ColorPicker "txtUIColorPicker3", x=200, y=350, width=75, height=75, value$="#D1D1D1"\nUI ColorPicker "txtUIColorPicker4", x=300, y=350, width=75, height=75, value$="#004444"\nUI ColorPicker "txtUIColorPicker5", x=400, y=350, width=75, height=75, value$="#623E87"\nUI ColorPicker "txtUIColorPicker6", x=500, y=350, width=75, height=75, value$="#C46200"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIColorPicker7Code"
+		{
+			window.copyToClipboard('UI ColorPicker "txtUIColorPicker7", x=100, y=450, width=200, height=75, value$="#000000", onChange$="COLOR7CHANGE"\nProcedure COLOR7CHANGE[ID$, VALUE$]\n	UI TextBlock "txtUIColor7event", x=30, y=550, width=500, content$="Color Picker Value: " + VALUE$\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIPopupCode1"
+		{
+			window.copyToClipboard('UI Popup "MyPopup", content$="The is default popup message with a delay of 5 seconds"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIPopupCode2"
+		{
+			window.copyToClipboard('UI Popup "MyPopup1", content$="Popup position top-left with a delay of 5 seconds", placement$="top-left"\nUI Popup "MyPopup2", content$="Popup position top-center with a delay of 6 seconds", placement$="top-center", delay=6000, class$="text-white bg-success"\nUI Popup "MyPopup3", content$="Popup position top-right with a delay of 7 seconds", placement$="top-right", delay=7000, class$="text-white bg-dark"\nUI Popup "MyPopup4", content$="Popup position bottom-left with a delay of 8 seconds",lacement$="bottom-left", delay=8000, class$="bg-warning"\nUI Popup "MyPopup5", content$="Popup position bottom-center with a delay of 9 seconds", placement$="bottom-center", delay=9000, class$="text-white bg-danger"\nUI Popup "MyPopup6", content$="Popup position bottom-right with a delay of 10 seconds", placement$="bottom-right", delay=10000, class$="text-white bg-primary"\nUI Popup "MyPopup7", content$="Popup position center with a delay of 11 seconds", placement$="center",delay=11000, class$="bg-info"\nUI Popup "MyPopup8", content$="Popup position left-center with a delay of 12 seconds", placement$="left-center", delay=12000, class$="bg-secondary"\nUI Popup "MyPopup9", content$="Popup position left-center with a delay of 13 seconds", placement$="right-center", delay=13000, class$="bg-secondary"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIProgressCode1"
+		{
+			window.copyToClipboard('UI Progress "txtUIProgress1"');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIProgressCode2"
+		{
+			window.copyToClipboard('UI Progress "txtUIProgress2", x=100, y=350, width=500, height=50, class$="progress-bar bg-success", value=10\nUI Progress "txtUIProgress3", x=100, y=450, width=800, height=60, class$="progress-bar bg-info", value=20\nUI Progress "txtUIProgress4", x=100, y=550, width=1000, height=80, class$="progress-bar bg-warning", value=50\nUI Progress "txtUIProgress5", x=100, y=650, width=1500, height=20, class$="progress-bar bg-danger progress-bar-striped", value=75');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIProgressCode6"
+		{
+			window.copyToClipboard('UI Progress "txtUIProgress6", x=100, y=750, width=500, class$="progress-bar bg-primary progress-bar-striped"\nV = 0: VS = 10: LAST_TIME# = Timer\nDo\nIf Timer - LAST_TIME# > 0.5\nLAST_TIME# = Timer\nV = Val(UI Value$("txtUIProgress6"))\nIf V > 100 or V < 0: VS = -VS: End If: Add V, VS\nUI Progress "txtUIProgress6", value = V\nEnd If\nWait Vbl\nLoop');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIConfirmCode1"
+		{
+			window.copyToClipboard('UI Confirm');
+		}
+		Pop Proc
+	End If
+
+	If ID$="txtUIConfirmCode2"
+		{
+			window.copyToClipboard('UI Confirm "Your title goes here", "Your confirm content goes here", closeButton$="No Thanks", confirmButton$="Yes Please", onConfirm$="MODEL_CONFIRM"\nProcedure MODEL_CONFIRM\nUI TextBlock "txtModelConfirm", x=30, y=400, fontSize=40, content$="You pressed the confirm button", width=600, class$="text-info bg-dark", padding=20\nEnd Proc');
+		}
+		Pop Proc
+	End If
+
+End Proc
+Load HTML
+Procedure BUTTON_CLICK[ID$]
+	Cls 1
+	Paste Bob 0, 0, 1
+	UI Cls
+
+	ANIMATE_PROGRESS = 0
+
+	UI TextBlock "txtPageTitle", x=30, y=180, content$="UI Button", fontSize=40, width=1860, class$="badge rounded-pill bg-dark text-light"
+	UI TextBlock "txtPageFooter", x=1600, y=1050, content$="UI Demo By Phil Bell", width=200, fontSize=15, class$="badge rounded-pill bg-info text-dark"
+	UI TextBlock "txtPageFooter2", x=1830, y=1050, content$=VERSION$, width=70, fontSize=15, class$="badge rounded-pill bg-dark text-light"
+
+	UI Button "btnUIButton", content$="UI Button", class$="btn btn-primary", x=10, y=20, onClick$="BUTTON_CLICK", iconClass$="bi bi-aspect-ratio", fontSize=30, width=230
+	UI Button "btnUITextBox", content$="UI TextBox", class$="btn btn-primary", x=250, y=20, onClick$="BUTTON_CLICK", iconClass$="bi bi-input-cursor-text", fontSize=30, width=230
+	UI Button "btnUITextBlock", content$="UI TextBlock", class$="btn btn-primary", x=490, y=20, onClick$="BUTTON_CLICK", iconClass$="bi bi-card-text", fontSize=30, width=230
+	UI Button "btnUITextArea", content$="UI TextArea", class$="btn btn-primary", x=730, y=20, onClick$="BUTTON_CLICK", iconClass$="bi bi-textarea-t", fontSize=30, width=220
+	UI Button "btnUISlider", content$="UI Slider", class$="btn btn-primary", x=960, y=20, onClick$="BUTTON_CLICK", iconClass$="bi bi-sliders", fontSize=30, width=220
+	UI Button "btnUISelect", content$="UI Select", class$="btn btn-primary", x=1190, y=20, onClick$="BUTTON_CLICK", iconClass$="bi bi-menu-button", fontSize=30, width=220
+	UI Button "btnUIRadio", content$="UI Radio", class$="btn btn-primary", x=1420, y=20, onClick$="BUTTON_CLICK", iconClass$="bi bi-ui-radios", fontSize=30, width=220
+	UI Button "btnUICheckBox", content$="UI CheckBox", class$="btn btn-primary", x=1650, y=20, onClick$="BUTTON_CLICK", iconClass$="bi bi-check-square", fontSize=30, width=260
+
+	UI Button "btnPopup", content$="UI Popup", class$="btn btn-primary", x=10, y=100, onClick$="BUTTON_CLICK", iconClass$="bi bi-chat-left-text", fontSize=30, width=230
+	UI Button "btnProgress", content$="UI Progress", class$="btn btn-primary", x=250, y=100, onClick$="BUTTON_CLICK", iconClass$="bi bi-segmented-nav", fontSize=30, width=230
+	UI Button "btnConfirm", content$="UI Confirm", class$="btn btn-primary", x=490, y=100, onClick$="BUTTON_CLICK", iconClass$="bi bi-question-square", fontSize=30, width=230
+	UI Button "btnUIDelete", content$="UI Delete", class$="btn btn-primary", x=730, y=100, onClick$="BUTTON_CLICK", iconClass$="bi bi-trash", fontSize=30, width=220
+	UI Button "btnUIValue", content$="UI Value", class$="btn btn-primary", x=960, y=100, onClick$="BUTTON_CLICK", iconClass$="bi bi-pencil-square", fontSize=30, width=220
+	UI Button "btnUIValueGet", content$="UI Value$()", class$="btn btn-primary", x=1190, y=100, onClick$="BUTTON_CLICK", iconClass$="bi bi-file-earmark-binary", fontSize=30, width=220
+	UI Button "btnUICls", content$="UI Cls", class$="btn btn-primary", x=1420, y=100, onClick$="BUTTON_CLICK", iconClass$="bi bi-eraser", fontSize=30, width=220
+	UI Button "btnUIColorPicker", content$="UI ColorPicker", class$="btn btn-primary", x=1650, y=100, onClick$="BUTTON_CLICK", iconClass$="bi bi-palette", fontSize=30, width=260
+
+	If ID$="btnConfirm"
+		UI TextBlock "txtPageTitle", content$="UI Progress"
+		UI Button "txtUIConfirmCode1", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIConfirmButton1", x=100, y=250, content$="Show Default Confirm", onClick$="SHOW_CONFIRM_1", class$="btn btn-secondary", width=270
+
+		UI Button "txtUIConfirmCode2", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIConfirmButton2", x=100, y=350, content$="Confirm Event", onClick$="SHOW_CONFIRM_2", class$="btn btn-primary", width=270
+	End If
+
+	If ID$="btnProgress"
+		UI TextBlock "txtPageTitle", content$="UI Progress"
+		UI Button "txtUIProgressCode1", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Progress "txtUIProgress1", x=100, y=250
+
+		UI Button "txtUIProgressCode2", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Progress "txtUIProgress2", x=100, y=350, width=500, height=50, class$="progress-bar bg-success", value=10
+		UI Progress "txtUIProgress3", x=100, y=450, width=800, height=60, class$="progress-bar bg-info", value=20
+		UI Progress "txtUIProgress4", x=100, y=550, width=1000, height=80, class$="progress-bar bg-warning", value=50
+		UI Progress "txtUIProgress5", x=100, y=650, width=1500, height=35, class$="progress-bar bg-danger progress-bar-striped", value=75
+
+		UI Button "txtUIProgressCode6", x=30, y=750, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Progress "txtUIProgress6", x=100, y=750, width=500, class$="progress-bar bg-primary progress-bar-striped"
+		ANIMATE_PROGRESS = 1
+	End If
+
+	If ID$="btnPopup"
+		UI TextBlock "txtPageTitle", content$="UI Popup"
+		UI Button "txtUIPopupCode1", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIPopupButton1", x=100, y=250, content$="Show Default Popup", onClick$="SHOW_POPUP_1", class$="btn btn-secondary", width=250
+
+		UI Button "txtUIPopupCode2", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIPopupButton2", x=100, y=350, content$="Show Many Popups", onClick$="SHOW_POPUP_2", class$="btn btn-primary", width=250
+	End If
+
+	If ID$="btnUICls"
+		UI TextBlock "txtPageTitle", content$="UI Cls"
+		UI TextBlock "txtCls", x=30, y=250, width=1500, content$="Use the UI Cls command to delete all the UI components from the screen.", fontSize=35, fontName$="baloo", class$="text-secondary"
+		UI TextBlock "txtUIClsLine2", x=30, y=400, width=1500, padding=20, content$="UI Cls", class$="text-secondary font-monospace text-info bg-dark", fontSize=40
+	End If
+
+	If ID$="btnUIValueGet"
+		UI TextBlock "txtPageTitle", content$="UI Value$()"
+		UI TextBlock "txtUIValueGet", x=30, y=250, width=1500, content$="Use the UI Value$() function to get the value of a UI component.", fontSize=35, fontName$="baloo", class$="text-secondary"
+		UI TextBlock "txtUIValueGetLine2", x=30, y=400, width=1500, padding=20,content$="Print UI Value$("+Chr$(34)+"MyRadioButtons"+Chr$(34)+")", class$="text-secondary font-monospace text-info bg-dark", fontSize=40
+	End If
+
+	If ID$="btnUIValue"
+		UI TextBlock "txtPageTitle", content$="UI Value"
+		UI TextBlock "txtUIValue", x=30, y=250, width=1500, content$="Use the UI Value command to update the value of a UI component.", fontSize=35, fontName$="baloo", class$="text-secondary"
+		UI TextBlock "txtUIValueLine2", x=30, y=400, width=1500, padding=20, content$="UI Value "+Chr$(34)+"MyCheckBox"+Chr$(34)+", "+Chr$(34)+"true" + Chr$(34), class$="text-secondary font-monospace text-info bg-dark", fontSize=40
+	End If
+
+	If ID$="btnUIDelete"
+		UI TextBlock "txtPageTitle", content$="UI Delete"
+		UI TextBlock "txtUIDelete", x=30, y=250, width=1500, content$="Use the UI Delete command to delete a UI component from the screen.", fontSize=35, fontName$="baloo", class$="text-secondary"
+		UI TextBlock "txtUIDeleteLine2", x=30, y=400, width=1500, padding=20, content$="UI Delete " + Chr$(34) + "MyTextBlock" + Chr$(34), class$="text-secondary font-monospace text-info bg-dark", fontSize=40
+	End If
+
+	If ID$="btnUIButton"
+		UI TextBlock "txtPageTitle", content$="UI Button"
+		UI Button "txtUIButton1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIButton1", x=100, y=250
+		UI Button "txtUIButton2Code", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIButton2", x=100, y=350, content$="Larger Button", fontSize=50, width=400
+		UI Button "txtUIButton3Code", x=30, y=500, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIButton3", x=100, y=500, content$="Allerta Stencil Font", width=300, fontName$="allerta stencil"
+		UI Button "txtUIButton4Code", x=30, y=600, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIButton4", x=100, y=600, content$="Icon Button", iconClass$="bi bi-emoji-heart-eyes-fill", width=150
+		UI Button "txtUIButton5Code", x=30, y=700, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIButton5", x=100, y=700, content$="Bootstrap Primary", width=200, class$="btn btn-primary"
+		UI Button "txtUIButton6Code", x=30, y=800, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIButton6", x=100, y=800, content$="Bootstrap Secondary", width=200, class$="btn btn-secondary"
+		UI Button "txtUIButton7Code", x=30, y=900, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIButton7", x=100, y=900, content$="Bootstrap Success", width=200, class$="btn btn-success"
+		UI Button "txtUIButton8Code", x=30, y=1000, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Button "txtUIButton8", x=100, y=1000, content$="Bootstrap Danger", width=200, class$="btn btn-danger"
+		UI Button "txtUIButton9Code", x=600, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "txtUIButton9", x=670, y=250, content$="Bootstrap Warning", width=200, class$="btn btn-warning"
+		UI Button "txtUIButton10Code", x=600, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "txtUIButton10", x=670, y=350, content$="Bootstrap Info", width=200, class$="btn btn-info"
+		UI Button "txtUIButton11Code", x=600, y=450, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "txtUIButton11", x=670, y=450, content$="Bootstrap Light", width=200, class$="btn btn-light"
+		UI Button "txtUIButton12Code", x=600, y=550, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "txtUIButton12", x=670, y=550, content$="Bootstrap Dark", width=200, class$="btn btn-dark"
+		UI Button "txtUIButton13Code", x=600, y=650, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "txtUIButton13", x=670, y=650, content$="Bootstrap Link", width=200, class$="btn btn-link"
+		UI Button "txtUIButton14Code", x=600, y=750, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "txtUIButton14", x=670, y=750, content$="Bootstrap Outline Primary", width=300, class$="btn btn-outline-primary"
+
+		UI Button "txtUIButton15Code", x=600, y=850, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "justIconButton1", content$="", x=670, y=850, class$="btn btn-info", fontSize=50, iconClass$="bi bi-controller", width=80
+		UI Button "justIconButton2", content$="", x=770, y=850, class$="btn btn-warning", fontSize=50, iconClass$="bi bi-cloud-lightning-rain", width=80
+		UI Button "justIconButton3", content$="", x=870, y=850, class$="btn btn-dark", fontSize=50, iconClass$="bi bi-emoji-heart-eyes-fill", width=80
+		UI Button "justIconButton4", content$="", x=670, y=950, class$="btn btn-outline-info", fontSize=50, iconClass$="bi bi-hand-thumbs-up-fill", width=80
+		UI Button "justIconButton5", content$="", x=770, y=950, class$="btn btn-outline-warning", fontSize=50, iconClass$="bi bi-image", width=80
+		UI Button "justIconButton6", content$="", x=870, y=950, class$="btn btn-outline-dark", fontSize=50, iconClass$="bi bi-cart-fill", width=80
+
+		UI Button "txtUIButton16Code", x=1200, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "txtUIButton16", x=1270, y=250, content$="Button Event Handler", width=300, class$="btn btn-success", onClick$="BUTTON_EVENT"
+
+		UI Button "txtUIButton17Code", x=1200, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI Button "txtUIButton17", x=1270, y=350, content$="Tooltip Top", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Top", tooltipPlacement$="top"
+		UI Button "txtUIButton18", x=1270, y=400, content$="Tooltip Right", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Right", tooltipPlacement$="right"
+		UI Button "txtUIButton19", x=1270, y=450, content$="Tooltip Left", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Left", tooltipPlacement$="left"
+		UI Button "txtUIButton20", x=1270, y=500, content$="Tooltip Bottom", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Bottom", tooltipPlacement$="bottom"
+
+		UI Button "btnVisit2", x=1100, y=750, content$="For more styles visit - https://getbootstrap.com/docs/5.0/components/buttons/", class$="btn btn-link", width=750, onClick$="VISIT2", iconClass$="bi bi-box-arrow-up-right"
+		UI Button "btnVisit3", x=1100, y=850, content$="Full list of icons - https://icons.getbootstrap.com/", class$="btn btn-link", width=750, onClick$="VISIT3", iconClass$="bi bi-box-arrow-up-right"
+		Pop Proc
+	End If
+
+	If ID$="btnUITextBox"
+		UI TextBlock "txtPageTitle", content$="UI TextBox"
+
+		UI Button "txtUITextBox1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBox "txtUITextBox1", x=100, y=250
+		UI Button "txtUITextBox2Code", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBox "txtUITextBox2", x=100, y=350, placeHolder$="Placeholder Text..."
+		UI Button "txtUITextBox3Code", x=30, y=450, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBox "txtUITextBox3", x=100, y=450, value$="Prefilled Text"
+		UI Button "txtUITextBox4Code", x=30, y=550, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBox "txtUITextBox4", x=100, y=550, placeHolder$="Password....", type$="password"
+		UI Button "txtUITextBox5Code", x=30, y=650, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBox "txtUITextBox5", x=100, y=650, type$="date"
+		UI Button "txtUITextBox6Code", x=30, y=750, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBox "txtUITextBox6", x=100, y=750, type$="time"
+		UI Button "txtUITextBox7Code", x=30, y=850, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBox "txtUITextBox7", x=100, y=850, placeHolder$="Bootstrap Style", class$="form-control"
+		UI Button "txtUITextBox8Code", x=30, y=950, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBox "txtUITextBox8", x=100, y=950, placeHolder$="Google Font Baloo...", class$="form-control", fontName$="baloo", fontSize=40, width=600
+
+		UI Button "txtUITextBox9Code", x=600, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBox "txtUITextBox9", x=670, y=250, placeHolder$="Enter text here....."
+		UI Button "txtUITextBox9Get", x=1000, y=250, content$="Get Entered Text", width=270, class$="btn btn-success", onClick$="GET_ENTERED_TEXT"
+
+		UI TextBlock "txtUITextBox10Label", x=600, y=350, content$="Numbers only, min=5, max=99", class$="fw-bold"
+		UI Button "txtUITextBox10Code", x=600, y=400, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBox "txtUITextBox10", x=670, y=400, value$="10", min=5, max=99, type$="number", width=200, class$="form-control", fontSize=30, onChange$="NUMBER_TEXT_CHANGED"
+		UI TextBlock "txtUITextBox10event", x=600, y=470, width=500, content$="TextBox Value: " + UI Value$("txtUITextBox10")
+
+		Pop Proc
+	End If
+
+	If ID$="btnUITextBlock"
+		UI TextBlock "txtPageTitle", content$="UI TextBlock"
+
+		UI Button "txtUITextBlock1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBlock "txtUITextBlock1", x=100, y=250, content$=TEXT_CONTENT$
+		UI Button "txtUITextBlock2Code", x=30, y=700, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextBlock "txtUITextBlock2", x=100, y=700, content$=TEXT_CONTENT$, height=250
+
+		UI Button "txtUITextBlock3Code", x=600, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock3", x=670, y=250, content$=TEXT_CONTENT$, height=200, class$="border border-5 rounded-3"
+		UI Button "txtUITextBlock4Code", x=600, y=500, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock4", x=670, y=500, content$=TEXT_CONTENT$, height=200, class$="border border-5 rounded-3 bg-info"
+		UI Button "txtUITextBlock5Code", x=600, y=750, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock5", x=670, y=750, content$=TEXT_CONTENT$, height=200, class$="bg-danger border border-5 border-warning text-center lh-lg"
+
+		UI Button "txtUITextBlock6Code", x=1200, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock6", x=1270, y=250, content$="Text with line underneath", class$="text-decoration-underline", width=600
+		UI Button "txtUITextBlock7Code", x=1200, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock7", x=1270, y=350, content$="Text with bold weight", class$="fw-bold", width=600
+		UI Button "txtUITextBlock8Code", x=1200, y=450, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock8", x=1270, y=450, content$="Text with line through", class$="text-decoration-line-through", width=600
+		UI Button "txtUITextBlock9Code", x=1200, y=550, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock9", x=1270, y=550, content$="Text with light weight", class$="fw-light", width=600
+		UI Button "txtUITextBlock10Code", x=1200, y=650, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock10", x=1270, y=650, content$="Text with italic style", class$="fst-italic", width=600
+
+		UI Button "txtUITextBlock11Code", x=1200, y=750, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock11", x=1270, y=750, content$="Warning Text Style Dark Background", class$="text-warning bg-dark", width=600
+		UI Button "txtUITextBlock12Code", x=1200, y=850, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock12", x=1270, y=850, content$="Info Text Style Dark Background", class$="text-info bg-dark", width=600
+
+		UI Button "txtUITextBlock13Code", x=1200, y=950, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard"
+		UI TextBlock "txtUITextBlock13", x=1270, y=950, content$="Rounded Pill TextBlock Style", class$="badge rounded-pill bg-warning text-dark", width=600
+
+		UI Button "btnVisit1", x=1200, y=1000, content$="For more styles visit - https://getbootstrap.com/docs/5.0/utilities/colors/", class$="btn btn-link", width=700, onClick$="VISIT1", iconClass$="bi bi-box-arrow-up-right"
+
+		Pop Proc
+	End If
+
+	If ID$="btnUITextArea"
+		UI TextBlock "txtPageTitle", content$="UI TextArea"
+		UI Button "txtUITextArea1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextArea "txtUITextArea1", x=100, y=250
+		UI Button "txtUITextArea2Code", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextArea "txtUITextArea2", x=100, y=350, class$="form-control", value$="Bootstrap Style with 5 rows of text", rows=5
+		UI Button "txtUITextArea3Code", x=30, y=550, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextArea "txtUITextArea3", x=100, y=550, value$="A larger text area using google font Baloo", rows=5, width=500, fontSize=35, fontName$="baloo"
+		UI Button "txtUITextArea4Code", x=30, y=850, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI TextArea "txtUITextArea4", x=100, y=850, value$="Styled using bootstrap !!!!", rows=5, width=500, fontName$="baloo", class$="text-info bg-dark"
+		Pop Proc
+	End If
+
+	If ID$="btnUISlider"
+		UI TextBlock "txtPageTitle", content$="UI Slider"
+		UI Button "txtUISlider1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Slider "txtUISlider1", x=100, y=260
+
+		UI Button "txtUISlider2Code", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Slider "txtUISlider2", x=100, y=360, onChange$="SLIDER2CHANGE"
+		UI TextBlock "txtUISlider2event", x=30, y=400, content$="Slider (min=0 max=100 step=1) Value:"
+
+		UI Button "txtUISlider3Code", x=30, y=500, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Slider "txtUISlider3", x=100, y=510, onChange$="SLIDER3CHANGE", min=10, max=40, step=0.5, width=600
+		UI TextBlock "txtUISlider3event", x=30, y=550, width=500, content$="Slider (min=10 max=40 step=0.5) Value:"
+		Pop Proc
+	End If
+
+	If ID$="btnUISelect"
+		UI TextBlock "txtPageTitle", content$="UI Select"
+
+		UI Button "txtUISelect1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Select "txtUISelect1", x=100, y=250, items$="1:This is item 1,2:This is item 2,3:This is item 3"
+
+		UI Button "txtUISelect2Code", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Select "txtUISelect2", x=100, y=350, items$="1:Bootstrap Style 1,2:This is item 2,3:This is item 3", class$="form-select"
+
+		UI Button "txtUISelect3Code", x=30, y=450, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Select "txtUISelect3", x=100, y=450, width=500, fontName$="baloo", fontSize=35, items$="1:Using Google Font 1,2:This is item 2,3:This is item 3", class$="form-select"
+
+		UI Button "txtUISelect4Code", x=30, y=550, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Select "txtUISelect4", x=100, y=550, items$="1:Change Event 1,2:This is item 2,3:This is item 3", onChange$="SELECT4CHANGE"
+		Pop Proc
+	End If
+
+	If ID$="btnUICheckBox"
+		UI TextBlock "txtPageTitle", content$="UI CheckBox"
+		UI Button "txtUICheckBox1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI CheckBox "txtUICheckBox1", x=100, y=250
+		UI Button "txtUICheckBox2Code", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI CheckBox "txtUICheckBox2", x=100, y=350, class$="form-check-input"
+		UI Button "txtUICheckBox3Code", x=30, y=450, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI CheckBox "txtUICheckBox3", x=100, y=450, class$="form-check-input", width=30, height=30, value$="true"
+		UI CheckBox "txtUICheckBox4", x=200, y=450, class$="form-check-input", width=50, height=50, value$="true"
+		UI CheckBox "txtUICheckBox5", x=300, y=450, class$="form-check-input", width=80, height=80, value$="true"
+		UI CheckBox "txtUICheckBox6", x=400, y=450, class$="form-check-input", width=150, height=150, value$="true"
+		UI Button "txtUICheckBox7Code", x=30, y=650, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI CheckBox "txtUICheckBox7", x=100, y=650, class$="form-check-input", width=80, height=80, onChange$="CHECK7CHANGE"
+		UI TextBlock "txtUICheckBox7event", x=30, y=750, width=500, content$="Check Value: " + UI Value$("txtUICheckBox7")
+		Pop Proc
+	End If
+
+	If ID$="btnUIRadio"
+		UI TextBlock "txtPageTitle", content$="UI Radio"
+		UI Button "txtUIRadio1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Radio "txtUIRadio1", x=100, y=250, items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", value$="2"
+
+		UI Button "txtUIRadio2Code", x=30, y=450, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI Radio "txtUIRadio2", x=100, y=450, items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", value$="1", fontSize=60, fontName$="allerta stencil", onChange$="RADIO2CLICK"
+		UI TextBlock "txtUIRadio2event", x=30, y=800, width=500, content$="Radio Value: " + UI Value$("txtUIRadio2")
+		Pop Proc
+	End If
+
+	If ID$="btnUIColorPicker"
+		UI TextBlock "txtPageTitle", content$="UI ColorPicker"
+		UI Button "txtUIColorPicker1Code", x=30, y=250, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI ColorPicker "txtUIColorPicker1", x=100, y=250
+
+		UI Button "txtUIColorPicker2Code", x=30, y=350, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI ColorPicker "txtUIColorPicker2", x=100, y=350, width=75, height=75, value$="#000000"
+		UI ColorPicker "txtUIColorPicker3", x=200, y=350, width=75, height=75, value$="#D1D1D1"
+		UI ColorPicker "txtUIColorPicker4", x=300, y=350, width=75, height=75, value$="#004444"
+		UI ColorPicker "txtUIColorPicker5", x=400, y=350, width=75, height=75, value$="#623E87"
+		UI ColorPicker "txtUIColorPicker6", x=500, y=350, width=75, height=75, value$="#C46200"
+
+		UI Button "txtUIColorPicker7Code", x=30, y=450, content$="", iconClass$="bi bi-clipboard-check", class$="btn btn-outline-success", width=45, onClick$="BUTTON_CODE_CLICK", tooltip$="Copy AOZ Code to clipboard", tooltipPlacement$="right"
+		UI ColorPicker "txtUIColorPicker7", x=100, y=450, width=200, height=75, value$="#000000", onChange$="COLOR7CHANGE"
+		UI TextBlock "txtUIColor7event", x=30, y=550, width=500, content$="Color Picker Value: " + UI Value$("txtUIColorPicker7")
+		Pop Proc
+	End If
+End Proc
+
+Procedure MODEL_CONFIRM
+	UI TextBlock "txtModelConfirm", x=30, y=400, fontSize=40, content$="You pressed the confirm button", width=600, class$="text-info bg-dark", padding=20
+End Proc
+
+Procedure SHOW_CONFIRM_2
+	UI Confirm "Your title goes here", "Your confirm content goes here", closeButton$="No Thanks", confirmButton$="Yes Please", onConfirm$="MODEL_CONFIRM"
+	UI Delete "txtModelConfirm"
+End Proc
+
+Procedure SHOW_CONFIRM_1
+	UI Confirm
+	UI Delete "txtModelConfirm"
+End Proc
+
+Procedure VISIT3
+ {
+ 	window.open('https://icons.getbootstrap.com/', '_blank');
+ }
+End Proc
+
+Procedure VISIT2
+ {
+ 	window.open('https://getbootstrap.com/docs/5.0/components/buttons/', '_blank');
+ }
+End Proc
+
+
+Procedure VISIT1
+ {
+ 	window.open('https://getbootstrap.com/docs/5.0/utilities/colors/', '_blank');
+ }
+End Proc
+
+Procedure SHOW_POPUP_2
+	UI Popup "MyPopup1", content$="Popup position top-left with a delay of 5 seconds", placement$="top-left"
+	UI Popup "MyPopup2", content$="Popup position top-center with a delay of 6 seconds", placement$="top-center", delay=6000, class$="text-white bg-success"
+	UI Popup "MyPopup3", content$="Popup position top-right with a delay of 7 seconds", placement$="top-right", delay=7000, class$="text-white bg-dark"
+	UI Popup "MyPopup4", content$="Popup position bottom-left with a delay of 8 seconds", placement$="bottom-left", delay=8000, class$="bg-warning"
+	UI Popup "MyPopup5", content$="Popup position bottom-center with a delay of 9 seconds", placement$="bottom-center", delay=9000, class$="text-white bg-danger"
+	UI Popup "MyPopup6", content$="Popup position bottom-right with a delay of 10 seconds", placement$="bottom-right", delay=10000, class$="text-white bg-primary"
+	UI Popup "MyPopup7", content$="Popup position center with a delay of 11 seconds", placement$="center", delay=11000, class$="bg-info"
+	UI Popup "MyPopup8", content$="Popup position left-center with a delay of 12 seconds", placement$="left-center", delay=12000, class$="bg-secondary"
+	UI Popup "MyPopup9", content$="Popup position right-center with a delay of 13 seconds", placement$="right-center", delay=13000, class$="bg-secondary"
+End Proc
+
+Procedure NUMBER_TEXT_CHANGED[ID$, VALUE$]
+	UI TextBlock "txtUITextBox10event", x=600, y=470, width=500, content$="TextBox Value: " + VALUE$
+End Proc
+
+Procedure SHOW_POPUP_1
+	UI Popup "MyPopup", content$="This is default popup message with a delay of 5 seconds"
+End Proc
+
+Procedure COLOR7CHANGE[ID$, VALUE$]
+	UI TextBlock "txtUIColor7event", x=30, y=550, width=500, content$="Color Picker Value: " + VALUE$
+End Proc
+
+Procedure RADIO2CLICK[ID$, VALUE$]
+	UI TextBlock "txtUIRadio2event", x=30, y=800, width=500, content$="Radio Value: " + VALUE$
+End Proc
+
+Procedure CHECK7CHANGE[ID$, VALUE$]
+	UI TextBlock "txtUICheckBox7event", x=30, y=750, width=500, content$="Check Value: " + VALUE$
+End Proc
+
+Procedure SELECT4CHANGE[ID$, VALUE$]
+	UI TextBlock "txtUISelect4event", x=30, y=600, width=500, content$="Selected Value: " + VALUE$
+End Proc
+
+Procedure SLIDER3CHANGE[ID$, VALUE]
+	UI TextBlock "txtUISlider3event", x=30, y=550, width=500, content$="Slider (min=10 max=40 step=0.5) Value: " + Str$(VALUE)
+End Proc
+
+Procedure SLIDER2CHANGE[ID$, VALUE]
+	UI TextBlock "txtUISlider2event", x=30, y=400, content$="Slider (min=0 max=100 step=1) Value: " + Str$(VALUE)
+End Proc
+
+Procedure BUTTON_EVENT[ID$]
+	UI TextBlock "txtUIButton16event", x=1200, y=300, content$="You Clicked The Button"
+End Proc
+
+Procedure GET_ENTERED_TEXT[ID$]
+	UI TextBlock "txtUITextBox9GetEvent", x=600, y=300, content$="You entered: " + UI Value$("txtUITextBox9")
+End Proc

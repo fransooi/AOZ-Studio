@@ -1,0 +1,28 @@
+<i>Get Sprite Palette</i>
+<b>Get Sprite Palette</b> xxxxxxx
+=
+This command copies the colour values used by your Sprite and Bob images and loads them into the current screen.
+
+Here is an example:
+@code
+Load "AMOSPro Tutorial:Objects/Sprites.Abk"
+Curs Off : Flash Off : Cls 0
+Get Sprite Palette
+Rem Set computed Sprite at hardware coords 128,50 using image 1
+Sprite 8,128,50,1
+Wait Key
+@code
+The optional mask parameter allows the colour selection to be limited. Each colour is represented by a single digit in
+a 32-digit bit mask. If the appropriate digit is set to 1, the colour is copied from the Object Bank. Any colours to be
+omitted (masked) should have their digit set to 0. The following example copies colours 0 to 3 from the Object Bank
+into the screen:
+@code
+Get Sprite Palette %0000000000001111
+@code
+Because the mask is entered as a normal number, either hexadecimal or decimal modes can also be used:
+@code
+Get Sprite Palette $FFFF0000
+@code
+Please note that the GET BOB PALETTE and GET OBJECT PALETTE instructions perform an identical task to
+the GET SPRITE PALETTE command.
+

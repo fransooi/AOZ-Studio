@@ -1,0 +1,8 @@
+<i>Len</i>
+<b>Len</b> xxxxxxx
+=
+The LEN function returns the number of characters stored in a string. For example:
+@code
+Print Len("0123456789")
+@code
+

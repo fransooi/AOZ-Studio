@@ -1,0 +1,9 @@
+<i>Del Sprite</i>
+<b>Del Sprite</b> xxxxxxx
+=
+The following example would delete Sprite images 4,5,6 and 7:
+@code
+Del Sprite 4 To 7
+@code
+After the last image has been deleted from the Object Bank, the entire Bank is erased automatically.
+

@@ -1,0 +1,11 @@
+<i>Get Block</i>
+<b>Get Block</b> xxxxxxx
+=
+The GET BLOCK command is used to grab a rectangular area from the graphics on the current screen. First specify
+a Block number, then set the coordinates of the top-left hand corner of the rectangle to be
+grabbed, followed by the number of pixels making up the width and height of the Block.
+
+An optional mask code can be added after these parameters. If this code is set to zero, the Block will destroy and
+replace any graphics that used to occupy its position on screen. If the mask code is set to 1, the block is given a
+background mask, and colour zero becomes transparent.
+

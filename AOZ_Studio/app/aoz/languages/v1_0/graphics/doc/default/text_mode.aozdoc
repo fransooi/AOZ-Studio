@@ -1,0 +1,44 @@
+<i>Text Mode</i>
+<b>Text Mode</b> xxxxxxx
+=
+'fill' or 'outline' uses the current Ink colour.
+To use 'border', the border ink colour has to be set using the extended version of Ink as shown in the second example below.
+
+This example draws a text phrase several times with the font outlined in different colours.
+
+@code
+//	OUTLINE TEXT
+#googleFont:"mystery quest"				// Choose a Google Font
+Curs Off : Cls 1						// Set up screen, white background
+Set Transparent 0						// Set background colour to transparent
+Set font 0,180							// Set then font size
+Set Line Width 4						// Set the line width
+Text Mode "outline"						// Set the 'Text Mode'to 'outline'
+For f=1 to 5							// Define loop
+Ink f*5+1							// Choose colour from palette
+If f>2 then Text Shadow 10,20,f*3,$333333ff // Apply a shadow to the last 3
+Text 100+f*70,f*200,"Outline Text"	// Draw Text
+wait 0.4							// Wait for 0.4 seconds
+Next f									// Repeat loop
+End
+@code
+
+This example draws a text phrase several times in different colours with the font outlined in black
+@code
+#googleFont:"mystery quest"				// Choose a Google Font
+Curs Off : Cls 1						// Set up screen, white background
+Set Transparent 0						// Set background colour to transparent
+Set font 1,180							// Set then font size
+Text Mode "border"						// Set the Text Mode
+colour 2,$000000						// Define colour number 2 as black
+For f=1 to 5							// Define loop
+Set Line Width f					// Set the line width
+Ink f*5+1,0,2						// Set the ink colours. The last number is the border.
+if f>2 then Text Shadow 10,20,f*3,$333333ff // Draw a shadow beneath last 3
+Text 100+f*70,f*200,"Border Text!"	// Draw Text
+// Choose colour from palette
+wait 0.4							// Wait for 0.4 seconds
+Next f									// Repeat loop
+End
+@code
+

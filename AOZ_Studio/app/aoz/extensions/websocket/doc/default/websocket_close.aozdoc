@@ -1,0 +1,15 @@
+<i>WebSocket Close</i>
+<b>WebSocket Close</b> xxxxxxx
+=
+Closes any connection and destroys the channel. Any pending message will be lost, the connection is cut without any warning to the other side.
+
+Example:
+@code
+URL$ = "ws://my_url.me:3000"
+WebSocket Open 1, URL$
+Repeat
+Wait Vbl
+Until WebSocket Is Connected( 1 )
+WebSocket Close 1
+@code
+

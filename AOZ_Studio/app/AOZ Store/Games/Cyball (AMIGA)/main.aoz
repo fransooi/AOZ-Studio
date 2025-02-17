@@ -1,0 +1,752 @@
+// #################################################################
+// CYBALL 2020 V1.0
+// By Phil Bell
+// Ported to AOZ 24/05/2020
+// phil@aozwithphil.com
+//
+// See video showing the conversion process
+// https://youtu.be/E0Rm4PNil9o
+//
+// #################################################################
+// Change Log
+// #################################################################
+// Version: V1.1
+// Date: 	24 Apr 2021
+// Author: 	Phil Bell
+// Desc:	Fixed issues with missing HUD screen during game play
+//			Resized intro image to allow high score to be displayed
+// #################################################################
+// Version: V1.2
+// Date: 	04 June 2021
+// Author: 	Phil Bell
+// Desc:	Fixed issues running with latest version of AOZ Studio
+// #################################################################
+// Version: V1.3
+// Date: 	6 Sep 2021
+// Author: 	Phil Bell
+// Desc:	Fixed transparent issue when getting images from Sprite
+//			sheet
+// #################################################################
+
+// I originally created this game back in 1993 on the AMIGA 600 using AMOS Pro
+// After finally getting a CF hard drive for my AMIGA 600, I copied the files from Amiga floppy to the CF hard drive
+// Then I used WinUAE to copy the files from the CF memory card to PC
+
+// 80% of the code here is the original but some code changes had to be made for AOZ
+// All original graphics are here, bob banks (.abk) where displayed by using a Java app (https://sourceforge.net/projects/javaamosabk/)
+// Then a simple print screen to paste them into Paint.net, save as .png
+// Sound effects were video recorded while the game was running in WinUAE, then converted to wav using Movavi video editor
+// Music was recorded while being played back on my PC, then exported as WAV using Movavi video editor
+// Original .mod file can be found in the filesystem/	application folder
+// The level data (101.abk, 102.abk, 103.abk) are the original AMOS bank files which contain the csv data for the screen "tiles"
+// See bottom of listing for original code.
+// Also, see my YouTube channel for a video showing how I ported over to AOZ
+// https://www.youtube.com/channel/UCgNZMa2njTO5ddNGdN9obWg
+
+#manifest:"amiga"
+#tvStandard:"ntsc"
+#fullScreen:true
+#splashScreen:true
+#googleFont:"baloo"
+#fps:false
+#clean:true
+#useAssetsResources: False   //For compatibility with the new AOZ Drive behavior
+
+// Load audio assets
+Load Asset "resources/audio/100.wav", 100
+Load Asset "resources/audio/101.wav", 101
+Load Asset "resources/audio/102.wav", 102
+Load Asset "resources/audio/103.wav", 103
+Load Asset "resources/audio/104.mp3", 104
+
+// Play the game music
+Play Audio 104
+
+// Setup screens
+Screen Open 0,320,250,64,Lowres: Screen Display 0,120,30,,
+Screen Open 1,320,200,64,Lowres: Screen Display 1,120,70,,
+Screen Open 2,320, 200, 64, Lowres
+Screen 2: Paste Bob 0, 0, 8: Screen Hide 2
+Screen 1: Reserve Zone 140: Cls 0: Flash Off : Curs Off
+Screen 0: Curs Off : Flash Off : Cls 0
+
+// Reserve screen zones
+Reserve Zone 140
+
+// Used to scale the bob images
+BOBSCALE# = 0.5
+Dim K(150),KX(150),KY(150),MEM(11)
+Dim Q(46),W(46),X2(46),Y2(46),SIZE(46)
+
+Screen Hide 1
+SCN$="HIGH SCORE" : HISC=200: CHEAT = 0
+
+// Load level 1 map matrix and load bobs using sprite sheet
+Load "101.abk", 15: LoadBobs[1]
+
+Goto TITLE2
+
+NEWGAME:
+	Screen Display 0,120,30,,
+	Sam Stop 104: Screen Hide 3: Screen 0: Cls 0
+	Paste Bob 0, 0, 14: Clear Key
+	Screen To Front 1 : Screen 1 : Screen Show 1
+	LEV=1 : PHIL=5 : SCO=0 : LIV=5 : ST=25
+	Gosub DISTARS
+
+RESET:
+	For T=1 To 150 : K(T)=0 : Next
+	ST=25 : X=100 : Y=102 : I=1 : IX=1 : D=0 : SP=3 : DX=SP : S=6
+	Bob Off 1: Cls 0: Wait 20
+
+LOLEVEL:
+	// Data defines number of tiles per game screen
+	1
+	Data 0,122,123,123,124,122,122,122,121,122,122
+	2
+	Data 0,123,124,122,122,122,124,121,122,122,122
+	3
+	Data 0,123,122,124,122,123,122,123,121,122,123
+
+	If LEV=4 Then ST=0 : Goto COMP
+	Restore(LEV)
+
+	If LEV>1
+		Paste Bob 0, 0, 9
+		Wait 3
+		Wait Vbl : Reserve Zone 140 : SCO=SCO+(PHIL*25) : SCO=SCO+(LIV*100) : Gosub DISTARS
+	End If
+
+	If LEV=2 Then Load "102.abk",15 : LoadBobs[2]
+	If LEV=3 Then Load "103.abk",15 : LoadBobs[3]
+
+	Cls 0
+	Get Sprite Palette
+	Gosub DISTARS
+
+	MEM(0)=Start(15)
+	For T=1 To 11 : Read A : MEM(T)=A+MEM(T-1) : Next
+
+HERE:
+	Gosub DISPLAY
+NXT:
+
+Do
+	Bob 1,X,Y,I + 100
+	Bob Scale 1, BOBSCALE#, BOBSCALE#
+
+	If X>305 Then S=S+1 : X=7 : DX=SP : Gosub DISPLAY
+	If X<7 Then S=S-1 : X=305 : DX=-SP : Gosub DISPLAY
+	I=I+IX : If I=5 Then IX=-1
+	If I=1 Then IX=1
+
+	If (Zone(X+SP,Y+6)>0 and Zone(X+SP,Y+6)<100 and DX=SP) or (Zone(X+SP,Y-4)>0 and Zone(X+SP,Y-4)<100 and DX=SP)
+		DX=-SP: Stop Audio 100: Play Audio 100: Goto MISS
+	End If
+
+	If (Zone(X-SP,Y+6)>0 and Zone(X-SP,Y+6)<100 and DX=-SP) or (Zone(X-SP,Y-4)>0 and Zone(X-SP,Y-4)<100 and DX=-SP)
+		DX=SP: Stop Audio 100: Play Audio 100
+	End If
+
+	MISS:
+	X=X+DX
+
+	If FLAG=0 Then Else Goto PHILLIP
+	If Key State(64)=True and PHIL>0 and DX=-SP Then PHIL=PHIL-1 : Gosub DISTARS : DX=SP : Play Audio 102: Goto PHILLIP
+	If Key State(64)=True and PHIL>0 and DX=SP Then PHIL=PHIL-1 :Gosub DISTARS : DX=-SP : Play Audio 102
+
+	PHILLIP:
+	If Key State(64)=True Then FLAG=1 Else FLAG=0
+	If Key State(76)=True Then Gosub UP
+	If Key State(77)=True Then Gosub DWN
+	If Zone(X,Y-4)>99 and Zone(X,Y-4)<110 and CHEAT=0 or Zone(X,Y+6)>99 and Zone(X,Y+6)<110 and CHEAT=0 Then Goto DIE
+
+	Gosub GOT
+	If ST=0 Then LEV=LEV+1 : Goto RESET
+	Wait Vbl
+Loop
+
+GOT:
+	BB=Zone(X,Y)
+	If BB>110 Then Else Return
+	If BB=136 Then PHIL=PHIL+5 : Play Audio 102: Gosub DISTARS : Paste Bob KX(BB),KY(BB),124, BOBSCALE#, BOBSCALE# : K(BB)=1 : Reset Zone BB : Return
+	K(BB)=1 : Paste Bob KX(BB),KY(BB),146, BOBSCALE#, BOBSCALE#
+	Reset Zone BB
+	Play Audio 103
+	ST=ST-1 : SCO=SCO+(LEV*35) : Gosub DISTARS
+	Return
+
+UP:
+	If Zone(X,Y-7)>0 and Zone(X,Y-7)<100 Then Return Else Y=Y-2 : Return
+DWN:
+	If Zone(X,Y+9)>0 and Zone(X,Y+9)<100 Then Return Else Y=Y+2 : Return
+
+DISPLAY:
+	Bob Off 1
+	Reset Zone : Z=1 : KILZ=100
+	M=MEM(S)
+	For TT=0 To 9
+		For T=0 To 11
+			A=Peek(M)
+			If A=0 Then A=24 : Paste Bob T*26,TT*19,A + 100, BOBSCALE#, BOBSCALE# : Goto SKIP
+			If A=39 Then Paste Bob T*26,TT*19,A + 100, BOBSCALE#, BOBSCALE# : Goto SKIP
+			If A=40 Then Paste Bob T*26,TT*19,A + 100, BOBSCALE#, BOBSCALE#: Goto SKIP
+			If A=38 Then Paste Bob T*26,TT*19,A + 100, BOBSCALE#, BOBSCALE#: Goto SKIP
+			If A>40 and A<45 Then Paste Bob T*26,TT*19,124, BOBSCALE#, BOBSCALE# : Paste Bob T*26,TT*19,A + 100, BOBSCALE#, BOBSCALE# : Gosub KILZONE : Goto SKIP
+			If A=45 Then M=M+1 : B=Peek(M) : Gosub STARS : Goto SKIP
+			If A=47 Then B=26 : Gosub STARS : Goto SKIP
+			Paste Bob T*26,TT*19,A + 100, BOBSCALE#, BOBSCALE#
+			Set Zone Z,T*26,TT*19 To T*26+26,TT*19+19
+			Z=Z+1
+			SKIP:
+			M=M+1
+		Next
+	Next
+	Return
+
+STARS:
+	B=B+110
+	If K(B)=1 and B=136 Then Paste Bob T*26,TT*19,124, BOBSCALE#, BOBSCALE# : Return
+	If K(B)=1 Then Paste Bob T*26,TT*19,146, BOBSCALE#, BOBSCALE# : Return
+	Paste Bob T*26,TT*19,A + 100, BOBSCALE#, BOBSCALE#
+	KX(B)=T*26 : KY(B)=TT*19
+	Set Zone B,T*26,TT*19 To T*26+26,TT*19+19
+	Return
+
+KILZONE:
+	Set Zone KILZ,T*26,TT*19 To T*26+26,TT*19+19
+	KILZ=KILZ+1
+	Return
+
+DIE:
+	Play Audio 101
+	For T=50 To 61
+		Bob 1,X,Y,T + 100
+		Bob Scale 1, BOBSCALE#, BOBSCALE#
+		Wait 0.1
+	Next T
+	Bob Off 1
+	Wait Vbl
+	X=100 : Y=102 : S=6 : LIV=LIV-1 : If LIV=0 Then Goto DEAD
+	Gosub DISTARS : Goto HERE
+
+TITLE:
+	Play Audio 104
+
+TITLE2:
+	Screen 0: Cls 0: Screen Show 0:	Screen To Front 0: Paste Bob 0, 0, 15
+	T$=Str$(HISC) : XX=220 : YY=180 : LL=4 : P=0 : Gosub DIGIT
+	Ink 5: Set Font "baloo", 15: Text 50, 195, SCN$
+
+TITLE1:
+
+	SC$="CONTROLS: UP ARROW-UP    DOWN ARROW-DOWN    SPACE-SWITCH DIRECTION    "
+	SC$=SC$+"COLLECT 25 GOLD PIECES TO COMPLETE THE LEVEL...THERE ARE 3 LEVELS TO COMPLETE..."
+	SC$=SC$+"PRESS SPACE TO START..."
+	SC$=SC$+"ORIGINALLY WRITTEN IN EASY AMOS IN 1993....."
+	SC$=SC$+"                                            "
+
+	Screen Open 3,368,50,64,Lowres
+	Curs Off : Flash Off : Cls 0 : Get Palette 2
+	Screen Display 3,128+10,235,305,26
+	Screen Open 4,368,50,64,Lowres
+	Curs Off : Flash Off : Cls 0 : Get Palette 2
+	Screen Hide 4: Screen Show 3
+
+	SCRL$="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789(!):-., "
+	Restore SCR0LLY_DATA
+
+	For F=1 To 44
+	  Read TEMP$,Q(F),W(F),X2(F),Y2(F),SIZE(F)
+	Next F
+
+   	SP=1: TEMP2=Len(SC$)
+
+   	For LOP=0 To TEMP2-1
+		CNUM = Instr(SCRL$, Mid$(SC$, LOP+1, 1))
+		Screen 2
+		Get Bob 1000, Q(CNUM),W(CNUM),X2(CNUM),Y2(CNUM) + 1
+		Screen 3
+		Ink Rnd( 15 ) + 1 : Bar 320, 0 To 368, 50 : Paste Bob 320, 0, 1000
+     	For LOP1=1 To SIZE(CNUM) Step SP
+		 	If Key State(64)=True
+				Goto NEWGAME
+			End If
+			Screen Copy 3,0,0,368,50 To 4,-SP,0,
+         	Screen Copy 4,0,0,368,50 To 3,0,0,
+ 			Wait Vbl
+		 Next LOP1
+	Next LOP
+
+SCR0LLY_DATA:
+     Data "A",1,1,31,25,32
+     Data "B",34,1,64,25,32
+     Data "C",67,1,97,25,32
+     Data "D",100,1,130,25,32
+     Data "E",133,1,163,25,32
+     Data "F",166,1,196,25,32
+     Data "G",199,1,229,25,32
+     Data "H",232,1,262,25,32
+     Data "I",265,1,276,25,12
+     Data "J",1,27,31,51,32
+     Data "K",34,27,64,51,32
+     Data "L",67,27,97,51,32
+     Data "M",100,27,130,51,32
+     Data "N",133,27,163,51,32
+     Data "O",166,27,196,51,32
+     Data "P",199,27,229,51,32
+     Data "Q",232,27,262,51,32
+     Data "R",265,27,295,51,32
+     Data "S",1,53,31,77,32
+     Data "T",34,53,64,77,32
+     Data "U",67,53,97,77,32
+     Data "V",100,53,130,77,32
+     Data "W",133,53,163,77,32
+     Data "X",166,53,196,77,32
+     Data "Y",199,53,229,77,32
+     Data "Z",232,53,262,77,32
+     Data "0",1,79,29,103,32
+     Data "1",32,79,46,103,17
+     Data "2",49,79,77,103,32
+     Data "3",80,79,108,103,31
+     Data "4",111,79,139,103,32
+     Data "5",142,79,171,103,32
+     Data "6",174,79,202,103,32
+     Data "7",205,79,233,103,32
+     Data "8",236,79,264,103,32
+     Data "9",267,79,295,103,32
+     Data "(",1,105,16,129,14
+     Data "!",19,105,29,129,12
+     Data ")",32,105,47,129,14
+     Data ":",50,105,60,129,12
+     Data "-",63,105,93,129,32
+     Data ".",96,105,106,129,12
+     Data ",",109,105,119,129,12
+     Data " ",1,170,20,199,19
+
+Goto TITLE1
+
+DISTARS:
+	Screen 0
+	T$=Str$(ST) : XX=230 : YY=20 : LL=2 : P=0 : Gosub DIGIT
+	T$=Str$(SCO) : XX=230 : YY=3 : LL=4 : P=0 : Gosub DIGIT
+	T$=Str$(PHIL) : XX=80 : YY=20 : LL=2 : P=0 : Gosub DIGIT
+	T$=Str$(LIV) : XX=80 : YY=3 : LL=1 : P=0 : Gosub DIGIT
+	Screen 1
+	Return
+
+DIGIT:
+	TT=LL-(Len(T$)-1)
+	If TT=0 Then Goto NEX
+	For G=1 To TT
+	    XD=XX+P*16
+	    Paste Bob XD,YY,162, BOBSCALE#, BOBSCALE#
+		P=P+1
+	Next
+	NEX:
+	TT=Len(T$)-1
+	For G=1 To TT
+	    XD=XX+P*16
+	    A$=Mid$(T$,G+1,1)
+	    Paste Bob XD,YY,163+Asc(A$)-48, BOBSCALE#, BOBSCALE#
+	 	P=P+1
+	Next
+	Return
+
+DEAD:
+	SCO=SCO+(PHIL*25) : Gosub DISTARS
+	Screen 1: Cls 0
+	Paste Bob 0, 0, 7
+	Gosub FIRB
+	Gosub NAME
+	Screen 0: Cls 0:	Wait 0.5: Clear Key
+	Screen 1
+	If LEV>1 Then Load "101.abk",15 : LoadBobs[1]
+	Cls 0 : Reserve Zone 140
+	Goto TITLE
+
+FIRB:
+	Do
+		If Key State(64)=True Then Return
+		Wait Vbl
+	Loop
+
+COMP:
+	SCO=SCO+(PHIL*25) : SCO=SCO+(LIV*100) : Gosub DISTARS
+	Screen 1
+	Paste Bob 0, 0, 13
+	Gosub FIRB
+	Gosub NAME
+	Screen 0: Screen 1
+	If LEV>1 Then Load "101.abk",15 : LoadBobs[1]
+	Cls 0 : Reserve Zone 140
+	Goto TITLE
+
+NAME:
+	If SCO>HISC Then HISC=SCO Else Return
+	Curs Off
+	Paper 0 : Pen 1
+	Cls 0
+
+	Locate 0,2 : Print "YOUR NAME"
+	Locate 0,3 : Input NAME$
+
+	If NAME$="iwanttocheat" Then CHEAT=1 : NAME$="Cheater" Else CHEAT=0
+	SCN$=Upper$(Mid$(NAME$,1,13))
+	Return
+
+Procedure LoadBobs[LEVEL]
+	Screen Open 5, 808, 420, 64, Lowres
+	Screen Hide 5: Screen 5
+	Cls 0
+	Paste Bob 0, 0, LEVEL
+	BI = 1
+
+	// Get game images
+	For y = 0 To 7
+		For x = 0 To 9
+			If BI > 61: Exit: End If
+			Get Image BI + 100, x * 84, y * 58, 53, 38
+			BI = BI + 1
+		Next x
+	Next y
+
+	// Get digit images
+	For x = 84 To 604 Step 52
+		Get Image BI + 100, x, 348, 21, 36
+		BI = BI + 1
+	Next x
+
+	// Set Hot Spots
+	For i = 101 To 105
+		Hot Spot i, $11
+	Next i
+
+	For i = 150 To 161
+		Hot Spot i, $11
+	Next i
+
+	Screen Close 5
+End Proc
+
+
+
+/*
+	Original AMOS Code written in 1993
+	By Phil Bell
+
+Screen Open 0,640,230,32,Lowres
+Screen Display 0,140,50,,
+Screen 0 : Curs Off : Flash Off : Cls 0
+
+Track Load "df0:mod.6",6
+Track Loop On
+Track Play 6
+Load "df0:12",12
+Load "df0:9",9
+Load "df0:10",10
+Load "df0:13",13
+Load "df0:14",14
+Unpack 12 To 0
+'
+'which computer
+'
+Limit Mouse 160,249 To 397,272
+Screen 0 : Reserve Zone 2
+Set Zone 1,160,249 To 235,272
+Set Zone 2,257,249 To 397,272
+SHANE:
+Repeat
+Until Mouse Key=1
+OPT=Zone(X Mouse,Y Mouse)
+If OPT>0 Then Else Goto SHANE
+If OPT=1 Then TYP=1200
+If OPT=2 Then TYP=600
+Hide
+Erase 12 : Fade 3 : Wait 45
+Screen Close 0
+'
+'
+Screen Open 1,320,200,32,Lowres : Screen Display 1,140,90,,
+Curs Off : Cls 0 : Hide
+Screen Open 0,320,230,32,Lowres
+Screen Display 0,140,50,,
+Screen 0 : Curs Off : Flash Off : Cls 0
+'Timer=0
+'For TT=0 To 80000
+'Next
+'If Timer>50 Then TYP=600
+'If Timer<50 Then TYP=1200
+
+
+Load "df0:4",2
+Sam Bank 2
+Load "df0:7",7
+Load "df0:8",8
+Unpack 8 To 2 : Erase 8 : Screen Hide 2
+Screen 1
+Reserve Zone 140
+Cls 0
+Flash Off : Curs Off : Hide
+Dim K(150),KX(150),KY(150),MEM(11)
+Dim Q(46),W(46),X2(46),Y2(46),SIZE(46)
+Screen Hide 1
+SCN$="PHIL BELL" : HISC=450
+Load "df0:1.abk",15 : Load "df0:bobs.abk"
+Goto TITLE2
+NEWGAME:
+Track Stop
+Screen 0
+Unpack 14 To 0 : Screen To Front 1 : Screen 1 : Screen Show 1
+LEV=1 : PHIL=5 : SCO=0 : LIV=5 : ST=25
+Gosub DISTARS
+RESET:
+For T=1 To 150 : K(T)=0 : Next
+ST=25 : X=100 : Y=102 : I=1 : IX=1 : D=0 : SP=7 : DX=SP : S=6
+Bob Off 1 : Fade 5 : Wait 75 : Cls 0
+LOLEVEL:
+1
+Data 0,122,123,123,124,122,122,122,121,122,122
+2
+Data 0,123,124,122,122,122,124,121,122,122,122
+3
+Data 0,123,122,124,122,123,122,123,121,122,123
+If LEV=4 Then ST=0 : Goto COMP
+Restore(LEV)
+If LEV>1 Then Unpack 9 To 1 : Wait Vbl : Reserve Zone 140 : SCO=SCO+(PHIL*25) : SCO=SCO+(LIV*100) : Gosub DISTARS
+'If LEV=1 Then Load "df0:1.abk",15 : Load "df0:bobs.abk"
+If LEV=2 Then Load "df0:2.abk",15 : Load "df0:bobs1.abk"
+If LEV=3 Then Load "df0:3.abk",15 : Load "df0:bobs2.abk"
+Fade 5 : Wait 75 : Cls 0
+Get Sprite Palette
+Gosub DISTARS
+MEM(0)=Start(15)
+For T=1 To 11 : Read A : MEM(T)=A+MEM(T-1) : Next
+HERE:
+Gosub DISPLAY
+NXT:
+Do
+'
+Bob 1,X,Y,I
+
+If TYP=600 Then Wait Vbl
+If TYP=1200 Then Wait 2
+
+If X>305 Then S=S+1 : X=7 : DX=SP : Gosub DISPLAY
+If X<7 Then S=S-1 : X=305 : DX=-SP : Gosub DISPLAY
+I=I+IX : If I=5 Then IX=-1
+If I=1 Then IX=1
+If Zone(X+SP,Y+6)>0 and Zone(X+SP,Y+6)<100 and DX=SP or Zone(X+SP,Y-4)>0 and Zone(X+SP,Y-4)<100 and DX=SP Then DX=-SP : Play Audio 4,3 : Goto MISS
+If Zone(X-SP,Y+6)>0 and Zone(X-SP,Y+6)<100 and DX=-SP or Zone(X-SP,Y-4)>0 and Zone(X-SP,Y-4)<100 and DX=-SP Then DX=SP : Play Audio 4,3
+MISS:
+X=X+DX
+J=Joy(1)
+If FLAG=0 Then Else Goto PHILLIP
+If J>15 and PHIL>0 and DX=-SP Then PHIL=PHIL-1 : Play Audio 2,2 : Gosub DISTARS : DX=SP : Goto PHILLIP
+If J>15 and PHIL>0 and DX=SP Then PHIL=PHIL-1 : Play Audio 2,2 : Gosub DISTARS : DX=-SP
+PHILLIP:
+If J>15 Then FLAG=1 Else FLAG=0
+If J and 1 Then Gosub UP
+If J and 2 Then Gosub DWN
+If Zone(X,Y-4)>99 and Zone(X,Y-4)<110 and CHEAT=0 or Zone(X,Y+6)>99 and Zone(X,Y+6)<110 and CHEAT=0 Then Goto DIE
+
+Gosub GOT
+If ST=0 Then LEV=LEV+1 : Goto RESET
+Loop
+GOT:
+BB=Zone(X,Y)
+If BB>110 Then Else Return
+If BB=136 Then PHIL=PHIL+5 : Play Audio 2,2 : Gosub DISTARS : Autoback 2 : Paste Bob KX(BB),KY(BB),24 : Autoback 0 : K(BB)=1 : Reset Zone BB : Return
+K(BB)=1 : Autoback 2 : Paste Bob KX(BB),KY(BB),46 : Autoback 0
+Reset Zone BB
+ST=ST-1 : Play Audio 2,1 : SCO=SCO+(LEV*35) : Gosub DISTARS
+Return
+UP:
+If Zone(X,Y-7)>0 and Zone(X,Y-7)<100 Then Return Else Y=Y-3 : Return
+DWN:
+If Zone(X,Y+9)>0 and Zone(X,Y+9)<100 Then Return Else Y=Y+3 : Return
+'
+DISPLAY:
+Autoback 2
+Bob Off 1
+Autoback 0
+Reset Zone : Z=1 : KILZ=100
+M=MEM(S)
+For TT=0 To 9
+For T=0 To 11
+A=Peek(M)
+If A=0 Then A=24 : Paste Bob T*26,TT*19,A : Goto SKIP
+If A=39 Then Paste Bob T*26,TT*19,A : Goto SKIP
+If A=40 Then Paste Bob T*26,TT*19,A : Goto SKIP
+If A=38 Then Paste Bob T*26,TT*19,A : Goto SKIP
+If A>40 and A<45 Then Paste Bob T*26,TT*19,24 : Paste Bob T*26,TT*19,A : Gosub KILZONE : Goto SKIP
+If A=45 Then M=M+1 : B=Peek(M) : Gosub STARS : Goto SKIP
+If A=47 Then B=26 : Gosub STARS : Goto SKIP
+Paste Bob T*26,TT*19,A
+Set Zone Z,T*26,TT*19 To T*26+26,TT*19+19
+Z=Z+1
+SKIP:
+M=M+1
+Next : Next
+Return
+STARS:
+B=B+110
+If K(B)=1 and B=136 Then Paste Bob T*26,TT*19,24 : Return
+If K(B)=1 Then Paste Bob T*26,TT*19,46 : Return
+Paste Bob T*26,TT*19,A
+KX(B)=T*26 : KY(B)=TT*19
+Set Zone B,T*26,TT*19 To T*26+26,TT*19+19
+Return
+KILZONE:
+Set Zone KILZ,T*26,TT*19 To T*26+26,TT*19+19
+KILZ=KILZ+1
+Return
+DIE:
+Play Audio 2,4
+For T=50 To 61 : Bob 1,X,Y,T : Wait 5 : Next T : Bob Off 1 : Wait Vbl
+X=100 : Y=102 : S=6 : LIV=LIV-1 : If LIV=0 Then Goto DEAD
+Gosub DISTARS : Goto HERE
+DISTARS:
+Screen 0
+T$=Str$(ST) : XX=230 : YY=20 : LL=2 : P=0 : Gosub DIGIT
+T$=Str$(SCO) : XX=230 : YY=3 : LL=4 : P=0 : Gosub DIGIT
+T$=Str$(PHIL) : XX=80 : YY=20 : LL=2 : P=0 : Gosub DIGIT
+T$=Str$(LIV) : XX=80 : YY=3 : LL=1 : P=0 : Gosub DIGIT
+Screen 1
+Return
+DIGIT:
+TT=LL-(Len(T$)-1)
+If TT=0 Then Goto NEX
+For G=1 To TT
+      XD=XX+P*16
+      Paste Bob XD,YY,62 : P=P+1 : Next
+NEX:
+TT=Len(T$)-1
+For G=1 To TT
+      XD=XX+P*16
+      A$=Mid$(T$,G+1,1)
+    Paste Bob XD,YY,63+Asc(A$)-48
+ P=P+1 : Next
+Return
+TITLE:
+Track Play 6
+TITLE2:
+Unpack 10 To 0
+T$=Str$(HISC) : XX=160 : YY=205 : LL=4 : P=0 : Gosub DIGIT
+Paper 0 : Locate 7,26 : Print SCN$
+TITLE1:
+SC$="HELLO AND WELCOME TO CYBALL !!!!!                         "
+   SC$=SC$+"THE AIM OF THE GAME IS TO GUIDE CYBALL ROUND THE UNDER GROUND CAVES "
+   SC$=SC$+"....   CYBALL IS CONSTANTLY BOUNCING FROM LEFT TO RIGHT SO YOU CAN ONLY MOVE UP AND DOWN "
+   SC$=SC$+"....  WHILE YOU ARE DOING THIS YOU MUST COLLECT 25 PIECES"
+   SC$=SC$+" OF GOLD ON EACH LEVEL WITHOUT HITTING ANY OF THE SPIKES"
+   SC$=SC$+"....  SOUNDS SIMPLE ENOUGH BUT ITS HARDER THAN IT SOUNDS. IF YOU PRESS FIRE"
+   SC$=SC$+" THEN CYBALL WILL CHANGE DIRECTION BUT THESE ARE LIMITED."
+   SC$=SC$+"...  IF YOU DO RUN OUT THEN THERE ARE 5 TO COLLECT ON EACH LEVEL."
+   SC$=SC$+"    HOPE YOU ENJOY THE GAME AS MUCH AS I DID WRITING IT"
+   SC$=SC$+"                                            "
+   Screen Open 3,368,25,8,Lowres
+   Curs Off : Flash Off : Cls 0 : Get Palette 2 : Hide On
+   Double Buffer
+   Autoback 0
+   Screen Display 3,130,275,305,
+   SCRL$="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789(!):-., "
+   Restore SCR0LLY_DATA
+   For F=1 To 44
+      Read TEMP$,Q(F),W(F),X2(F),Y2(F),SIZE(F)
+   Next F
+   SP=4
+   TEMP=Varptr(SC$)
+   TEMP2=Len(SC$)
+   For LOP=0 To TEMP2-1
+      CNUM=Instr(SCRL$,Chr$(Peek(TEMP+LOP)))
+      Screen Copy 2,Q(CNUM),W(CNUM),X2(CNUM),Y2(CNUM)+1 To 3,320,0
+      For LOP1=1 To SIZE(CNUM) Step SP
+         Screen Swap
+If Joy(1)=16 Then Fade 5 : Wait 75 : Screen Hide 3 : Screen 0 : Fade 5 : Wait 75 : Goto NEWGAME
+Wait Vbl
+         Screen Copy Physic(3),0,0,368,40 To Logic(3),-SP,0
+      Next LOP1
+  Next LOP
+SCR0LLY_DATA:
+   Data "A",1,1,31,25,32
+   Data "B",34,1,64,25,32
+   Data "C",67,1,97,25,32
+   Data "D",100,1,130,25,32
+   Data "E",133,1,163,25,32
+   Data "F",166,1,196,25,32
+   Data "G",199,1,229,25,32
+   Data "H",232,1,262,25,32
+   Data "I",265,1,276,25,12
+   Data "J",1,27,31,51,32
+   Data "K",34,27,64,51,32
+   Data "L",67,27,97,51,32
+   Data "M",100,27,130,51,32
+   Data "N",133,27,163,51,32
+   Data "O",166,27,196,51,32
+   Data "P",199,27,229,51,32
+   Data "Q",232,27,262,51,32
+   Data "R",265,27,295,51,32
+   Data "S",1,53,31,77,32
+   Data "T",34,53,64,77,32
+   Data "U",67,53,97,77,32
+   Data "V",100,53,130,77,32
+   Data "W",133,53,163,77,32
+   Data "X",166,53,196,77,32
+   Data "Y",199,53,229,77,32
+   Data "Z",232,53,262,77,32
+   Data "0",1,79,29,103,32
+   Data "1",32,79,46,103,32
+   Data "2",49,79,77,103,32
+   Data "3",80,79,108,103,32
+   Data "4",111,79,139,103,32
+   Data "5",142,79,171,103,32
+   Data "6",174,79,202,103,32
+   Data "7",205,79,233,103,32
+   Data "8",236,79,264,103,32
+   Data "9",267,79,295,103,32
+   Data "(",1,105,16,129,14
+   Data "!",19,105,29,129,12
+   Data ")",32,105,47,129,14
+   Data ":",50,105,60,129,12
+   Data "-",63,105,93,129,32
+   Data ".",96,105,106,129,12
+   Data ",",109,105,119,129,12
+   Data " ",1,170,20,199,19
+Goto TITLE1
+DEAD:
+SCO=SCO+(PHIL*25) : Gosub DISTARS
+Screen 1 : Fade 5 : Wait 75
+Unpack 7 To 1
+Gosub FIRB
+Gosub NAME
+Fade 5 : Wait 75
+Screen 0 : Fade 5 : Screen 1
+If LEV>1 Then Load "df0:1.abk",15 : Load "df0:bobs.abk"
+Cls 0 : Reserve Zone 140
+Goto TITLE
+FIRB:
+Do
+If Joy(1)=16 Then Return
+Loop
+COMP:
+SCO=SCO+(PHIL*25) : SCO=SCO+(LIV*100) : Gosub DISTARS
+Screen 1 : Fade 5 : Wait 75
+Unpack 13 To 1
+Gosub FIRB
+Gosub NAME
+Fade 5 : Wait 75
+Screen 0 : Fade 5 : Screen 1
+If LEV>1 Then Load "df0:1.abk",15 : Load "df0:bobs.abk"
+Cls 0 : Reserve Zone 140
+Goto TITLE
+NAME:
+If SCO>HISC Then HISC=SCO Else Return
+Curs Off
+Paper 0 : Pen 1
+Locate 8,20 : Print "PLEASE ENTER YOUR NAME"
+Locate 14,22 : Input NAME$
+If NAME$="tangomanishere" Then CHEAT=1 : Play Audio 2,2 : NAME$="PHIL BELL" Else CHEAT=0
+SCN$=Upper$(Mid$(NAME$,1,13))
+Return
+*/

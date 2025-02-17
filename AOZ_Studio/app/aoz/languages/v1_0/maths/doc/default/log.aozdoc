@@ -1,0 +1,9 @@
+<i>Log</i>
+<b>Log</b> xxxxxxx
+=
+LOG returns the logarithm in base 10 (log 10) of the given value. For example:
+@code
+Print Log(10)
+A#=Log(100)
+@code
+

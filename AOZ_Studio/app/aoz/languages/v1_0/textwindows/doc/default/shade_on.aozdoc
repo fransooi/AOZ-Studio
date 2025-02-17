@@ -1,0 +1,10 @@
+<i>Shade On</i>
+<b>Shade On</b> xxxxxxx
+=
+The appearance of your text can be changed more subtly by introducing a mask pattern that reduces the brightness of
+the characters when printed. To make use of this shading facility, simply turn it on and off like this:
+@code
+Shade On :Print "Shady Lady"
+Shade Off:Print "Norman Normal"
+@code
+

@@ -1,0 +1,210 @@
+// #################################################################
+// FLAPPY BIRD V1.0
+// By Phil Bell
+// Created 11 May 2020
+// phil@aozwithphil.com
+// #################################################################
+// Change Log
+// #################################################################
+// Date: 	03 Apr 2021
+// Author: 	Phil Bell
+// Desc:	Fixed the player rotation
+// #################################################################
+
+// Check the full tuto in video: https://youtu.be/1nZJMqroGv8
+// on the AOZ.Studio Youtube channel.
+
+// Use the SPACE BAR, Mouse Key or Touch Screen to Play
+
+
+#manifest: "aoz"
+#displayWidth: 225
+#displayHeight: 400
+#fullScreen: true
+#splashScreen: false
+#googleFont: "baloo"
+#clean:true
+#useAssetsResources: False   //For compatibility with the new AOZ Drive behavior
+
+Load Asset "resources/audio/sfx_point.wav", 1
+Load Asset "resources/audio/sfx_die.wav", 2
+Load Asset "resources/audio/sfx_wing.wav", 3
+Load Asset "resources/audio/sfx_hit.wav", 4
+
+DW = 225: DH = 400
+Screen Open 0, DW, DH, 32, Lowres
+Cls 0: Curs Off
+Screen Open 1, DW, 50, 32, Lowres
+Cls 0: Curs Off
+Set Transparent 0
+Screen 0
+Screen To Front 1
+
+Degree
+Priority On
+
+Dim PIL_STATUS(10)
+Dim PILX#(10)
+Dim PILY#(10)
+Dim PILS(10)
+
+Hot Spot 10, $11: Hot Spot 11, $11
+Hot Spot 111, $11: Hot Spot 112, $11
+CURRENT_TIME# = 0: LAST_TIME# = 0: DELTA_TIME# = 0
+
+START_GAME:
+Bob Off
+XB# = 0: XB1# = 0
+PX# = DW / 2: PY# = DH / 2: PF = 10: PYV# = 0: G = 25: PR# = 0 : MBSTATE = 0
+Global MBSTATE
+
+LEVELX = 0: DO_GAME_OVER = 0: SCORE = 0
+For i = 0 to 10: PIL_STATUS(i) = 0: PILS(i) = 0: Next i
+
+Touch On Change "TOUCH_CHANGE_GAME"
+Procedure TOUCH_CHANGE_GAME [ X, Y, LASTX, LASTY, STATE ]
+	If STATE = 3 Then MBSTATE = 0
+	If ( STATE = 1 Or STATE = 2 ) And MBSTATE = 0 Then MBSTATE= 1
+End Proc
+
+Gosub UPDATE_GAME_OBJECTS
+Gosub DRAW_GAME_OBJECTS
+Paste Bob DW / 2, DH / 2 - 40, 111
+Gosub DRAW_SCORE
+Do
+	CURRENT_TIME# = Timer
+	DELTA_TIME# = CURRENT_TIME# - LAST_TIME#
+
+	Gosub UPDATE_FOREGROUND
+	Gosub DRAW_FOREGROUND
+
+	A$ = Inkey$
+	If A$ = " " Or MBSTATE = 1
+		PYV# = -6
+		Play Audio 3
+		Goto MAIN_GAME_LOOP
+	End If
+
+	LAST_TIME# = CURRENT_TIME#
+	Wait Vbl
+Loop
+
+MAIN_GAME_LOOP:
+	Do
+		CURRENT_TIME# = Timer
+		DELTA_TIME# = CURRENT_TIME# - LAST_TIME#
+
+		Gosub UPDATE_GAME_OBJECTS
+		Gosub DRAW_GAME_OBJECTS
+
+		If DO_GAME_OVER = 1
+			Goto GAME_OVER_LOOP
+		End If
+		LAST_TIME# = CURRENT_TIME#
+		Wait Vbl
+	Loop
+
+GAME_OVER_LOOP:
+Play Audio 4
+Play Audio 2
+Bob 100, DW / 2, DH / 2 - 40, 112
+Clear Key
+	Do
+		CURRENT_TIME# = Timer
+		DELTA_TIME# = CURRENT_TIME# - LAST_TIME#
+		A$ = Inkey$
+		If A$ = " " Or MBSTATE = 1
+			Goto START_GAME
+		End If
+		LAST_TIME# = CURRENT_TIME#
+		Wait Vbl
+	Loop
+
+UPDATE_GAME_OBJECTS:
+	Add XB#, -25 * DELTA_TIME#
+	If Abs(XB#) >= DW: XB# = 0: End If
+	Gosub UPDATE_FOREGROUND
+	Gosub DRAW_FOREGROUND
+
+	A$ = Inkey$
+	If A$ = " " Or MBSTATE = 1: PYV# = -6: Play Audio 3: End If
+
+	Add PYV#, G * DELTA_TIME#
+	Add PY#, PYV#
+	PR# = PYV# * 4
+
+	If PY# >= 350: PY# = 350: PR# = 0: End If
+	If PYV# <= 0: PF = 11: Else: PF = 10: End If
+
+	Add LEVELX, Int(60 * DELTA_TIME#)
+
+	If Int(LEVELX) Mod 60 = 0
+		Add LEVELX, 1
+		For i = 0 To 10
+			If PIL_STATUS(i) = 0
+				PIL_STATUS(i) = 1
+				PILX#(i) = DW + 5
+				PILY#(i) = 20 + Rnd(180)
+				PILS(i) = 0
+				Exit
+			End If
+		Next i
+	End If
+
+	For i = 0 To 10
+		If PIL_STATUS(i) = 1
+			Add PILX#(i), -90 * DELTA_TIME#
+			If PILX#(i) < -45
+				Bob Off i + 20
+				Bob Off i + 30
+				PIL_STATUS(i) = 0
+			End If
+
+			If PILX#(i) < DW / 2 - 45 and PILS(i) = 0
+				PILS(i) = 1
+				Add SCORE, 1
+				Gosub DRAW_SCORE
+				Play Audio 1
+			End If
+		End If
+	Next i
+
+	c = Bob Col (1, 20 To 42)
+	If c = 1
+		DO_GAME_OVER = 1
+	End If
+Return
+
+DRAW_GAME_OBJECTS:
+	Paste Bob XB#, 0, 100
+	Paste Bob XB# + DW, 0, 100
+
+	Bob 1, PX#, PY#, PF
+	Bob Rotate 1, PR#
+
+	For i = 0 To 10
+		If PIL_STATUS(i) = 1
+			Bob i + 20, PILX#(i), PILY#(i) - 252, 102
+			Bob i + 30, PILX#(i), PILY#(i) + 120, 103
+		End If
+	Next i
+Return
+
+UPDATE_FOREGROUND:
+	Add XB1#, -90 * DELTA_TIME#
+	If Abs(XB1#) >= DW: XB1# = 0: End If
+Return
+
+DRAW_FOREGROUND:
+	Bob 41, XB1#, 350, 110
+	Bob 42, XB1# + 243, 350, 110
+Return
+
+DRAW_SCORE:
+	Screen 1
+	Cls 0
+	Set Font "baloo", 50
+	Ink 2
+	Text DW / 2, 40, Str$(SCORE), "#center"
+	Screen 0
+Return

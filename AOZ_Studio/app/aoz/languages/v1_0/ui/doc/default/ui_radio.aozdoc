@@ -1,0 +1,31 @@
+<i>UI Radio</i>
+<b>UI Radio</b> xxxxxxx
+=
+The items$ is a comma separated list of value:item pairs .
+
+For example:-
+items$ = "aoz:AOZ Studio is the best"
+
+The value part is "aoz" and the item part (the text displayed on the component) is the text after the ":", which is "AOZ Studio is the best"
+
+@code
+// Display 3 radio buttons with the second button selected
+UI Radio "MyRadio", items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", value$="2"
+
+// To get the selected radio button value you can use the UI Value$ function
+Print UI Value$("MyRadio")
+
+// You can set the selected radio button by setting its value$ parameter
+UI Radio "MyRadio", value$="2"
+
+// You can also use the UI Value command
+UI Value "MyRadio", value$="1"
+
+// Example using the onChange$
+UI Radio "MyRadio", items$="cats:I like cats the best,dogs:I like dogs the best", value$="dog", onChange$="MY_RADIO_CHANGE"
+
+Procedure MY_RADIO_CHANGE[ID$, VALUE$]
+Print "You like " + VALUE$ + " the best"
+End Proc
+@code
+

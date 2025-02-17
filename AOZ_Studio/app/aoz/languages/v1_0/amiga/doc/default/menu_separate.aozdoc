@@ -1,0 +1,11 @@
+<i>Menu Separate</i>
+<b>Menu Separate</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+level will be deactivated. If you define an individual item in brackets by giving its parameters, only that item will become inactive.
+
+If no inactive string has been defined when you originally set your menu up with MENU$, any menu options that
+have been made inactive will be shown in italics. Otherwise the special inactive string will appear.
+
+

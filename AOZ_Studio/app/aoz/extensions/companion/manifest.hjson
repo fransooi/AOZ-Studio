@@ -1,0 +1,53 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Instructions Module Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"				// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "The Companion Extension"
+		author: "By Francois Lionet"
+		version: "Version 1.00"
+		date: "09/10/2021"
+		copyright: "(c) AOZ Studio 2019-2021"
+		start: "companion.aoz"
+		name: "companion"
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+				"companion_server_not_running: Please launch the Aoz Companion server (python) first" ,				
+				"companion_not_connected: Aoz Companion server not connected",				
+				"companion_API_not_open: API not open on Companion server (name: %1)",
+				"companion_API_already_open: API already open on Companion server (name: %1)"
+			]
+			fr:
+			[
+				"companion_server_not_running: Veuillez lancer le server Aoz Companion (python) en premier." ,				
+				"companion_not_connected: Le server Aoz n'est pas connecte",
+				"companion_API_not_open: API non ouverte sur le serveur Aoz (nom: %1)",
+				"companion_API_already_open: API deja ouverte sur le serveur Aoz (name: %1)"
+			]
+		}
+	}
+}

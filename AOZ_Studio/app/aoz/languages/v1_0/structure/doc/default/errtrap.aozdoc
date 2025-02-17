@@ -1,0 +1,6 @@
+<i>ErrTrap</i>
+<b>ErrTrap</b> xxxxxxx
+=
+This function is used to return the error status after a previous TRAP command.
+If no error has been detected, a zero is returned, otherwise the appropriate error number is given. The related error message can then be returned using the ERR$ function.
+

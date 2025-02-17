@@ -1,0 +1,52 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Transpiler Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "1"
+	//language: 'fr'						// Enforce the transpiler language
+
+	// Informations about the application
+	directories:
+	{
+		modules: "./languages"
+		modulesObj: "./languages/build"
+		extensions: "./extensions"
+		extensionsObj: "./extensions/build"
+		data: "./data"
+		runtime: "./runtime"
+		templates: "./templates"
+		fonts: "./fonts"
+		utilities: "./utilities/windows"
+		log: "./logs"
+	}
+	warnings:
+	{
+		'variable_not_declared': true,
+		'instruction_not_implemented': true,
+	}
+	options:
+	{
+		clean: true
+		cleanModules: false
+		cleanExtensions: false
+		exe: false
+		speed: "fast"
+		tabWidth: 4
+		basicRemarks: true
+		fullPage: false
+		fullScreen: false
+	}
+}

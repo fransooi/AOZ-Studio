@@ -1,0 +1,1402 @@
+////////////////////////////////////////////////////////////////////
+// Crunchman Reloaded - Included in AOZ Studio Beta Release 0.9.8 //
+////////////////////////////////////////////////////////////////////
+//
+// First Release with AOZ - May 17th 2020
+//
+// v1.3
+//
+// Coded By Dave Baldwin 1992-2020 (took a while)
+// v1.1 12/1/21 - Some changes to code, touch control disabled, sparks changed to sprites as was in original, death sequence changed.
+// v1.2 6/6/21  - Change to AOZ manifest, added some new power ups to utilise screen skew, screen scale and screen alpha.
+//			 WARNING - MAY INDUCE NAUSEA!
+// v1.3 14/7/21 - Added 'Invisible Screen' power up, added 'Glow' to ghosts & sparks, added some shadows to text
+#manifest:"aoz"
+#displayWidth:336
+#displayHeight:256
+#useAssetsResources:false
+#speed:"fast"
+#stringBaseIndex:0
+
+Reserve As Data 9,400
+Reserve As Data 10,400
+Reserve As Data 11,400
+Bload "9.bin",9
+Bload "10.bin",10
+Bload "11.bin",11
+Screen Open 0,336,256,32,0
+Set Transparent 0
+Screen Hot Spot 0,$11
+Screen Display 0,168,128
+Curs Off
+Cls 0
+Load Asset "resources/audio/Crunch.wav", 1
+Load Asset "resources/audio/BonusSpot.wav", 8
+Load Asset "resources/audio/EatFruit.wav", 9
+Load Asset "resources/audio/GhostEat.wav", 10
+Load Asset "resources/audio/PowerUp.wav", 11
+Load Asset "resources/audio/Regen.wav", 12
+Load Asset "resources/audio/Boost.wav", 13
+Load Asset "resources/audio/Warp.wav",14
+Load Asset "resources/audio/GhostFlash.wav",15
+Load Asset "resources/audio/Die.wav",16
+Load Asset "resources/audio/CPU_Showdown.mp3",17
+Load Asset "resources/audio/LevelComplete.wav",18 // Credit - Little Robot Sound Factory
+Load Asset "resources/audio/GameOver2.wav",19
+for f=64 to 69
+	hot spot f,$11
+next f
+PHASEOUT
+Degree // For Ghost Rotation Calcs
+
+Dim PM$(70)
+Dim GHOST$(8)
+Dim P$(16)
+Dim SC(6)
+Dim HSC(6)
+Dim LEV(6)
+Dim GhostX(6)   // death  x coord
+Dim GhostY(6)   // death y coord
+Dim GhostXM#(6) // x movement step FP
+Dim GhostYM#(6) // y movement step FP
+Dim GhostHS(6)  // Hot Spot X
+Dim GhostAL#(6) // Alpha
+Dim GhostR(6)   // Active counter
+Dim GhostS(6)   // Step
+Dim GhostC(6)   // Counter
+
+Touch On Change "Direction_Control"
+Ox=0 : Oy=0 //  Previous coordinates
+XMove=0 : YMove=0 // These carry direction result +1 or -1
+TMode=1 // 0 - Tracking mode, instant control // 1 - Wait for completion of swipe
+TAP=0
+
+DIFF=0 : GPH=0 : GPV=0 : SPEEDTIME=0 : EATON=0 : EATEND=0 : LAST=0 : FRTON=0 : FRTIME=0 : FRT=0 : FR$=""
+GALPH#=0 : SCORECOUNTDOWN=0 : BSC=0 : BSC1=0 : DE=0 : DE$="" : TL$="" : TB$="" : S#=0 : S1$="" : S2$="" : S3$="" : S4$=""
+GLITCH=0 : SPOTS=0
+
+Global XMove,YMove,Ox,Oy,TMode,TAP
+Global PM$(),GHOST$(),P$(),SC(),HSC(),LEV(),TL$,TB$,FR$,GPH,GPV,LAST,GLITCH,GX,GY,SPOTS,DIFF
+Global FRTON,FRTIME,FRT,EATON,EATEND,LEVEL,HISCORE,SCORE,SCORECOUNTDOWN,EXTRAMAN,LIFE,PMX,PMY,PX,PY
+Global GALPH#,GALPHSTEP#,GALPHALOW#,GALPHAHIGH#,BSC,BSC1,SPEEDTIME,BACKWARDS
+Global GH,GhostX(),GhostY(),GhostXM#(),GhostYM#(),GhostHS(),GhostAL#(),GhostR(),GhostS(),GhostC()
+Global PSPEED,S#,S1$,S2$,S3$,S4$
+Global SkewX#,SKEWXEASE#,SkewY#,SKEWYEASE#,ScaleX#,SCALEXEASE#,ScaleY#,SCALEYEASE#,WARPEASE
+
+AmalStrings
+LEVEL=1
+HISCORE=0
+SCORE=0
+EXTRAMAN=0
+LIFE=3
+Cls 0
+
+CONTROLNEW:
+CRINTRO
+Difficulty
+GH=4+DIFF
+S#=1.0+DIFF/6.0
+GALPHALOW#=0.3-(4*DIFF*0.015)
+GALPHAHIGH#=0.8-(4*DIFF*0.02)
+
+CONTROL:
+RESET10
+For N=1 To 6
+   SC(N)=0
+   HSC(N)=0
+Next N
+For N=1 To 3
+   LEV(N)=0
+Next N
+LEVELSET
+Gosub GHOSTPATHS
+PHASEOUT
+MPDRAW
+BITZ
+LIFEDISP
+SCOREUPDATE
+HISCOREUPDATE
+LEVELUPDATE
+SPOTS=0
+FRUIT=0
+BACKTIME=0
+BACKWARDS=0
+WARPTIME=0
+INVISIBLE_TIME=0
+For N=1 To GH
+   GhostSetup[N]
+   Wait rnd(5)*0.5
+   Amal On
+Next N
+PMY=0
+Gosub MAININIT
+PHASEIN
+If LEVEL>1 then POWER_UPS
+Sparks_On
+Amal On
+Goto MAIN
+
+MAININIT:
+P=Start(10)
+WARP=0
+PSPEED=2
+PX=160
+PY=160
+MPX=10
+MPY=10
+PMX=2
+DF=5
+FR=0
+FA=-1
+GX=0
+GY=0
+GLITCH=0
+
+Return
+
+MAIN:
+If GLITCH=0
+   Bob Clear
+Else
+   Paste Icon GX,GY,Peek (Int(Start(10)+GX/16+(GY/16)*21))
+   Dec GLITCH
+End If
+If FR=4 or FR=0 then FA=-FA
+Add FR,FA
+PX1=PX
+If PX1=304
+   PX=16
+   Play Audio 14
+End If
+If PX1=16
+   PX=304
+   Play Audio 14
+End If
+If PX/16.0=Int(PX/16)
+   XM=1
+Else
+   XM=0
+End If
+If PY/16.0=Int(PY/16)
+   YM=1
+Else
+   YM=0
+End If
+If YM=1
+   MPY=PY/16
+End If
+If XM=1
+   MPX=PX/16
+End If
+If YM=1
+   MUP=Peek(P+(MPY-1)*21+MPX)
+   MDOWN=Peek(P+(MPY+1)*21+MPX)
+   MON=Peek(P+MPY*21+MPX)
+End If
+If XM=1
+   MLEFT=Peek(P+MPY*21+MPX-1)
+   MRIGHT=Peek(P+MPY*21+MPX+1)
+   MON=Peek(P+MPY*21+MPX)
+End If
+GPV = Int(Gamepad Axis( 0, 1 ))
+GPH = Int(Gamepad Axis( 0, 0 ))
+
+If BACKWARDS=1
+   If YM=1
+      If GPH<0 or Key State(79) or jLeft(0) or XMove=-1
+         If MRIGHT=1 or MRIGHT=16 or MRIGHT=17 or MRIGHT>83
+            DF=15
+            PMX=PSPEED
+            PMY=0
+         End If
+      End If
+      If GPH>0 or Key State(78) or jRight(0) or XMove=1
+         If MLEFT=1 or MLEFT=16 or MLEFT=17 or MLEFT>83
+            DF=5
+            PMX=-PSPEED
+            PMY=0
+         End If
+      End If
+   End If
+   If XM=1
+      If GPV<0 or Key State(76) or jUp(0) or YMove=-1
+         If MDOWN=1 or MDOWN=16 or MDOWN=17 or MDOWN>83
+            DF=20
+            PMY=PSPEED
+            PMX=0
+         End If
+      End If
+      If GPV>0 or Key State(77) or jDown(0) or YMove=1
+         If MUP=1 or MUP=16 or MUP=17 or MUP>83
+            DF=10
+            PMY=-PSPEED
+            PMX=0
+         End If
+      End If
+   End If
+Else
+   If YM=1
+      If GPH<0 or Key State(79) or jLeft(0) or XMove=-1
+         If MLEFT=1 or MLEFT=16 or MLEFT=17 or MLEFT>83
+            DF=15
+            PMX=-PSPEED
+            PMY=0
+         End If
+      End If
+      If GPH>0 or Key State(78) or jRight(0) or XMove=1
+         If MRIGHT=1 or MRIGHT=16 or MRIGHT=17 or MRIGHT>83
+            DF=5
+            PMX=PSPEED
+            PMY=0
+         End If
+      End If
+   End If
+   If XM=1
+      If GPV<0 or Key State(76) or jUp(0) or YMove=-1
+         If MUP=1 or MUP=16 or MUP=17 or MUP>83
+            DF=20
+            PMY=-PSPEED
+            PMX=0
+         End If
+      End If
+      If GPV>0 or Key State(77) or jDown(0) or YMove=1
+         If MDOWN=1 or MDOWN=16 or MDOWN=17 or MDOWN>83
+            DF=10
+            PMY=PSPEED
+            PMX=0
+         End If
+      End If
+   End If
+End If
+
+If Key State(80) or TAP=1 then Pause
+If PMX=-PSPEED and MLEFT>1 and MLEFT<16
+   PMX=0
+End If
+If PMY=PSPEED and MDOWN>1 and MDOWN<16 or MDOWN=83
+   PMY=0
+End If
+If PMY=-PSPEED and MUP>1 and MUP<16
+   PMY=0
+End If
+If PMX=PSPEED and MRIGHT>1 and MRIGHT<16
+   PMX=0
+End If
+
+Wait 0.02
+If BACKTIME>0
+   Dec BACKTIME
+   If BACKTIME=0
+      BACKWARDS=0
+   End If
+End If
+If INVISIBLE_TIME>0
+	Dec INVISIBLE_TIME
+	If INVISIBLE_TIME=0
+		INVISIBLE=0
+		INVISIBLE_EASE=15
+		ALPHA_FADE_EASE#=(0-ALPHA_FADE#)/15
+		ALPHA_DURATION=0
+		ALPHA_TIMER=0
+		Screen Alpha 0,1
+	End if
+End if
+If WARPTIME>0
+	Dec WARPTIME
+	If WARPTIME=0
+		WARP=0
+		WARPEASE=15
+		SKEWXEASE#=(0-SkewX#)/15
+		SKEWYEASE#=(0-SkewY#)/15
+		SCALEXEASE#=(1-ScaleX#)/15
+		SCALEYEASE#=(1-ScaleY#)/15
+	End if
+End if
+If WARPEASE>0
+	WARP_EASE
+	If WARPEASE=0
+		Screen Skew 0,0,0
+		Screen Scale 0,1,1
+	End If
+End If
+If SPEEDTIME>0
+   Dec SPEEDTIME
+End If
+If XM=1 and YM=1
+	If MON=16
+		GhostEat
+		Add SCORE,40
+	End If
+	If MON=17 or MON=16 or MON>83
+		Add SCORE,10
+		Inc SPOTS
+		If MON=17
+			Stop Audio 1
+			Play Audio 1
+		else
+			Play Audio 11
+		End if
+		Poke(P+MPY*21+MPX),1
+	End If
+	If MON=88
+		EXTRA_LIFE
+		Add SCORE,40
+	End If
+	If MON=87 then Add SCORE,LEVEL*1000-10
+	If MON=86
+		SPEEDTIME=500
+		If PSPEED<>4
+			PSPEED=4
+			Add SCORE,40
+			If PMX=2 or PMX=1 then PMX=4
+			If PMX=-2 or PMX=-1 then PMX=-4
+			If PMY=-2 or PMY=-1 then PMY=-4
+			If PMY=2 or PMY=1 then PMY=4
+		End If
+	End If
+	If MON=85
+		SPEEDTIME=500
+		Add SCORE,40
+		If PSPEED=2
+			PSPEED=1
+			If PMX=2 then PMX=1
+			If PMX=-2 then PMX=-1
+			If PMY=2 then PMY=1
+			If PMY=-2 then PMY=-1
+		End If
+		If PSPEED=4
+			PSPEED=2
+			If PMX=4 then PMX=2
+			If PMX=-4 then PMX=-2
+			If PMY=4 then PMY=2
+			If PMY=-4 then PMY=-2
+		End If
+	End If
+	If MON=84
+		If BACKWARDS=0
+			BACKWARDS=1
+		Else
+			BACKWARDS=0
+		End If
+		BACKTIME=300
+		Add SCORE,40
+	End If
+	If MON=89
+		If WARP=0
+			WARP=1
+			WARPTIME=500
+		Else
+			WARP=0
+			WARPTIME=0
+			WARPEASE=15
+			SKEWXEASE#=(0-SkewX#)/15
+			SKEWYEASE#=(0-SkewY#)/15
+			SCALEXEASE#=(1-ScaleX#)/15
+			SCALEYEASE#=(1-ScaleY#)/15
+		End If
+		Add SCORE,40
+	End If
+	If MON=90
+		If INVISIBLE=0
+			INVISIBLE=1
+			INVISIBLE_TIME=500
+			ALPHA_DURATION=0
+		Else
+			INVISIBLE=0
+			INVISIBLE_TIME=0
+			ALPHA_DURATION=0
+		End If
+		Add SCORE,40
+	End If
+
+	SCOREUPDATE
+	If SPEEDTIME=0 and PSPEED<>2
+		PSPEED=2
+		If PMX=1 or PMX=4 then PMX=2
+		If PMX=-1 or PMX=-4 then PMX=-2
+		If PMY=1 or PMY=4 then PMY=2
+		If PMY=-1 or PMY=-4 then PMY=-2
+	End If
+End If
+If WARP=1
+	Add SkewA,3,0 to 359
+	SkewM#=cos(SkewA)*sin(skewA)
+	SkewX#=cos(SkewA)*SkewM#
+	SkewY#=sin(SkewA)*SkewM#
+	Screen Skew 0,SkewX#,SkewY#
+	ScaleX#=cos(SkewA)/4*SkewM#+1
+	ScaleY#=sin(SkewA)/4*SkewM#+1
+	Screen Scale 0,ScaleX#,ScaleY#
+End if
+If INVISIBLE=1
+	If ALPHA_DURATION=0
+		ALPHA_FLASH=10
+		ALPHA_DURATION=Rnd(30)+30+LEVEL*5
+	End If
+	Dec ALPHA_DURATION
+	If ALPHA_FLASH>0
+		Screen Alpha 0,1/256*(ALPHA_FLASH-1)*25+4/256
+		Dec ALPHA_FLASH
+	End if
+End if
+Bob 21,PX,PY,DF+FR
+Paste Bob (MPX)*16,MPY*16,84
+Inc FRUIT
+If FRUIT=1000 Then FruitOn
+If SPOTS=129 then Goto NXTLEVEL
+If EATON=1
+   If Timer>LAST+0.7 then Play Audio 15 : LAST=Timer
+End if
+If EATEND=1 and Timer>10 Then GALPHSTEP# = GALPHSTEP# * 10 : EATEND=0
+If EATON=1 and Timer>12
+   Sam Stop 15
+   GALPHA[1]
+   EATON=0
+End If
+PMCol=0
+For F=1 to 6
+   If isbob(F)
+      If Bob Col(21,F to F) then PMCol=F
+   End if
+Next F
+If EATON=1 and PMCol>0 Then EatenOne[PMCol]
+If EATON=0 and PMCol>0 Then Goto DEAD
+If Bob Col(21,7 To 8) Then Goto DEAD
+If FRTON=1
+   If Bob Col(21,20 to 20) Then EatFruit
+   Inc FRTIME
+   If FRTIME=(15-(FRT-73))*25
+      Bob Off 20
+      FRTON=0
+   End If
+End If
+If EATON=1
+   If GALPH#>GALPHAHIGH# or GALPH#<GALPHALOW# then GALPHSTEP#=-GALPHSTEP#
+   Add GALPH#,GALPHSTEP#
+   If GALPH#<0 then GALPH#=0
+   GALPHA[GALPH#]
+END if
+If SCORECOUNTDOWN>0
+   Dec SCORECOUNTDOWN
+   If SCORECOUNTDOWN=0
+      Bob Off 17
+   else
+      Bob Alpha 17,SCORECOUNTDOWN/100
+	  sc#=(100-SCORECOUNTDOWN)/20
+	  bob scale 17,sc#,sc#
+   End If
+End if
+For F=1 to 6
+   If GhostR(F)>0 then GhostBack[F]
+Next F
+Add PX,PMX
+Add PY,PMY
+Goto MAIN
+
+NXTLEVEL:
+INVISIBLE=0
+INVISIBLE_TIME=0
+Screen Alpha 0,1
+If WARP>0
+	WARP=0
+	WARPEASE=15
+	SKEWXEASE#=(0-SkewX#)/15
+	SKEWYEASE#=(0-SkewY#)/15
+	SCALEXEASE#=(1-ScaleX#)/15
+	SCALEYEASE#=(1-ScaleY#)/15
+	Repeat
+		WARP_EASE
+		Wait 0.0167
+	Until WARPEASE=0
+End if
+For F=1 to 6
+   If isbob(F) then GhostDead[F] : Bob Off F
+Next F
+Play Audio 18
+If GALPHALOW#>0.2 then Add GALPHALOW#,-0.2
+If GALPHAHIGH#>3 then Add GALPHAHIGH#,-0.2
+For N=1 To 62
+   For F=1 to 6
+   If GhostR(F)>0 then GhostBack[F]
+   Next F
+   Wait 0.033
+Next N
+ResetGhostBack
+Bob Off
+LEVEL=LEVEL+1
+SCORECOUNTDOWN=0
+Screen Scale 0,1,1
+Screen Skew 0,0,0
+Timer=600
+PHASEOUT
+MIDSCREEN
+PHASEIN
+WaitFire
+Goto CONTROL
+
+DEAD:
+	Screen Alpha 0,1
+	INVISIBLE=0
+	INVISIBLE_TIME=0
+	Play Audio 16
+	GALPHA[1]
+	EATON=0
+	EATEND=0
+	PSPEED=2
+	SPEEDTIME=0
+	BACKWARDS=0
+	BACKTIME=0
+	If WARP>0
+		WARP=0
+		WARPEASE=15
+		SKEWXEASE#=(0-SkewX#)/15
+		SKEWYEASE#=(0-SkewY#)/15
+		SCALEXEASE#=(1-ScaleX#)/15
+		SCALEYEASE#=(1-ScaleY#)/15
+		Repeat
+			WARP_EASE
+			Wait 0.0167
+		Until WARPEASE=0
+	End if
+	Amal Freeze
+	Amal on 15
+	Amal on 16
+	Bob Off 21
+	Bob Off 20
+	FRTON=0
+	For F=1 To 5
+		For N=8 To 23 Step 5
+			Wait 0.0167
+			Bob 12,PX,PY,N
+			Wait 0.067
+		Next N
+	Next F
+	For N=55 To 63
+		Wait 0.0167
+		Bob 12,PX,PY,N
+		Wait 0.05
+	Next N
+	Wait 0.0167
+	Bob Off 12
+	Play Audio 8
+	XMove=0 : YMove=0 : TAP=0
+	If LIFE-1=0 Then GameOver : Goto CONTROLNEW
+	LIFE=LIFE-1
+	LIFEDISP
+	GLITCH=1
+	For F=1 to 6
+		If isbob(F)
+			GhostDead[F] : Bob Off F
+			for n=0 to (rnd(5)+1)*4
+				for l=1 to F
+					GhostBack[l]
+				next l
+				wait 0.0167
+			next n
+		End if
+	Next F
+	If GALPHALOW#>0.2 then Add GALPHALOW#,-0.2
+	If GALPHAHIGH#>3 then Add GALPHAHIGH#,-0.2
+	For N=1 To 62
+		For F=1 to 6
+			If GhostR(F)>0 then GhostBack[F]
+		Next F
+	Wait 0.0167
+	Next N
+	ResetGhostBack
+	If GH>4 then Bob Off 7 : GhostSetup[5]
+	If GH>6 then Bob Off 8 : GhostSetup[7]
+	BONUS_SPOTS
+	POWER_UPS
+	Amal On
+	PX=160
+	PY=160
+	PMX=2
+	PMY=0
+	DF=5
+Goto MAIN
+
+Procedure Pause
+	Amal Freeze
+	Repeat
+		Wait 0.0167
+	Until Key State (80)=0 or TAP=1
+	RA#=0
+	RSTEP#=0.8
+	RSTEPINC#=0.1
+	Hot Spot 108,$11
+	Bob 108,168,128,108
+	Bob Shadow 108,0,0.01,30,$000000ff
+	Repeat
+	  Bob Rotate 108,RA#
+	  Bob Scale 108,0.5,0.5
+	  //Bob Alpha 108,0.6
+	  Add RA#,RSTEP#
+	  Add RSTEP#,RSTEPINC#
+	  If RSTEP#>0.8 or RSTEP#<-0.8 then RSTEPINC#=-RSTEPINC#
+	  Wait 0.0167
+	Until Key State (80) or TAP=1
+	Repeat
+	  Wait 0.0167
+	Until Key State (80)=0 or TAP=1
+	Amal On
+	Bob Off 108
+End Proc
+Procedure EatenOne[G]
+   Bob 17,PX,max(PY-15,24),BSC1
+   GhostDead[G]
+   Bob Off G
+   Add SCORE,BSC
+   If BSC<6400
+      Add BSC,BSC
+   End If
+   Inc BSC1
+   If BSC1=70
+      BSC1=69
+   End If
+   Play Audio 10
+   Amal On
+   SCOREUPDATE
+   SCORECOUNTDOWN=75
+End Proc
+Procedure GhostEat
+   Play Audio 15
+   GALPH#=GALPHAHIGH#
+   GALPHSTEP#=-0.02
+   GALPHA[GALPH#]
+   If EATON=0 then BSC=200 : BSC1=64
+   EATON=1
+   Timer=0
+   LAST=0
+   EATEND=1
+End Proc
+Procedure GhostSetup[G]
+   If G=1
+      Channel 1 To Bob 1
+      Bob 1,144,128,25
+	  Bob Shadow 1,0,0.1,30,$00ff00ff
+      Amal 1,"A 0,(25,8)(26,8)(27,8)(28,8)(29,8);"+GHOST$(1)
+   End If
+   If G=2
+      Channel 2 To Bob 2
+      Bob 2,144,128,31
+	  Bob Shadow 2,0,0.1,30,$00aaffff
+      Amal 2,"A 0,(31,8)(32,8)(33,8)(34,8)(30,8);"+GHOST$(2)
+   End if
+   If G=3
+      Channel 3 To Bob 3
+      Bob 3,144,128,37
+	  Bob Shadow 3,0,0.1,30,$ff00b8ff
+      Amal 3,"A 0,(37,8)(38,8)(39,8)(35,8)(36,8);"+GHOST$(3)
+   End If
+   If G=4
+      Channel 4 To Bob 4
+      Bob 4,144,128,40
+	  Bob Shadow 4,0,0.1,30,$ff0000ff
+      Amal 4,"A 0,(40,8)(41,8)(42,8)(43,8)(44,8);"+GHOST$(4)
+   End if
+   If G=5
+      Channel 7 To Bob 7
+      Bob 7,16,112,87
+	  Bob Shadow 7,0,0.1,30,$ff0099ff
+      Amal 7,"A 0,(87,60)(88,3)(89,3)(90,3)(91,3)(89,3)(88,3)(90,3);"+GHOST$(5)
+   End If
+   If G=6
+      Channel 5 To Bob 5
+      Bob 5,144,128,45
+	  Bob Shadow 5,0,0.1,30,$00aaffff
+      Amal 5,"A 0,(45,8)(46,8)(47,8)(48,8)(49,8);"+GHOST$(6)
+   End If
+   If G=7
+      Channel 8 To Bob 8
+      Bob 8,304,112,92
+	  Bob Shadow 8,0,0.1,30,$0000ffff
+      Amal 8,"A 0,(92,30)(93,3)(94,3)(95,3)(96,3)(94,3)(95,3)(93,3);"+GHOST$(7)
+   End If
+   If G=8
+      Channel 6 To Bob 6
+      Bob 6,144,128,50
+	  Bob Shadow 6,0,0.1,30,$ff9100ff
+      Amal 6,"A 0,(50,8)(51,8)(52,8)(52,8)(54,8);"+GHOST$(8)
+   End if
+End Proc
+Procedure GhostDead[G]
+   GhostX(G)=X bob (G) : GhostY(G)=Y Bob (G)
+   GhostXM#(G)=-(GhostX(G)-144)/61
+   GhostYM#(G)=-(GhostY(G)-128)/61
+   GhostR(G)=1
+   GhostS(G)=2
+   GhostC(G)=1
+End Proc
+Procedure GhostBack[G]
+	Bob G+30,GhostX(G)+GhostC(G)*GhostXM#(G),GhostY(G)+GhostC(G)*GhostYM#(G),20+G*5
+	Bob Scale G+30,GhostR(G)/40+1,GhostR(G)/40+1
+	Bob Rotate G+30,GhostC(G)*12
+	Bob Alpha G+30,0.5-GhostR(G)/200
+	Add GhostR(G),GhostS(G)
+	Inc GhostC(G)
+	If GhostR(G)=61 then GhostS(G)=-GhostS(G)
+	If GhostR(G)<2
+		Hot Spot 20+G*5,0,0
+		Bob Off G+30
+		If G<5 Then GhostSetup[G]
+		If G=5 Then GhostSetup[6]
+		If G=6 Then GhostSetup[8]
+		Amal On
+		GhostR(G)=0
+		GhostC(G)=0
+	End if
+End Proc
+Procedure ResetGhostBack
+   For F=1 to 6
+      Hot Spot 20+F*5,0,0
+      Bob Off 30+F
+      GhostR(F)=0
+   Next F
+End Proc
+Procedure WARP_EASE
+	Add SkewX#,SKEWXEASE#
+	Add SkewY#,SKEWYEASE#
+	Add ScaleX#,SCALEXEASE#
+	Add ScaleY#,SCALEYEASE#
+	Dec WARPEASE
+	Screen Skew 0,SkewX#,SkewY#
+	Screen Scale 0,ScaleX#,ScaleY#
+End Proc
+Procedure WaitFire
+   Channel 60 To Bob 60
+   Bob 60,105,211,75
+   Bob Shadow 60,0,25,20,$000000FF
+   Amal 60,"A 0,(100,2)(105,2)(106,2);"+TB$
+   Amal On
+   While Gamepad Button(0,2)=0 and Fire(0)=0 and Key State(64)=0 and TAP=0
+      Wait 0.0167
+   Wend
+   Bob Off 60
+   Amal Off
+End Proc
+Procedure GameOver
+	Play Audio 19
+	Wait 0.5
+	Bob Off
+	Channel 19 To Bob 19
+	Bob 19,400,115,74
+	Bob shadow 19,0,20,15,$000000FF
+	Amal 19,TL$
+	Amal On
+	If HISCORE<SCORE
+		HISCORE=SCORE
+		HISCOREUPDATE
+	End If
+	WaitFire
+	Bob Off 15
+	Bob Off 16
+	Bob Off 150
+	Bob Off 160
+	Bob Off 19
+	Bob Off 18
+	Bob Off 17
+	Wait 0.167
+	SCORECOUNTDOWN=0
+	WARPEASE=0
+	SCORE=0
+	LEVEL=1
+	EXTRAMAN=0
+	LIFE=3
+	PMX=2
+	PMY=0
+End Proc
+Procedure EXTRA_LIFE
+   LIFE=LIFE+1
+   LIFEDISP
+End Proc
+Procedure SCOREUPDATE
+   If int(SCORE/30000)>EXTRAMAN
+      LIFE=LIFE+1
+      LIFEDISP
+      EXTRAMAN=Int(SCORE/30000)
+   End If
+   If SCORE>1000000 Then SCORE=SCORE-1000000
+   SCORE2$="0000000"
+   SCORE1$=Str$(SCORE)
+   SCLEN=Len(SCORE1$)-1
+   SCORE1$=Right$(SCORE1$,SCLEN)
+   Right$(SCORE2$,SCLEN)=SCORE1$:
+   For N=1 To 6
+      If SC(N)<>Asc(Mid$(SCORE2$,N,1))-48
+         SC(N)=Asc(Mid$(SCORE2$,N,1))-48
+         Paste Bob 16,160+16*(N-1),84
+         Paste Icon 16,160+16*(N-1),SC(N)+31
+      End If
+   Next N
+End Proc
+Procedure HISCOREUPDATE
+   HISCORE2$="0000000"
+   HISCORE1$=Str$(HISCORE)
+   HISCLEN=Len(HISCORE1$)-1
+   HISCORE1$=Right$(HISCORE1$,HISCLEN)
+   Right$(HISCORE2$,HISCLEN)=HISCORE1$:
+   For N=1 To 6
+      If HSC(N)<>Asc(Mid$(HISCORE2$,N,1))-48
+         HSC(N)=Asc(Mid$(HISCORE2$,N,1))-48
+         Paste Bob 304,160+16*(N-1),84
+         Paste Icon 304,160+16*(N-1),HSC(N)+31
+      End If
+   Next N
+End Proc
+Procedure LEVELUPDATE
+   LEVEL2$="0000"
+   LEVEL1$=Str$(LEVEL)
+   LEVLEN=Len(LEVEL1$)-1
+   LEVEL1$=Right$(LEVEL1$,LEVLEN)
+   Right$(LEVEL2$,LEVLEN)=LEVEL1$:
+   For N=1 To 3
+      If LEV(N)<>Asc(Mid$(LEVEL2$,N,1))-48
+         LEV(N)=Asc(Mid$(LEVEL2$,N,1))-48
+         Paste Bob 304,16+16*(N-1),84
+         Paste Icon 304,16+16*(N-1),LEV(N)+31
+      End If
+   Next N
+End Proc
+Procedure RESET10
+   If Rnd(1)=1
+      HOLE
+   Else
+      NOHOLE
+   End If
+   P=Start(9)
+   Q=Start(10)
+   For N=0 To 335
+      Poke Q+N,Peek(P+N)
+   Next N
+End Proc
+Procedure HOLE
+   N=Start(9)
+   Poke N+9,8
+   Poke N+10,3
+   Poke N+11,8
+   Poke N+30,12
+   Poke N+31,1
+   Poke N+32,12
+End Proc
+Procedure NOHOLE
+   N=Start(9)
+   Poke N+9,7
+   Poke N+10,1
+   Poke N+11,5
+   Poke N+30,4
+   Poke N+31,3
+   Poke N+32,6
+End Proc
+Procedure MPDRAW
+   P=Start(9)
+   For F=1 To 2
+      For Y=0 To 15
+         For X=0 To 20
+            I=Peek(P+Y*21+X)
+            Paste Icon X*16,Y*16,I
+         Next X
+      Next Y
+   Next F
+End Proc
+Procedure BONUS_SPOTS
+   For R=1 To 130-SPOTS+10
+      REGEN
+   Next R
+End Proc
+Procedure REGEN
+   P=Start(9)
+   Q=Start(10)
+   X=Rnd(15)+3
+   Y=Rnd(14)+1
+   QC=Q+X+Y*21
+   DUD=0
+   For N=0 To 10
+      If Peek(P+X+Y*21)=17 and Peek(QC)=1 Then Exit
+      Inc DUD
+   Next N
+   If DUD<10
+      Poke QC,17
+      Dec SPOTS
+      Paste Icon X*16,Y*16,17
+      GX=X*16
+      GY=Y*16
+      GLITCH=2
+      Play Audio 13
+      For N=1 To 6
+         Wait 0.0167
+      Next N
+   End If
+End Proc
+Procedure POWER_UPS
+   P=Start(9)
+   Q=Start(10)
+   For F=1 To Int(LEVEL/3)+1
+      DUD=0
+      For N=1 To 10
+         X=Rnd(14)+3
+         Y=Rnd(13)+1
+         QC=Q+X+Y*21
+         If Peek(P+X+Y*21)=17 and Peek(QC)=17 Then Exit
+         Inc DUD
+      Next N
+      If DUD<10
+         PU=Rnd(100)
+         If PU<25 then PUB=16
+		 If PU>24 and PU<35 then PUB=90
+         If PU>34 and PU<45 then PUB=88
+         If PU>44 and PU<60 then PUB=85
+         If PU>59 and PU<70 then PUB=86
+         If PU>69 and PU<80 then PUB=87
+		 If PU>79 and PU<90 then PUB=84
+		 If PU>89 then PUB=89
+         Poke QC,PUB
+         Paste Icon X*16,Y*16,PUB
+         Play Audio 8
+         Wait 0.25
+      End If
+   Next F
+End Proc
+Procedure BITZ
+   For F=1 To 2
+      W$="LLSHIECIVVOSEERCSLER"
+      For N=0 To 4
+         Paste Icon 0,N*16,Asc(Mid$(W$,N*4+0,1))-24
+         Paste Icon 320,N*16,Asc(Mid$(W$,N*4+1,1))-24
+         Paste Icon 0,N*16+168,Asc(Mid$(W$,N*4+2,1))-24
+         Paste Icon 320,N*16+168,Asc(Mid$(W$,N*4+3,1))-24
+      Next N
+      For N=1 To 6
+         Paste Icon 16,144+N*16,31
+         Paste Icon 304,144+N*16,31
+      Next N
+      For N=1 To 3
+         Paste Icon 304,N*16,31
+      Next N
+   Next F
+End Proc
+Procedure Sparks_On
+	Channel 15 To Bob 15
+	Bob 15,16,106,70
+	Bob Shadow 15,0,0.01,50,$000affff
+	Amal 15,"Anim 0,(70,3)(71,3)(72,3)(73,3);"
+	Channel 16 To Bob 16
+	Bob 16,305,106,70
+	Bob Shadow 16,0,0.01,50,$000affff
+	Amal 16,"Anim 0,(70,3)(71,3)(72,3)(73,3);"
+End proc
+Procedure TITLESCRN
+   P=Start(11)
+   For N=0 To 1
+      For Y=0 To 15
+         For X=0 To 20
+            I=Peek(P+Y*21+X)
+            Paste Icon X*16,Y*16,I
+         Next X
+      Next Y
+      Paste Bob 174,239,85
+   Next N
+End Proc
+Procedure LIFEDISP
+   If LIFE<6
+      For N=1 To LIFE-1
+         Paste Icon 16,80-N*16,30
+      Next N
+      Paste Bob 16,80-LIFE*16,84
+   End If
+   If LIFE>6
+   		Paste Bob 16,0,84
+    	Paste Icon 16,0,70
+    	For N=1 To 4
+        	Paste Icon 16,80-N*16,30
+      Next N
+   End If
+   If LIFE=6
+      For N=1 To 5
+	  	If N=5 then Paste Bob 16,80-N*16,84
+        Paste Icon 16,80-N*16,30
+      Next N
+   End If
+End Proc
+Procedure MIDSCREEN
+   For N=0 To 1
+      Restore MIDSCRNDATA
+      For Y=4 To 10 Step 2
+         Read DE$
+         For X=0 To 20
+            Paste Icon X*16,Y*16,(Asc(Mid$(DE$,X*2,1))-48)*10+Asc(Mid$(DE$,X*2+1 ,1))-48
+         Next X
+      Next Y
+   Next N
+   MIDSCRNDATA:
+   Data "010101010163455252014455544501670101010101"
+   Data "010101015455630148416245014101475501010101"
+   Data "010101010141600160484501544564600101010101"
+   Data "010101010101010152456245520101010101010101"
+End Proc
+
+Procedure Difficulty
+   Cls 0
+   Screen Scale 0,0,0
+   For Y=5 To 9
+      Read DE$
+      For X=0 To 20
+        Paste Icon X*16,Y*16+8,(Asc(Mid$(DE$,X*2,1))-48)*10+Asc(Mid$(DE$,X*2+1,1))-48
+      Next X
+   Next Y
+   wait key
+   PHASEIN
+   DIFF=0
+   Gosub DIFFDISP
+   Do
+      GPV = Int(Gamepad Axis( 0, 1 ))
+      GPH = Int(Gamepad Axis( 0, 0 ))
+      If GPH<0 or jLeft(0) or Key State(79) or XMove=-1 and DIFF>0
+         Dec DIFF
+         Gosub DIFFDISP
+		 TAP=0
+		 XMove=0
+      End If
+      If GPH>0 or jRight(0) or Key State(78) or XMove=1 and DIFF<4
+         Inc DIFF
+         Gosub DIFFDISP
+		 TAP=0
+		 XMove=0
+      End If
+      If Gamepad Button (0,2) or Fire(0) or Key State(64) or TAP=1 Then PHASEOUT : TAP=0 : Pop Proc
+	  Wait 0.0167
+   Loop
+   DIFFDISP:
+   Cls 0,128,136 To 208,151
+   If DIFF=0
+      Play Audio 14
+      Paste Icon 136,136,45 : Paste Icon 152,136,41
+      Paste Icon 168,136,59 : Paste Icon 184,136,65
+   End If
+   If DIFF=1
+      Play Audio 14
+      Paste Icon 128,136,59 : Paste Icon 144,136,55
+      Paste Icon 176,136,59 : Paste Icon 192,136,55
+   End If
+   If DIFF=2
+      Play Audio 14
+      Paste Icon 128,136,60 : Paste Icon 144,136,55 : Paste Icon 160,136,61
+      Paste Icon 176,136,47 : Paste Icon 192,136,48
+   End If
+   If DIFF=3
+      Play Audio 14
+      Paste Icon 136,136,48 : Paste Icon 152,136,41
+      Paste Icon 168,136,58 : Paste Icon 184,136,44
+   End If
+   If DIFF=4
+      Play Audio 14
+      Paste Icon 128,136,43 : Paste Icon 144,136,58 : Paste Icon 160,136,41
+      Paste Icon 176,136,66 : Paste Icon 192,136,65
+   End If
+   Wait 0.2
+   Return
+   Data "010503030303030303030303030303030303030701"
+   Data "010244494646494361526065015245624552590201"
+   Data "010403030303080303030303030308030303030601"
+   Data "010101010101020101010101010102010101010101"
+   Data "010101010101040303030303030306010101010101"
+End Proc
+
+Procedure LEVELSET
+   If Int(LEVEL/4)=LEVEL/4.0
+      If GH<8
+         GH=GH+1
+         S#=S#-0.7
+      End If
+   End If
+   S#=S#+0.2
+   If S#>3 Then S#=3
+   S1=32/S#
+   S1$=Str$(S1)-" "
+   S2=64/S#
+   S2$=Str$(S2)-" "
+   S3=96/S#
+   S3$=Str$(S3)-" "
+   S4=128/S#
+   S4$=Str$(S4)-" "
+End Proc
+Procedure PHASEOUT
+    ScreenChange[1,50,1,0] : Cls 0
+End Proc
+Procedure PHASEIN
+   ScreenChange[0,50,1,1]
+End Proc
+Procedure ScreenChange[T,S,Xm,Ym] // T - 1 or 0 / Remove or Restore, S - Steps (50 is good, less-faster, more-slower), Xm - X multiplier (-1,0 or 1), Ym - Y multiplier (-1,0 or 1)
+    If T=1
+        St=0 : En=1
+    Else
+        St=1 : En=0
+    End if
+    Stp#=(En-St)/S
+    for f#=St to En step Stp#
+         Wait 0.0167
+         Screen Skew 0,Xm*f#,Ym*f#
+         If Xm=1 and Ym=1
+            Screen Scale 0,1-f#*2,1-f#*2
+         else
+            Screen Scale 0,1-f#,1-f#
+         End if
+    next f#
+    Screen Scale 0,St,St
+    Screen Skew 0,0,0
+End proc
+Procedure CRINTRO
+   Play Audio 17
+   Audio Loop On 17
+   //Goto MAIN
+   PHASEOUT
+   Channel 60 To Bob 60
+   Bob 60,108,211,75
+   Bob Shadow 60,5,20,10,$000000ff
+   Bob Alpha 60,0.5
+   Amal 60,"Anim 0,(100,2)(101,2)(102,2)(107,2)(103,2)(104,2)(105,2)(106,2);"+TB$
+   Amal On
+   //Return
+
+   MAIN:
+   Do
+      Cls 0
+	  Load Image "CrunchmanReloaded.png",0,"#fit"
+      PHASEIN
+      //Gosub STBOB
+      Gosub RESPLOOP
+      PHASEOUT
+
+	  Cls 0
+	  Load Image "CreatedWithAOZstudio.png",0,"#fit"
+	  PHASEIN
+	  Gosub RESPLOOP
+	  PHASEOUT
+
+      Cls 0
+	  Wait 0.0167
+      TITLESCRN
+      PHASEIN
+      For F#=2.0 to 0 Step -0.04
+         Bob 99,140-F#*150,222-F#*150,99
+         Bob Scale 99,F#+0.1,F#+0.1
+         Wait 0.0167
+      Next F#
+      Gosub RESPLOOP
+      Bob Off 99
+	  PHASEOUT
+
+      Cls 0
+      Load Image "CrunchScreenPerspective.png",0,"#fit"
+      PHASEIN
+      Gosub RESPLOOP
+      PHASEOUT
+
+      Cls 0
+      Load Image "Controls.png",0,"#fit"
+      PHASEIN
+      Gosub RESPLOOP
+	  PHASEOUT
+   Loop
+   RESPLOOP:
+   For N=1 To 400
+      If Gamepad Button(0,2) or Fire(0) or Key State(64) or TAP=1 Then TAP=0 : Goto PRESSED
+      Wait 0.0167
+   Next N
+   Return
+   PRESSED:
+   Bob Off 60
+   Bob Off 99
+   Audio Loop Off 17
+   Stop Audio 17
+   PHASEOUT
+End Proc
+Procedure GALPHA[AL#]
+   For F=1 to 6
+      If isbob(F) Then Bob Alpha F,AL#
+   Next F
+End Proc
+Procedure AmalStrings
+   TL$="Loop:"
+   For F=14 To -14 Step -1
+      TL$=TL$+"M"+Str$(-2*Abs(14-Abs(F)))+","+Str$(F)+",7;"
+   Next F
+   For N=-14 To 14
+      TL$=TL$+"M"+Str$(2*Abs(14-Abs(N)))+","+Str$(N)+",7;"
+   Next N
+   TL$=TL$+"JL"
+   TB$="Loop:"
+   For F=-20 To 20
+      TB$=TB$+"M0,"+Str$(F)+",5;"
+   Next F
+   TB$=TB$+"JL"
+   FR$="Loop:M 1,0,5;M 2,0,5;M 3,0,5;M 4,0,5;M 5,0,5;M 4,0,5;M 3,0,5;M 2,0,5;M 1,0,5;M -1,0,5;M -2,0,5;M -3,0,5;M -4,0,5;M -5,0,5;M -4,0,5;M -3,0,5;M -2,0,5;M -1,0,5;Jump Loop"
+End Proc
+Procedure FruitOn
+   FRTON=1
+   FRTIME=0
+   If LEVEL>8
+      FRT=83
+   Else
+      FRT=LEVEL+75
+   End If
+   Channel 20 To Bob 20
+   Amal 20,FR$
+   Bob 20,147,160,FRT
+   Amal On
+End Proc
+Procedure EatFruit
+   Play Audio 9
+   SCORE=SCORE+(FRT-75)*1000
+   SCOREUPDATE
+   Bob Off 20
+   FRTON=0
+End Proc
+Procedure Direction_Control[X,Y,LASTX,LASTY,STATE]
+	TX=X : TY=Y : TS=STATE : TAP=0 : TC=Touch Count
+	If TS=1
+		Ox=TX : Oy=TY
+		Goto Done
+	End if
+	If TS=2 and TMode=1
+		goto Done
+	End if
+	If TS=2 or TS=3
+		XDiff=TX-Ox : YDiff=TY-Oy
+		If Abs(XDiff)>Abs(YDiff) then XMove=1 : YMove=0
+		If Abs(YDiff)>Abs(XDiff) then YMove=1 : XMove=0
+		If XMove=1 and XDiff<0 Then XMove=-1
+		If YMove=1 and YDiff<0 Then YMove=-1
+	End if
+	If TC=2 then TAP=1 : XMove=0 : YMove=0
+	Ox=TX : Oy=TY
+	Done:
+End Proc
+
+GHOSTPATHS:
+   Restore PATHMOVEDATA
+   For N=1 To 16
+      Read P$(N)
+   Next N
+   Restore PATHDATA
+   For N=1 To 68
+      PM$(N)=""
+      Repeat
+         Read DE
+         If DE>0 Then PM$(N)=PM$(N)+P$(DE)
+      Until DE=0
+   Next N
+   PM$(69)=";M -64,0,"+S4$+";M 0,-150,1;M 288,0,3;M 0,150,1;M -64,0,"+S4$
+   PM$(70)=";M 64,0,"+S4$+";M 0,-150,1;M -288,0,3;M 0,150,1;M 64,0,"+S4$
+   Restore FULLPATH
+   For N=1 To 8
+      GHOST$(N)=""
+   Next N
+   For G=1 To 8
+      If G<>5 and G<>7
+         Read DE
+         For N=1 To DE
+            GHOST$(G)=GHOST$(G)+PM$(40)+PM$(35)
+         Next N
+      End If
+      Read DE
+      GHOST$(G)=GHOST$(G)+PM$(DE)+";Loop:"
+      Read DE
+      Repeat
+         GHOST$(G)=GHOST$(G)+PM$(DE)
+         Read DE
+      Until DE=0
+      GHOST$(G)=GHOST$(G)+";Jump Loop"
+      L=Len(GHOST$(G))
+      GHOST$(G)=RIGHT$(GHOST$(G),L-1)
+   Next G
+   For N=1 To 10
+      On Rnd(15) Gosub 10,20,30,40,50,60,70,80,90,100,110,120,130,140,150
+   Next N
+   If LEVEL<33
+      For N=1 To Int(LEVEL/4)+1
+         G=N
+         Gosub GHOST_DOCTOR
+      Next N
+   Else
+      For N=1 To 8
+         G=N
+         Gosub GHOST_DOCTOR
+      Next N
+   End If
+
+   Return
+   10 Swap GHOST$(1),GHOST$(2) : Return
+   20 Swap GHOST$(1),GHOST$(3) : Return
+   30 Swap GHOST$(1),GHOST$(4) : Return
+   40 Swap GHOST$(1),GHOST$(6) : Return
+   50 Swap GHOST$(1),GHOST$(8) : Return
+   60 Swap GHOST$(2),GHOST$(3) : Return
+   70 Swap GHOST$(2),GHOST$(4) : Return
+   80 Swap GHOST$(2),GHOST$(6) : Return
+   90 Swap GHOST$(2),GHOST$(8) : Return
+   100 Swap GHOST$(3),GHOST$(4) : Return
+   110 Swap GHOST$(3),GHOST$(6) : Return
+   120 Swap GHOST$(3),GHOST$(8) : Return
+   130 Swap GHOST$(4),GHOST$(6) : Return
+   140 Swap GHOST$(4),GHOST$(8) : Return
+   150 Swap GHOST$(6),GHOST$(8) : Return
+   PATHDATA:
+   Data 5,2,0,11,14,5,0,6,3,6,0,4,7,0,13,0,10,0,7,2,0,9,14,7,0,6,1,6,0,15,0
+   Data 4,5,0,8,1,8,0,7,16,9,0,6,0,2,5,4,1,0,2,5,10,0,12,0,3,2,7,4,0,1,2,5,4,1,0
+   Data 3,2,7,2,0,3,14,0,3,2,7,4,3,0,1,14,0,1,2,5,2,0,1,2,5,4,0,5,16,11,0,8,3,8,0
+   Data 2,7,4,3,0,2,7,10,0,8,0,4,5,4,0,4,5,10,0,4,7,4,3,0,4,7,10,0,7,0,5,6,0,16,3,0
+   Data 12,5,4,0,12,5,2,0,5,0,2,3,0,12,7,4,0,16,1,0,12,7,2,0,2,1,0,7,6,0,8,5,0,5,2,0
+   Data 10,5,0,3,4,0,1,4,0,8,7,0,7,2,0,10,7,0,9,0,11,0,1,6,15,0,3,6,13,0,5,12,0
+   Data 15,8,1,0,7,12,0,13,8,3,0,1,8,3,4,3,0,1,8,1,4,1,0,8,3,4,3,0,8,1,4,1,0
+   Data 3,8,3,4,3,0,3,8,1,4,1,0
+   PATHMOVEDATA:
+   Data ";M 16,0,"+S1$,";M 0,16,"+S1$,";M -16,0,"+S1$,";M 0,-16,"+S1$,";M 32,0,"+S2$
+   Data ";M 0,32,"+S2$,";M -32,0,"+S2$,";M 0,-32,"+S2$,";M 48,0,"+S3$,";M 0,48,"+S3$
+   Data ";M -48,0,"+S3$,";M 0,-48,"+S3$,";M 64,0,"+S4$,";M 0,64,"+S4$,";M -64,0,"+S4$
+   Data ";M 0,-64,"+S4$
+   FULLPATH:
+   Data 2,63,17,4,3,14,69,34,40,36,53,56,30,10,50,35,30,30,13,1,5,6,23,40,30,30,26,9,28,22,0
+   Data 1,64,23,40,30,70,14,46,48,55,57,30,4,49,30,4,47,30,30,13,3,13,1,6,21,45,5,51,38,27,7,6,0
+   Data 3,64,17,10,6,19,17,11,8,27,7,10,4,3,13,1,6,20,14,40,44,69,34,41,10,14,56,14,62,30,50,43,19,0
+   Data 1,63,18,13,1,5,11,8,14,14,36,54,60,30,10,14,57,61,47,30,30,13,3,14,69,34,41,10,50,43,17,5,6,22,0
+   Data 5,14,46,49,62,30,5,14,58,59,52,30,30,26,7,10,4,2,14,0
+   Data 2,64,23,41,10,14,56,14,62,30,5,14,55,14,59,52,30,70,32,35,30,69,30,26,9,28,17,10,6,19,0
+   Data 10,30,26,7,10,4,2,14,14,46,49,62,30,5,14,58,59,52,30,0
+   Data 3,63,21,35,30,69,14,36,53,56,30,10,50,44,69,30,27,8,27,7,6,22,17,5,11,9,28,22,18,12,2,15,0
+
+GHOST_DOCTOR:
+   POS=0
+   Repeat
+      Inc POS
+   Until Mid$(GHOST$(G),POS,1)=":"
+   Add POS,2
+   Do
+      Repeat
+         Inc POS
+         M$=Mid$(GHOST$(G),POS,1)
+         If M$="J"
+            Return
+         End If
+      Until M$=";"
+      STP=Val(Mid$(GHOST$(G),POS-2,2))
+      If STP<>0
+         FRAC#=1/((LEVEL+4)/4)+0.3
+         ALTER=Rnd(MAX(LEVEL,16))
+         FRAC#=FRAC#+ALTER*0.02+0.3
+         STP=STP*FRAC#
+         If Rnd(1)=1
+            STP=STP/1.5
+         End If
+         If STP<10
+            STP=10
+         End If
+         If STP>99
+            STP=99
+         End If
+         NW$=Str$(STP)-" "
+         DOC=POS-2
+         Mid$(GHOST$(G),DOC)=NW$
+      End If
+   Loop
+Return

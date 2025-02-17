@@ -1,0 +1,18 @@
+<i>On Break Proc</i>
+<b>On Break Proc</b> xxxxxxx
+=
+This instruction will force AOZ to make a jump when the user presses CONTROL-C... You can therefore prevent the user from leaving your application.
+
+It can also be used to prevent CONTROL-C from breaking in order to use the combination of keys, for example to paste text in an editor.
+
+For example:
+@code
+On Break Proc BROKEN
+Do
+Print "Unbroken" : Wait 50
+Loop
+
+Procedure BROKEN
+Print "I am the procedure"
+End Proc
+

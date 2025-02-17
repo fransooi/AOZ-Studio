@@ -1,0 +1,13 @@
+<i>EDialog</i>
+<b>EDialog</b> xxxxxxx
+=
+Whenever an error occurs in an Interface program, its position can be found with a quick call to the EDIALOG function. The relevant section of the Interface string will be displayed on screen, enabling you to discover what has gone wrong. In practice, the most common mistakes are caused by missing or wrongly-used semi-colon characters!"
+
+Here is a small error handler that may be useful if included in your own programs
+@code
+On ErrOr Goto TRAP: Rem Add this line before a DIALOG OPEN command
+...: Rem The rest of your program goes here
+TRAP: Print Mid$(DB$,Edialog,80) : Wait Key : End : Rem Error handler
+@code
+
+

@@ -1,0 +1,8 @@
+<i>Shift Down</i>
+<b>Shift Down</b> xxxxxxx
+=
+This command is identical to SHIFT UP, except for the fact that colours are rotated in the opposite direction, so that
+the second colour is copied into the first, the third to the second, and so on. With the final flag set to zero, all colours
+are eventually replaced with the last colour in the list
+
+

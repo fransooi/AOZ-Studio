@@ -1,0 +1,9 @@
+<i>Colour Back</i>
+<b>Colour Back</b> xxxxxxx
+=
+This command is used to assign your choice of RGB components for the screen's background colour, which fills
+unused areas at the top and bottom of the visible screen. Such area usually appear when a fixed proportion image is displayed in a windowed browser and the proportions of the browser's window do not match the one of the application.
+they are usually called "black bars".
+
+Alternatively, existing colours may also be specified when enclosed in brackets.
+

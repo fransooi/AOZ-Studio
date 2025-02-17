@@ -1,0 +1,41 @@
+<i>Goto</i>
+<b>Goto</b> xxxxxxx
+=
+A computer program that can only obey a list of instructions one after the other is a very limited computer program
+indeed. One way of forcing programs to jump to specified locations is to use the old fashioned GOTO structure,
+followed by a target destination. In AMOS Professional, these destinations can be a label, a line number or a
+variable.
+
+Label markers can consist of names that use any string of letters or numbers, as -well as the underscore character
+"_", and they must be ended with the colon character ":" as follows:
+
+@code
+Print "Jump in two seconds" : Wait 100
+Goto LABEL_MARKER
+Wait 180000 : Rem Wait one hour
+LABEL_MARKER:
+Print "Now is the time to jump!"
+@code
+Numbers may be used to identify specific lines, and the program can be commanded to GOTO one of these
+optional markers, like this:
+@code
+Goto 5
+Print "I am being ignored"
+5 Print "I am line 5"
+@code
+It should be obvious that these identification numbers have nothing to do with the number of lines in a program, but
+they may still lead to confusion. Labels are much easier to remember and to locate.
+
+Expressions can also be used for this purpose, and the expression may be any string or integer. Strings hold the
+name of a label, and integers return a line identification number. Here is an example:
+@code
+BEGIN:
+Goto "BED"+"2"
+End
+BED1:
+Print "This Bed will never be used"
+BED2:
+Print "Welcome to Bed Two!"
+Wait 20
+Goto BEGIN
+

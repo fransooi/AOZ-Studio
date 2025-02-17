@@ -1,0 +1,22 @@
+<i>FSel$</i>
+<b>FSel$</b> xxxxxxx
+=
+This file selection function allows you to choose the files you need directly from a disc, using the standard AOZ Studio file selector. In its simplest form, it operates like this:
+@code
+Print Fsel$("*.PNG")
+@code
+The string held within the brackets is a path that sets the searching pattern, in that case a PNG file.
+
+The following optional parameters may also be included:
+
+The optional default string is used to choose a filename that will be automatically selected if you press [Return] and abort the process.
+
+Title$ and title2$ are optional text strings that set up a title to be displayed at the top of your file selector. For example:
+@code
+F$=Fsel$("AMOSPro_Examples:Objects/*.Abk")
+If F$= Then Edit : Rem Return to editor if no file selected
+Load F$: Rem Load file and display first Bob
+Flash Off : Bob 1,100,100,1 : Get Bob Palette : Wait Vbl
+@code
+
+

@@ -1,0 +1,6 @@
+<i>Sprite Move Freeze</i>
+<b>Sprite Move Freeze</b> xxxxxxx
+=
+This command suspends the movement of all Objects on screen. Frozen Objects may be re- animated using the
+"SPRITE MOVE ON" command. If an optional Object number is given after "SPRITE MOVE FREEZE", then only that bob will be frozen.
+

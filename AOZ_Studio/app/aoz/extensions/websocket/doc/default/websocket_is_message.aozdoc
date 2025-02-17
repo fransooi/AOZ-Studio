@@ -1,0 +1,22 @@
+<i>WebSocket Is Message</i>
+<b>WebSocket Is Message</b> xxxxxxx
+=
+This function is designed to be used in the main loop of your application.
+If it returns true, it means that one or more messages are available, and that you should ask for them with the "WebSocket Message$" function.
+
+This example connects to a server, sends a message and disconnects as soon as it receives a response from the server...
+@code
+URL$ = "ws://my_url.me:3000"
+WebSocket Open 1, URL$
+Repeat
+Wait Vbl
+Until WebSocket Is Connected( 1 )
+
+WebSocket Send Message 1, "Hello"
+Repeat
+Wait Vbl
+Until WebSocket Is Message( 1 )
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+@code
+

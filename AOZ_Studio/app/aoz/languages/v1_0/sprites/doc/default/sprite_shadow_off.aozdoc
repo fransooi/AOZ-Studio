@@ -1,0 +1,27 @@
+<i>Sprite Shadow Off</i>
+<b>Sprite Shadow Off</b> xxxxxxx
+=
+This instruction removes the shadow from one (specified by index) or all of the sprites (if index in omitted).
+The blur and colour of each indivual shadow is remembered, so the shadow can be switched back on by just changing one or both of the offset values.
+
+This example show how Sprite Shadow Off can be used to turn off individual sprite shadows or all sprite shadows at once.
+@code
+Curs Off : Cls 1								// Set up screen, black background
+For f=1 to 10
+Sprite f,f*170,450, "ship.png" 				// Display sprite at a new position
+Sprite Shadow f,0,0.01,f*4,$000000ff		// Define shadow 'glow' with increasing shadow blur, which increases the 'glow'.
+Wait 0.2
+Next f
+Print "Press Any Key to Turn Off FIRST 5 Shadows individually"	// Display a message
+Wait Key										// Wait for key press
+For f=1 to 5
+Sprite Shadow Off f							// Turn off shadow of Sprite number f
+Wait 0.5
+Next f
+Cls 1
+Print "Press Any Key to Turn Off ALL REMAINING Shadows"	// Display a message
+Wait Key										// Wait for key press
+Sprite Shadow Off								// Turn off shadow of all sprites
+End
+@code
+

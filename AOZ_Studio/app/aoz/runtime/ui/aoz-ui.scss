@@ -1,0 +1,116 @@
+
+.aoz.auth-ui {
+	background-color: #235f7e;
+	color: white;
+	width: 508px;
+
+	&::after {
+		background-color: white;
+		mask: url(lucie.svg) bottom right no-repeat, url(stars.svg) 20px 160px no-repeat;
+		-webkit-mask: url(lucie.svg) bottom right no-repeat, url(stars.svg) 20px 160px no-repeat;
+		mask-size: 50%, 10%; -webkit-mask-size: 50%, 10%;
+		color: white;
+		content: '';
+		display: inline-block;
+		height: 100%;
+		opacity: .22;
+		position: absolute;
+		right: 10px;
+		bottom: 30px;
+		pointer-events: none;
+		width: 100%;
+	}
+
+	> h2 {
+		background: url(aoz-studio.svg) center 12px no-repeat;
+		background-size: auto 80px;
+		padding-top: 110px;
+	}
+
+	> ul {
+
+		&.fieldset {
+
+			> li:not(.remember-me) {
+				margin: 12px 103px 12px 58px;
+
+				> input {
+					color: white;
+					padding: 0 10px 0 55px;
+
+					&::placeholder {
+						color: #ffdd99;
+					}
+				}
+
+				> label {
+					background: #ffab00;
+					border: 20px solid #ffab00;
+					border-radius: 20px;
+					position: relative;
+
+					&::after {
+						background-color: white;
+						mask-position: 12px center; -webkit-mask-position: 12px center;
+						mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat;
+						mask-size: 26px auto; -webkit-mask-size: 26px auto;
+						content: '';
+						height: calc(100% + 40px);
+						left: -20px;
+						position: absolute;
+						top: -20px;
+						width: calc(100% + 40px);
+					}
+				}
+			}
+
+			> .email > label::after {
+				mask-image: url(username.svg); -webkit-mask-image: url(username.svg);
+			}
+
+			> .confirm-email > label::after {
+				mask-image: url(email.svg); -webkit-mask-image: url(email.svg);
+			}
+
+			> .password > label::after {
+				mask-image: url(password.svg); -webkit-mask-image: url(password.svg);
+			}
+
+			> .confirm-password > label::after {
+				mask-image: url(confirm-password.svg); -webkit-mask-image: url(confirm-password.svg);
+			}
+		}
+
+		&.actions > li {
+
+			> button {
+				color: white;
+			}
+		}
+
+		.close > button,
+		.remember-me > input {
+			background-color: #8da4b0;
+			border-color: #ffab00;
+
+			&::before {
+				background-color: #17455e;
+			}
+		}
+	}
+
+	> .messages > li {
+		border-radius: 20px;
+		border: 1px solid;
+
+		&.error {
+			background-color: #f40;
+			border-color: #620;
+		}
+
+		&.information {
+			background-color: #4b0;
+			border-color: #150;
+		}
+	}
+}

@@ -1,0 +1,9 @@
+<i>Make Icon Mask</i>
+<b>Make Icon Mask</b> xxxxxxx
+=
+Normally, any Icons that are drawn on screen completely replace the existing background image, and the Icon
+appears in a rectangular box filled with colour zero. If you prefer to overlay Icons on top of the current graphics, a
+mask must be created. This is achieved by the MAKE ICON MASK command, and sets colour zero to transparent.
+All Icons in Bank 2 will be affected by this instruction, unless an optional Icon number is given, in which case only
+that Icon will be masked.
+

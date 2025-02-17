@@ -1,0 +1,10 @@
+<i>ASin</i>
+<b>ASin</b> xxxxxxx
+=
+The ASIN function takes a number between -1 and +1, and calculates the angle which would be needed to generate this value with SIN. For example:
+@code
+A#=Sin(45)
+Print Asin(A#)
+@code
+
+

@@ -1,0 +1,36 @@
+<i>Bin$</i>
+<b>Bin$</b> xxxxxxx
+=
+This is the function that converts a decimal number or expression into the equivalent string of binary digits. The
+binary number that is returned will automatically have a leading % (per cent) character added to it. This character
+acts as an introduction sign, to indicate that the number which follows it is in binary notation, rather than the
+standard decimal system.
+
+After the decimal value that is to be converted, an optional number between 1 and 31 can be added which sets the
+number of digits to be returned in the binary string. If this parameter is omitted, AOZ will express the
+value in the fewest possible digits, with no leading zeros.
+
+Here are a few examples:
+@code
+Print Bin$(5)
+Print Bin$(10)
+Print Bin$(255)
+X$=Bin$(100) : Print X$
+@code
+You may enter binary numbers directly, as part of an expression, providing that the % (per cent) character is placed
+in front of your binary value. Such numbers will be converted into standard decimal notation automatically.
+
+For example:
+@code
+Print %101
+Print %1010
+Print %11111111
+X$=Bin$(100) : Print Val(X$)
+@code
+Certain functions make use of yet another system of counting. The Hexadecimal system counts in units of 16 rather
+than ten, so a total of 16 different digits is needed to represent all the different numbers. The digits from 0 to 9 are
+used as normal, but the digits from 10 to 15 are signified by the letters A to F, as shown in the following table:
+@code
+Hex digit 	0 1 2 3 4 5 6 7 8 9 A  B  C  D  E  F
+Decimal 	0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+

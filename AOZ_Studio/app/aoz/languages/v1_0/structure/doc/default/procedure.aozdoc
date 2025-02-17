@@ -1,0 +1,24 @@
+<i>Procedure</i>
+<b>Procedure</b> xxxxxxx
+=
+A procedure is created in exactly the same way as a normal variable, by giving it a name. The name is then followed
+by a list of parameters and the procedure must be ended with an END PROC command. PROCEDURE and END
+PROC commands must be placed on their own individual lines.
+
+For example:
+@code
+Procedure HELLO
+Print "Hello, I am a procedure!"
+End Proc
+@code
+If you try and run that program, nothing will happen. This is because a procedure must be called up by name from
+inside your program before it can do anything. Now add the following line at the start of that last example, and then
+[Run] it.
+@code
+HELLO
+Procedure HELLO
+Print "Hello, I am a procedure!"
+End Proc
+@code
+There is nothing preventing a procedure from calling itself, but this recursion is limited by memory. Such a process is called recursivity.
+

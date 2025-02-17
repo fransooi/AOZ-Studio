@@ -1,0 +1,8 @@
+<i>Screen Colour</i>
+<b>Screen Colour</b> xxxxxxx
+=
+To find the maximum number of colours in the screen that is currently active, test the SCREEN COLOUR function now:
+@code
+Print Screen Colour
+@code
+

@@ -1,0 +1,11 @@
+<i>Physic</i>
+<b>Physic</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The PHYSIC function returns an identification number for the current physical screen. This number allows you to
+access the physical image being displayed by the automatic DOUBLE BUFFER system, and the result of this
+function can be substituted for the screen number in ZOOM, APPEAR and SCREEN COPY commands. The
+PHYSIC identification number of the current screen will be returned, unless an optional screen number is specified.
+
+

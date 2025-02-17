@@ -1,0 +1,316 @@
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+
+// Welcome to your AOZ Studio Lesson 3   -   Written by Neil John Ives
+// This lesson will later be enhanced with Lesson 6
+
+// This tutorial will discuss and use many new functions and concepts:
+//      Print, Locate, Paper, Pen, Centre,
+//      Global, Input, Do Loop,
+//      Procedures, Integer and String Variables,
+//      If Then, If End If,
+//      Upper$, Cls, Ink, Bar,
+//      Wait n, Wait Key,
+
+// We are going to discover all of that by building a game.
+// The game goal is to cross a river in a very small boat with a chicken, a fox and some corn, without anyone be eaten!
+
+// Note: In a follow-up tutorial we will see how to improve this puzzle game.
+// We will add graphical texts, images and sound samples.
+
+// So let's start!
+
+
+// 'Print' Locate and Pen ---------------------------------
+
+// You already know these instructions if you have followed the Tutorial Lesson 1
+// Locate is used to position text using the "Print" instruction.
+//   Eg., Locate 1,12 // This means, One text column across from the left, and twelve rows down from the top
+// Pen sets the text colour.
+
+// Paper set the background colour for text
+//   Eg., Locate 1,12: Paper 11: Pen 1: Print "Hello"
+//   Would show a white Hello text against a green background at the selected location 1, 12
+
+// Centre tells the program to print in the middle of the screen at the set location
+//   Eg., Locate 0,10: Centre "Hello World".
+
+
+// Variables, (Integer and String)-----------------------
+
+// You already know these a bit as well if you have followed the Tutorial Lesson 1
+// Variables are used to store a value that can vary, hence the name variable.
+// In this program some variables are used to store numbers that will let the program know where to
+// place text on the screen.
+
+// These variables are storing whole numbers which are known as Integers, so these are called Integer Variables
+// The following Integer Variables are used in this program:
+//      mx, stores the horizontal position to display the text "Man (M)"
+//      fx, same thing for "Fox (F)"
+//      cx, same thing for "Chicken (C)"
+//      bx, same thing for "corn (B)"
+
+// There is a difference between a variable that stores a text and one that stores a number.
+// When a variable is made to store a text its name must have a dollar symbol added at the end.
+//   Eg., MyName$ = "Francois".
+
+// Note: numbers can be used as texts or real numbers. For instance, a house number is usually a text.
+// You would not expect to carry out maths operations with a house number, like multiplying house numbers.
+
+// To be more precise, letters and words in computer programs are known as 'Strings'
+// In this program, RightChoice$ and LeftChoice$ are String Variables, they hold the letter entered by the user to pick the Chicken (C), Fox (F), etc.
+// For example RightChoice$ = "C"
+
+
+// Setting up the program--------------------------------
+
+// Here the starting positions of the words to display are being defined
+
+mx=3        // Horizontal position of man
+fx=3        // ditto fox
+cx=3        // ditto chicken
+bx=3        // ditto bag of corn
+
+
+// Procedure------------------------------------------------
+
+// Procedures can be thought of as program modules or sections, each Procedure having a specific purpose.
+// Think of procedures as building blocks.
+
+// They allow sections of code to be reused. A procedure can be created and tested separately from the main program.
+// This is very useful, especially inlarger programs.
+
+// Procedures can be executed by calling them by name from any part of the program.
+
+// Procedures can have parameters sent to them to allow internal calculations or logical decisions to be made.
+
+// In this program we have created five Procedures: DRAWSCREEN, MOVERIGHT, MOVELEFT, CHECKIT and SHOWMESSAGES
+
+
+
+// Global------------------------------------------------
+
+// Let discuss another complex concept, the Global variables. If you do not get it, no worries.
+// "Global" allows the variables attached to it to be seen in all parts of the program, otherwise it is local to the Procedure.
+// We are going to set our position variables global, so it can be used everywhere outside of the Procedures:
+
+Global mx,fx,cx,bx
+
+// If then Else Instruction-----------------------------------
+
+// A useful instruction made of "If" and "Then" and "Else" to make simple logical decisions.
+// If (something is true) Then (carry out a course of actions) Else (do some other actions)
+//    eg., If Highscore = 1000 then Print "Player Wins" else Print "You loose"
+// Note: Then and Else are not mandatory as you will see below
+
+
+// If End If Instruction-----------------------------------
+
+// A if..then carrying out multiple actions based on a logical decision:
+// Example:
+// If Highscore = 1000
+//   Clear the screen   (these are not an instructions just for the explanation)
+//   Show winning screen
+//   Play a sound sample
+//   End (the game)
+// End If
+
+
+// Upper$ Instruction-----------------------------------
+
+// Converts a string to the same in all capitals
+// Upper$("francois") would be converted to "FRANCOIS". Like A$=Upper$("francois"). In the string A$ we will find "FRANCOIS".
+
+
+// Cls Instruction-----------------------------------
+
+// Clear the screen. The default is to clear to the current paper colour.
+// If a number is added the screen wil be cleared to one of the current palette colours
+//      CLS 0: Screen is cleared to black.
+//      CLS 1: screen is cleared to white.
+
+
+// Bar Instruction-----------------------------------
+// A bar is a filled rectangle that OAZ will draw for you.
+//   Eg., Bar 1,1 to 100,100,
+// This would draw a rectangle with the top left corner at 1 pixel out from the left edge of the screen and one down from the top
+// and the bottom right corner at 100 across and 100 down. The rectangle fill colour would be set by the Ink command.
+
+
+// Wait n Instruction-----------------------------------
+
+// As per Lesson 2, the Wait function followed by a number pauses the program for a given time.
+// The time is expressed in seconds and can be a floating point number.
+
+// Wait 10, will pause the program for 10 seconds
+// Wait 0.5 will pause the program for half a second
+// Wait 0.02 will pause the program for 1/50th of second
+// This can be useful to create dramatic effect, such as when the chicken gets the corn, then the fox gets the chicken!
+
+
+// Wait Key Instruction-----------------------------------
+
+// Stops the program until the user presses any key
+// In this program it is used to allow the user to read the message and restart the game
+
+
+// Do Loop Instruction-----------------------------------
+
+// The Do and Loop create a.... loop, a repeating sequence like the main program loop below.
+
+// Here are some explanations of what you will find in this Do Loop:
+
+// Input halts the program to ask a question and stores the answer in a variable; you know that already.
+// For example, Input "What should he take across M,F,C,B?";RightChoice$
+//      When the man is on the left of the river, (mx=3) the String variable RightChoice$ is used to pass the string to the procedure MOVERIGHT.
+//      When the man is on the right of the river, (mx = 60) the String variable LeftChoice$ is used to pass the string to the procedure MOVELEFT.
+//      When all of the group are over the river, (position 60) the puzzle is solved and the user sees a 'congratulations!' message.
+
+
+// OK, so most is explained now. Let see the game, starting by using our DRAWSCREEN procedure.
+// To create it we simply type: "Procedure DRAWSCREEN" and add instructions, finish by placing "End Proc" at the end.
+// Then to use DRAWSCREEN, We will just type this name and it will execute the instructions created in the Procedure block
+// you will see below, it is easier with an example...
+
+// Start of the Main part of the program:
+DRAWSCREEN    // This execute the DRAWSCREEN procedure that is define later.
+Do
+    If mx=3                 // If the man is on the left side of the river
+        locate 1,11         // Set text position on left side
+        Input "What should he take across M,F,C,B? ";RightChoice$ // We use Input to display the question and get the answer in RightChoice$
+        MOVERIGHT[RightChoice$] // Send the answer to the MOVERIGHT procedure
+    End if
+
+    If mx = 60 and fx = 60 and cx = 60 and bx = 60  // All are across the river. Note: "and" means we add a condition to the IF
+        SHOWMESSAGES[4]                             // Message 4 is the 'Congratulations' message
+        Wait 1                                      // Wait for a while (1 second)
+        End                                         // Stops the program
+    End If
+
+    If mx=60 // Man is on right side of the river
+        Locate 55,11 // Set text position on right side
+        Input "Who should go back? ";LeftChoice$
+        MOVELEFT[LeftChoice$]
+    End If
+loop
+
+
+// Now here are the Procedures. See, you can place them anywhere in the program, not necessarily at the beginning.
+Procedure DRAWSCREEN
+    //This procedure redraws the whole screen. This is neccessary to delete the old text before printing the text in new position
+
+    CLS 11 // Clear to green, (grass)
+    Ink 20 // Set the colour for the river
+    Bar 1050,0 To 1100,1180 // Draw the river using Bar x,y to x2,y2
+
+    // Set up text colours
+    Paper 11 //Green background for words
+    Pen 1 //White text
+
+    // Text strings
+    Locate 1,0:Print "A man must get three things across"
+    Locate 1,1:Print "a river."
+    Locate 1,3: Print "He has a tiny boat so he can only"
+    Locate 1,4:Print "take himself and one thing at a time."
+
+    // Show strings at horizontal positions, (mx, fx etc.) defined at start and then in MOVERIGHT and MOVERIGHT procedures
+    Locate mx,6:Print "Man (M)"
+    Locate fx,7:Print "Fox (F)"
+    Locate cx,8: Print "Chicken (C)"
+    Locate bx,9:Print "Bag of corn (B)"
+
+    CHECKIT // Go to the procedure that checks for a bad decision
+End Proc
+
+Procedure MOVERIGHT[Ch$] // The MOVERIGHT Procedure using the Ch$ variable as a parameter
+    Ch$ = Upper$(Ch$)  // Change users input to capitals because we cannot tell if the user will enter capitals or lower case
+    // Therefore one of the following letters: "M", "F", "C", "B" or "m", "f", "c", "b"
+    // has been sent to this procedure and is stored in the string variable Ch$
+
+    // Define text positions on the right of the river
+    If Ch$="M" then mx=60 // Man only
+    If Ch$="F" then fx=60:mx=60 // Man always has to cross the river with the fox, chicken or bag of corn
+    If Ch$="C" then cx=60:mx=60 // Ditto
+    If Ch$="B" then bx=60:mx=60 // Ditto
+    DRAWSCREEN  // A Procedure can be called from a Procedure, here to redraw the screen
+End Proc
+
+Procedure MOVELEFT[Ch$]
+    // See notes in MOVERIGHT
+    Ch$ = Upper$(Ch$)
+    If Ch$="M" then mx=3
+    If Ch$="F" then fx=3:mx=3
+    If Ch$="C" then cx=3:mx=3
+    If Ch$="B" then bx=3:mx=3
+    DRAWSCREEN
+End Proc
+
+Procedure CHECKIT
+    // Check for a bad decision, using the text positions, (mx, fx etc.) to decide what message to show
+    // Fox, Chicken and bag of corn are together but man is not with them.
+    // The '<>' characters mean not equal to (or different to)
+    If fx = cx and cx = bx and fx <> mx  Then SHOWMESSAGES[1] // Notice the parameter sent to the procedure SHOWMESSAGES[] inside the square brackets
+
+    // Fox and Chicken are together man is not with them
+    If fx=cx and mx<>cx Then SHOWMESSAGES[2] // <> means different then so here if both fx=cx and mx is different than cx
+
+    // Chicken and Bag of corn are together but man is not with them
+    If cx=bx and mx<>cx Then SHOWMESSAGES[3]
+
+End Proc
+
+Procedure SHOWMESSAGES[M]
+    // Show appropriate message
+    // Prepare the print format for the message strings
+    Cls 0 // Clear screen to black
+    Paper 0 // Black paper
+    Pen 4 // Red text
+    Locate 0,9 // Locate messages
+
+    Curs Off// Turn Off the flashing screen cursor
+
+    //Notice how the parameter sent to the procedure is stored in variable 'M'. It is used to select and print one of three messages
+
+    If M = 1
+            Centre "The chicken ate the corn..." // Centered at the location given
+            Wait 1      // One second pause for dramatic effect!
+            Locate 1,11 // Move down a bit
+            Centre "...then the fox ate the Chicken!"
+    End if
+
+    If M = 2 Then Centre "The fox ate the Chicken!"
+
+    If M = 3 Then  Centre "The chicken ate the corn!"
+
+    If M = 4 then  Centre "Congratulations, you did it!":Pop Proc // Do not show the 'Press Any Key' message
+
+    Paper 0: Pen 1 // Go back to normal paper and text colours
+    Locate 1,22: Centre "Press any key"
+    Curs On // Turn the cursor on again
+
+    Wait key // Wait for user key press
+
+    mx=3:fx=3:cx=3:bx=3 // Reset start positions
+
+    DRAWSCREEN
+
+End proc
+
+
+//    _       __     ____       __                 __
+//   | |     / /__  / / /  ____/ /___  ____  ___  / /
+//   | | /| / / _ \/ / /  / __  / __ \/ __ \/ _ \/ /
+//   | |/ |/ /  __/ / /  / /_/ / /_/ / / / /  __/_/
+//   |__/|__/\___/_/_/   \__,_/\____/_/ /_/\___(_)
+
+// OK so take a deep breath. You will need to spend some time to understand the logic of the program. But you will learn a lot.
+// Not only many functions, concepts of programming but also the logic. It is very normal that you may need some time, but I can tell you
+// that once you understand that... you will be able to achieve great things and will be knowledgeable enough to start the program you are dreaming of.
+// :)

@@ -1,0 +1,18 @@
+<i>Bank Swap</i>
+<b>Bank Swap</b> xxxxxxx
+=
+The BANK SWAP command switches over the memory pointers assigned to a pair of selected banks, so that the first bank is assigned to the second bank's memory block and the second bank grabs the locations used by the first.
+
+Note that the items held in these banks are completely unaffected by this operation, and the only thing that changes
+is the number and type of the memory bank to which the items are assigned.
+
+BANK SWAP is commonly used in conjunction with Objects, Icons and music banks. For example, it can be used
+to instantly flick between the images in an Icon bank and an Object bank, like this:
+@code
+Load "Objects.Abk"
+Load "Icons.Abk"
+Bank Swap 1,2 : Rem Banks 1 and 2 normally used for Sprites and Icons
+@code
+Another possibility is to store several different music banks in memory, and swap them as required.
+
+

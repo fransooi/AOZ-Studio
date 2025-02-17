@@ -1,0 +1,26 @@
+<i>Set Envel</i>
+<b>Set Envel</b> xxxxxxx
+=
+AOZ Studio uses envelopes to change your original wave forms according to a set pattern. The parameters
+are as follows:
+
+The wave number sets the wave form to be affected, and any number can be used including the pre-set wave
+numbers zero and 1.
+
+The phase number refers to one of seven individual sections of the original wave form that is to be defined, ranging
+from 0 to 6.
+
+The duration controls the length of this particular segment (phase number) of the wave form, and is expressed in
+units of one 50th of a second. This is how the speed of a volume change in any phase of the wave form is
+controlled.
+
+Volume specifies the volume to be reached by the end of this phase, ranging from zero for silence up to 63 for full
+blast.
+
+In the next example, an envelope for wave form number one is set, so that segment zero (its first phase) lasts for
+four seconds, ramping up to full volume by its end, no matter what the original volume was at the start of this phase.
+@code
+Set Envel 1,0 To 200,63
+@code
+
+

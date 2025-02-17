@@ -1,0 +1,9 @@
+<i>Put CBlock</i>
+<b>Put CBlock</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This command places the Block whose number is specified at its original screen coordinates. Optional target
+coordinates can be added, in which case the Block will be unpacked and then drawn at the new position. Any new
+x-coordinate will also be rounded to the nearest 8-pixel boundary.
+

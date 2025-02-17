@@ -1,0 +1,69 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝   ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗    ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║    ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Lang features
+ * By Francois Lionet
+ *
+ * @author Baptiste Pillot
+ * @date first pushed on 2022-12-07
+ */
+
+// MODULE IMPLEMENTATION
+
+{
+	const DEBUG = false
+
+	aoz_translations    = {}
+	this.aoz.moduleLang = this
+	this.language       = undefined
+	//this.language = 'en'
+
+	this.loadTranslations = function(module, language)
+	{
+		if (!aoz_translations[module]) aoz_translations[module] = {}
+		if (aoz_translations[module][language]) return
+		const xhr = new XMLHttpRequest()
+		const url = location.href.substring(0, location.href.lastIndexOf('/'))
+		if (DEBUG) console.log('loadTranslations', url + '/run/lang/' + module + '.' + language + '.json')
+		xhr.open('GET', url + '/run/lang/' + module + '.' + language + '.json', false)
+		xhr.send()
+		if (DEBUG) console.log('loadTranslations', xhr.responseText)
+		try {
+			aoz_translations[module][language] = JSON.parse(xhr.responseText)
+		}
+		catch (exception) {
+			aoz_translations[module][language] = {}
+		}
+	}
+
+	this.navigatorLanguage = () => navigator.language.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+
+	this.translate = function(module, text, vars = {})
+	{
+		const language = this.language ? this.language : this.navigatorLanguage()
+		this.loadTranslations(module, language)
+		let translation = aoz_translations[module][language][text]
+		if (!translation) translation = text
+		for (const key in vars) if (vars.hasOwnProperty(key)) {
+			translation = translation.replaceAll(':' + key, vars[key])
+		}
+		return translation
+	}
+
+}

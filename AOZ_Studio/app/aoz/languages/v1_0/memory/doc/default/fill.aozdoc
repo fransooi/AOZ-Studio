@@ -1,0 +1,7 @@
+<i>Fill</i>
+<b>Fill</b> xxxxxxx
+=
+The FILL instruction packs an area of memory specified from start to finish. This area is filled with multiple copies
+of a specified four-byte pattern. The addresses of the start and finish determine the size and position of the memory
+block, and they must both be even.
+

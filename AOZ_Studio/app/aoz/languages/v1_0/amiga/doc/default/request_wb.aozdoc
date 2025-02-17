@@ -1,0 +1,13 @@
+<i>Request WB</i>
+<b>Request WB</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This command is used to switch to the Workbench system requester.
+
+As soon as one of the options is selected from it, you will be returned to AOZ Studio. Please note that if the Requester Extension is deleted from the
+extension list by means of the configuration file, then the standard Workbench requester will be used for displaying
+messages. This will give the illusion that AOZ Studio has crashed when a requester appears. If this situation
+occurs, simply press [Amiga]+[A] to return to the Workbench, respond to the requester and press [Amiga]+[A] again
+to return to AOZ Studio. There should be no need to delete the Requester extension unless memory is very low.
+

@@ -1,0 +1,7 @@
+<i>Menu Base</i>
+<b>Menu Base</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+Use this command to move the starting point of the first level in your menu hierarchy to the absolute screen coordinates at x,y. All subordinate menu items will now be displayed relative to this starting point.
+

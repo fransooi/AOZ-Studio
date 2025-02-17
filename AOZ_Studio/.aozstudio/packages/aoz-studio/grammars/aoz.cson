@@ -1,0 +1,154 @@
+#   - https://flight-manual.atom.io/hacking-atom/sections/creating-a-grammar/
+'scopeName': 'source.aoz'
+'name': 'AOZ'
+'fileTypes': [
+  'aoz',
+  'aozinc'
+]
+'patterns': [
+  # Javascript
+  {
+    'begin': '{'
+    'beginCaptures':
+      '0':
+        'name': 'meta.brace.curly.js'
+    'end': '}'
+    'endCaptures':
+      '0':
+        'name': 'meta.brace.curly.js'
+    'patterns': [
+      {
+        'include': 'source.js'
+      }
+    ]
+  }
+  {
+    'match': '^\\s*//.*$'
+    'name': 'comment.line.aoz'
+  }
+  # Binary numeric constants
+  {
+	 match: "[%]([0|1])+"
+	 name: "constant.numeric.binary.aoz"
+  }
+  # Tags
+  {
+    begin: "(#[a-zA-Z])"
+    beginCaptures:
+      "2":
+        name: "punctuation.definition.string.begin.aoz"
+    end: "\:"
+    endCaptures:
+      "1":
+        name: "punctuation.definition.string.end.aoz"
+    name: "keyword.control.aoz"
+  }
+  # Rem
+  {
+    begin: "(?i:\\b(REM)\\b)"
+    beginCaptures:
+      "0":
+        name: "punctuation.definition.comment.begin.aoz"
+    end: "\\n"
+    endCaptures:
+      "0":
+        name: "punctuation.definition.comment.end.aoz"
+    name: "comment.line.rem.aoz"
+  }
+  # Multi-line comments.
+  {
+    begin: "\/[*]"
+    beginCaptures:
+      "0":
+        name: "punctuation.definition.comment.begin.aoz"
+    end: "[*]\/"
+    endCaptures:
+      "0":
+        name: "punctuation.definition.comment.end.aoz"
+    name: "comment.line.multi.aoz"
+  }
+  # Apostrophe ' comments.
+  {
+    begin: "\'"
+    beginCaptures:
+      "0":
+        name: "punctuation.definition.comment.begin.aoz"
+    end: "\\n"
+    endCaptures:
+      "0":
+        name: "punctuation.definition.comment.end.aoz"
+    name: "comment.line.apostrophe.aoz"
+  }
+  # Double slash // comments.
+  {
+    begin: "\//"
+    beginCaptures:
+      "0":
+        name: "punctuation.definition.comment.begin.aoz"
+    end: "\\n"
+    endCaptures:
+      "0":
+        name: "punctuation.definition.comment.end.aoz"
+    name: "comment.line.double.aoz"
+  }
+  # Double-quoted strings
+  {
+    begin: "\""
+    beginCaptures:
+      "0":
+        name: "punctuation.definition.string.begin.aoz"
+    end: "\""
+    endCaptures:
+      "0":
+        name: "punctuation.definition.string.end.aoz"
+    name: "string.quoted.double.aoz"
+    patterns: [
+      {
+        match: "\"\""
+        name: "constant.character.escape.apostrophe.aoz"
+      }
+    ]
+  }
+  # Decimal numeric constants
+  {
+    match: "-?\\b((([0-9]+\\.?[0-9]*)|(\\.[0-9]+))((e|E)(\\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f)?\\b"
+    name: "constant.numeric.decimal.aoz"
+  }
+  # Constants
+  {
+    match: "(?i:\\b(pi[#]))"
+    name: "constant.numeric.variable.aoz"
+  }
+  # Hex values
+  {
+    match: "([\\$][0-9A-Fa-f]+)"
+    name: "constant.numeric.decimal.aoz"
+  }
+  # Operators
+  {
+    match: "!|%|&|\\*|\\-\\-|\\-|\\+\\+|\\+|~|===|==|=|!=|!==|<=|>=|<<=|>>=|>>>=|<>|<|>|!|&&|\\|\\||\\?\\:|\\*=|/=|%=|\\+=|\\-=|&=|\\^=\\b"
+    name: "keyword.operator.aoz"
+  }
+  {
+    match: "(?i:\\b(Mod|And|Not|Or|Xor|As|AndAlso|IsNot|Of|OrElse)\\b)"
+    name: "keyword.operator.aoz"
+  }
+  # Language
+  {
+    match: "(?i:\\b(firebaseauth userdisplayname[$]|firebase querygetdocumentid[$]|firebase getdocumentstring[$]|firebaseauth userphotourl[$]|firebase getdocumentdate[$]|firebase querygetstring[$]|html element attribute[$]|firebaseauth useremail[$]|firebase querygetdate[$]|firebase newdocument[$]|json asset property[$]|firebaseauth userid[$]|firebase formatdate[$]|player errormessage[$]|ui tooltipplacement[$]|firebase newquery[$]|firebase datenow[$]|gamepad product[$]|gamepad vendor[$]|file extension[$]|ui placeholder[$]|image dataurl[$]|set font size[$]|border filter[$]|player engine[$]|screen filter[$]|sprite filter[$]|gamepad name[$]|command line[$]|ui iconclass[$]|actor group[$]|actor image[$]|drive first[$]|draw filter[$]|player name[$]|leaderboard[$]|player data[$]|ui property[$]|ui fontname[$]|ui onchange[$]|actor anim[$]|drive next[$]|ui content[$]|ui tooltip[$]|ui onclick[$]|html code[$]|dir first[$]|file name[$]|disc info[$]|player id[$]|ui prompt[$]|resource[$]|dir next[$]|set font[$]|key name[$]|ui value[$]|ui group[$]|ui class[$]|ui items[$]|amalerr[$]|vdialog[$]|rdialog[$]|replace[$]|ui type[$]|filter[$]|italic[$]|string[$]|cright[$]|repeat[$]|border[$]|ui src[$]|i bob[$]|field[$]|inkey[$]|input[$]|right[$]|space[$]|upper[$]|lower[$]|paper[$]|cdown[$]|cleft[$]|cmove[$]|fsel[$]|font[$]|bold[$]|scan[$]|poke[$]|peek[$]|menu[$]|left[$]|flip[$]|trim[$]|trim[$]|zone[$]|rgb[$]|rgb[$]|dir[$]|ink[$]|key[$]|mid[$]|chr[$]|str[$]|bin[$]|hex[$]|err[$]|pen[$]|cup[$]|tab[$]))"
+    name: "keyword.language.aoz"
+  }
+  {
+    match: "(?i:\\b(segment x y radius1 radius2 radius3 angle1 angle2 rotation fill counterclockwise|ellipse arc x y radius1 radius2 angle1 angle2 rotation fill counterclockwise|player sendaccountrecoveryemail|set double precision|reserve as chip work|reserve as chip data|priority reverse off|gamepad map triggers|resource screen open|load asset listener|json asset property|priority reverse on|gamepad map buttons|show physic bodies|hide physic bodies|get images palette|filled ellipse arc|animate text pause|leaderboard update|get sprite palette|sprite move freeze|menu item movable|set sprite buffer|gamepad threshold|gamepad connected|player initialise|sprite update off|sprite shadow off|string base index|actor anim frame|menu item static|bob collide with|gamepad map axes|animate text off|get icon palette|player errorcode|leaderboard load|stop transparent|sprite update on|actor isvisible|close workbench|set equate bank|reserve as work|reserve as data|bob move freeze|default palette|gamepad buttons|gamepad trigger|dialog unfreeze|resource unpack|get font number|set bitmap font|set block alpha|text shadow off|draw shadow off|get text height|animate text on|even ( number )|player register|screen to front|screen hot spot|set transparent|sprite priority|sprite move off|actor isenable|del all actors|mouse on actor|get disc fonts|dual playfield|bob update off|bob shadow off|gamepad button|set db service|display height|audio loop off|video loop off|load variables|save variables|set line width|filled ellipse|filled segment|make icon mask|clear interval|key code table|odd ( number )|menu mouse off|player isguest|screen display|screen to back|sprite move on|ui colorpicker|ui hidetooltip|amos to front|get rom fonts|menu separate|dual priority|double buffer|console error|bob update on|bobsprite col|spritebob col|dialog update|dialog freeze|resource bank|auto view off|display width|audio loop on|video loop on|set line join|menu mouse on|menu inactive|on menu gosub|player forget|player update|screen center|screen offset|screen rotate|screen colour|screen height|sprite update|sprite rotate|sprite shadow|sprite move x|sprite move y|sprite moveon|on error goto|on break proc|actor exists|actor height|actor ishrev|actor isvrev|actor scalex|actor scaley|amos to back|frame length|menu movable|close editor|html element|console warn|asset loaded|image height|priority off|bob move off|sprite point|gamepad axes|gamepad axis|dialog close|auto view on|update every|volume audio|volume video|set line cap|filled shape|animate text|no icon mask|set interval|change mouse|get distance|menu to bank|bank to menu|on menu proc|on menu goto|player login|screen close|screen clone|screen scale|screen alpha|mouse screen|screen color|screen width|sam loop off|sprite scale|sprite alpha|title bottom|ui textblock|reserve zone|zones length|zone enabled|actor alpha|actor angle|actor image|actor reset|actor skewx|actor skewy|actor width|reset actor|set gravity|amal freeze|set hardcol|request off|frame param|set tempras|menu static|menu active|menu called|screen swap|screen base|screen mode|sprite base|anim freeze|move freeze|synchro off|console log|bank shrink|image width|priority on|bobpriority|bob move on|bob collide|get palette|colour back|dialog open|set display|pause audio|pause video|open random|file length|bitmap text|filled star|text length|text shadow|draw shadow|format text|set pattern|text styles|paste image|mouse image|mouse click|limit mouse|mouse wheel|on menu del|on menu off|player data|set rainbow|rainbow del|screen open|screen hide|screen show|screen skew|screen copy|sam loop on|sprite show|sprite hide|sprite skew|sprite move|resume next|print using|inverse off|outline off|ui progress|ui checkbox|ui textarea|ui property|ui fontsize|copper off|multi wait|set buffer|request wb|request on|frame load|frame play|frame skip|get cblock|put cblock|del cblock|menu tline|halfbright|synchro on|load asset|erase temp|bob camera|bob update|bob rotate|bob shadow|bob move x|bob move y|bob moveon|sprite col|shift down|jdownright|dialog box|dialog run|dialog clr|update off|draw image|play audio|stop audio|time audio|play video|stop video|time video|draw video|show video|hide video|load image|save image|hrev block|vrev block|point rgba|filled arc|gr writing|paste icon|line input|wait click|wait input|on menu on|def scroll|sprite off|get sprite|ins sprite|del sprite|wind close|inverse on|italic off|outline on|shadow off|scroll off|memorize x|memorize y|remember x|remember y|win height|ui confirm|ui textbox|ui disable|ui padding|is defined|reset zone|mouse zone|actor col|actor del|del actor|copper on|cop reset|cop movel|cop logic|amos here|amos lock|get fonts|icon base|chip free|fast free|set stack|menu base|menu link|menu once|show html|del asset|bank swap|erase all|list bank|ins image|del image|get image|make mask|limit bob|paste bob|bob alpha|bob scale|bob point|flash off|shift off|jdownleft|update on|video bob|load text|save text|save bank|set input|get block|put block|del block|point rgb|gr locate|text base|text mode|set paint|set print|key speed|key state|key shift|scanshift|clear key|mouse key|randomize|get angle|menu line|set alpha|voice off|set envel|is sprite|every off|procedure|break off|td remove|td camera|wind open|wind save|wind move|wind size|title top|italic on|under off|shade off|shadow on|scroll on|x graphic|y graphic|win width|ui prompt|ui iframe|ui slider|ui select|ui button|ui delete|ui enable|ui height|amal off|cop swap|cop wait|cop move|load iff|save iff|mask iff|iff anim|set menu|autoback|anim off|move off|hot spot|bob show|bob hide|bob skew|bob move|shift up|jupright|unfreeze|open out|set font|polyline|set line|set text|ins icon|del icon|get icon|wait key|scancode|menu off|menu key|menu bar|menu del|x screen|y screen|sam play|sam stop|voice on|play off|set wave|noise to|del wave|sam bank|x sprite|y sprite|i sprite|every on|end proc|pop proc|break on|td light|td actor|curs pen|curs off|bold off|under on|shade on|set curs|wait vbl|ui radio|ui image|ui popup|ui value|ui width|ui focus|set zone|zone off|actor x|actor y|actor z|amal on|amalerr|execall|gfxcall|doscall|intcall|phybase|logbase|anim on|move on|synchro|no mask|=bstart|bob off|put bob|get bob|ins bob|del bob|bob col|palette|default|jupleft|vdialog|rdialog|edialog|zdialog|open in|set dir|ellipse|polygon|put key|hide on|show on|x mouse|y mouse|menu on|rainbow|vumeter|sam raw|errtrap|exit if|else if|include|td init|td view|td copy|td anim|writing|curs on|bold on|hscroll|vscroll|set tab|ui show|ui hide|ui step|ui rows|restore|zone on|chanan|chanmv|unpack|x menu|y menu|physic|lowres|x hard|y hard|move x|move y|length|colour|jright|joykey|dialog|freeze|update|append|assign|parent|rename|circle|radian|degree|choice|scroll|appear|screen|volume|sample|sprite|resume|repeat|return|def fn|direct|td add|td cls|window|windon|locate|centre|border|cright|x curs|y curs|x text|y text|ui cls|ui min|ui max|global|shared|varptr|actor|amreg|pload|spack|logic|hires|laced|hzone|movon|start|erase|bgrab|bsend|x bob|y bob|i bob|isbob|color|flash|jdown|jleft|bload|bsave|dfree|mkdir|close|exist|point|curve|shape|paint|input|remap|voice|shoot|instr|every|until|while|gosub|print|paper|cdown|cleft|cmove|cline|timer|array|false|match|amal|areg|ntsc|pack|free|call|anim|move|hrev|vrev|rgba|fade|fire|view|load|save|kill|ldir|plot|draw|star|disc|text|clip|hide|show|asin|acos|atan|hsin|hcos|htan|poke|doke|loke|peek|deek|leek|fill|copy|hunt|bset|bclr|bchg|btst|rorb|rorw|rorl|rolb|rolw|roll|zoom|scin|boom|bell|play|wave|errn|next|step|wend|loop|exit|goto|else|proc|edit|stop|home|wait|ui x|ui y|data|read|sort|swap|true|zone|equ|lvo|rev|bob|col|rgb|joy|jup|put|get|lof|eof|pof|dir|cls|arc|bar|box|ink|fix|rnd|sgn|abs|int|pi#|min|max|sin|cos|tan|sqr|log|exp|mod|not|xgr|ygr|asc|val|len|for|pop|run|rem|end|clw|pen|cup|add|dec|dim|inc|ln|do|if|on|fn|at)\\b)"
+    name: "keyword.language.aoz"
+  }
+  {
+    match: "(?i:\\b(Procedure|End Proc|Wait Vbl|Wait)\\b)"
+    name: "keyword.language.aoz"
+  }  
+  # Control
+  {
+    match: "(?i:\\b(Return|Gosub|Goto|Step|If|Then|Else|ElseIf|Else If|End|End If|Every|Break|Error|Resume|While|Wend|For|To|Each|In|Do|Until|Loop|Repeat|Exit|Next)\\b)"
+    name: "keyword.control.aoz"
+  }
+]

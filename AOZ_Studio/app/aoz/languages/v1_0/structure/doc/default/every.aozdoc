@@ -1,0 +1,26 @@
+<i>Every</i>
+<b>Every</b> xxxxxxx
+=
+The EVERY statement is used to call up a sub-routine or a procedure at regular intervals, without interfering with
+the main program. Simply specify the length of time between every call, measured in seconds. Obviously
+the time taken for a sub-routine or a procedure to be completed must be less than the interval time, or an error will
+be generated.
+
+After a sub-routine has been entered, the EVERY system is automatically disabled. This means that in order to call
+this feature continuously, an EVERY ON command must be inserted into a sub-routine before the final RETURN
+statement. Similarly, EVERY ON must be included in a procedure before returning to the main program with an
+END PROC.
+
+For example:
+@code
+Every 50 Proc TEST
+Do
+Print At(0,0); "Main Loop"
+Loop
+Procedure TEST
+Shared A
+Inc A: Print "This is call number ";A
+Every On
+End Proc
+@code
+

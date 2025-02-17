@@ -1,0 +1,7 @@
+<i>Dev Abort</i>
+<b>Dev Abort</b> xxxxxxx
+=
+This instruction executes an AbortIO and a WaitIO command, clearing all pending action from the specified device
+channel. It can be used to exit directly from a multi-tasking operation, without waiting for it to complete.
+
+

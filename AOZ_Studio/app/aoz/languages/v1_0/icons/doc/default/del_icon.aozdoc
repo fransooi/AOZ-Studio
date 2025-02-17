@@ -1,0 +1,8 @@
+<i>Del Icon</i>
+<b>Del Icon</b> xxxxxxx
+=
+DEL ICON erases the Icon whose number is specified from Bank 2. A second Icon number may also be given, in
+which case, all Icons from the first number TO the second number will be deleted. When the final Icon in the bank
+has been deleted, the whole bank will be removed from memory.
+
+

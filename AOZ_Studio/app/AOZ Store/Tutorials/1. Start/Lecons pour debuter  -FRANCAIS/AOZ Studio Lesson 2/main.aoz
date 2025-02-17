@@ -1,0 +1,142 @@
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+
+// Bienvenue dans votre leçon 2 d'AOZ Studio
+
+// Vous voyez ces deux barres obliques (//) -> cela signifie que tout ce qui suit  est un commentaire.
+// Après le // tout sera une remarque, une note, une explication, mais pas une instruction de programme pour AOZ.
+
+// Je vais vous montrer comment saisir des informations dans votre programme puis les afficher à l'écran.
+
+// Les Variables
+// -------------
+// Une "variable" est un moyen de stocker temporairement des informations. La valeur qu'il stocke peut varier :
+// un nombre, une lettre, un mot, une phrase ...
+// Nous l'avons vu dans la leçon 1 et nous en utiliserons plus dans cette leçon.
+
+// Voici des exemples:
+
+N = 20
+Print N
+
+N = 2000
+Print N
+
+ELEPHANT = 1
+Print ELEPHANT
+
+ANYWORD$ = "Kitchen"
+Print ANYWORD$
+
+ANYWORD$ = "Elephant"
+Print ANYWORD$
+
+ANYWORD$ = "Fred"
+Print ANYWORD$
+
+// La variable "N" est utilisée pour stocker les nombres 20, puis 2000
+// La variable "ANYWORD$" "est utilisée pour stocker les mots Kitchen, puis Elephant, puis Fred.
+// Les lettres et les mots en langage informatique sont appelés des "chaînes". ANYWORD$ est une "variable de type chaîne",
+// elle stocke des morceaux de texte.
+// Nous devons mettre des guillemets autour des mots comme ci-dessus voir "Cuisine", "Eléphant", ..
+
+// Notez que, pour faire savoir à l'ordinateur que la variable contient un mot plutôt qu'un nombre, nous ajoutons
+// le signe dollar ($) à la fin du nom de la variable. Les variables doivent être écrites exactement de la même manière à chaque fois;
+// si nous utilisons Anyword$, ANYWORD$ ou anyword$ ou aNyWoRd$ ne seront pas reconnus comme la même chose.
+
+// **Appuyez sur le bouton "Run in AOZ Viewer", celui avec un triangle noir sur fond gris en haut de cet écran
+
+
+End
+// Maintenant supprimez l'instruction End au dessus (ou mettez // avant : //End), afin que les instructions suivantes soient également exécutées
+
+// L'instruction "Cls" efface l'écran. Remarque: c'est si rapide que vous ne verrez plus les affichages fait avant le Cls
+Cls
+
+Print "Q1 sur 4": Input "95 est-il un nombre ou une chaîne (N ou C) ? "; ANSWER1$
+//Notez le ':' 'entre le "Print" et le "Input". Il permet d'avoir plusieurs instructions sur une même ligne
+
+// L'Instruction If-Else-End If
+// ----------------------------
+
+// Cette instruction très utile est composée de 3 parties "If" (Si) et "Else" (Sinon) et "End if" (Fin Si),
+// Elle permet de prendre des décisions logiques simples comme :
+// Si (quelque chose est vrai) Alors (exécuter une série d'actions) Sinon (exécuter d'autres actions, jusqu'à "Fin Si")
+// Par exemple, If Highscore = 1000 Then Afficher "Gagné" Else Afficher "Perdu"
+
+// Remarque: la partie "Else" (Sinon) n'est pas obligatoire.
+// Nous verrons des exemples plus tard.
+
+If Upper$( ANSWER1$ ) = "N"
+    // La fonction Upper$ convertit la variable Answer1$ en majuscules car nous ne pouvons pas savoir si
+    // l'utilisateur entrera des majuscules ou des minuscules. Donc OK si la réponse est n ou N.
+    Print "Oui 95 est un nombre" : Inc MYSCORE
+Else
+    Print "Incorrect, 95 est un nombre entier"
+End If
+
+// Affiche une ligne vide (saut de ligne) en faisant juste un PRINT
+Print
+
+Print "Q2 sur 4": Input "La variable 'Nom' peut-elle être utilisée pour stocker un nom (O ou N) ? "; ANSWER2$
+
+If Upper$( ANSWER2$ ) = "N"
+    Print "Correct. Pas de signe $, donc pour stocker des nombres et non des chaînes"
+    // "Inc MyScore" est équivalent à MyScore = MyScore + 1, il augmente la valeur de la variable de 1
+    Inc MYSCORE
+Else
+    Print "C'est faux. Cette variable est prévue pour un nombre, il n'y a pas de symbole $"
+End if
+
+Print
+
+Print "Q3 sur 4" : Input "Quels sont les symboles utilisés pour des commentaires dans le programme "; ANSWER3$
+
+If ANSWER3$ = "//" Or ANSWER3$ = "'"
+    Print "Bonne Réponse !" : Inc MYSCORE
+Else
+    Print "Incorrect. La double barre oblique (//) ou l'apostrophe (') sont utilisées pour indiquer les commentaires"
+End If
+
+Print
+
+Print "Q4 sur 4": Input "La variable 'Cheese' peut-elle être utilisée pour stocker du texte (O ou N) ? "; ANSWER4$
+
+If Upper$( ANSWER4$ ) = "N"
+    Print "Bien joué ! Cette variable sert à stocker des nombres." : Inc MYSCORE
+Else
+    Print "Oups, un texte est stocké dans une variable chaîne, indiquée par le signe $"
+End If
+Print
+
+Print "Appuyez sur une touche pour voir les résultats ..."
+
+// "Wait key", attend simplement qu'une touche soit pressée sur le clavier et on continue si c'est le cas
+Wait key
+
+//Cls, que vous connaissez déjà , permet d'effacer l'écran
+Cls
+
+Print
+
+// Remarque: il n'y a ni "Else" ni "End If" avec ce simple If
+// mais il y a un "Then" car tout est sur la même ligne
+If MYSCORE = 4 then Print "Toutes nos félicitations. Score maximum !"
+
+Print " Tu as marqué des points: " + Str$( MYSCORE ) + " sur 4"
+
+
+//    _       __     ____       __                 __
+//   | |     / /__  / / /  ____/ /___  ____  ___  / /
+//   | | /| / / _ \/ / /  / __  / __ \/ __ \/ _ \/ /
+//   | |/ |/ /  __/ / /  / /_/ / /_/ / / / /  __/_/
+//   |__/|__/\___/_/_/   \__,_/\____/_/ /_/\___(_)
+
+// Vous êtes prêt à passer à la leçon 3. Félicitations!

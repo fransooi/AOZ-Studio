@@ -1,0 +1,89 @@
+' ............................................................................................................
+'
+'      ___   ____  _____      _____ __            ___          __
+'     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+'    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+'   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+'  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+'
+' ............................................................................................................
+
+' Tutoriel d'utilisation de l'instruction Actor. (C'est un début qui sera complété.)
+
+' L'instruction Actor est trés puissante, elle permet d'afficher, animer, controler des images,
+' mais aussi de gérer les collisions entre actors, faire des interfaces utilisateurs,
+' bientôt de la physique des objets et de la 3D.
+
+' *  Actor exemple 01 : Affichage d'un Actor
+' Affiche un Actor nommé "lucie", à la position 100,100 sur l'écran, utilisant l'image "lucie.png"
+Print "Affiche mon actor en position 100, 100.   -> Cliquez à chaque étape."
+Actor "lucie", X=100, Y=100, Image$="lucie.png"
+Wait Click  // attend le click sur un bouton de la souris
+
+' *  Actor exemple 02 : Déplacement automatique
+' Affiche un Actor et son déplacement automatique vers la droite. Screen Width donne la taille en X de l'écran.
+' EndX correspond à la position X finale de l'Actor.
+' Duration correspond à la durée totale de l'animation du déplacement en millisecondes (soit 4 secondes).
+Cls : Print "Affiche mon actor en position 0,100 et en déplacement vers le bord droit"
+Actor "lucie", X=0, Y=100, EndX=Screen Width, Duration=4000, Image$="lucie.png"
+Wait Click
+
+' *  Actor exemple 03 : Déplacement automatique en X et en Y
+' Affiche un actor et effectue un déplacement automatique vers le coté bas-droit de l'écran.
+' EndX correspond à la position X finale de l'Actor
+' EndY correspond à la position Y finale de l'Actor
+Cls : Print "Affiche mon actor en position 0,100 en déplacement en bas (Y) et à droite (X)"
+Actor "lucie", X = 0, Y = 100, EndX = Screen Width, EndY = Screen Height, Duration = 3000, Image$ = "lucie.png"
+Wait Click
+
+' *  Actor exemple 04 : Déplacement automatique avec le clavier
+' Affiche un actor que l'on peut déplacer avec les touches flêchées (elles sont affectées par défaut)
+' Control$="keyboard" indique que l'Actor est contrôlé avec le clavier ("keyboard")
+Cls : Print "Affiche mon actor en déplacement avec les touches fléches du clavier"
+Actor "magic", X = 200, Y = 200, Control$="keyboard", Image$ = "magic.png"
+Wait Click
+
+' *  Actor exemple 05 : Déplacement automatique avec deux touches
+' Affiche en plus un actor que l'on peut déplacer gauche-droite avec les touches "o" et "p" du clavier.
+' Control$ indique que l'Actor est contrôlé avec les touches, "keyo" et "keyp" sont les codes touches "o" et "p"
+' "offsetX" est la valeur de déplacement horizontal pour chaque touche (-8 veut dire vers la gauche de 8 pixels)
+Print "Affiche en plus un actor en déplacement avec les touches o et p du clavier"
+Actor "lucie", X = 150, Y = 150, Control$="keyo:offsetX=-8;keyp:offsetX=8", Image$ = "lucie.png"
+Wait Click
+
+' *  Actor exemple 06 : Déplacement automatique avec la souris
+' Le paramétre Control$ indique que l'Actor est contrôlé par la souris ("mouse")
+Cls : Print "Affiche mon actor en déplacement avec la souris"
+Actor "lucie", X = 0, Y = 0, Control$="mouse", Image$ = "lucie.png"
+Wait Click
+del Actor "lucie" : del Actor "magic"
+
+ici:
+' *  Actor exemple 07 : Scrolling
+'Affiche 2 éléments de décors qui scrollent vers la gauche et en boucle (LoopMove=True)
+'et affiche 2 personnages: Magic qui suit la souris et lucie controlée par les flêches clavier
+Cls : Print "Décors scrollants avec Magic qui suit la souris et lucie les flêches clavier"
+Actor "decor",  Image$="forest.png", X=0, Y=50, EndX= -1920, Duration=10000, LoopMove=True
+Actor "sol",    Image$="ground.png", X=0, Y=940, EndX= -1920, Duration=7000, LoopMove=True
+Actor "magic", X=0, Y=0, LookAt$="Mouse", Auto$="forward=14", Image$="magic.png"
+Actor "lucie", X=Screen Width/2, Y=708, Control$="keyboard", Image$="lucie.png"
+'L'Actor Lucie est crée aprés et s'affichera donc en dernier, par dessus tous les autres
+Wait click
+
+' *  Actor exemple 08 : Ordre d'affichage
+'On change juste l'ordre d'affichage (le z) à chaque clic. Les autres paramétres de l'Actor sont inchangés
+'z=0 par défaut. Si z=1 cet actor s'affichera au dessus de l'actor avec z=0
+Cls : Print "Cliquez pour inverser l'ordre d'affichage de Magic et Lucie"
+Do    // boucle Do...Loop
+	CLK = Mouse Click	// lecture des boutons de la souris
+   	If (CLK & 1) = 1	// test si c'est le bouton de gauche
+		If A=0 then A=1 : B=0 else A=0 : B=1  // test pour inverser l'ordre à chaque clic
+		Actor "magic", z=A : Actor "lucie", z=B  //changement d'affichage
+	End If
+Wait Vbl
+Loop
+
+Wait click
+
+
+' voir le tutoriel Magic bird pour aller plus loin dans l'exemple de scrolling

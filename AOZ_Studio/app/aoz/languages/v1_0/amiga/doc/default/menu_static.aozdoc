@@ -1,0 +1,11 @@
+<i>Menu Static</i>
+<b>Menu Static</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+One characteristic of mobile menus is that the amount of memory they use changes during the course of the
+program. With large menus or programs that are on the boundary of available memory this can cause real problems.
+MENU STATIC can be used to avoid these difficulties by setting the level or item at which the entire menu
+becomes immovable by the user.
+
+

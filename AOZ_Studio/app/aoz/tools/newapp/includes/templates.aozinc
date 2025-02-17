@@ -1,0 +1,41 @@
+
+// Show the templates list
+Procedure SHOW_TEMPLATES
+	N = JSON Asset Property( JSON_ID, CTX$ + ".length" )
+	CODE$ = ""
+	If N > 0
+		For R = 1 To N
+			TEMP_ID$ = "T" + Trim$( Str$( R ) )
+			TEMP_INFO_ID$ = "TI" + Trim$( Str$( R ) )
+			TEMP_TITLE$ = JSON Asset Property$( JSON_ID, CTX$ + "[ " + Trim$( Str$( R - 1 ) ) + " ].title." + LANG$ )
+			TEMP_DESCR$ = JSON Asset Property$( JSON_ID, CTX$ + "[ " + Trim$( Str$( R - 1 ) ) + " ].description." + LANG$ )
+			TEMP_IMAGE$ = TEMPPATH$ + "/data/" + CTX$ + "/thumbs/" + ( JSON Asset Property$( JSON_ID, CTX$ + "[ " + Trim$( Str$( R - 1 ) ) + " ].path" ) ) + ".png"
+			CODE$ = CODE$ + HTML Code$( "template" )
+		Next R
+		HTML Element "templates", Content$ = CODE$
+
+		For R = 1 To N
+			If JSON Asset Property( JSON_ID, CTX$ + "[ " + Trim$( Str$( R - 1 ) ) + " ].disable" ) = False
+				HTML Element "T" + Trim$( Str$( R ) ), OnClick$="CLICK_TEMPLATE"
+			Else
+				HTML Element "T" + Trim$( Str$( R ) ), OnClick$="CLICK_NOT_AVAILABLE"
+			End If
+		Next R
+
+	Else
+		HTML Element "templates", Content$ = HTML Code$( "no_template" )
+	End If
+
+	HTML Element "btn_cancel", OnClick$ = "CLICK_CANCEL"
+	HTML Element "btn_help", OnClick$ = "CLICK_HELP"
+	HTML Element "btn_create", OnClick$ = "CLICK_CREATE", Visible = False
+End Proc
+
+Procedure CLICK_TEMPLATE[ EVENT$, INDEX$ ]
+	CUR_TEMP = Val( Right$( INDEX$, 1 ) ) - 1
+	REQUEST$ = "edit_project"
+End Proc
+
+Procedure CLICK_NOT_AVAILABLE[ EVENT$, INDEX$ ]
+	JS Execute "client.atom.nalert( 'This project will be available in the next version.');"
+End Proc

@@ -1,0 +1,23 @@
+<i>Put</i>
+<b>Put</b> xxxxxxx
+=
+Once a record has been placed in a string, it can be moved from the computer's memory into a record number of your random access file.
+If you were still using channel 1, your first record would be put into the random access file like this:
+@code
+Put 1,1
+@code
+The next record will become number 2, and so on until you fill up your telephone book. Here is a simple working example. When you have created enough records, type in "exit" when prompted to enter another name.
+@code
+Open Random 1,"ADDRESSES.rnd"
+Field 1,25 As NAME$,12 As TEL$
+INDEX=1
+Do
+Input "Enter a name:;NAME$
+If NAME$="exit" Then Exit
+Input "Enter the phone number:;TEL$
+Put 1,INDEX
+Inc INDEX
+Loop
+Close 1
+@code
+

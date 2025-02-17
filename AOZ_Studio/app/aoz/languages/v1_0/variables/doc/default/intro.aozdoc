@@ -1,0 +1,106 @@
+Instructions and functions to manage variables and arrays in AOZ.
+=
+There are certain elements of a computer program that are set aside to store the results of calculations. The names of these storage locations are known as "variables".
+=
+Think of a variable as the name of a place where a value resides, and that the value can change as the result of a calculation made by your computer. Like strings, variables are given their own names, and once a name has been chosen it can be given a value, like this:
+@code
+SCORE=100
+Print SCORE
+@code
+That example creates a variable with the name of SCORE, and loads it with a value of 100.
+=
+<b>Naming variables</b>
+The rules for the naming of variables are very simple. Firstly, all variable names must begin with a letter, so the following variable name is fine:
+@code
+AOZStudio2=1
+Print AOZStudio2
+@code
+=
+But the next name is not allowed:
+@code
+2AOZStudio=1
+@code
+=
+Secondly, you cannot begin a variable name with the letters that make up one of the AOZ Studio command words, because this would confuse your program. The following variable name is acceptable, because the first letters are not used by one of the AOZ Studio commands:
+@code
+FOOTPRINT=1
+Print FOOTPRINT
+@code
+=
+But the next name is unacceptable, because the computer recognises the first five letters as the command PRINT:
+@code
+PRINTFOOT=1
+@code
+=
+If you try and type in an illegal variable name, AOZ Studio will spot the mistake, and point it out by splitting the illegal characters away from the rest of the name. A full list of the command words can be found in the Command Index, in Appendix H of this User Guide.
+=
+Variable names can be as short as one character, and as long as 255 characters, but they can never contain a blank space. So the next name is allowed:
+@code
+AOZSTUDIO=1
+Print AOZSTUDIO
+@code
+=
+But this is an illegal variable name:
+@code
+AOZ STUDIO=1
+@code
+=
+To introduce a name, or split it up, use the "underscore" character instead of spaces. For example:
+@code
+IAM_A_LONG_LEGAL_VARIABLE_NAME=1
+Print IAM_A_LONG_LEGAL_VARIABLE_NAME
+@code
+=
+<b>Types of variables</b>
+There are three types of variable that can be used in AOZ programs.
+=
+<b>Whole Numbers</b>
+The first of these types is where the variable represents a whole number, like 1 or 9999. These variables are perfect for holding the sort of values used in computer games, for example:
+@code
+HISCORE=1000000
+Print HISCORE
+@code
+=
+Whole numbers are called "integers", and integer variables can range from -147,483,648 up to 147,483,648.
+=
+<b>Real number variables</b>
+Variables can also represent fractional values, such as 1.2 or 99.99 and the results from this sort of variable can be extremely accurate. The accuracy of numbers either side of a decimal point (known as "floating point" numbers) is fully explained in Chapter 5.3.
+=
+Real number variables must always have a "hash" symbol added to the end of their names, which is typed by pressing the tit] key. For example:
+@code
+REAL_NUMBER#=3.14
+Print REAL_NUMBER#
+@code
+=
+<b>String variables</b>
+This type of variable holds text characters, and the length of the text can be anything from zero up to 65,500 characters long. String variables are enclosed in quotation marks, and are also distinguished from number variables by a $ character on the end of their names, to tell AOZ Studio that they will contain text rather than numbers. For example:
+@code
+NAME$="Name"
+GUITAR$="Twang"
+Print NAME$,GUITAR$
+@code
+=
+<b>Storing variables</b>
+All variables are stored in an 8k memory area called a "buffer". This area can hold about 2000 numbers or two pages of normal text, and it has been set as small as possible to allow more space for memory banks and screens of graphics. When there is not enough room left to store all of the variables in a program, an error message will appear saying "Out of variable space". The size of the storage space for variables can be increased at any time, and the only limit to the size of arrays and string variables is the amount of memory available in your computer.
+=
+<b>SET BUFFER</b>
+<i>instruction: set the size of the variable area</i>
+<b>Set Buffer</b> number of kilobytes
+=
+The SET BUFFER command can be used inside a program to set the new size of the variable area. Simply follow the command with the number of kilobytes required, and you are recommended to increase this value by 5k at a time, until enough space has been reserved in the buffer area. It is important to note that the SET BUFFER command must be the very first instruction in your program, apart from any REM messages.
+=
+<b>Arrays</b>
+It is often necessary to use a whole set of similar variables for something like a table of football results or a catalogue for a record collection. Any set of variables can be grouped together in what is known as an "array".
+=
+Supposing you have 100 titles in your record collection, and you need to tell AMOS Professional the size of the table of variables needed for your array. There is a special command for setting up this dimension.
+=
+<b>Constants</b>
+Constants are a special type of number or string that can be assigned to a variable, or used in a calculation. They are given this name because their value remains constant, and does not change during the course of the program.
+=
+AOZ Studio will normally treat all constants that are fractional numbers (floating point numbers) as whole numbers (integers), and convert them automatically, before they are used. For example:
+@code
+A=3.141
+Print A
+@code
+=
+Any numbers that are typed into an AOZ program are converted into a special format. When programs are listed, these numbers are converted back to their original form, and this can lead to minor discrepancies between the number that was originally typed in and the number that is displayed in the listing. There is no need to worry about this, because the value of the number always remains exactly the same.

@@ -1,0 +1,24 @@
+<i>Lvo</i>
+<b>Lvo</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This function returns the Library Vector Offset associated with a specified function. The function name will be
+translated automatically when your program is tested for the first time, and it will be placed in a memory bank for
+future use. Set up the memory bank with a SET EQUATE BANK command first, otherwise an error message will
+be generated. If the function name does not exist, an "Equate not found error" will be given from the Editor.
+
+The function name is in standard Commodore format, and should be typed in exactly as it appears in your reference
+manuals. This is especially important regarding the way upper case letters are treated differently from their lower
+case equivalents. For example, Input, INPUT and input are separate keywords, only the first version will be
+accepted, and either of the alternatives will generate an error when the program is tested!"
+Also note that because the function is executed during the testing process, it must be a simple string rather than an
+expression. For example, if you need to call the FindTask option from Exec, you would use a line like this:
+
+Also note that because the function is executed during the testing process, it must be a simple string rather than an
+expression. For example, if you need to call the FindTask option from Exec, you would use a line like this:"
+@code
+TASK=Execall(Lvo("FindTask"))
+@code
+
+

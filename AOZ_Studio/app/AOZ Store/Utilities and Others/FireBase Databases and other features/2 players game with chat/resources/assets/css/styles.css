@@ -1,0 +1,90 @@
+body {
+	background-color: #000;
+}
+
+.layer2 {
+	z-index: 10
+}
+
+.layer3 {
+	z-index: 20
+}
+
+.layer4 {
+	z-index: 30
+}
+
+.text-chat {
+	color: #bbb;
+}
+
+a:hover {
+  color: #FFAD00;
+}
+
+a {
+  color: #FFAD00;
+  text-decoration: underline;
+}
+
+.fade-in {
+  background-color: rgba(0, 0, 0, 0.3);
+  animation: fadeIn ease-in 1s;
+  -webkit-animation: fadeIn ease-in 1s;
+  -moz-animation: fadeIn ease-in 1s;
+  -o-animation: fadeIn ease-in 1s;
+  -ms-animation: fadeIn ease-in 1s;
+}
+
+@keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+@-moz-keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+@-webkit-keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+@-o-keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+@-ms-keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+.user-image {
+   border-radius: 50%;
+}
+
+* {
+scrollbar-width: thin;
+scrollbar-color: #FFAD00 #F9F9FA;
+}
+
+/* Works on Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+width: 12px;
+}
+
+*::-webkit-scrollbar-track {
+background: #212529;
+}
+
+*::-webkit-scrollbar-thumb {
+background-color: #FFAD00;
+border-radius: 20px;
+border: 3px solid #212529;
+}
+
+.overlay {
+	background-color: rgba(0, 0, 0, 0.7);
+}

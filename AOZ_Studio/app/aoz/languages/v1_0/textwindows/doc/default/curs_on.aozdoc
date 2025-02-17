@@ -1,0 +1,6 @@
+<i>Curs On</i>
+<b>Curs On</b> xxxxxxx
+=
+This pair of commands is use to hide and reveal the text cursor in the current window. It has no effect at all on any
+cursors used in other windows.
+

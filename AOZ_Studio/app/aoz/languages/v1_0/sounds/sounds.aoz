@@ -1,0 +1,1009 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Music Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+#useSounds:true
+
+//
+// Initialization
+//
+{
+    // Base initiliations
+    this.aoz.moduleSounds = this;
+    this.banks = this.aoz.banks;
+    this.soundBank = this.banks.soundBank;
+    this.utilities = this.aoz.utilities;
+    this.play_done = false;
+
+	this.samLoop = function( onOff, voices )
+	{
+		if ( typeof voices == 'undefined' )
+			this.aoz.sounds.samLoop( onOff );
+		else
+        	this.aoz.sounds.callVoices( 'samLoop', voices, onOff );
+	};
+    this.play = function( args )
+    {
+        this.play_done = true;
+        this.aoz.sounds.callVoices( 'play', args.voices, [ args.index, { rate: args.rate, type: args.type, loop: args.loop, frequency: args.frequency } ] );
+    };
+    this.playNote = function( args )
+    {
+        this.play_done = false;
+        var args2 = args.slice( 1 )
+        var options = args2[ 1 ];
+        options.duration = typeof options.duration == 'undefined' ? 0 : options.duration;
+        if ( options.duration > 0 )
+        {
+        if ( this.aoz.platform == 'amiga' )         // If Amiga, time in 1/50th of seconds
+            options.duration /= 50;
+            var self = this;
+                options.callback = function( response, data, extra )
+                {
+                    if ( response == 'end' )
+                        self.play_done = true;
+                };
+            }
+            else
+            {
+            this.play_done = true;
+        }
+        this.aoz.sounds.callVoices( 'playNote', args[ 0 ], args2 );
+    };
+    this.play_wait = function()
+    {
+        return this.play_done;
+    };
+    this.setWave = function( index, buffer )
+    {
+        var self = this;
+        if ( buffer && typeof buffer != 'string' )
+        {
+            if ( !buffer.dimensions )
+            throw { error: 'syntax_error' };
+            buffer = this.aoz.getVarptr( buffer )[ buffer.name ];
+        }
+        this.aoz.sounds.addWave( index, undefined, buffer )
+    };
+    this.delWave = function( index )
+    {
+        this.aoz.sounds.delWave( index );
+    };
+}
+
+/**doc
+@name:Sound Samples
+@description:Instructions set to play sounds effects.
+@author:François Lionet
+@since:0.9.0
+doc*/
+
+/**api Sound AOZ Object
+@name:Voice
+@description:A sound voice part of the game
+@compatible:aoz
+@examples:
+@content:
+api*/
+/*
+Class Voice, name, path, volume#=1.0, loops=1, x=0, y=0, z=0, angleX#=0, angleY#=0, angleZ#=0, autoStart=true
+	{
+		#class:"Voice"
+
+        this.set_name = function( name )
+        {
+            this.vars.name = name;
+        };
+        this.set_path = function( path )
+        {
+            if ( this.vars.path != path )
+            {
+                this.stop();
+                this.loadFile( path );
+                if ( this.autostart )
+                    this.play();
+            }
+        };
+        this.set_loops = function( loops )
+        {
+            this.vars.loops = loops;
+        };
+        this.set_autostart = function( start )
+        {
+            if ( this.vars.autostart != start )
+            {
+                this.vars.autostart = start;
+                if ( this.autostart && this.isLoaded() && !this.isPLaying() )
+                    this.play();
+            }
+        };
+	}
+
+	Method Is Connected
+	End Method( {this.parent.connected} )
+
+End Class
+*/
+
+/**api
+@name:Boom
+@description:BOOM command plays a realistic explosive sound effect.
+@compatible: aoz, stos, amos
+@examples:instructions:i_73
+@content:
+This does not delay the program at all, so it may be necessary to use WAIT between successive explosions,
+or to create ricochet and echo effects.
+
+The BOOM command plays a realistic explosive sound effect simulating an explosion.
+This does not delay the program at all, so it may be necessary to use WAIT between successive explosions, or to
+create ricochet and echo effects For example:
+~~~
+Curs Off : Centre "Thunderbolt and Lightning"
+Flash 1, "(FFF,1)(000,147)(A5F,2)
+Boom : Wait 150: Boom : Cls
+Centre "Very Very Frightening"
+Wait 50 : Boom
+~~~
+api*/
+Instruction Boom
+{
+    aoz.sounds.callVoices( 'play', undefined, [ 'boom', { contextName:aoz.moduleSounds.contextName, type: 'sound' } ] );
+}
+End Instruction
+
+/**api
+@name:Shoot
+@description:Generate percussive sound effect.
+@compatible: aoz, stos, amos
+@examples:instructions:i_73
+@content:
+The SHOOT command generates a simple sound effect in exactly the same way as Boom.
+For example:
+~~~
+Shoot : Wait 25: Shoot : Print "Ouch!"
+~~~
+
+api*/
+Instruction Shoot
+{
+    aoz.sounds.callVoices( 'play', undefined, [ 'shoot', { contextName:aoz.moduleSounds.contextName, type: 'sound' } ] );
+}
+End Instruction
+
+/**api
+@name:Bell
+@description:Generate the sound of a bell.
+@compatible: aoz, stos, amos
+@examples:instructions:i_73
+@content:
+Unlike the built-in explosive sound effects, Bell produces a simple pure tone.
+
+The frequency or "pitch" of this sound can be changed by adding a pitch value after the BELL command, ranging
+from 1 for a very deep ring, up to 96 for an ultra high pitched sound. You can hear the range of frequencies with
+this example :
+~~~
+For F=1 To 96
+    Bell F : Wait F/10+1 : Rem Vary delay
+Next F
+~~~
+(example taken from the Amiga, it will give various results depernding on the platform)
+api*/
+Instruction Bell, note
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleSounds,callFunction:"playNote",waitFunction:"play_wait",args:[undefined,%note,{type:'sound',index:'bell',contextName:aoz.moduleSounds.contextName}]};
+}
+End Instruction
+
+/**api
+@name:Sam Play
+@description:Play a sound sample from the sample bank
+@param:sample:index:Index of the sample into the bank to play
+@examples:instructions:i_74
+@compatible: aoz, stos, amos
+@content:
+The Sam Play command is used to play a digital sound sample through your audio system. Simply define the
+number of the required sample held in the bank. There is no limit to the number of samples that can be stored, other
+than available memory.
+
+There are two optional parameters that can also be given. A voice parameter can be placed immediately after the
+SAM PLAY command, in front of the sample number. This is a bitmap containing a list of the voices the sample
+will use. There is one bit for each of the four available voices, and to play a voice the relevant bit should be set to 1.
+
+The other parameter can be given after the sample number, and this governs the
+frequency of the sound. The frequency parameter sets the speed at which the sample will be played back, and the
+setting is given in Hertz. This is a professional standard of measurement, but as a rule of thumb, a rate of 4000 is
+acceptable for simple sound effects, with 10000 for recognisable speech. By changing this playback rate, the sample
+pitch can be adjusted over a very wide range, allowing a single sample to generate many different sounds.
+
+The following example loads up a bank of ready-made samples stored in the "AOZ Resources Drive/AMOSPro Examples" folder, and
+allows you to play them in random order:
+~~~
+Load "AMOSPro_Examples:Samples/Mixture.Abk",5
+Sam Bank 5
+Curs Off : Cls 0: Paper 0
+Locate 0,10
+Centre "Press a key from A to J"
+Do
+    A$=Inkey$
+    A=Asc(A$)
+    If A>96 And A<107
+        Sam Play A-96
+    End If
+Loop
+~~~
+You can try playing the keys rapidly, like a miniature drum kit, as well as holding down the keys to get some
+hammer-drill effects! The next example demonstrates the use of two voices for a simple echo effect, and how
+frequency changes can alter the sample:
+~~~
+Load "AMOSPro_Examples:Samples/Mixture.Abk",10
+Sam Bank 10
+Sam Play 1,12 : Wait 5: Sam Play 2,12: Rem Simple echo effect
+Wait Key
+Sam Play 1,13,2000: Rem Lower Pitch
+Wait Key
+Sam Play 1,13,5000: Rem Higher Pitch
+~~~
+
+api*/
+Instruction Sam Play, index = (index), loop=1, frequency
+{
+    #errors
+    aoz.moduleSounds.play({index:%index,loop:%loop,frequency:%frequency,type:'sound'});
+}
+End Instruction
+
+Instruction Sam Play, voices, index = (index), loop=1, frequency
+{
+    #errors
+    aoz.moduleSounds.play({voices:%voices,index:%index,frequency:%frequency,loop:%loop,type:'sound'});
+}
+End Instruction
+
+/**api
+
+@name:Sam Stop
+@description:Stop one or more samples playing
+@param:*voice:integer:Index of the voice
+@compatible: aoz, stos, amos
+@examples:instructions:i_74
+@content:
+This simple command is used to stop all samples playing through your loudspeaker system. If it is followed by an
+optional voice parameter, only the selected voices will be switched off. Voices are chosen using a binary bit-map,
+where any bit that is assigned to 1 will have the associated voice terminated. Otherwise it will be ignored. The voices
+are associated with the following bits:
+~~~
+Voice 3210
+Bitmap %1111
+~~~
+For example, the next line would stop samples playing on voices 3 and 1:
+~~~
+Sam Stop %1010
+~~~
+api*/
+Instruction Sam Stop, voices
+{
+    #errors
+    aoz.sounds.callVoices( 'stop', %voices, [ ] );
+}
+End Instruction
+
+/**api
+@name:Volume
+@description:Define the volume of a voice
+@param:level:float:Value of the volume (0-mute).
+@param:voice:integer:Index of the voice.
+@compatible: aoz, stos, amos
+@examples:instructions:i_73,instructions:i_74
+@content:
+The VOLUME command controls the level of sound flowing through one or more channels, ranging from zero
+(complete silence) up to 100 ( or 64 in Amiga mode, ear-splitting), like this:
+~~~
+For L=0 To 100
+    Volume L: Bell 80 : Wait 0.5
+Next L
+~~~
+Once the VOLUME level has been set, all future sound effects and music will be delivered at that level, across all
+four channels. In order to create stereo effects and perfect sound mixes, each of the voices needs to be adjusted
+independently from one another.
+
+api*/
+Instruction Volume, level#
+{
+    #errors
+    aoz.sounds.setVolume( %level# );
+}
+End Instruction
+Instruction Volume, voice, level#
+{
+    #errors
+    aoz.sounds.setVolume( %level#, %voice );
+}
+End Instruction
+
+/**api
+@name:Voice
+@description:Activate a voice
+@param:bitmask:integer:A mask of bit, where bit 0 indicates voice 0, bit 1 voice 1 etc.
+@compatible: notimplemented
+@examples:instructions:i_74,instructions:i_75
+@content:
+Soundtracks are made up of one or more voices, acting independently or together. The VOICE command is used to
+activate voices by setting a bit-mask, with each bit representing the state of one of the four available channels
+through which the voices flow. To play the required voice (from 0 to 3) simply set the relevant bit to 1, otherwise a
+value of zero will keep the voice silent. Here are some example settings:
+~~~
+Voice %1111 : Rem Activate all voices
+Voice %0001 : Rem Activate voice 0 only
+Voice %1001 : Rem Activate voices 3 and 0
+~~~
+The volume of each voice can now be controlled by specifying voices and volumes, like this:
+~~~
+Volume %0001,63
+Boom : Wait 100: Rem Channel 1 loud
+Volume %1110,5
+Boom : Wait 50: Rem Channels 2,3,4 soft
+Bell 40 : Wait 50 : Volume 60: Bell 40
+~~~
+Here are some common values for voice settings, that can be used to make programming a little easier:
+~~~
+Value 	Voices used 	Effect
+15 	0,1,2,3 	use all four voices
+9 	0,3 		combine output to left speaker
+6 	2,4 		combine output to right speaker
+1 	0 		use voice 0
+2 	1 		use voice 1
+4 	2 		use voice 2
+8 	3 		use voice 3
+~~~
+
+api*/
+Instruction Voice, onOff
+{
+    #errors
+    aoz.sounds.setVoices(%onOff);
+}
+End Instruction
+Instruction Voice, voice, onOff
+{
+    #errors
+    aoz.sounds.setVoices(%onOff,%voice);
+}
+End Instruction
+
+/**api
+@name:Voice On
+@description:Unmute one or all voices
+@param:voice:number:The number of the voice to unmute, if ommited the master volume will be restored to the original volume
+@compatible: aoz
+@content:
+If used without any parameter, this instruction will mute the master volumte of the audio context.
+
+If specified, only the specified voice will be unmuted.
+api*/
+Instruction Voice On, voices
+{
+    #errors
+    aoz.sounds.mute(false,%voices);
+}
+End Instruction
+
+/**api
+@name:Voice Off
+@description:Mute one or all voices
+@param:voice:number:The number of the voice to mute, if ommited the master volume will be muted
+@compatible: aoz
+@content:
+If used without any parameter, this instruction will mute the master volumte of the audio context.
+
+If specified, only the specified voice will be muted.
+api*/
+Instruction Voice Off, voices
+{
+    #errors
+    aoz.sounds.mute(true,%voices);
+}
+End Instruction
+
+/**api
+@name:Play
+@description:Play a voice
+@param:voice:integer or string:The note to play, from 1 to 96 if a number, of the name of the note in international notation
+@param:delay:integer:The length of any pause between this PLAY command and then next, in 1/1000th of second in PC mode, and 1/50th of second in Amiga mode
+@compatible: amos, stos, aoz
+@examples:instructions:i_76
+@content:
+Patterns of individual notes can be played, allocated to any voice, given a pitch and delayed for pause, using just one
+PLAY command. The voice parameter is optional, allowing notes to be played through any combination of thecomputer voices,
+and is set by the usual bit-map format.
+
+The pitch parameter uses the values from 1 to 96, which correspond to the notes in the table given earlier. Delay sets
+the length of any pause between this PLAY command and the next instruction in the program, with a value of zero
+starling the note and immediately going on to the next command.
+
+The next example demonstrates this technique, including stereo harmonies:
+~~~
+Play 1,40,0: Play 2,50,0: Rem No delay
+Wait Key
+Play 1,40,15: Play 2,50,15: Rem Delay
+Rem Play a random sequence of notes
+Do
+    V=Rnd(1 5): P=Rnd(96): Play V,P,3
+Loop
+~~~
+PLAY is not restricted to pure notes. It is possible to assign complex wave forms to voices, using the WAVE and
+NOISE commands next. To stop the playing process, simply turn it off like this:
+~~~
+Play Off
+~~~
+api*/
+Instruction Play, voice, pitch=(index), duration=0, type$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleSounds,callFunction:"playNote",waitFunction:"play_wait",args:[%voice,%pitch,{duration:%duration,type:%type$}]};
+}
+End Instruction
+Instruction Play, pitch=(index), duration=0, type$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleSounds,callFunction:"playNote",waitFunction:"play_wait",args:[undefined,%pitch,{duration:%duration,type:%type$}]};
+}
+End Instruction
+
+/**api
+@name:Play Off
+@description:Stop playing a voice
+@compatible: aoz, amos
+@param:*bitmask:integer:A mask of bit, where bit 0 indicates voice 0, bit 1 voice 1 etc.
+api*/
+Instruction Play Off, voice
+{
+    #errors
+    aoz.sounds.callVoices( 'stop', %voice, [] );
+}
+End Instruction
+
+/**api
+@name:Set Wave
+@description:Define a wave form
+@param:index:index:The number of the wave to define
+@param:shape$:integer:The definition of the shape
+@compatible: notimplemented
+@examples:instructions:i_76
+@content:
+The SET WAVE command sets the wave form of an individual sound, that can then be used at various pitches to
+create music or sound effects. This command requires two parameters, the number of the wave to be set, followed
+by the shape of this pattern, held in a string.
+
+Wave numbers zero and 1 are already allocated, so these numbers should not be used. Wave zero holds a random
+noise pattern, used to generate the explosive effects of BOOM and SHOOT, while wave number 1 is a smooth
+pattern in the shape of a sine wave, which is used as the "template" for the pure tones needed by the PLAY and
+BELL commands. So when setting your new wave patterns, use the identification numbers from 2 upwards.
+
+Setting the parameter for the shape of the wave form is a little more complicated.
+
+Each one of the 256 numbers which make up the shape of the wave form sets a single level of intensity for that
+single part of the wave. Each one of these intensities can hold a possible value ranging from -128 up to 127. Look at
+the diagram below. The vertical scale represents this range of intensities (-128 to 127) and the horizontal scale
+shows the physical length of the wave form, in other words the individual moments of time as the wave is played
+(256).
+![Wave Example 1](help:img/samples/samples_ex1.png)
+
+This triangular wave pattern does not make a very exciting sound, but it serves as a simple introduction to making
+your own wave forms.
+Because AOZ Studio strings can only hold positive numbers from zero to 256, the negative values in this
+wave form need to be converted before use. This is extremely easy, and is achieved by adding 256 to the negative
+numbers in the list! In other words, a value of -50 would be entered as 206, like this:
+~~~
+-50+256=206
+~~~
+The following program shows how the sort of wave form in the above diagram could be created The wave form is
+then assigned to a wave and played, which is explained a little later.
+~~~
+S$=" " : Rem Clear wave form string
+For W=-128 To 127
+    X=W : If X<0 Then Add X,256
+    S$=S$+Chr$(X)
+Next W
+Set Wave 2,S$
+Wave 2 To 15: For S=10 to 60: Play S,10: Next S
+~~~
+The wave forms of musical instruments are much more complicated than the last example, but they are not too
+difficult to reproduce. By combining several sine waves together, with each sine wave having a different starting
+point, the type of pattern shown in the next diagram is achieved.
+![Wave Example 1](help:img/samples/samples_ex2.png)
+
+This sort of wave form generates smooth harmonics, which can then be used as the "templates" for musical notes,
+and the sort of routine in the next example can produce typical sine waves:
+~~~
+SHAPE$=" " : Degree
+For S=0 To 255
+    V=Int((Sin(S)/2+Sin(S*2+45)/4)*128)+127
+    SHAPE$=SHAPE$+Chr$(V)
+Next S
+Set Wave 2,SHAPE$ : Wave 2 To 15
+For N=10 To 60: Play N,10 : Next N
+~~~
+
+api*/
+Instruction Set Wave, index=(index), shape$
+{
+    #errors
+	aoz.moduleSounds.setWave(%index,%shape$)
+}
+End Instruction
+
+Instruction Set Wave, index=(index), shape=(varptr)
+{
+    #errors
+	aoz.moduleSounds.setWave(%index,%shape)
+}
+End Instruction
+
+/**api
+@name:Wave
+@description:Assign a wave to sound channel
+@param:index:index:The number of the wave to define
+@param:bitmask:integer:A mask of bit, where bit 0 indicates voice 0, bit 1 voice 1 etc.
+@compatible: notimplemented
+@examples:instructions:i_76
+@content:
+The WAVE command is used to assign the specified wave number to one or more sound channels.
+
+The voice parameter contains a bit-map in the standard format, and if a bit pattern is set to 1 then the appropriate
+voice is used to PLY the sound. Remember that wave number zero is already reserved for the NOISE channel, and
+wave number 1 contains a smooth sine wave for pure tone. Here are some examples:
+~~~
+Wave 1 To %1111 : Rem Play pure tone through all voices
+Play 60,0
+Wave 0 To %0001 : Rem Use voice 0 for noise
+Play 20,10
+~~~
+
+api*/
+Instruction Wave, number To voice
+{
+    #errors
+    aoz.sounds.callVoices( 'setType', %voice, [ { type: 'wave', index: %number } ] );
+}
+End Instruction
+
+/**api
+@name:Noise To
+@description:Assign noise wave to sound channel
+@param:bitmask:integer:A mask of bit, where bit 0 indicates voice 0, bit 1 voice 1 etc.
+@compatible: aoz, amos
+@examples:instructions:i_76
+@content:
+This command has the same effect as assigning the white noise wave form number zero to the selected voices, and it
+is used to form the foundations for a whole range of special effects, such as explosions and percussion drumming.
+The bit-pattern used to set one or more voices has already been explained above. Here is an example:
+~~~
+Noise To 15 Rem All four voices
+Play 60,50
+Play 30,0
+~~~
+
+api*/
+Instruction Noise To, voice, type$ = "white"
+{
+    #errors
+    aoz.sounds.callVoices( 'setType', %voice, [ { type: %type$ } ] );
+}
+End Instruction
+
+/**api
+@name:Sample
+@description:Assign noise wave to sound channel
+@param:index:index:The index of the wave to define
+@param:bitmask:integer:A mask of bit, where bit 0 indicates voice 0, bit 1 voice 1 etc.
+@compatible: notimplemented
+@examples:instructions:i_76
+@content:
+This is the most powerful of the wave commands. SAMPLE is used to assign the specified sound sample number, which is already stored in the Sample Bank, directly to the current wave form. The voices to be used are set in the usual way. When PLAY is used, this sample will be taken from the Sample Bank and used as the "musical
+instrument" to be played. Try this example:
+~~~
+Load "AMOSPro_Examples:Samples/Mixture.Abk",6
+Sam Bank 6
+Sample 5 To 15
+For S=20 To 50
+Play S,50
+Next S
+~~~
+The pitch values that can be applied to any particular sample will vary, but normally anything between 10 and 50 is
+satisfactory.
+
+api*/
+Instruction Sample, index=(index) To voice
+{
+    #errors
+    aoz.sounds.callVoices( 'setType', %voice, [ { type: 'sound', index: %index } ] );
+}
+End Instruction
+
+/**api
+@name:Del Wave
+@description:Delete a wave
+@param:index:index:The number of the wave to delete
+@compatible: notimplemented
+@examples:instructions:i_76
+@content:
+To delete a wave that has been set up with a SET WAVE instruction, simply use this command followed by the number of the wave to be erased.
+
+When this has been done, all deleted voices will be set to the standard default sine wave. The pre-set wave numbers
+zero and 1 can be manipulated, but they cannot be eradicated.
+
+Making audio envelopes
+An "envelope" is audio jargon for how a sound is manipulated during the brief period of tin that it is played. In other
+words, whether it bursts into life or makes a more subtle entry (attack), whether it fades away with dignity or lives
+life to the full (decay), how long it hangs on for (sustain) and finally, the manner in which it meets its end (release).
+All of this is achieved simply by changing the volume of individual sections of the wave form.
+
+api*/
+Instruction Del Wave, index=(index)
+{
+    #errors
+    aoz.moduleSounds.delWave(index: %index);
+}
+End Instruction
+
+/**api
+@name:Set Envel
+@description:Create a volume envelope
+@param:number:integer:The number of the wave to create
+@param:phase:integer:Refers to one of seven individual sections of the original wave form that is to be defined, ranging from 0 to 6
+@param:duration:integer:Controls the length of this particular segment (phase number) of the wave form, and is expressed in units of one 1/1000th of a second in PC mode and 1/50th of a second in Amiga mode
+@param:volume:integer:Specifies the volume to be reached by the end of this phase
+@examples:instructions:i_76
+@compatible: aoz, amos
+@content:
+AOZ Studio uses envelopes to change your original wave forms according to a set pattern. The parameters
+are as follows:
+
+The wave number sets the wave form to be affected, and any number can be used including the pre-set wave
+numbers zero and 1.
+
+The phase number refers to one of seven individual sections of the original wave form that is to be defined, ranging
+from 0 to 6.
+
+The duration controls the length of this particular segment (phase number) of the wave form, and is expressed in
+units of one 50th of a second. This is how the speed of a volume change in any phase of the wave form is
+controlled.
+
+Volume specifies the volume to be reached by the end of this phase, ranging from zero for silence up to 63 for full
+blast.
+
+In the next example, an envelope for wave form number one is set, so that segment zero (its first phase) lasts for
+four seconds, ramping up to full volume by its end, no matter what the original volume was at the start of this phase.
+~~~
+Set Envel 1,0 To 200,63
+~~~
+
+api*/
+Instruction Set Envel, index=(index), phase To duration, volume
+{
+    #errors
+    aoz.sounds.setEnvelope( %index, %phase, %duration, %volume );
+}
+End Instruction
+
+/**api
+@name:VuMeter
+@description:Return the volume level of a voice
+@param:voice:integer:The number of the voice
+@return:integer:The current audio level of the voice
+@compatible: notimplemented
+@content:
+Volume meters (Vu-meters) are a familiar sight on the control panels of audio equipment. AOZ Studio is not
+only able to monitor the volume level of any selected voice number from 0 to 3, it can also use the value of the
+volume intensity to make graphics dance around in response to the intensity of a soundtrack!"
+
+The value returned is given as the volume intensity, ranging from silence (0) up to full volume (63).
+
+The best way to understand the effect of all the commands in this Chapter is to hear them working. Be sure to try out
+all of the demonstration programs that are available via the HELP feature.
+
+Playing music
+The AOZ Studio music system allows backing tracks to be added to any program. Music can be created
+from a variety of sources, including original samples and compositions, which are explained in the following two
+Chapters. These backing tracks are converted into the AOZ Studio format, and held in the Music Bank.
+
+Music tracks are loaded with the MUSIC command, volume is controlled by MVOLUME, and speed by
+MVOLUME. Individual music passages can be halted using the MUSIC STOP instruction, and all music is halted
+by MUSIC OFF.
+
+For a taster of these techniques in action, load this ready-made example:
+~~~
+Load "AMOSPro_Examples:Music/Music.Abk"
+Music 1: Mvolume 63 : Tempo 35
+~~~
+
+api*/
+Function VuMeter, voice
+{
+    #errors
+}
+End Function({aoz.sounds.getVuMeter(%voice)})
+
+/**api
+@name:Frequency
+@description:Analyse the sound and return the current level of a given frequency
+@param:voice:integer:The number of voice to analyse, if undefined the whole sound output is analysed
+@param:number:integer:The number of the frequency to analyse (0-1023)
+@return:float:The current audio level of the frequency, a signed number from -1 to 1
+@compatible: aoz
+@content:
+This function allow you to create frequency analysers. The sound is cut in 1024 "zones" and the level
+of each zone is detected in real time by the system.
+
+A value of 0 throughout the entiere spectrum indicates that no sound is currently being played at that moment.
+api*/
+Function Frequency, voice, number = 0
+{
+    #errors
+}
+End Function({aoz.sounds.getFrequency(%voice,%number)})
+
+/**api
+@name:Sam Bank
+@description:Change the current Samples bank
+@param:bankNumber:index:The index of the new bank
+@compatible: notimplemented
+@examples:instructions:i_74
+@content:
+The SAM BANK instruction dictates that all future SAM PLAY commands will take samples from the newly
+specified memory bank. If several parallel banks are set up, AOZ Studio can swap between them with a
+simple call to the SAM BANK command. To hear all of the samples used in one of the AOZ Studio
+example games, load the following file and listen to what is stored in the memory bank, using this routine:
+~~~
+Load "AMOSPro_Productivity:Wonderland/Wonderland Samples.Abk"
+Sam Bank 6
+For A=1 To 5
+    Print "Sample number ";A
+    For B=1 To 3
+        Sam Play A
+        Wait 20
+    Next B
+Next A
+~~~
+Playing a sample from memory
+Samples do not have to be held in a special bank. In fact, a "raw" sound sample can be stored anywhere in the
+computer's memory using BLOAD, and then played with the following command:
+
+api*/
+Instruction Sam Bank, bankNumber=(index)
+{
+    #errors
+    aoz.banks.samBank(%bankNumber);
+}
+End Instruction
+
+/**api
+@name:Sam Raw
+@description:Play a raw sample from memory
+@param:voices:integer:A mask of bit, where bit 0 indicates voice 0, bit 1 voice 1 etc.
+@param:address:integer:The address of the sound samples, must be part of an AOZ memory bank
+@param:length:integer:The number of bytes to read
+@param:frequency:integer:The frequency at which to play, in Herz
+@compatible: notimplemented
+@examples:instructions:i_74
+@content:
+SAM RAW plays a raw sample, and can be used to scan through any program or sound library discs, searching for a
+sample that matches the given parameters.
+
+The voice parameter has already been explained. Address refers to the location address of the sound sample, which
+is normally inside an AOZ Studio memory bank, but can be anywhere. The length parameter confirms the
+length in bytes of the sample to be played. Finally, frequency dictates the playback speed of the original sample,
+given in Hertz.
+
+A typical raw sample command looks like this:
+~~~
+Reserve as work 10,21480
+R$="AMOSPro_Examples:Samples/Mixture.Abk"
+Bload R$,Start(10)
+Sam Raw 15,Start(10),length(10),3000
+~~~
+
+api*/
+Instruction Sam Raw, voice, address, length, frequency
+{
+    #notimplemented
+}
+End Instruction
+
+/**api
+@name:Sam Loop On
+@description:Start repetition of a sample
+@compatible: notimplemented
+@examples:instructions:i_74
+@content:
+There are many instances where a single sample needs to be repeated over and over again. SAM LOOP ON ensures
+that all sound samples which follow this instruction will be looped continuously. To turn off the looping facility,
+simply call the SAM LOOP OFF command. Add a SAM LOOP ON instruction to the last example, before the SAM
+RAW command, and hear the result.
+
+api*/
+Instruction Sam Loop On, voice=(index)
+{
+    #errors
+    aoz.sounds.samLoop(true, %voice);
+}
+End Instruction
+
+/**api
+@name:Sam Loop Off
+@description:Start repetition of a sample
+@compatible: notimplemented
+@examples:instructions:i_74
+@content:
+There are many instances where a single sample needs to be repeated over and over again. SAM LOOP ON ensures
+that all sound samples which follow this instruction will be looped continuously. To turn off the looping facility,
+simply call the SAM LOOP OFF command. Add a SAM LOOP ON instruction to the last example, before the SAM
+RAW command, and hear the result.
+
+api*/
+Instruction Sam Loop Off, voice=(index)
+{
+    #errors
+    aoz.sounds.samLoop(false,%voice);
+}
+End Instruction
+
+Instruction Filter, voice, type$='reverb', delay#=5, decayRate#=0.2, reverse=False, frequency=440, resonance = 500
+{
+    #errors
+    aoz.sounds.setFilter( %voice, %type$, { seconds: %delay#, decayRate: %decayRate#, reverse: %reverse, frequencey: %frequency, resonance: %resonance } );
+}
+End Instruction
+Instruction Filter On, voice, type$
+{
+    #errors
+    aoz.sounds.activateFilter(%voice,type$,true);
+}
+End Instruction
+Instruction Filter Off, voice, type$
+{
+    #errors
+    aoz.sounds.activateFilter(%voice,type$,false);
+}
+End Instruction
+
+Instruction Reverb, voice, delay#=1, decay#=0.1, reverse=False
+{
+    #errors
+    aoz.sounds.addFilter(%voice,'reverb',{delay:%delay#,decay:%decay#,reverse:%reverse});
+}
+End Instruction
+Instruction Reverb Off, voice
+{
+    #errors
+    aoz.sounds.removeFilter(%voice,'reverb');
+}
+End Instruction
+
+Instruction Distort, voice, amount=50, oversample = 2
+{
+    #errors
+    aoz.sounds.addFilter(%voice,'distort',{amount:%amount,oversample:%oversample});
+}
+End Instruction
+Instruction Distort Off, voice
+{
+    #errors
+    aoz.sounds.removeFilter(%voice,'distort');
+}
+End Instruction
+
+
+/*
+Instruction Sound Volume, volume#
+{
+    #errors
+	aoz.sounds.setVolume( %volume# );
+}
+End Instruction
+Instruction Sound Pan, pan#
+{
+    #errors
+	aoz.sounds.pan(%pan#);
+}
+End Instruction
+Instruction Sound Mute, onOff
+{
+    #errors
+	aoz.sounds.setVoices(%onOff);
+}
+End Instruction
+Function Sound Devices$, index
+{
+    #errors
+}
+End Function({aoz.sound.getDevices(%index)})
+
+Instruction Voice Connect
+{
+    #errors
+}
+End Instruction
+Instruction Voice Volume, voice = 1, volume#
+{
+    #errors
+	aoz.sounds.setVolume( %level#, %voice );
+}
+End Instruction
+Instruction Voice Pan, voice = 1, pan#
+{
+    #errors
+	aoz.sounds.pan(%pan#,%pan#);
+}
+End Instruction
+Instruction Voice Mute, voice = 1, onOff
+{
+    #errors
+	aoz.sounds.setVoices(%onOff,%index);
+}
+End Instruction
+Instruction Voice Sound, voice = 1, index=(index), duration=0, loop=1
+{
+    #errors
+	aoz.moduleSounds.play({voices:%voice,index:%index,frequency:%frequency,loop:%loop,type:'sound'});	
+}
+End Instruction
+Instruction Voice Note, voice = 1, frequency = 440, duration = 0, loop=1
+{
+    #errors
+	return{type:12,waitThis:aoz.moduleSounds,callFunction:"playNote",waitFunction:"play_wait",args:[%voice,%frequency,{duration:%duration,type:"synth",loop:%loop}]};
+}
+End Instruction
+Instruction Voice Noise, voice = 1, frequency = 440, duration = 0, loop=1, type$ = "white"
+{
+    #errors
+	return{type:12,waitThis:aoz.moduleSounds,callFunction:"playNote",waitFunction:"play_wait",args:[%voice,%frequency,{duration:%duration,loop:%loop}]};
+}
+End Instruction
+Instruction Voice Play, voice = 1, frequency = 440, duration = 0 
+{
+    #errors
+	return{type:12,waitThis:aoz.moduleSounds,callFunction:"playNote",waitFunction:"play_wait",args:[%voice,%frequency,{duration:%duration}]};
+}
+End Instruction
+Instruction Voice Pause, voice = (index)
+{
+    #errors
+}
+End Instruction
+Instruction Voice Resume, voice = (index)
+{
+    #errors
+}
+End Instruction
+*/
+

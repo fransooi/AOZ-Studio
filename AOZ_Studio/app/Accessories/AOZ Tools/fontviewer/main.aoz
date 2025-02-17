@@ -1,0 +1,184 @@
+////////////////////////
+// Google Font Viewer //
+////////////////////////
+
+//  By Dave Baldwin
+
+// V1.0	- February 2020
+// V1.1 - 30/12/2020 - Added graduated font size to single font page, and added some colour! Commented out 3 fonts that weren't displaying properly - 2 x Libre Barcode 128 and Press Start 2P
+
+#fps:false
+#smoothing:true
+
+number_of_fonts = Get Font Number()
+Screen Open 0, screen width, screen height, 16, Lowres
+Set Transparent 0
+Curs Off
+
+se=-1
+k$ = ""
+dis_num=-1
+font_number=0
+Ink 6
+Range=180
+Bright=60
+
+Repeat
+
+    Cls 0
+    If se=1
+	    Screen Skew 0,1,-1
+	    Screen Scale 0,0,0
+    end if
+    Home
+    x = Screen Width / 2
+    y = 50
+    size = 40
+    Set Font 81, 25
+	colour 6,$00a0b0
+    Text 10,20,"S - Skew Effects On/Off"
+    Text 10,50,"N - Next"
+    Text 10,80,"P - Previous"
+    Text Screen Width-250,20,"T - Ten at a Time"
+    Text Screen Width-250,50,"A - Show all"
+    Set Font 81,size
+	If dis_num=1
+    	Text x, y, "Font number: " + Str$( font_number )+" to"+Str$(min(font_number+9,number_of_fonts-1)), "#center"
+    else
+    	Text x, y, "Font number: " + Str$( font_number ), "#center"
+    end if
+    y = 80
+    size = 10
+    count=0
+    Gosub Cleanfont
+    If dis_num=-1
+	    For count = 0 To 8
+			Gosub Ch_col
+	        size = size + 5
+	        Set Font font_number, size : Wait 0.001
+	        Text x, y, F$+" "+Str$(size)+"  "+Upper$(F$), "#center"
+	        y = y + size + 8
+	    Next count
+	    y=y+20
+		Gosub Ch_col
+	    Text x,y,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","#center"
+	    y=y+size+18
+		Gosub Ch_col
+	    Text x,y,"abcdefghijklmnopqrstuvwxyz","#center"
+	    y=y+size+18
+		Gosub Ch_col
+	    Text x,y,"1 2 3 4 5 6 7 8 9 0 ","#center"
+	    y=y+size+18
+		Gosub Ch_col
+	    Text x,y,"! £ $ % & * ( ) - + = , . : ; @","#center"
+    end if
+    If dis_num=1
+        y=140
+        size=50
+        For count = 0 to 9
+        Exit If font_number+count>number_of_fonts-1
+        Gosub Cleanfont
+		Gosub Ch_col
+        Set Font font_number+count,size : Wait 0.001
+        Text x, y, F$+" "+Str$(font_number+count)+"  "+Upper$(F$), "#center"
+        y = y + size + 8
+        Next count
+    end If
+
+    // Call Screen Change (Restore Current Screen)
+    If se=1
+        ScreenChange[0,50,Rnd(2)-1,Rnd(2)-1]
+    End if
+
+    Repeat
+        Wait 0.01
+        k$ = Inkey$
+    Until k$ != ""
+
+    if k$="p"
+        if dis_num=-1
+            Add font_number,-1 : font_number = Max( 1, font_number )
+        else
+            Add font_number,-10 : font_number = Max( 1, font_number )
+        end if
+    End if
+    if k$="n"
+        if dis_num=-1
+            Add font_number,1 : font_number = Min( number_of_fonts-1, font_number )
+        else
+            Add font_number,10 : font_number = Min( number_of_fonts-1, font_number
+        end if
+    End if
+
+    if k$="t" then dis_num=-dis_num
+
+    If k$="s" then se=-se
+
+    if k$="a"
+        Cls 0
+        for x=0 to 4
+        for y=0 to 26
+		Gosub Ch_col
+        If (x*27)+y<number_of_fonts
+            Set Font (x*27)+y,23
+            F$=Font$((x*27)+y)
+            L=Len(F$)
+            For N=1 to L
+               If Mid$(F$,N,1)="(" then Exit
+            Next N
+            F$=Left$(F$,N-1)
+            Text x*268,y*26+26,F$
+        End if
+        Next y
+        Next x
+        Repeat
+        Wait 0.001
+        k$ = Inkey$
+        Until k$ != ""
+    end if
+
+    // Call Screen Change (Remove Current Screen)
+    If se=1
+        ScreenChange[1,50,Rnd(2)-1,Rnd(2)-1]
+    End if
+
+Until k$ = "q"
+End
+Ch_col:
+	r=rnd(Range)+Bright
+	g=rnd(Range)+Bright
+	b=rnd(Range)+Bright
+	c=rgb(r,g,b)
+	colour 6,c
+Return
+
+// Remove everything but the name from the Font$
+Cleanfont:
+    F$=Font$(font_number+count)
+    L=Len(F$)
+    For N=1 to L
+        If Mid$(F$,N,1)="(" then Exit
+    Next N
+    F$=Left$(F$,N-1)
+Return
+
+Procedure ScreenChange[T,S,Xm,Ym]
+    If T=1
+        St=0 : En=1
+    Else
+        St=1 : En=0
+    End if
+    Stp#=(En-St)/S
+    for f#=St to En step Stp#
+        wait 0.001
+        Screen Skew 0,Xm*f#,Ym*f#
+        If Xm=1 and Ym=1
+            Screen Scale 0,1-f#*2,1-f#*2
+        else
+            Screen Scale 0,1-f#,1-f#
+        End if
+    next f#
+    Screen Scale 0,St,St
+    Screen Skew 0,0,0
+End proc
+

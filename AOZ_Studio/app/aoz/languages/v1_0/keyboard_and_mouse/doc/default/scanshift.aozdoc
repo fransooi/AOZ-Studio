@@ -1,0 +1,23 @@
+<i>ScanShift</i>
+<b>ScanShift</b> xxxxxxx
+=
+To determine if keys are pressed at the same time as either or both of the [Shift] keys, the Scanshift function returns
+the following values:
+@code
+Value 	Meaning
+0 	no [Shift] key pressed
+1 	[Left Shift] pressed
+2 	[Right Shift] pressed
+3 	both [Shift] keys pressed
+@code
+Try out the following example by pressing various keys, in combination with the [Shift] keys:
+@code
+Do
+A$=Inkey$
+S=Scanshift
+If S<>0
+Print S
+End If
+Loop
+@code
+

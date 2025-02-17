@@ -1,0 +1,21 @@
+<i>PLoad</i>
+<b>PLoad</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The PLOAD command reserves a memory bank and loads some machine code into it from disc. Specify the
+filename that contains the machine code file on disc, followed by the number of a new memory bank to be reserved
+for the program. If the bank number is negative, the number will be multiplied by -1, and the bank will be allocated
+using Chip memory.
+
+Once machine code is loaded in this way, it is installed as a permanent memory bank, so whenever the current
+program is saved, the machine code is stored too. Also note that the machine code file can be saved onto disc as a
+standard ".Abk" file, then loaded directly into AMOS Professional Basic. After PLOAD has performed its work, the
+memory bank can be executed immediately! The following factors should be noted:
+
+- This file must consist of a standard piece of machine code, that can be run under CLI.
+- The program must be terminated by an RTS instruction.
+- Only the first CODE segment of the routine will be installed into memory.
+
+Any attempt to load a commercial program using this technique will probably crash your Amiga
+

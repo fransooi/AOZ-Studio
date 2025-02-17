@@ -1,0 +1,20 @@
+<i>Clear Interval</i>
+<b>Clear Interval</b> xxxxxxx
+=
+This example displays a "Hello World" message during 5 seconds and delete the process...
+
+@code
+A = Set Interval( 1000, "HELLO" )
+TM = 0 : Global TM
+Do
+Wait Vbl
+Loop
+
+Procedure HELLO[ ID ]
+Print "Hello World!"
+TM = TM + 1
+If TM = 5 Then Clear Interval ID : Print "Interval deleted"
+End Proc
+
+@code
+

@@ -1,0 +1,21 @@
+<i>Tile Value</i>
+<b>Tile Value</b> xxxxxxx
+=
+The return value will change after a Set Tile Value instruction.
+
+This example display the value of the tile under the mouse.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"
+Do
+I = Tile Test( "MapView", X Mouse, Y Mouse )
+If I >= 0
+Print "Value "; Tile value( "MapView", I )
+End If
+Wait Vbl
+Loop
+@code
+

@@ -1,0 +1,9 @@
+<i>Dev First$</i>
+<b>Dev First$</b> xxxxxxx
+=
+This function is similar to DIR FIRST$. A string is returned identifying the first device that satisfies a chosen search
+path in the current device list.
+
+DEV FIRST$("**") will list everything, DEV FIRST$("D/**") will only list disks, and DEV FIRST$(A/**") is used
+if you only want to list assigns.
+

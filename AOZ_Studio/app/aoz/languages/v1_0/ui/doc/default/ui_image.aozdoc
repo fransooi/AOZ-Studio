@@ -1,0 +1,27 @@
+<i>UI Image</i>
+<b>UI Image</b> xxxxxxx
+=
+Please see the UI Demo for more button examples.
+@code
+// Display a default image
+UI Image "MyImage"
+
+// Display an image from a web link
+UI Image "MyImage", src$="https://www.vintageisthenewold.com/wp-content/uploads/2018/10/AMOS.png"
+
+// Display an image from the Image Bank
+UI Image "MyImage", src$=Image DataURL$( "lucie.png" )
+
+// An Image with onClick% event
+UI Image "MyImage", y=350, width=300, onClick$="IMAGE_EVENT"
+Procedure IMAGE_EVENT[ID$]
+Print "You Clicked The Image"
+End Proc
+
+// Images with tooltips
+UI Image "MyImage1", x=100, y=350, onClick$="IMAGE_EVENT", tooltip$="Tooltip Top", tooltipPlacement$="top"
+UI Image "MyImage2", x=100, y=400, onClick$="IMAGE_EVENT", tooltip$="Tooltip Right", tooltipPlacement$="right"
+UI Button "MyImage3", x=100, y=450, onClick$="IMAGE_EVENT", tooltip$="Tooltip Left",tooltipPlacement$="left"
+UI Button "MyImage4", x=100, y=500, onClick$="IMAGE_EVENT", tooltip$="Tooltip Bottom", tooltipPlacement$="bottom"
+@code
+

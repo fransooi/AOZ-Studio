@@ -1,0 +1,13 @@
+<i>Del Bob</i>
+<b>Del Bob</b> xxxxxxx
+=
+The DEL BOB command permanently deletes one or more Bob images from the Object Bank. To erase a single image, simply give the image number to be deleted, like this:
+@code
+Del Bob 2
+@code
+Whenever an image is deleted, all the subsequent images in the Bank with a numerical index are moved up one place in the numerical order.
+For instance, if the Bank originally contained four images, the above example would remove image number 2 from
+memory, leaving a gap between images 1 and 3. This gap would be filled immediately, as the old image numbers 3
+and 4 were shunted up one place, to become the new image numbers 2 and 3.
+
+

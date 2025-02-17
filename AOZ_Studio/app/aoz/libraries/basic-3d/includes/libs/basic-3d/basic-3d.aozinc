@@ -1,0 +1,154 @@
+// Load the Javascript wrapper
+Load Asset "libs/basic-3d/js/vendor/three.min.js", "three-js"
+Load Asset "libs/basic-3d/js/basic-3d.js", "basic-3d"
+
+// Initialize the 3D Engine.
+// If KEEP_CANVAS is True, AOZ Canvas wiil be putted hover
+// the 3D view with a transparent background
+Procedure INIT_3D[ KEEP_CANVAS ]
+	JS Execute "init_3d( " + Str$( KEEP_CANVAS ) + " );"
+End Proc
+
+//
+// Stops the 3D renderer and hide the 3D view
+//
+Procedure STOP_3D
+	JS Execute "stop_3d();"
+End Proc
+
+//
+// Restart the 3D renderer and show the 3D view
+//
+Procedure RESTART_3D
+	JS Execute "restart_3d();"
+End Proc
+
+Procedure SET_BACKGROUND_3D[ IMAGE$ ]
+	JS Execute "set_background_3d( '" + Image DataURL$( IMAGE$ ) + "' );"
+End Proc
+
+// Create a 3D group
+// NAME$ is a string. It's the name of this 3D group.
+Procedure GROUP_3D[ NAME$ ]
+	JS Execute "group_3d( '" + NAME$ + "' );"
+End Proc
+
+// Add a 3D Object on the current 3D scene or a 3D group
+// CHILDNAME$ is a string. It's the name of this 3D object to add.
+// PARENTNAME$ is a string. It's the name of this 3D parent. Should be an existing 3D group or 'scene' ( for the current scene )
+Procedure ADD_TO_3D[ CHILDNAME$, PARENTNAME$ ]
+	JS Execute "add_to_3d( '" + CHILDNAME$ + "', '" + PARENTNAME$ + "' );"
+End Proc
+
+// Create a 3D box
+// OBJSRC$ is a string. It's the name of this 3D object that will be duplicated.
+// OBJTARGET$ is a string. It's the name of this 3D object copied.
+Procedure COPY_3D[ OBJSRC$, OBJTARGET$ ]
+	JS Execute "copy_3d( '" + OBJSRC$ + "', '" + OBJTARGET$ + "' );"
+End Proc
+
+// Create a 3D box
+// NAME$ is a string. It's the name of this 3D object.
+// IMAGE$ is a string. It's the name of your image used as IMAGE
+// SIZE# is the flotting value of the size
+Procedure CUBE_3D[ NAME$, IMAGE$, SIZE# ]
+	JS Execute "box_3d( '" + NAME$ + "', '" + Image DataURL$( IMAGE$ ) + "', " + Str$( SIZE# ) + ", " + Str$( SIZE# ) + ", " + Str$( SIZE# ) + " );"
+End Proc
+
+// Create a 3D box
+// NAME$ is a string. It's the name of this 3D object.
+// IMAGE$ is a string. It's the name of your image used as IMAGE
+// WIDTH#, HEIGHT# and DEPTH# are the flotting values of the size
+Procedure BOX_3D[ NAME$, IMAGE$, WIDTH#, HEIGHT#, DEPTH# ]
+	JS Execute "box_3d( '" + NAME$ + "', '" + Image DataURL$( IMAGE$ ) + "', " + Str$( WIDTH# ) + ", " + Str$( HEIGHT# ) + ", " + Str$( DEPTH# ) + " );"
+End Proc
+
+// Create a 3D sphere
+// NAME$ is a string. It's the name of this 3D object.
+// IMAGE$ is a string. It's the name of your image used as IMAGE
+// RADIUS# is the flotting value of the radius
+Procedure SPHERE_3D[ NAME$, IMAGE$, RADIUS# ]
+	JS Execute "sphere_3d( '" + NAME$ + "', '" + Image DataURL$( IMAGE$ ) + "', " + Str$( RADIUS# ) + " );"
+End Proc
+
+// Create a 3D cone
+// NAME$ is a string. It's the name of this 3D object.
+// IMAGE$ is a string. It's the name of your image used as IMAGE
+// RADIUS# and HEIGHT# are the flotting values of the radius and height
+Procedure CONE_3D[ NAME$, IMAGE$, RADIUS#, HEIGHT# ]
+	JS Execute "cone_3d( '" + NAME$ + "', '" + Image DataURL$( IMAGE$ ) + "', " + Str$( RADIUS# ) + ", " + Str$( HEIGHT# ) + " );"
+End Proc
+
+// Create a 3D plane
+// NAME$ is a string. It's the name of this 3D object.
+// IMAGE$ is a string. It's the name of your image used as IMAGE
+// WIDTH# and HEIGHT# are the flotting values of the width and height
+Procedure PLANE_3D[ NAME$, IMAGE$, WIDTH#, HEIGHT#, COLS, ROWS ]
+	JS Execute "plane_3d( '" + NAME$ + "', '" + Image DataURL$( IMAGE$ ) + "', " + Str$( WIDTH# ) + ", " + Str$( HEIGHT# ) + ", " + Str$( COLS ) + ", " + Str$( ROWS ) + " );"
+End Proc
+
+// Create a 3D cylinder
+// NAME$ is a string. It's the name of this 3D object.
+// IMAGE$ is a string. It's the name of your image used as IMAGE
+// RADIUS_TOP# & RADIUS_BOTTOM# are the flotting values of the raduis at top and bottom
+// HEIGHT# is the flotting value of the height
+// FILLED is a boolean value. If True, the cylinder will be filled, else it will be empty (tube)
+Procedure CYLINDER_3D[ NAME$, IMAGE$, RADIUS_TOP#, RADIUS_BOTTOM#, HEIGHT#, FILLED ]
+	JS Execute "cylinder_3d( '" + NAME$ + "', '" + Image DataURL$( IMAGE$ ) + "', " + Str$( RADIUS_TOP# ) + ", " + Str$( RADIUS_BOTTOM# ) + ", " + Str$( HEIGHT# ) + ", " + Str$( FILLED ) + " );"
+End Proc
+
+// Locate a 3D object on the 3 axis.
+// NAME$ is a string. It's the name of this 3d object. It should be existing.
+// X#, Y# and Z# are the flotting values
+Procedure LOCATE_3D[ NAME$, X#, Y#, Z# ]
+	JS Execute "move_3d( '" + NAME$ + "', " + Str$( X# ) + ", " + Str$( Y# ) + ", " + Str$( Z# ) + ", true );"
+End Proc
+
+// Move a 3D object on the 3 axis.
+// NAME$ is a string. It's the name of this 3d object. It should be existing.
+// X#, Y# and Z# are the flotting values
+Procedure MOVE_3D[ NAME$, X#, Y#, Z# ]
+	JS Execute "move_3d( '" + NAME$ + "', " + Str$( X# ) + ", " + Str$( Y# ) + ", " + Str$( Z# ) + ", false );"
+End Proc
+
+// Move a 3D object on the 3 axis.
+// NAME$ is a string. It's the name of this 3d object. It should be existing.
+// SPEED# is the flotting value of the speed of the move
+Procedure FORWARD_3D[ NAME$, SPEED# ]
+	JS Execute "forward_3d( '" + NAME$ + "', " + Str$( SPEED# ) + " );"
+End Proc
+
+// Move a 3D object on the 3 axis.
+// NAME$ is a string. It's the name of this 3d object. It should be existing.
+// SPEED# is the flotting value of the speed of the move
+Procedure BACKWARD_3D[ NAME$, SPEED# ]
+	JS Execute "backward_3d( '" + NAME$ + "', " + Str$( SPEED# ) + " );"
+End Proc
+
+// Rotate a 3D object on the 3 axis.
+// NAME$ is a string. It's the name of this 3d object. It should be existing.
+// X#, Y# and Z# are the flotting values
+Procedure ORIENTATION_3D[ NAME$, X#, Y#, Z# ]
+	JS Execute "rotate_3d( '" + NAME$ + "', " + Str$( X# ) + ", " + Str$( Y# ) + ", " + Str$( Z# ) + ", true );"
+End Proc
+
+// Rotate a 3D object on the 3 axis.
+// NAME$ is a string. It's the name of this 3d object. It should be existing.
+// X#, Y# and Z# are the flotting values
+Procedure ROTATE_3D[ NAME$, X#, Y#, Z# ]
+	JS Execute "rotate_3d( '" + NAME$ + "', " + Str$( X# ) + ", " + Str$( Y# ) + ", " + Str$( Z# ) + ", false );"
+End Proc
+
+// Resize a 3D object on the 3 axis.
+// NAME$ is a string. It's the name of this 3d object. It should be existing.
+// X#, Y# and Z# are the flotting values
+Procedure SIZE_3D[ NAME$, X#, Y#, Z# ]
+	JS Execute "scale_3d( '" + NAME$ + "', " + Str$( X# ) + ", " + Str$( Y# ) + ", " + Str$( Z# ) + ", true );"
+End Proc
+
+// Scale a 3D object on the 3 axis.
+// NAME$ is a string. It's the name of this 3d object. It should be existing.
+// X#, Y# and Z# are the flotting values
+Procedure SCALE_3D[ NAME$, X#, Y#, Z# ]
+	JS Execute "scale_3d( '" + NAME$ + "', " + Str$( X# ) + ", " + Str$( Y# ) + ", " + Str$( Z# ) + ", false );"
+End Proc

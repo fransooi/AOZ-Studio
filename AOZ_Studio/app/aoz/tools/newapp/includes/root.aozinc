@@ -1,0 +1,104 @@
+ROOT:
+// Show the home page
+Show HTML "home"
+
+SHOW_CATEGORIES
+SHOW_TEMPLATES
+
+// Loop for keep the application alive
+REQUEST$ = "" : RESPONSE$ = "" : REQERROR$ = "" : PROJECT_NAME$ = ""
+CUR_TEMP = -1
+Do
+
+	If REQERROR$ <> ""
+		If REQERROR$ = "yes" Then End
+		REQRROR$ = ""
+	End If
+
+	If REQUEST$ <> ""
+
+		If REQUEST$ = "close_app"
+			JS Execute "client.close();"
+		End If
+
+		If REQUEST$ = "edit_project"
+			EDIT_PROJECT
+		End If
+
+		If REQUEST$ = "copy_project"
+			PROJECT_FOLDER
+			If PROJECT_PATH$ <> "" And PROJECT_PATH$ <> "error"
+				COPY_PROJECT
+				If REQERROR$ = ""
+					REQUEST$ = "open_project"
+				End If
+			End if
+		End If
+
+		If REQUEST$ = "load_pages"
+			LOAD_PAGES
+		End If
+
+		If REQUEST$ = "change_page"
+			CHANGE_PAGE
+		End If
+
+		If REQUEST$ = "show_properties"
+			SHOW_PROPERTIES
+		End If
+
+		If REQUEST$ = "create_project"
+			JS Execute "client.createProject();"
+		End If
+
+		If REQUEST$ = "project_folder"
+			PROJECT_PATH$ = ""
+			PROJECT_FOLDER
+			If PROJECT_PATH$ <> "" And PROJECT_PATH$ <> "error"
+				COPY_PROJECT
+			End if
+		End If
+
+		If REQUEST$ = "save_project"
+			SAVE_PROJECT
+		End If
+
+		If REQUEST$ = "open_project"
+			OPEN_PROJECT
+		End If
+
+		If REQUEST$ = "close_app"
+			JS Execute "client.close();"
+		End If
+
+		If REQUEST$ = "close_editor"
+			JS Execute "client.closeEditor()"
+		End If
+
+		If REQUEST$ = "update_categories"
+			SHOW_CATEGORIES
+			SHOW_TEMPLATES
+		End If
+
+		REQUEST$ = ""
+		RESPONSE$ = ""
+		PROJECT_PATH$ = ""
+	End If
+	Wait Vbl
+Loop
+
+Procedure CLICK_CANCEL[ EVENT$, INDEX$ ]
+	If CUR_TEMP = -1
+		REQUEST$ = "close_app"
+	Else
+		REQUEST$ = "close_editor"
+		CUR_TEMP = -1
+	End If
+End Proc
+
+Procedure CLICK_HELP[ EVENT$, INDEX$ ]
+End Proc
+
+Procedure CLICK_CREATE[ EVENT$, INDEX$ ]
+	REQUEST$ = "create_project"
+End Proc

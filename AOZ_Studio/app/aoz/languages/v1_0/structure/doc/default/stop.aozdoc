@@ -1,0 +1,5 @@
+<i>Stop</i>
+<b>Stop</b> xxxxxxx
+=
+This command is similar to END, but it will display a message "Program Interrupted". You can use it as a signal that something went wrong when running your application.
+

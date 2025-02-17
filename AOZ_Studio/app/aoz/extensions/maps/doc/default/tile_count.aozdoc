@@ -1,0 +1,36 @@
+<i>Tile Count</i>
+<b>Tile Count</b> xxxxxxx
+=
+This instructionm scans the tiles currently displayed by the view looking for a specific tile.
+
+If no tile of this value is found, then it returns 0.
+
+If one or more tiles is found, then the value returned is the number of such tile. Please note that it counts a tile as soon as it appears in the view, even a portion of the tile will be counted.
+
+Use this function in your game to detect for example the arrival of ennemies from an "ennemy" layer, detect bonuses etc.
+
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+XOFFSET = 0
+YOFFSET = 0
+ENNEMYTILE = 1112
+Do
+If JLeft( 1 ) Then XOFFSET = XOFFSET - 1
+If JRight( 1 ) Then XOFFSET = XOFFSET + 1
+If JUp( 1 ) Then YOFFSET = YOFFSET - 1
+If JDown( 1 ) Then YOFFSET = YOFFSET + 1
+Offset View "MapView", XOFFSET, YOFFSET
+Redraw View "MapView"
+
+If Tile Count( 'MapView", ENNEMYTILE ) > 0
+Print "Ennemies at sight!"
+End If
+Wait Vbl
+Loop
+@code
+
+

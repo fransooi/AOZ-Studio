@@ -1,0 +1,27 @@
+<i>Bob Collide</i>
+<b>Bob Collide</b> xxxxxxx
+=
+This instruction, allied with the "Bob Collide With" instruction allows you accelerate the collision detection process.
+
+Bob Collide With set a list of the categories of bob with which this bob will collide. If no categories are defined the the bob will generate collission with all the other objects.
+@code
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+
+Bob "hero", 100, 100, 1
+Bob Collide "hero", "good"
+
+Bob "side-kick", 100, 100, 2
+Bob Collide "side-kick", "good"
+
+Bob "ennemy", 100, 100, 3
+Bob Collide "ennemy", "bad"
+
+Bob "box", 100, 100, 4
+
+Bob Collide With "hero", "bad", "box"
+Bob Collide With "ennemy", "good"
+
+Print Bob Col( "hero" )			// Will print true, bobs colliding: "box"
+Print Bob Col( "ennemy" )		// Will print true, bobs colliding: "hero", "side-kick"
+Print Bob Col( "box" )			// Will print false: "box" has no category whereas other have...
+

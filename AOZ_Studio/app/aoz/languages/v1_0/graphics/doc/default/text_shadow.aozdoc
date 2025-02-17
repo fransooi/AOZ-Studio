@@ -1,0 +1,42 @@
+<i>Text Shadow</i>
+<b>Text Shadow</b> xxxxxxx
+=
+This instruction allows you to add a shadow to any graphical text using the current font. With a bit of imagination, shadow can be used to create other effects, such as add a glow to an image, or an outline. See second example below.
+Once the shadow is set, it will be used for all subsequent text operations until it is turned off, either by using 'Text Shadow Off', or by setting both the offsetX and offsetY to zero.
+Also, once set, individual elements of the shadow definition can be changed, such as the blur in the examples below.
+
+This example shows you how to add a basic shadow to your text.
+
+@code
+//	BASIC SHADOWS
+Curs Off : Cls 1						// Set up screen, white background
+Set Transparent 0						// Set background colour to transparent
+Set font 0,180							// Set then font size
+Text Shadow 10,20,0,$333333ff			// Set the 'Text Shadow'to offsetX=10, offsetY=20, blur=8, and $rgba to a dark grey with full alpha level
+For f=1 to 5							// Define loop
+Ink f*5+1							// Choose colour from palette
+Text 100+f*70,f*200,"Text Shadow"	// Draw Text
+Text Shadow ,,f*3					// Gradually increase the blur
+wait 0.4							// Wait for 0.4 seconds
+Next f									// Repeat loop
+End
+@code
+
+This example shows you how to make your text 'GLOW'!
+
+@code
+//	GLOWING TEXT
+Curs Off : Cls 0						// Set up screen, white background
+Set Transparent 0						// Set background colour to transparent
+Set font 0,180							// Set then font size
+Text Shadow 0,0.1,4,$00ff00ff			// Set the 'Text Shadow'to offsetX=0, offsetY=0.1, blur=4, and $rgba to green with full alpha level
+// The 0.1 Y offset basically puts the shadow directly below the image
+Ink 5 : colour 5,$000000				// Set ink to 5 and change it to Black
+For f=1 to 5							// Define loop
+Text 100+f*70,f*200,"Glowing Text"	// Draw Text
+Text Shadow ,,(f+1)*4				// Gradually increase the blur to make it 'Glow' more
+wait 0.4							// Wait for 0.4 seconds
+Next f									// Repeat loop
+End
+@code
+

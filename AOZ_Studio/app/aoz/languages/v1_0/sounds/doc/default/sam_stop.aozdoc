@@ -1,0 +1,16 @@
+<i>Sam Stop</i>
+<b>Sam Stop</b> xxxxxxx
+=
+This simple command is used to stop all samples playing through your loudspeaker system. If it is followed by an
+optional voice parameter, only the selected voices will be switched off. Voices are chosen using a binary bit-map,
+where any bit that is assigned to 1 will have the associated voice terminated. Otherwise it will be ignored. The voices
+are associated with the following bits:
+@code
+Voice 3210
+Bitmap %1111
+@code
+For example, the next line would stop samples playing on voices 3 and 1:
+@code
+Sam Stop %1010
+@code
+

@@ -1,0 +1,19 @@
+<i>Lib Call</i>
+<b>Lib Call</b> xxxxxxx
+=
+This important function acts as the gateway to all the functions in the selected library. It calls the required function
+and returns the result to your AOZ program.
+
+The function offset parameter holds the offset value to the library function that you wish to execute, and if it is
+entered directly this value must be exact. Any mistakes will crash the computer. Alternatively, you are recommended
+to use a safer method via the LVO function to call the command by name, which is explained below.
+
+Before calling this function, the appropriate parameter values need to be loaded into the Address and Data registers,
+using the AREG and DREG commands. The precise format of these parameters depends on the function in question,
+and should be checked from the appropriate reference manual.
+
+After the function has been successfully executed, any return values will be available for immediate use from the
+AREG and DREG variables. Note that AREG only allows the registers from A0 to A3 to be accessed. (Registers
+A4, A5 and A6 are not used by the libraries at all.)"
+
+

@@ -1,0 +1,5 @@
+<i>Save Text</i>
+<b>Save Text</b> xxxxxxx
+=
+This instruction saves the content of the string in UTF-8, all in one block. It does not interfere with cariage returns.
+

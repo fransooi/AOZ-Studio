@@ -1,0 +1,17 @@
+<i>String Base Index</i>
+<b>String Base Index</b> xxxxxxx
+=
+This instruction set the base index of string function, that is the value that points to the first letter of the string.
+
+Historically, the Basic language uses 1 as base index for strings. Although it is good for learning how to program, it is recommende, specially if you do complex string manipulation or
+orient yourself toward professional programming, to use 0 as index for strings (as for arrays).
+
+Please note that you can also use the tag #stringBaseIndex: 0 or 1. This tag has a global effect of the whole application whereas this instruction allows you to change it locally.
+@code
+A$ = "I love AOZ Studio !"
+String Base Index 0
+Print Mid$(A$, 8, 1)		// Will print O
+String Base Index 1
+Print Mid$(A$, 9, 1)		// Use plus one on the index to get the O
+@code
+

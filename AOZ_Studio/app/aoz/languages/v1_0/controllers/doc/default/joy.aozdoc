@@ -1,0 +1,26 @@
+<i>Joy</i>
+<b>Joy</b> xxxxxxx
+=
+This inspects what is happening with the joystick and makes a report. Any kind of joystick is supported, and the keys are mapped as best as possible.
+AOZ also emulate joystick entry through the keyboard if no joystick is connected, with a default mapping to the arrow keys for directions and the space bar for fire.
+The mappingh is stored in the manifest that is created when you click on "New Application" in AOZ.
+@code
+Do
+J=Joy(1)
+Print Bin$(J,5),J
+Loop
+@code
+When you run that routine, reports are given about the movements of the joystick and the status of the fire-button in
+the form of binary numbers. The pattern of ones and zeros in the report can then be inspected. Binary bits shown as
+zero indicate that nothing is happening, whereas if any of the bits in the report is shown as a one, it means that the
+joystick has been moved in the direction that relates to that bit. Here is a list of those bits along with their meanings.
+@code
+Bit number 	Meaning
+0 		Joystick has been moved Up
+1 		Joystick has been moved Down
+2 		Joystick has been moved Left
+3 		Joystick has been moved Right
+4 		Fire-button has been pressed
+@code
+
+

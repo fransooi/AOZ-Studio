@@ -1,0 +1,14 @@
+<i>Sprite Point</i>
+<b>Sprite Point</b> xxxxxxx
+=
+This function checks for a point object the given sprite. It will return True if the point
+is within the collision mask of the sprite, and false if not.
+@code
+Sprite 1, 100, 100, 1
+Repeat
+If Sprite Point( 1, X Mouse, Y Mouse )
+Print "The mouse pointer is over the sprite!"
+End IF
+Until Inkey$ != ""
+@code
+

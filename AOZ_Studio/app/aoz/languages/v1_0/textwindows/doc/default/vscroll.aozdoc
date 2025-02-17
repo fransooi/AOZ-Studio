@@ -1,0 +1,13 @@
+<i>VScroll</i>
+<b>VScroll</b> xxxxxxx
+=
+Similarly to HSCROLL, the values given to this command result in different vertical scrolling effects, one character at a time.
+@code
+Number 	Effect
+1 		Scroll down text on and below current cursor Line
+2 		Scroll down text from top of screen to current cursor line only
+3 		Scroll up text from top of screen to current cursor line only
+4 		Scroll up text on or below current cursor line
+@code
+Note that blank lines are inserted to fill any gaps left by these scrolling operations.
+

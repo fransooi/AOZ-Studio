@@ -1,0 +1,19 @@
+<i>Exist</i>
+<b>Exist</b> xxxxxxx
+=
+EXIST looks through the current directory of filenames and checks it against the filename in your given string. If the names match, then the file does exist and True will be reported, otherwise False will be returned.
+
+As well as checking for individual filenames, even if an idiotic name is given, EXIST will search for discs and devices as well. For example:
+@code
+Print Exist("An idiotic name")
+Print Exist("C:) 	// Rem Is a drive named DEMO available
+Print Exist("Df1:) 	// Is the second floppy drive connected when in Amiga simulation?
+@code
+It is advisable to test for empty strings () separately, like this:
+@code
+F$=Fsel$("*.PNG"," ","Load a PNG file")
+If F$= Then Edit // Return to editor if no file chosen
+If Exist(F$) Then Load Image F$,0
+@code
+
+

@@ -1,0 +1,31 @@
+// This game is explained in detail in the User guide and the MagicBird Tutorial
+
+START:
+// Move the background image from X=0 to -1920, in a loop (LoopMove), for the Duration  -More about it in the User guide
+Actor "background", Image$="forest.png", X=0, EndX=-1920, LoopMove=True, Duration=20000
+
+// With this For… Next loop we create 50 stalactites positioned in Y with a random (rnd), increasing (with I): rnd (I * 30), each spaced in X of 320 pixels (I * 320), moving from right to left
+//    For I = 1 to 50, means I increase of 1 each time up to 50 where the loop is over.
+//    Therefore on the first loop, I=1, we will have Actor 1, X=720, Y=-780 + a random value between 0 and 20
+For I= 1 to 50
+  Actor I, X=400+(I*320), Y=-780+rnd(I*20),Auto$="offsetX=-5", Image$="ice.png" //offsetX tells the actor to automatically move in X by -5 pixels (therefore to the left)
+Next I
+PY=Screen Height/2 // Set Magic Y coordinate at middle of screen vertically
+
+// The Main Game loop
+do    // Start of the Loop  (do...loop Instruction)
+   If Mouse Key = 0 then PY = PY+7 else PY = PY-15   	     // Magic goes down automatically of 7 pixels, and up of 15 if a Mouse button is pressed (screen touch on a smartphone). Mouse Key is a function that takes a value depending on the mouse button pressed, 0 if no button.
+   Actor "magic",Y=PY, Image$="magicfly.png"   			     // Display Magic on screen, X not set = 0 by default.
+   Wait Vbl	// Forget it, this is to smooth the display (User Guide)
+   if Actor Col("magic", image$="ice") = True Then Goto DEAD // Collision test between magic and any stalactyte (they all use the ice.png image)
+   If PY>1000 Then Goto DEAD  // Magic felt below the ground (more than 1000 pixels high in Y)
+loop  // End of the Loop
+
+DEAD:  // A name followed by: is a label, a place in the program that can be reached with the Goto. If Magic collide with ice (line 20) or fall down the screen (line 21) below code is executed.
+  Actor "magic", Image$="magicdead.png", Y=PY, ENDY=-20, Auto$="offsetY=-15"   // magic graphics change when dead and moves up (Y reducing automatically)
+  Actor "gameover", X=660, Y=400, Image$="gameover.png"  // Display the Game Over image
+  Wait Click  // wait for a click on the mouse (or on the smartphone screen)
+  Actor Del "gameover"  // Delete the gameover image
+Goto START    // Go back to the beginning of the program
+
+// Now your turn, have fun...

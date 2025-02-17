@@ -1,0 +1,115 @@
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../../AOZ_Studio/app/aoz/fonts/google/roboto mono/roboto-mvleeer.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../../AOZ_Studio/app/aoz/fonts/google/ibm plex mono/ibm-pmvleer.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Overpass Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../../AOZ_Studio/app/aoz/fonts/google/overpass mono/overpass-mvlr.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../../AOZ_Studio/app/aoz/fonts/google/oxygen mono/oxygen-mvlr.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'PT Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../../AOZ_Studio/app/aoz/fonts/google/pt mono/pt-mvleer.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../../AOZ_Studio/app/aoz/fonts/google/space mono/space-mvlr.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../../AOZ_Studio/app/aoz/fonts/google/ubuntu mono/ubuntu-mvleeer.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Amiga Topaz';
+    font-weight: normal;
+    font-style: normal; 
+	src: url('../../../../AOZ_Studio/app/aoz/fonts/amiga-topaz/topaz_a500_v1.0-webfont.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'AvenirNext LT Pro';
+    src: url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-Regular.eot');
+    src: url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-Regular.eot?#iefix') format('embedded-opentype'),
+        url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-Regular.woff2') format('woff2'),
+        url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-Regular.woff') format('woff'),
+        url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-Regular.ttf') format('truetype'),
+        url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-Regular.svg#AvenirNextLTPro-Regular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'AvenirNext LT Pro It';
+    src: url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-It.eot');
+    src: url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-It.eot?#iefix') format('embedded-opentype'),
+        url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-It.woff2') format('woff2'),
+        url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-It.woff') format('woff'),
+        url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-It.ttf') format('truetype'),
+        url('%THEME%/assets/fonts/avenir/AvenirNextLTPro-It.svg#AvenirNextLTPro-It') format('svg');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Brandon Grotesque';
+    src: url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Black.eot');
+    src: url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Black.eot?#iefix') format('embedded-opentype'),
+        url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Black.woff2') format('woff2'),
+        url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Black.woff') format('woff'),
+        url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Black.ttf') format('truetype'),
+        url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Black.svg#BrandonGrotesque-Black') format('svg');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Brandon Grotesque LT';
+    src: url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Light.eot');
+    src: url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Light.eot?#iefix') format('embedded-opentype'),
+        url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Light.woff2') format('woff2'),
+        url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Light.woff') format('woff'),
+        url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Light.ttf') format('truetype'),
+        url('%THEME%/assets/fonts/brandon/BrandonGrotesque-Light.svg#BrandonGrotesque-Light') format('svg');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'amiga';
+    src: url('%THEME%/assets/fonts/amiga-topaz/topaz_a500_v1.0-webfont.woff2') format('woff2'),
+         url('%THEME%/assets/fonts/amiga-topaz/topaz_a500_v1.0-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}

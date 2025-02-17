@@ -1,0 +1,11 @@
+<i>function:returns the height of the Actor</i>
+value=<b>Actor Height</b>(number)
+value=<b>Actor Height</b>(name$)
+=
+@code
+Cls 0
+Actor 1, image$="magic"
+Print Str$( Actor Height( 1 ) )
+@code
+Display "211" on the screen
+

@@ -1,0 +1,45 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Instructions Module Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionModule: "1"					// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "The Player Instruction"
+		author: "By Phil Bell"
+		version: "Version 0.99"
+		date: "02/07/2021"
+		copyright: "(c) AOZ Studio 2021"
+		start: "player.aoz"
+		name: "player"
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+			]
+			fr:
+			[
+			]
+		}
+	}
+}

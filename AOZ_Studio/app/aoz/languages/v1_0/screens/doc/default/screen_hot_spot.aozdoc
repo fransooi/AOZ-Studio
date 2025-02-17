@@ -1,0 +1,36 @@
+<i>Screen Hot Spot</i>
+<b>Screen Hot Spot</b> xxxxxxx
+=
+AOZ introduces the ability to rotate screens as any other graphcial objects. All the bobs that are displayed inside of the screen will follow the rotation.
+
+As for the Hot Spot instruction available for Bobs and Sprite, you can use a mask of bits to indicate one of the default positions of the hot-spot.
+- 0: indicate top or left,
+- 1: center or middle,
+- 2: right or bottom.
+
+Example: $11 centers the hot-spot horizontally and vertically
+
+@code
+Degree
+
+// Rotates the screen with it's default hot-spot, on the top-left corner
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+For A = 0 To 360
+Screen Rotate 0, A
+Wait Vbl
+Next
+Wait Key
+
+// Set the hot spot of the screen in the center
+Screen Hot Spot 0, $11
+For A = 0 To 360
+Screen Rotate 0, A
+Wait Vbl
+Next
+Wait Key
+@code
+

@@ -1,0 +1,7 @@
+<i>Move Freeze</i>
+<b>Move Freeze</b> xxxxxxx
+=
+This command suspends the movement of all Objects on screen. Frozen Objects may be re- animated using the
+MOVE ON command. If an optional Object number is given after MOVE FREEZE, then only that Object will be
+frozen.
+

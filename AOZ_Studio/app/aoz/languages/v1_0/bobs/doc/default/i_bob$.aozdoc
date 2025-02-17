@@ -1,0 +1,8 @@
+<i>I Bob$</i>
+<b>I Bob$</b> xxxxxxx
+=
+@code
+As image indexes can either be numbers or strings, I BOB$ returns the index of the image currently displayed in the form of a string so that you can name your images.
+If the index is a number, then the returned value will be the string version of the number.
+@code
+

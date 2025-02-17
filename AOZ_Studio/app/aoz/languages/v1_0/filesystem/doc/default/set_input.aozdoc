@@ -1,0 +1,12 @@
+<i>Set Input</i>
+<b>Set Input</b> xxxxxxx
+=
+SET INPUT is used to set which characters you want to input to end a line of data. Many computers need both a [Return] and [line feed] character at the end of each line, but the Amiga only needs a [line feed]. This means that if you wanted to import files from an ST via the serial cable, for example, unwanted [Return] characters would litter your input.
+
+SET INPUT solves this problem by allowing you to select two Ascii values as your end-of-line characters. If you prefer to use a single character only, make the second value a negative number. For example:
+@code
+Set Input 10,-1 		// macOS, Linux
+Set Input 13,10			// Windows
+@code
+
+

@@ -1,0 +1,14 @@
+<i>Def Scroll</i>
+<b>Def Scroll</b> xxxxxxx
+=
+Using AOZ Studio, you are able to define scrolling screen zones, and each one can have an individual pattern of movement.
+
+Simply follow your DEF SCROLL command with the index of the zone you are setting up.
+
+Then give the coordinates of the area of the zone to be scrolled, from the top left-hand corner to the diagonally opposite bottom right-hand corner. Finally, give this zone a scrolling pattern by
+setting the number of pixels to be shifted horizontally, and the number of pixels to be shifted vertically during each
+scrolling operation.
+
+Positive horizontal values will cause a shift to the right whereas negative values will shift the zone towards the left of the screen. Similarly, positive vertical values will scroll downwards and negative values
+cause an upward scroll.
+

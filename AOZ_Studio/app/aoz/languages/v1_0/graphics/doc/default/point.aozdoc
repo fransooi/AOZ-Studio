@@ -1,0 +1,10 @@
+<i>Point</i>
+<b>Point</b> xxxxxxx
+=
+Use this function to find the index number of the colour occupying your chosen coordinates, like this:
+@code
+Cls : Plot 160,100
+Print "The colour is ";Point(160,100)
+@code
+
+

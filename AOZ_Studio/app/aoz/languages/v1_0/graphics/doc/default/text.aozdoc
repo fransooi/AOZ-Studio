@@ -1,0 +1,19 @@
+<i>Text</i>
+<b>Text</b> xxxxxxx
+=
+This command is used to print text at the specified graphical coordinates.
+
+Tags can be any logical combination of the following tags and have the same meaning as their Javascript equivalents:
+- '#left', '#center', '#right',  '#start' or '#end' to position the text horizontally
+-  '#top', '#hanging', '#middle', '#alphabetic', '#ideographic' or '#bottom' for vertical alignement
+- '#ltr', '#rtl' or '#inherit' for drawing direction
+
+The next example demonstrates how text can be placed at any pixel position on the
+screen:
+@code
+Do
+Ink Rnd(15)+1,Rnd(15) : Text Rnd(320)+1, Rnd(198)+1, "AOZ", "#center #middle"
+Loop
+@code
+
+

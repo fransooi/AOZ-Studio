@@ -1,0 +1,12 @@
+<i>Animate Text</i>
+<b>Animate Text</b> xxxxxxx
+=
+This instruction only works after you have displayed a text on screen with the "Format Text" instruction, and if it contains active zones.
+
+It starts a background process to test the mouse over the active zones, and reacts when you click.
+
+If no procedure is defined, then a link will open a new browser tab, or open the browser itself if the application was a stand-alone.
+
+If you specify the name of a procedure, then this procedure is called instead.
+
+

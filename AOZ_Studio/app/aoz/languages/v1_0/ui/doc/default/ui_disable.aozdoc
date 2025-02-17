@@ -1,0 +1,13 @@
+<i>instruction: Disable all the user actions on a UI element.</i>
+<b>UI Enable</b>
+=
+The UI Disable instruction is used to disable all the user actions on a UI element. You can to enable an element by using the UI Enable instruction.
+@code
+// Add a Button linked on the BTN_CLICK procedure
+UI Button "MyButton", OnClick$="BTN_CLICK"
+Wait Key
+UI Disable "MyButton" // We can't to click
+Procedure BTN_CLICK[ ID$ ]
+	Print "Click!"
+End Proc
+@code

@@ -1,0 +1,15 @@
+<i>File Extension$</i>
+<b>File Extension$</b> xxxxxxx
+=
+Use this function to trigger procedures from the extension...
+@code
+F$ = FSel$( "*.*", " ", "Please choose an image file..." )
+If F$ <> ""
+E$ = Lower$( File Extension$( F$ ) )
+If E$ = "png" Or E$ = "jpg" Or E$ = "jpeg" Or E$ = "iff"
+Load Image F$
+Else
+Print "File not supported."
+End If
+End If
+

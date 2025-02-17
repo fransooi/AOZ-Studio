@@ -1,0 +1,25 @@
+<i>Offset View</i>
+<b>Offset View</b> xxxxxxx
+=
+Once the maps have been loaded, once the view has been opened and display, this instruction is the key to your game, as it enables the exploration of the map in the view.
+
+As a default, the origin of the map displayed in the view is at 0, 0, the top-left corner of the map will be display at the position of the top-left pixel in the Display View.
+
+You can achieve scrollings by setting the offsets to the view, as you would do for screens with the "Screen Offset" instruction.
+
+You can perfectly set the offset out of the map: in such area nothing will be drawn and the previous graphics will be left in place: if you want a clean display, the extra "Ink" parameter of the "Redraw View" instruction.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Slow scrolling on the whole map
+For X = 0 To Map Width
+Offset View "MapView", X, 0
+Redraw View "MapView", 0				// Make sure the display is clean
+Wait Vbl
+Next
+@code
+

@@ -1,0 +1,13 @@
+<i>Pen$</i>
+<b>Pen$</b> xxxxxxx
+=
+This function returns a special control sequence that changes the pen colour inside a string. This means that
+whenever the string is printed on the screen, the pre-set pen colour is automatically assigned to it. The format of the
+string returned by PEN$ is: Chr$(27)+"Pen"+Chr$(48+number). Here is an example:
+@code
+P$=Pen$(2)+"Well all WHITE, "+Pen$(6)+" I still got the BLUES"
+Print P$
+Pen 4
+Print "In the RED"
+@code
+

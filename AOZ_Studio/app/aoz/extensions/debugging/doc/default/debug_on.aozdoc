@@ -1,0 +1,7 @@
+<i>Debug On</i>
+<b>Debug On</b> xxxxxxx
+=
+The Debug On instruction launches the debugger with the given windows opened without interrupting the application.
+
+You can decide to break in the code by pressing F8 or clicking on the Pause button.
+

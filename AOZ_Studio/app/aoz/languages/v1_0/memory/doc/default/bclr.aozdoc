@@ -1,0 +1,7 @@
+<i>BClr</i>
+<b>BClr</b> xxxxxxx
+=
+The BCLR command clears a bit by setting it to zero. The bit number can be from 0 to 31, and pinpoints the single binary digit to be cleared.
+
+If an expression is used instead of a variable, it will be treated as an address only if AOZ can detect the "magical number" that indicate a memory bank.
+

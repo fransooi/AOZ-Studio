@@ -1,0 +1,23 @@
+<i>Load Tileset</i>
+<b>Load Tileset</b> xxxxxxx
+=
+This instruction doers all the hard work of loading all the tiles necessary to display your maps, by extracting the graphics from the map tileset image and adding the cut images to the image bank.
+The "firstimage" parameter indicates the position of the first image in the image bank. If your image bank already contains images at the position where the imp;orter creates them, they will be replaced by the new images.
+
+It is perfectly possible to load several tileset, they are independant entities, allowing you to completely chaneg the aspect of your game by changing the tileset with one instruction (just make sure that they do not overlap in the image bank).
+
+It only works with tilesets exported by Tiled in eother TSX format or JSON export format. If you use the aozmap format, you will have to create your tileset by hand.
+
+In order to work, you must not forget to add to the same directory where the tileset file is located, the source image from which to extract the graphics. The name of the image should be identical to the name of the titleset file (but for the extension of course).
+
+As for the "Load Map" instruction, the tileset will be refered later by the name of the file without extension.
+
+The next example is extracted from the ZeldaoZ tutorial.
+@code
+// Load the main map definition
+Load Map "zeldaoz.json"
+
+// Load the tilset after image number 1000
+Load Tileset "zelda_tiles1.json", 1000
+@code
+

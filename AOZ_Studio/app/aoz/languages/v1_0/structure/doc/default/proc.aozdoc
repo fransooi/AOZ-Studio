@@ -1,0 +1,21 @@
+<i>Proc</i>
+<b>Proc</b> xxxxxxx
+=
+Another way to identify a procedure is to precede it with a PROC statement.
+
+Run the following example:
+@code
+Rem Demonstrate that a procedure is being called not simply a command
+Proc HELLO
+
+Rem The same can be achieved without the Proc
+HELLO
+
+Procedure HELLO
+Print "Hey!"
+End Proc
+@code
+It is possible to place the procedure definition anywhere in your program. When AOZ encounters a
+procedure statement, the procedure is recognised and a jump is made to the final End Proc. In this way, there is no
+risk of executing your procedure by accident.
+

@@ -1,0 +1,10 @@
+<i>Mod</i>
+<b>Mod</b> xxxxxxx
+=
+This example will only print numbers between 0 and 2...
+@code
+For X = 0 To 100
+Print X Mod 3
+Next
+@code
+

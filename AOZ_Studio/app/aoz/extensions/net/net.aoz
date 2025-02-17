@@ -1,0 +1,251 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ 
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ 
+*
+****************************************************************************@*/
+/** @file
+ *
+ * The Network Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 23/03/2020
+ */
+#need_server
+#noWarning:"instruction_not_implemented"
+ 
+//
+// Initialization
+//
+{
+	this.aoz.NET = this;
+	this.load_done = true;
+	this.response = undefined;
+
+    this.openUrl = function( url, frameId )
+	{
+        if(typeof (url) == 'undefined' || url == '')
+        {
+            throw "url_missing";
+        }
+
+        if(typeof (frameId) == 'undefined' || frameId == '')
+        {
+			franeId = "_blank";
+        }
+
+        if( frameId == '_self' || frameId == '_parent' || frameId == '_top' || frameId == '_blank')
+        {
+            window.open(url, frameId);
+            return;
+        }
+    };
+   
+	this.callService = function( args )
+	{
+		if( typeof( args ) == 'undefined' )
+			throw 'args_missing';
+		
+		var method = args.method;
+		if( method == undefined )
+			method = 'post';
+		method = method.toLowerCase();	
+		if( method != 'get' && method != 'post' && method != 'head' )
+			throw 'wrong_method';
+		
+		var url = args.url;
+		if( url === undefined )
+			throw 'url_missing';
+		
+		var dateNow = 'foobar=' + Date.now();
+		var params = args.parameters;
+		if( params === undefined )
+			params = '';
+		if ( params != '' )
+		{
+			if ( params.substring( 0, 1 ) == '?' )
+				params = params.substring( 1 );
+			params = params + '&' + dateNow;
+		}
+		else
+		{
+			params = dateNow;
+		}
+
+		var contentType = args.contentType;
+		if( contentType === undefined )
+			contentType = 'application/x-www-form-urlencoded';
+
+		var procSuccess = args.success;
+		var procError = args.error;
+		var async = args.asynchrone;
+
+		this.load_done = async;
+		this.load_error = null;
+		this.response = undefined;
+
+		var self = this;
+		let xhr = new XMLHttpRequest();
+		if( method == 'post' )
+		{
+			xhr.open( method, url + '?' + params, true );
+			params = '';
+		}
+		else
+		{
+			xhr.open( method, url + '?' + params );
+			params = '';
+		}
+		if ( contentType != '' )
+		xhr.setRequestHeader( 'Content-Type', contentType );
+		xhr.onload = function()
+		{
+			console.log( xhr.responseText );
+			if ( xhr.status != 200 )
+			{
+				if( procError != undefined && procError != '' )
+					self.aoz.runProcedure( procError, { status$: xhr.status, response$: xhr.responseText } );
+				else
+					self.load_error = { error: 'request_failed', parameter: "" + xhr.status };
+			}
+			else
+			{
+				self.response = xhr.response;
+				if( procSuccess != undefined && procSuccess != '' )
+					self.aoz.runProcedure( procSuccess, { status$: xhr.status, response$: xhr.responseText } );
+				else 
+					self.load_error = 'success_procedure_not_exists';
+			}
+			self.load_done = true;
+		}
+		
+		xhr.onerror = function( error ) 
+		{
+			self.load_done = true;
+			var status = xhr.status;
+			var response = xhr.responseText;
+			if ( status == 0 )
+			{
+				status = 508;
+				response = 'Service not available';
+			}
+			if ( procError != undefined && procError != '' )
+				self.aoz.runProcedure( procError, { status$: status, response$: response } );
+			else
+				self.load_error = { error: 'request_failed', parameter: "" + status };
+		};		
+
+		if( method != 'post' )
+		{
+			xhr.send();
+		}
+		else
+		{
+			xhr.send( params );
+		}
+	};
+
+	this.loadHTML = function( args )
+	{
+		if( typeof( args ) == 'undefined' )
+		{
+			throw 'args_missing';
+		}
+		
+		var url = args.url;
+		if( url == undefined || url == '' )
+		{
+			throw 'url_missing';
+		}
+		
+		params = args.parameters;
+		if( params == undefined || params == '' )
+		{
+			params = '';
+		}
+
+		var self = this;
+		let xhr = new XMLHttpRequest();
+		xhr.open( 'get', 'resources/www/' + url + '?foobar=' + Date.now() + '&' + params );
+		xhr.setRequestHeader( 'Content-Type', 'text/plain' );
+		this.load_done = false;
+		this.load_error = null;
+		xhr.onload = function()
+		{
+			if ( xhr.status != 200 )
+			{
+				throw 'load_html_error';
+			}
+			else
+			{
+				var html = xhr.responseText.strReplace( "%ROOT%", "resources/www" );
+				var html = html.strReplace( "%root%", "resources/www" );				
+				document.body.innerHTML = html;
+			}
+			self.load_done = true;
+		}
+		
+		xhr.onerror = function() {
+			self.load_done = true;
+			throw 'request_failed';
+		};		
+
+		xhr.send();	
+	};
+	this.load_wait = function()
+	{
+		if ( this.load_error )
+			throw this.load_error;
+		return this.load_done;
+	};
+}
+
+/**doc
+@name:Network
+@description:All commands to communicate with the network.
+@author:Baptiste Bideaux
+@since:0.9.7
+doc*/
+
+/**api
+@name:Call Service
+@description:Call a web service by RTC protocole ans send it parameters.
+@description:The response of the remote server is intercepted and sand to a AOZ procedure to manage.
+@param:*method$:string:Should by one of theses values : 'get', 'post' or 'head'. 'post' value is used by default.
+@param:url$:string:Web address of the web service
+@param:*parameters$:string:Parameters to send to the web service. ( ex. : "id=1234&firtname=Thomas&lastname=Martin&age=15&genre=1" ). Empty by default.
+@param:*procSuccess$:string:Name of the AOZ procedure to intercept the response of the remote server. Empty by default.
+@param:*procError$:string:Name of the AOZ procedure to intercept the error from the remote server. Empty by default.
+@param:*aSync:integer:Set if the AOZ program must to wait the end of the request to continue. Yes, if ASYNC=0 (value by default). No, if ASYNC=1.
+@compatible: aoz
+api*/
+Instruction Call Service, method$, url$, parameters$, success$, error$, contentType$, asynchrone=0
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.NET, callFunction: "callService", waitFunction: "load_wait", args:{ method: %method$, url: %url$, parameters: %parameters$, success: %success$, error: %error$, asynchrone: %asynchrone } };
+}
+End Instruction
+
+/**api
+@name:Load HTML
+@description:Load a HTML file and add it to application
+@param:url$:string:The URL of the file to load
+@param:*parameters$:string:Parameters to send to the web service. ( ex. : "id=1234&firtname=Thomas&lastname=Martin&age=15&genre=1" ). Empty by default.
+@compatible: aoz
+api*/
+Instruction Load HTML, url$, parameters$
+{
+    #errors
+	#waiting
+	return { type: 12, waitThis: aoz.NET, callFunction: "loadHTML", waitFunction: "load_wait", args:{ url: %url$, parameters$: %parameters$ } };
+}
+End Instruction

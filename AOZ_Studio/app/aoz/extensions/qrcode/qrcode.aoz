@@ -1,0 +1,302 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The QR Code Instructions Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 17/10/2020
+ */
+#need_javascript_file:"qrcode/qrcode.js"
+#need_javascript_file:"qrcode/html5-qrcode.min.js"
+#need_javascript_file:"qrcode/html2canvas.min.js"
+#noWarning:"instruction_not_implemented"
+
+{
+    this.aoz.qrcode = this;
+	this.aoz.qrcode.utilities = aoz.utilities;
+	this.aoz.qrcode.banks = aoz.banks;
+	this.load_done = true;
+	this.resultScan = "";
+	this.scanEnabled = false;
+	this.scanner = undefined;
+	this.devices = undefined;
+	this.options = 
+	{
+		cameraId: "user",
+	};
+	
+	this.readerCamera = document.createElement( 'div' );
+	this.readerCamera.setAttribute( 'id', 'reader' )
+	document.body.appendChild( this.readerCamera );
+	
+	this.create = function( args )
+	{
+	
+		var text = args[ 0 ];
+		var numImage = args[ 1 ];
+		var width = args[ 2 ];
+		var height = args[ 3 ];
+		
+		if( text == undefined || text == null || text == '' )
+		{
+			throw 'qrcode_create_text_argument_missing';
+		}
+
+		if( numImage == undefined || numImage == null || isNaN( numImage ) )
+		{
+			throw 'qrcode_create_num_image_argument_missing';
+		}
+
+		if( width == undefined || width == null || isNaN( width ) )
+		{
+			throw 'qrcode_create_width_argument_missing';
+		}
+		
+		if( height == undefined || height == null || isNaN( height ) )
+		{
+			throw 'qrcode_create_height_argument_missing';
+		}
+		
+		this.load_done = false;
+		var qr = qrcode( 0 , 'H' );
+		qr.addData( text );
+		qr.make();
+		
+		var canvas = document.createElement( 'canvas' );
+		canvas.width = width;
+		canvas.height = height;
+		
+		var img = document.createElement( 'img' );
+		img.src = qr.createDataURL();
+	
+		var self = this;
+		img.onload = function()
+		{
+			canvas.getContext( '2d' ).drawImage( this, 0, 0, width, height );
+			self.aoz.qrcode.banks.insertImage( 'images', numImage, undefined, undefined, self.aoz.currentContextName, undefined, canvas );
+			self.load_done = true;
+		}
+
+	};
+
+	this.scan = function( value )
+	{
+		this.resultScan = "";
+		this.scanEnabled = value;
+		var self = this;
+
+		Html5Qrcode.getCameras().then(devices => {
+		  if( devices && devices.length ) {
+			self.devices = devices;
+		  }
+		}).catch(err => {
+		  throw 'qrcode_no_camera_available';
+		});		
+		
+		if( this.scanner == undefined )
+		{
+			this.scanner = new Html5Qrcode( "reader" );
+		}
+		
+		if( value )
+		{
+			const qrCodeSuccessCallback = message => 
+			{
+					console.log( message );
+					if( self.scanEnabled )
+					{
+						self.resultScan = message;
+					}
+					//this.readerCamera.style.display = 'none';
+					this.scanner.stop();
+					return;
+			};
+			
+			this.scanner.start( { facingMode: { exact: this.options.cameraId } }, { fps: 10, qrbox: 250 }, qrCodeSuccessCallback );
+		}
+		else
+		{
+			if( this.scanner )
+			{
+				this.scanner.stop();
+			}
+		}
+		
+	};
+
+	this.getResultScan = function()
+	{
+		if( this.resultScan && this.resultScan != "" )
+		{
+			var res = this.resultScan;
+			this.resultScan = "";
+			return res;
+		}
+		this.resultScan = "";
+		return "";
+	};
+
+	this.getCamera = function( args )
+	{
+		try
+		{
+			var video = undefined;
+			var elm = document.getElementById( 'reader' );
+			if( elm  && elm.childNodes && elm.childNodes.length > 0 )
+			{
+				video = elm.childNodes[ 0 ];
+			}
+			
+			if( video )
+			{
+			
+				var image = document.createElement( 'canvas' );
+				image.width = video.videoWidth;
+				image.height = video.videoHeight;
+				var ctx2 = image.getContext( '2d' );
+				ctx2.drawImage( video, 0, 0 );
+			
+				ctx2.beginPath();
+				ctx2.lineWidth = "6";
+				ctx2.strokeStyle = "white";
+				var size = video.videoWidth / 3;
+				ctx2.rect( ( video.videoWidth - size ) / 2, ( video.videoHeight - size ) / 2, size, size );
+				ctx2.stroke();
+
+				var canvas = document.createElement( 'canvas' );
+				canvas.width = args.width;
+				canvas.height = args.height;
+				var ctx = canvas.getContext( '2d' );
+				ctx.drawImage( image, 0, 0, args.width, args.height );
+				this.aoz.qrcode.banks.insertImage( 'images', args.image, undefined, undefined, this.aoz.currentContextName, undefined, canvas );
+			}
+		}
+		catch( e )
+		{
+			console.log( e );
+		}		
+	};
+	
+	this.load_wait = function()
+	{
+		return this.load_done;
+	};
+}
+
+/**doc
+@name:QR Code
+@description:Create and read QR Code with AOZ.
+@author:Baptiste Bideaux
+doc*/
+
+/**api
+@name:QRCode Create
+@description:Create an QRCode image from a text and assign it to an image number.
+@param:text$:string:Text associated to the QRCode.
+@param:imageIndex:index:Index of the image to use with the BOB instructions
+@param:width:integer:Width of the QRCode Image
+@param:height:integer:Height of the QRCode Image
+@compatible: aoz
+@content:
+api*/
+Instruction QRCode Create, text$, imageIndex=(index), width, height
+{
+	#errors
+	#waiting
+    return{type:12,waitThis:aoz.qrcode,callFunction:"create", waitFunction:"load_wait", args:[ %text$, %imageIndex, %width, %height ]};	
+	aoz.qrcode.create( %text$, %imageIndex, %width, %height );
+}
+End Instruction
+
+/**api
+@name:QRCode Scan
+@description:Setting up the QR Code reader.
+@param:cameraId$:string:One of the following IDs: "user" for the front camera, "environment" for the front camera
+@compatible: aoz
+@content:
+api*/
+Instruction QRCode Scan, cameraId$
+{
+	#errors
+	aoz.qrcode.options =
+	{
+		cameraId: %cameraId$,
+	};
+}
+End Instruction
+
+/**api
+@name:QRCode Scan On
+@description:Starts the QR Code reader.
+@compatible: aoz
+@content:
+api*/
+Instruction QRCode Scan On
+{
+	#errors
+	aoz.qrcode.scan( true );
+}
+End Instruction
+
+/**api
+@name:QRCode Scan Off
+@description:Stops the QR Code reader.
+@compatible: aoz
+@content:
+api*/
+Instruction QRCode Scan Off
+{
+	#errors
+	aoz.qrcode.scan( false );
+}
+End Instruction
+
+/**api
+@name:QRCode Scan$
+@description:Retrieves the text of the QR Code retrieved by the reader.
+@return:string:String containing the text of the QR Code retrieved by the reader.
+@compatible: aoz
+@content:
+api*/
+Function QRCode Scan$
+{
+	#errors
+}
+End Function( { aoz.qrcode.getResultScan() } )
+
+/**api
+@name:QRCode Get Camera
+@description:Store the image of the camera into the images banks, at the image number IMAGE.
+@param:imageIndex:index:Index of the image to use
+@param:width:integer:Width of the image
+@param:height:integer:Height of the image
+@compatible: aoz
+@content:
+You should to call the instruction "QRCode Scan On" before. This image can be used like any Bob.
+api*/
+Instruction QRCode Get Camera, imageIndex=(index), width, height
+{
+	#errors
+	aoz.qrcode.getCamera( { image: %imageIndex, width: %width, height: %height } ); 
+}
+End Instruction

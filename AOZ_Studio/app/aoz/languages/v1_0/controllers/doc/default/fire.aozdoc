@@ -1,0 +1,15 @@
+<i>Fire</i>
+<b>Fire</b> xxxxxxx
+=
+To set up a routine for testing to see if the fire-button has been pressed, use the FIRE function followed by the
+joystick port number. A value of True will be given only if the fire-button on the relevant joystick has been pressed.
+@code
+Do
+F=Fire(1)
+If F=-1 Then Centre "BANG!": Shoot
+Print
+Loop
+@code
+As a default, the SPACE key is mapped to replace FIRE in case no joystick is connected to the machine.
+You can edit this setting in the manifest of the application, or while creating the project.
+

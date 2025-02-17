@@ -1,0 +1,30 @@
+<i>UI Select</i>
+<b>UI Select</b> xxxxxxx
+=
+The items$ is a comma separated list of value:item pairs .
+
+For example:-
+items$ = "aoz:AOZ Studio is the best"
+
+The value part is "aoz" and the item part (the displayed text) is the text after the ":", which is "AOZ Studio is the best"
+@code
+// Display a select component with 3 dropdown list items
+UI Select "MySelect", items$="1:This is item 1,2:This is item 2,3:This is item 3"
+
+// To get the selected item value you can use the UI Value$ function
+Print UI Value$("MySelect")
+
+// You can set the selected item by setting its value$ parameter
+UI Radio "MySelect", value$="2"
+
+// You can also use the UI Value command
+UI Value "MySelect", value$="1"
+
+// Example using the onChange$
+UI Select "MySelect", y=550, items$="red:My favorite color is red,green:My favorite color is green,blue:My favorite color is blue", onChange$="SELECTCHANGE"
+
+Procedure SELECTCHANGE[ID$, VALUE$]
+Print "Your favorite color is " + VALUE$
+End Proc
+@code
+

@@ -1,0 +1,65 @@
+# Your keymap
+#
+# Atom keymaps work similarly to style sheets. Just as style sheets use
+# selectors to apply styles to elements, Atom keymaps use selectors to associate
+# keystrokes with events in specific contexts. Unlike style sheets however,
+# each selector can only be declared once.
+#
+# You can create a new keybinding in this file by typing "key" and then hitting
+# tab.
+#
+# Here's an example taken from Atom's built-in keymap:
+#
+# 'atom-text-editor':
+#   'enter': 'editor:newline'
+#
+# 'atom-workspace':
+#   'ctrl-shift-p': 'core:move-up'
+#   'ctrl-p': 'core:move-down'
+#
+# You can find more information about keymaps in these guides:
+# * http://flight-manual.atom.io/using-atom/sections/basic-customization/#customizing-keybindings
+# * http://flight-manual.atom.io/behind-atom/sections/keymaps-in-depth/
+#
+# If you're having trouble with your keybindings not working, try the
+# Keybinding Resolver: `Cmd+.` on macOS and `Ctrl+.` on other platforms. See the
+# Debugging Guide for more information:
+# * http://flight-manual.atom.io/hacking-atom/sections/debugging/#check-the-keybindings
+#
+# This file uses CoffeeScript Object Notation (CSON).
+# If you are unfamiliar with CSON, you can read more about it in the
+# Atom Flight Manual:
+# http://flight-manual.atom.io/using-atom/sections/basic-customization/#configuring-with-cson
+
+'atom-text-editor':
+  'home': 'editor:move-to-first-character-of-line'
+  'end': 'editor:move-to-end-of-screen-line'
+  'shift-home': 'editor:select-to-first-character-of-line'
+  'shift-end': 'editor:select-to-end-of-line'
+  'shift-escape': 'aoz-studio:pressEscape'
+
+  'f1': 'aoz-studio:run-browser'
+  'f2': 'aoz-studio:run-atom'
+  'shift-f2': 'aoz-studio:run-debugger'
+  'ctrl-f2': 'aoz-studio:test'
+  'ctrl-f7': 'aoz-studio:run-amiga'  
+  'ctrl-shift-f2': 'aoz-studio:run-atom-devtools'
+  'ctrl-shift-f3': 'aoz-studio:indent'
+  'ctrl-shift-f4': 'aoz-studio:recompile-all'
+  'f4': 'aoz-studio:next-error'
+  'shift-f4': 'aoz-studio:previous-error'
+#  'f5': 'aoz-studio:help-instruction'
+  'f6': 'aoz-studio:search-selection'
+#  'ctrl-f6': 'bookmarks:toggle-bookmark'
+#  'f6': 'bookmarks:jump-to-next-bookmark'
+#  'shift-f6': 'bookmarks:jump-to-previous-bookmark'
+  'ctrl-shift-c': 'aoz-studio:console'
+  'ctrl-shift-r': 'aoz-studio:restart'
+  'ctrl-p': 'aoz-studio:print'
+  'ctrl-shift-s': 'aoz-studio:save-file'
+  'ctrl-shift-t': 'aoz-studio:update-theme'
+  'ctrl-shift-u': 'aoz-studio:update-ide'
+  'ctrl-f4': 'core:close'
+  'cmd-f4': 'core-close'
+  
+  

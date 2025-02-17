@@ -1,0 +1,53 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'baloo' !important;
+    font-size: 10pt;
+}
+
+.se-pre-con {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background-color: #000;
+}
+
+.pre-loading-image {
+    background: url(preloader.gif) center no-repeat #000;
+    width: 100%;
+	height: 150px;
+	margin-top: 0px;
+}
+
+.pre-loading-subtitle {
+    margin-top: 0px;
+    width: 100%;
+    text-align: center;
+    color: #00FF00;
+    font-size: 25pt;
+	font-family: 'baloo' !important;
+}
+
+.game-title {
+	font-family: 'baloo' !important;
+	font-size: 50px !important;
+	color: #ADFEFD;
+}
+
+.form-signin-heading {
+	color: #fff;
+}
+
+.checkbox
+{
+	color: #fff;
+}
+
+.header-text {
+	color: #B89235;
+}
+
+.row-padding {
+	margin-bottom: 30px;
+}

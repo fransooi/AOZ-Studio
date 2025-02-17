@@ -1,0 +1,16 @@
+<i>Reserve As Chip Work</i>
+<b>Reserve As Chip Work</b> xxxxxxx
+=
+Note: this command is equivalent to "Reserve As Work" in AOZ.
+
+(extracted from the AMOSPro manual)
+
+This command allocates the selected block of temporary memory using Chip Ram, and it is often used with the DOUBLE BUFFERED sampling system, to play samples directly from hard disc. Here are some typical examples of
+the different RESERVE AS commands:
+@code
+Reserve As Chip Work 10,10000: Rem 10000 bytes of chip workspace to bank 10
+Reserve As Work 11,5000: Rem 5000 bytes of fast workspace to bank 11
+Reserve As Chip Data 12,2000 : Rem 2000 bytes of permanent chip data to bank 12
+Reserve as Data 13,1000 : Rem 1000 bytes of fast data to bank 13
+@code
+

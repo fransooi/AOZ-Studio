@@ -1,0 +1,473 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Debugging extension
+ * By Francois Lionet
+ *
+ * @author FL
+ * @date first pushed on 30/12/2020
+ *
+ */
+#basicRemarks:false
+
+/**doc 
+@name:Horizontal & vertical Slider
+@description:Instructions and functions to display a vertical or horizontal slider
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+	this.sliderSettings =
+	{
+		ink1: 0,
+		paper1: 0,
+		outline1: 1,
+		pattern1: 0,
+		ink2: 1,
+		paper2: 0,
+		outline2: 1,
+		pattern2: 0
+	};
+	this.drawSlider = function( args )
+	{
+		for ( var i in this.sliderSettings )
+		{
+			if ( typeof args[ i ] == 'undefined' )
+				args[ i ] = this.sliderSettings[ i ];
+		}
+		args.id = undefined;
+		new this.Slider( this.aoz, args );
+	};
+	this.setSlider = function ( args )
+	{
+		this.sliderSettings = args;
+	};
+
+	// Slider Javascript object
+	///////////////////////////////////////////////////////////////////////////
+	this.Slider = function( aoz, args )
+	{
+		this.aoz = aoz;
+		this.vars = 
+		{
+			id: undefined,
+			type: 'vertical',
+			x: 100,
+			y: 100, 
+			width: 10,
+			height: 100,
+			maximum: 100,
+			position: 0,
+			size: 10,
+			visible: true,
+			ink1: 0,
+			paper1: 0,
+			outline1: 1,
+			pattern1: 0,
+			ink2: 1,
+			paper2: 0,
+			outline2: 1,
+			pattern2: 0,
+			enabled: true
+		};
+		for ( var i in args )
+			this.vars[ i ] = args[ i ];
+		if ( this.vars.position < 0 || this.vars.maximum < 0 || this.vars.size <= 0 )
+			throw 'illegal_function_call';
+		if ( this.vars.position > this.vars.maximum )
+			throw 'illegal_function_call';
+		this.vars.maximum = Math.floor( this.vars.maximum );
+		this.vars.size = Math.floor( this.vars.size );
+
+		// Branch into AOZ.
+		this.screen = args.screen ? args.screen : this.aoz.currentScreen;
+		this.draw();
+		if ( typeof args.onChange != 'undefined' )
+			this.aoz.addExternalEventHandler( this, this.eventCallback, this.vars.id, {}, 100 );
+	};
+	this.Slider.prototype.destroy = function()
+	{
+		if ( typeof this.vars.id != 'undefined' )
+			this.aoz.removeExternalEventHandler( this.vars.id );
+	};
+	this.Slider.prototype.set_parameters = function( maximum, size )
+	{
+		this.vars.maximum = Math.floor( maximum );
+		this.vars.size = Math.floor( size );
+		this.draw();
+	};
+	this.Slider.prototype.set_maximum = function( value, noDraw )
+	{
+		if ( !this.mouseIsDown )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			if ( this.vars.position > value )
+				this.vars.position = Math.floor( value );
+			this.vars.maximum = value;
+			if ( !noDraw )
+				this.draw();
+		}
+	};
+	this.Slider.prototype.set_position = function( value, noDraw )
+	{
+		if ( !this.mouseIsDown )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			if ( value > this.vars.maximum )
+				value = this.vars.maximum;
+			this.vars.position = Math.floor( value );
+			if ( !noDraw ) 
+				this.draw();
+		}
+	};
+	this.Slider.prototype.set_size = function( value, noDraw )
+	{
+		if ( !this.mouseIsDown )
+		{
+			if ( value > this.vars.maximum )
+				value = this.vars.maximum;
+			this.vars.size = Math.floor( value );
+			if ( !noDraw )
+				this.draw();
+		}
+	};
+	this.Slider.prototype.set_visible = function( onOff )
+	{
+		if ( onOff != this.vars.visible )
+		{
+			this.vars.visible = onOff;
+			if ( onOff )
+				this.draw();
+		}
+	};
+	this.Slider.prototype.is_visible = function()
+	{
+		return this.vars.visible;
+	};
+	this.Slider.prototype.is_enabled = function()
+	{
+		return this.vars.enabled;
+	};
+	this.Slider.prototype.set_enabled = function( onOff )
+	{
+		if ( this.vars.enabled != onOff )
+		{
+			this.vars.enabled = onOff;
+			this.mouseIsDown = false;
+			this.mouseDown = false;
+		}
+	};
+	this.Slider.prototype.set_rectangle = function( rectangle )
+	{
+		this.vars.x = typeof rectangle.x == 'undefined' ? this.vars.x : rectangle.x;
+		this.vars.y = typeof rectangle.y == 'undefined' ? this.vars.y : rectangle.y;
+		this.vars.width = typeof rectangle.width == 'undefined' ? this.vars.width : rectangle.width;
+		this.vars.height = typeof rectangle.height == 'undefined' ? this.vars.height : rectangle.height;
+	};
+	this.Slider.prototype.eventCallback = function( type, event, extra )
+	{
+		if ( !this.vars.visible || !this.vars.enabled )
+			return event;
+
+		switch ( type )
+		{
+			case 'mousedown':
+				if ( this.aoz.utilities.pointInRect( this.xMouse, this.yMouse, this.vars ) )
+				{
+					this.mouseDown = true;
+					type = 'test';
+				}
+				break;
+			case 'mouseup':
+				this.mouseDown = false;
+				type = 'test';
+				break;
+			case 'mousemove':
+				this.xMouse = ( event.aozInfo.x - this.screen.vars.x ) / this.screen.renderScale.x / this.screen.vars.scaleX + this.screen.vars.offsetX;
+				this.yMouse = ( event.aozInfo.y - this.screen.vars.y ) / this.screen.renderScale.y / this.screen.vars.scaleY + this.screen.vars.offsetY;
+				response = 'test';
+				break;
+		}
+		if ( type == 'test' )
+		{
+			if ( this.mouseDown )
+			{
+				if ( !this.mouseIsDown )
+				{
+					this.mouseIsDown = true;
+					this.xMouseStart = this.xMouse; 
+					this.yMouseStart = this.yMouse; 
+					this.positionStart = this.vars.position;
+					this.dragging = false;
+					this.inBox = this.aoz.utilities.pointInRect( this.xMouse, this.yMouse, this.boxRect );
+				}
+				if ( this.mouseIsDown )
+				{
+					var position;
+					var computedWidth = this.vars.width;	// - this.vars.size * this.vars.width / this.vars.maximum;
+					var computedHeight = this.vars.height - this.vars.size * this.vars.height / this.vars.maximum;
+					if ( this.inBox )
+					{
+						position = this.positionStart;
+						if ( !this.dragging )
+						{
+							if ( this.vars.type == 'vertical' )	
+							{
+								if ( Math.abs( this.yMouse - this.yMouseStart ) > 5 )
+								{
+									this.dragging = true;
+									this.yMouseStart = this.yMouse; 
+								}
+							}
+							else 
+							{
+								if ( Math.abs( this.xMouse - this.xMouseStart ) > 5 )
+								{
+									this.dragging = true;
+									this.xMouseStart = this.xMouse; 
+								}
+							}
+						}
+						if ( this.dragging )
+						{
+							if ( this.vars.type == 'vertical' )
+								position = ( this.yMouse - this.yMouseStart ) / computedHeight * this.vars.maximum + this.positionStart;
+							else
+								position = ( this.xMouse - this.xMouseStart ) / computedWidth * this.vars.maximum + this.positionStart;						
+						}
+					}
+					else
+					{
+						position = this.vars.position;
+						if ( this.vars.type == 'vertical' )
+							position = ( this.yMouse - this.vars.y ) / computedHeight * this.vars.maximum;
+						else
+							position = ( this.xMouse - this.vars.x ) / computedHeight * this.vars.maximum;
+					}
+					position = Math.min( Math.max( Math.floor( position ), 0 ), this.vars.maximum - this.vars.size );
+					if ( position != this.vars.position )
+					{
+						this.vars.position = position;
+						this.draw();
+						if ( this.vars.onChange )
+							this.aoz.runProcedure( this.vars.onChange, { ID$: this.vars.id, POSITION: this.vars.position } );
+						if ( this.vars.onChangeCallback )
+							this.vars.onChangeCallback.call( this.vars.onChangeThis, { id: this.vars.id, position: this.vars.position } );
+					}
+				}
+				return null;			// Stop event handling
+			}
+			else
+			{
+				this.mouseIsDown = false;
+
+				var position;
+				var computedWidth = this.vars.width; // - this.vars.size * this.vars.width / this.vars.maximum;
+				var computedHeight = this.vars.height - this.vars.size * this.vars.height / this.vars.maximum;
+				position = ( this.xMouse - this.vars.x ) / computedWidth * this.vars.maximum;						
+			}
+		};
+		return event;
+	};
+	this.Slider.prototype.draw = function()
+	{
+		if ( this.vars.visible )
+		{
+			// Whole area
+			this.screen.setPaint( true );
+			this.screen.setPattern( this.vars.pattern1 );
+			this.screen.setInk( this.vars.paper1, this.vars.ink1, this.vars.outline1 );
+			this.screen.bar( { x: this.vars.x, y: this.vars.y, width: this.vars.width, height: this.vars.height } );
+
+			// Box
+			var sliderStart = this.vars.position / this.vars.maximum;
+			var sliderEnd  = ( this.vars.position + this.vars.size ) / this.vars.maximum;
+			this.screen.setPattern( this.vars.pattern2 );
+			this.screen.setInk( this.vars.ink2, this.vars.ink2, this.vars.outline2 );
+			if ( this.vars.type == 'vertical' )
+				this.boxRect = { x: this.vars.x, y: this.vars.y + sliderStart * this.vars.height, width: this.vars.width, height: ( sliderEnd - sliderStart ) * this.vars.height };
+			else
+				this.boxRect = { x: this.vars.x + sliderStart * this.vars.width, y: this.vars.y, width: ( sliderEnd - sliderStart ) * this.vars.width, height: this.vars.height };
+			this.screen.setClip( this.vars );
+			this.screen.bar( this.boxRect );
+			this.screen.clipOff();
+		}
+	};
+}
+
+/*
+Class Slider, x = 100, y = 100, width = 10, height = 100, type$ = "vertical", maximum = 100, position = 0, size = 10, ink1 = 1, paper1 = 0, outline1 = 0, pattern1 = 0, ink2 = 1, paper2 = 0, outline2 = 0, pattern2 = 0, onChnage$
+	{
+		#class:"Ide"
+	this.slider.prototype.set_onChange$ = function( value )
+	{
+		this.vars.onChange$ = value;
+	};
+	this.slider.prototype.set_ink1 = function( value )
+	{
+		this.vars.ink1 = value;
+	};
+	this.slider.prototype.set_ink2 = function( value )
+	{
+		this.vars.ink2 = value;
+	};
+	this.slider.prototype.set_paper1 = function( value )
+	{
+		this.vars.paper1 = value;
+	};
+	this.slider.prototype.set_paper2 = function( value )
+	{
+		this.vars.paper2 = value;
+	};
+	this.outline1 = function( value )
+	{
+		this.vars.ouline1 = value;
+	};
+	this.outline2 = function( value )
+	{
+		this.vars.outline2 = value;
+	};
+	this.pattern1 = function( value )
+	{
+		this.vars.pattern1 = value;
+	};
+	this.pattern2 = function( value )
+	{
+		this.vars.pattern2 = value;
+	};
+
+	}
+End Class
+*/
+
+/**api
+@name:HSlider
+@description:Initialize the debugging system
+@param:x1:number:Horizontal coordinate of the top-left corner of the slider
+@param:y1:number:Vertical coordinate of the top-left corner of the slider
+@param:x2:number:Horizontal coordinate of the bottom-right corner of the slider
+@param:y2:number:Vertical coordinate of the bottom-right corner of the slider
+@param:max:number:Maximum value displayed by the slider
+@param:position:number:Current position of slider box (expressed relative to the "max" parameter)
+@param:size:number:Width of the slider box (expressed relative to the "max" parameter)
+@compatible: aoz
+@content:
+Horizontal slider bars are set up by giving the HSLIDER command, qualified by the following parameters: 
+the x,y-coordinates of the top left-hand corner of the bar in pixels 
+followed by the x,y-coordinates of the bottom right-handcorner, 
+then the number of individual units that the slider is divided into. 
+
+Next, you must specify the position of theactive slider box or control button from the left-hand end of the slider, 
+measured in the same sized units as the sliderdivisions. 
+
+Finally, give the length of the slider control box in these units. 
+
+Here is an example:
+
+~~~
+Hslider 10,10 To 100,20,100,20,5   Hslider 10,50 To 150,100,25,10,10
+~~~
+api*/
+
+Instruction HSlider, x1 = 100, y1 = 100 To x2 = 300, y2 = 120, max = 100, position = 0, size = 10
+{
+	#errors
+	aoz.ext_slider.drawSlider( { type: 'horizontal', x: %x1, y: %y1, width: %x2 - %x1, height: %y2 - %y1, maximum: %max, position: %position, size: %size } );
+}
+End Instruction
+
+/**api
+@name:VSlider
+@description:Display a vertical slider
+@param:x1:number:Horizontal coordinate of the top-left corner of the slider
+@param:y1:number:Vertical coordinate of the top-left corner of the slider
+@param:x2:number:Horizontal coordinate of the bottom-right corner of the slider
+@param:y2:number:Vertical coordinate of the bottom-right corner of the slider
+@param:max:number:Maximum value displayed by the slider
+@param:position:number:Current position of slider box (expressed relative to the "max" parameter)
+@param:size:number:Width of the slider box (expressed relative to the "max" parameter)
+@compatible: aoz, amos
+@content:
+Horizontal slider bars are set up by giving the HSLIDER command, qualified by the following parameters: 
+the x,y-coordinates of the top left-hand corner of the bar in pixels 
+followed by the x,y-coordinates of the bottom right-handcorner, 
+then the number of individual units that the slider is divided into. 
+
+Next, you must specify the position of theactive slider box or control button from the left-hand end of the slider, 
+measured in the same sized units as the sliderdivisions. 
+
+Finally, give the length of the slider control box in these units. 
+
+Here is an example:
+
+~~~
+VSlider 10,10 To 20,200,100,20,5   
+~~~
+api*/
+Instruction VSlider, x1 = 100, y1 = 100 To x2 = 300, y2 = 120, max = 100, position = 0, size = 10
+{
+	#errors
+	aoz.extensionSlider.drawSlider( { type: 'vertical', x: %x1, y: %y1, width: %x2 - %x1, height: %y2 - %y1, maximum: %max, position: %position, size: %size } );
+}
+End Instruction
+
+/**api
+@name:Set Slider
+@description:Define the colors and patterns of the next created slider
+@param:ink1:Ink to use to draw the slider area
+@param:paper1:number:Color of the background of the slider area
+@param:outline1:number:Ink to use to draw the shape of the surrounding slider box
+@param:pattern1:number:Pattern to use to fill the inside of the slider's box
+@param:ink12Ink to use to draw the moveable slider box
+@param:paper2:number:Color of the background of the moveable slider box
+@param:outline2:number:Ink to use to draw the shape of the moveable slider box
+@param:pattern2:number:Pattern to use to fill the inside of the moveable slider box
+@compatible: aoz, amos
+@content:
+SET SLIDER is used to set up the colours and patterns used for your slider bars and their control boxes.
+
+Simply give the index numbers of the ink, paper, outline and pattern to be used for the slider bar, followed by the
+ink paper, outline and pattern to be used by the slider control box. If negative values are used for either pattern, a
+sprite image will be commandeered from the sprite bank, allowing even more spectacular effects. Try this example:
+~~~                
+Centre "<Press a key>" : Curs Off
+Do
+	A1=Rnd(15) : B1=Rnd(15) : C1=Rnd(15) : D1=Rnd(24)
+	A2=Rnd(15) : B2=Rnd(15) : C2=Rnd(15) : D2=Rnd(24)
+	Set Slider Al ,B1,C1,D1,A2,B2,C2,D2
+	Hslider 10,10 To 300,60,100,20,25
+	Vslider 10,60 To 20,190,100,20,25
+	Wait Key
+Loop
+~~~
+Having set up your slider bars, you will want to activate them using the mouse. A simple routine to create working
+slider bars needs to be included in your main program. As always, remember to test out the ready-made example
+programs, for a working guide.
+api*/
+Instruction Set Slider, ink1 = 1, paper1 = 0, outline1 = 1, pattern1 = 0, ink2 = 1, paper2 = 0, outline2 = 1, pattern2 = 0
+{
+	aoz.ext_slider.setSlider( { ink1: %ink1, paper1: %paper1, outline1: %outline1, ink2: %ink2, paper2: %paper2, outline2: %outline2, pattern2: %pattern2 } );
+}
+End Instruction
+

@@ -1,0 +1,9 @@
+<i>Auto View Off</i>
+<b>Auto View Off</b> xxxxxxx
+=
+When SCREEN OPEN is used to create a new screen, the screen is usually displayed at once. This may be
+inconvenient during the initialisation stages of a program, in which case the AUTO VIEW OFF command can be
+used to disable this automatic display system. Screens can then be updated at a convenient point, using the VIEW
+instruction. To re-activate the automatic screen updating system, use the AUTO VIEW ON command.
+
+

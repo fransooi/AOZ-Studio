@@ -1,0 +1,119 @@
+{
+    zones_commands:
+    { 
+        name: "Zones Commands"
+        intro: ""
+        conclusion: ""
+        commands:
+        {
+
+
+            "reset_zone":
+            [
+                This command is used to nullify a zone created by the SET ZONE instruction. On its own, RESET ZONE
+permanently de-activates all zone settings, but if it is qualified by a zone number, only that zone will be erased. The
+RESET ZONE instruction does not return the memory allocated by RESERVE ZONE to the main program.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "zone$":
+            [
+                The AOZ Studio programmer is allowed to create powerful dialogue boxes and on- screen control panels
+without the need to employ complex programming. The ZONES function surrounds a section of text with its own
+screen zone, so that the presence of the mouse pointer can be detected using the ZONE function. Simply supply the
+two parameters in brackets, which are the string of text for one of your control "buttons", followed by the number of
+the screen zone to be defined.
+""
+The maximum number of zones will be limited by the value specified in a previous RESERVE ZONE command.
+The format for the control string is as follows:
+
+                '''
+                ~~~                
+		Chr$(27)+"ZO"+A$+Chr$(27)+"R"+Chr$(48+n)
+                ~~~
+                '''
+            ]
+            "set_zone":
+            [
+                After memory has been allocated with the RESERVE ZONE command, SET ZONE is used to define a rectangular
+area of the screen which can be tested by the various ZONE functions. The command is followed by the number of
+the new zone, followed by its coordinates from top left to bottom right-hand corner.
+
+            ]
+            "zone":
+            [
+                The ZONE function is used to give the number of the screen zone at the specified screen coordinates x,y. These
+coordinates are normally relative to the current screen, but an optional screen number can be included before the
+coordinates.
+""
+After the ZONE function has been called, the number of the first zone at these coordinates will be returned, or a
+value of zero (False) will be given if no zone is detected.
+""
+This function can be used with the X BOB and Y BOB functions to detect whether or not a Bob has entered a
+specific screen zone, as follows:
+
+                '''
+                ~~~                
+		   N=Zone(X Bob(n),Y Bob(n))
+                ~~~
+                '''
+            ]
+            "hzone":
+            [
+                The HZONE function is identical to ZONE, except for the fact that the position on screen is measured in hardware
+coordinates. This means that this function can be used to detect the presence of a hardware Sprite in one of the
+screen zones, in this format:
+                '''
+                ~~~                
+		   N=Hzone(X Sprite(n),Y Sprite(n))
+                ~~~
+                '''
+            ]
+            "mouse_zone": //TODO
+            [
+                This is a short reminder that the MOUSE ZONE function is used to check whether the mouse pointer has entered a zone, as outlined in Chapter 5.8.
+
+            ]
+            "zone_on": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "zone_off": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "zones_length": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "zone_enabled": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            
+        }
+    }
+}

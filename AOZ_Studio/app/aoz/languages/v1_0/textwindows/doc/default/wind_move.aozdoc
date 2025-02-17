@@ -1,0 +1,16 @@
+<i>Wind Move</i>
+<b>Wind Move</b> xxxxxxx
+=
+The current window can be moved to any acceptable graphic coordinates. Give the new x,y- coordinates after the
+WIND MOVE command, and the x-coordinate will be rounded to the nearest 16-pixel boundary automatically.
+
+Here is an example:
+@code
+Wind Save : Wind Open 1,0,2,30,10,1 : Wind Save
+For M=1 To 100
+Pen Rnd(15) : Paper Rnd(15) : Print : Centre "Making Movies"
+Wind Move Rnd(30)+1,Rnd(100)+1
+Wait Vbl
+Next
+@code
+

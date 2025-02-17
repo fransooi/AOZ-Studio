@@ -1,0 +1,12 @@
+<i>Menu On</i>
+<b>Menu On</b> xxxxxxx
+=
+Use this command to initialise the menu previously defined by a MENU$, and the menu line will appear when the right mouse button is pressed. To activate the previous example, add the following lines:
+@code
+Menu On
+Wait Key
+@code
+Trigger the menu and its options now, and use the left mouse button to re-locate the title bar. Now that this simple
+menu has been activated, the selected options must be read and reported back to the system.
+
+

@@ -1,0 +1,8 @@
+<i>Space$</i>
+<b>Space$</b> xxxxxxx
+=
+Try the following example:
+@code
+Print "Ten";Space$(10);"spaces"
+@code
+

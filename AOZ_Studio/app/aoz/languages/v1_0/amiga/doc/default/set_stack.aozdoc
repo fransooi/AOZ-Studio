@@ -1,0 +1,25 @@
+<i>Set Stack</i>
+<b>Set Stack</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+When AMOS procedures call themselves, an "Out of stack space" error message will be generated
+after about fifty loops. Use the SET STACK instruction by specifying the new number of procedure calls that an be
+made.
+
+Keeping track of procedures
+To help you find the starting positions of procedures in a very long program, there is a simple short-cut that uses just
+two keys.
+
+By pressing [Alt] and [Down Arrow] together, the edit cursor automatically jumps to the next procedure definition
+in your program. To jump to the previous procedure, press [Alt] and [Up Arrow] together. This shortcut works
+equally well with labels and line numbers!
+
+If you are using several procedures on the same line, you can avoid the risk of a procedure being confused with a
+label by adding an extra space at the end of each statement. For example:
+@code
+HEY: HEY: HEY: Rem Perform HEY procedure three times
+HEY: HEY: HEY: Rem Define label HEY and perform HEY procedure twice
+@code
+
+

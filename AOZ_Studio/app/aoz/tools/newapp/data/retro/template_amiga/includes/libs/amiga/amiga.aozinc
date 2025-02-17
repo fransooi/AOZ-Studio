@@ -1,0 +1,6 @@
+PLATFORM$ = "aoz"
+Global PLATFORM$
+
+Procedure _CHECK_PLATFORM
+	If Exist( "amiga" ) Then PLATFORM$ = "amiga"
+End Proc

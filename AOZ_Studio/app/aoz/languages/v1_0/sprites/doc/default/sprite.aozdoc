@@ -1,0 +1,12 @@
+<i>Sprite</i>
+<b>Sprite</b> xxxxxxx
+=
+The SPRITE function assigns an image to a Sprite, and displays it at the selected (hardware) coordinates.
+
+This example demonstrate the use of object-orientation with the Sprite function.
+@code
+MYSPRITE@ = Sprite( 1, 100, 100, 1 )
+MYSPRITE@Add Circular Movement, Ray = 200
+Wait Key
+@code
+

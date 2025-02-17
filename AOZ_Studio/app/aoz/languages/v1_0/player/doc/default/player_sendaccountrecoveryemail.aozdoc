@@ -1,0 +1,24 @@
+<i>Player SendAccountRecoveryEmail</i>
+<b>Player SendAccountRecoveryEmail</b> xxxxxxx
+=
+The "local" engine does not support sending account recovery emails.
+
+Here is an example using the PlayFab engine.
+@code
+Player Initialise Engine$="playfab", Key$="51D14"
+
+Print "Account Recovery": Print "================"
+EMAIL$ = "": PASSWORD$ = ""
+Input "Enter Email: "; EMAIL$
+
+If EMAIL$ <> ""
+Player SendAccountRecoveryEmail email$=EMAIL$
+
+If Player ErrorCode() <> 0
+Print Player ErrorMessage$()
+Else
+Print "Email has been sent"
+End If
+End If
+@code
+

@@ -1,0 +1,8 @@
+<i>Screen Swap</i>
+<b>Screen Swap</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This is the command that swaps over the physical and logical screens, so that the displays are instantly switched
+between the two of. them. If the DOUBLE BUFFER command has been engaged, this process is automatic.
+

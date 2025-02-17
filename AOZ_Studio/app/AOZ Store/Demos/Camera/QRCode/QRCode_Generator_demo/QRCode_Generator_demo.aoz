@@ -1,0 +1,21 @@
+//
+// Demonstration of the AOZ QR Code Generator
+// By Baptiste Bideaux
+//
+// (c) AOZ Studio 2020
+//
+GO:
+Rem Wait a text
+Cls 0 : Input "Please, enter a text: "; TXT$
+
+Rem Create the QR Code with the text
+Rem and store the image generated in the images bank at the index 1.
+Rem The image size is defined to 320x320 pixels
+QRCode Create TXT$, 1 , 320, 320
+
+Rem Show a Bob with the QR Code image
+Rem You can to test the result with your smartphone ;)
+Bob 1,( Screen Width - 320 ) / 2, (Screen Height - 320 ) / 2, 1
+
+Rem Ask a new text
+Goto GO

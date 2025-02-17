@@ -1,0 +1,6 @@
+<i>Console Print</i>
+<b>Console Print</b> xxxxxxx
+=
+This function will print the given text, on several individual line if the text contains new line characters
+without displaying the command prompt first. use this function to display the result of a command.
+

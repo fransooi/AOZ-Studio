@@ -1,0 +1,10 @@
+<i>YGr</i>
+<b>YGr</b> xxxxxxx
+=
+Use these functions to find the current coordinates of the graphics cursor, which is the default location for future
+drawing operations. For example:
+@code
+Cls : Circle 100,100,50
+Print Xgr,Ygr
+@code
+

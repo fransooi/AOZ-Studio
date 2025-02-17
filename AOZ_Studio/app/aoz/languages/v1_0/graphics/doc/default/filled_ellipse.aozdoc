@@ -1,0 +1,12 @@
+<i>Filled Ellipse</i>
+<b>Filled Ellipse</b> xxxxxxx
+=
+After the x,y-coordinates have set the centre location, two radii must be given,
+one to set the horizontal width and the second to set the height of the ellipse. Coordinates may be omitted as usual,
+providing the commas remain in place. For example:
+@code
+Filled Ellipse 100,100,50,20
+Filled Ellipse ,,20,50
+@code
+
+

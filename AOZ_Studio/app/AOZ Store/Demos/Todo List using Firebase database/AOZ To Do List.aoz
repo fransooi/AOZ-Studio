@@ -1,0 +1,763 @@
+// #######################################################################
+// AOZ To Do List V1.3
+// By Phil Bell
+// Created 22 June 2021
+// phil@aozwithphil.com
+// #######################################################################
+// A simple to do list database application for demonstration purposes
+//
+// Check out the YouTube walk through video:
+// https://youtu.be/CWZx13otBio
+//
+// Uses The Google Firebase Platform for authentication and data storage
+// The Google Firestore Database is a NoSQL cloud database
+//
+// Check out the Firebase documentation here:
+// https://firebase.google.com/docs/firestore
+//
+// Check out the open source FirebaseUI (pre-built sign in UI) here:
+// https://github.com/firebase/firebaseui-web/blob/master/README.md
+//
+// NOTE !! The Google and Github sign in methods will not work when
+//         running locally as it is restricted to a configured domain in
+//         the Firebase console. If you publish the app it will work fine
+//
+//		   I have deployed the app on https://aozwithphil.com/aoztodolist/
+//		   where you can sign in using a google or Github account
+//
+// #######################################################################
+// Date: 	23 June 2021
+// Author: 	Phil Bell
+// Desc:	Added Update item function
+// #######################################################################
+// Date: 	24 June 2021
+// Author: 	Phil Bell
+// Desc:	Added CanvasInput - recreates a html Input element within
+//			a HTML5 Canvas
+//			https://github.com/goldfire/CanvasInput
+//			MIT License
+// #######################################################################
+// Date: 	26 June 2021
+// Author: 	Phil Bell
+// Desc:	Extended CanvasInput.js to support passwords
+//			Wrapped the CanvasInput into AOZ Procedures for easy reuse
+// #######################################################################
+
+#useAssetsResources:False
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#googleFont:"baloo"
+#fps:false
+#clean:true
+#googleFont:"allerta stencil"
+#googleFont:"baloo"
+
+// Disable [ctrl]+[c] so we can use this keyboard shortcut to copy text in the input text box
+Break Off
+Curs Off
+Reserve Zone 4
+
+VERSION$ = "1.3"
+DW = 1920: DH = 1080
+Global DW, DH
+
+USER_SIGNED_IN = 0				// Tracks if the user is authenticated with Firebase
+USER_DISPLAY_NAME$ = ""			// The users display name
+USER_EMAIL$ = ""				// The users email
+USER_ID$ = ""					// The Firebase authentication unique identifier for the user
+
+REQUEST_COMPLETED = 0
+REQUEST_SUCCESS = 0
+Global REQUEST_COMPLETED, REQUEST_SUCCESS, USER_SIGNED_IN, USER_DISPLAY_NAME$, USER_EMAIL$, USER_ID$
+
+TODO_TOTAL = 0
+SELECTED_ITEM = 1
+BUTTON_PRESS = 0
+KEY_TRIGGER = 0
+Dim TODO_ID$(1000): Dim TODO_TEXT$(1000):
+Global TODO_ID$(), TODO_TEXT$(), TODO_TOTAL, KEY_TRIGGER
+
+{
+	document.title = "AOZ To Do List - By Phil Bell"
+	// Enable developer mode so we can press F12 to get to the browser developer tools
+	window.application.aoz.developerMode = true;
+}
+
+// Add a browser dom element to the html body tag, required for the firebase signin UI
+Dom Element "div", "firebaseui-auth-container"
+Dom Add "firebaseui-auth-container", "body"
+
+// Load required firebase api's
+Load JS "https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"
+Load JS "https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"
+Load JS "https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"
+Load JS "https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.js"
+Load CSS "https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.css"
+
+// Load custom input function
+Load JS "resources/custom/CanvasInput.js"
+Load CSS "resources/custom/CanvasInput.css"
+
+INPUT_SUBMIT = 0
+Global INPUT_SUBMIT
+
+// Wait here until the firebase API is loaded and available to use
+JS_LOADED = 0
+Repeat
+	Wait Vbl
+	{
+		if (typeof firebase === 'object') {
+			if (firebase.auth) {
+				vars.JS_LOADED = 1;
+			};
+		};
+	}
+Until JS_LOADED = 1
+
+JS_LOADED = 0
+Repeat
+	Wait Vbl
+	{
+		if (typeof firebaseui === 'object') {
+			vars.JS_LOADED = 1;
+		};
+	}
+Until JS_LOADED = 1
+
+JS_LOADED = 0
+Repeat
+	Wait Vbl
+	{
+		if (typeof CanvasInput === 'function') {
+			vars.JS_LOADED = 1;
+		};
+	}
+Until JS_LOADED = 1
+
+// Initialize firebase and get the current authentication state
+{
+	self = this;
+
+	// These settings are provided in the Google Firebase Console
+	var firebaseConfig = {
+      apiKey: "AIzaSyDrliSyoppHV04H5YPJzFWHShZPKN7Hqyc",
+      authDomain: "aoztodolist.firebaseapp.com",
+      projectId: "aoztodolist",
+      storageBucket: "aoztodolist.appspot.com",
+      messagingSenderId: "368013118634",
+      appId: "1:368013118634:web:858cf209e7896d1c5b14d3"
+    };
+
+	// Initialize Firebase
+	firebase.initializeApp(firebaseConfig);
+
+	// Gets and monitors the current authentication state
+	// The firebase.auth default configuration is to persist when you close the browser
+	// This default behavior can be changed, see https://firebase.google.com/docs/auth/web/auth-state-persistence
+	firebase.auth().onAuthStateChanged(function(user) {
+	  if (user) {
+		// User is signed in.
+		user.getIdToken().then(function(accessToken) {
+			self.root.vars.USER_DISPLAY_NAME$ = user.displayName;
+			self.root.vars.USER_EMAIL$ = user.email;
+			self.root.vars.USER_ID$ = user.uid;
+			self.root.vars.USER_SIGNED_IN = 1;
+			self.root.vars.REQUEST_COMPLETED = 1
+		});
+
+	  } else {
+		// User is signed out.
+		self.root.vars.USER_DISPLAY_NAME$ = "";
+		self.root.vars.USER_EMAIL$ = "";
+		self.root.vars.USER_ID$ = "";
+		self.root.vars.USER_SIGNED_IN = 0;
+		self.root.vars.REQUEST_COMPLETED = 1
+	  }
+	});
+}
+
+// Wait here until we have the auth state response
+Repeat
+	Wait Vbl
+Until REQUEST_COMPLETED = 1
+
+DO_USER_SIGN_IN:
+	// Show login UI if not signed in
+	If USER_SIGNED_IN = 0
+		// Hide the AOZ canvas
+		AOZ Hide
+
+		{
+			var uiConfig = {
+
+			  signInOptions: [
+				// There are many other sign in methods available
+				// They need to be configured in the firebase console
+				firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+				firebase.auth.GithubAuthProvider.PROVIDER_ID,
+				{
+				  provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+				  // Whether the display name should be displayed in the Sign Up page.
+				  requireDisplayName: true
+				},
+			  ],
+			  callbacks: {
+				  signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+					 return false; // Just tells the UI not to redirect
+				  },
+				  signInFailure: function(error) {
+					// Some unrecoverable error occurred during sign-in.
+					return false;
+				  },
+			  },
+			  tosUrl: 'https://aozwithphil.com/privacypolicy.html',
+			  privacyPolicyUrl: function() {
+				window.location.assign('https://aozwithphil.com/privacypolicy.html');
+			  }
+			};
+
+			// Initialize the FirebaseUI Widget using Firebase.
+			// The FirebaseUI is an open source project providing pre-build sign in UI's
+			if (!this.root.vars.ui) {
+				this.root.vars.ui = new firebaseui.auth.AuthUI(firebase.auth());
+			}
+
+			// The start method will wait until the DOM is loaded.
+  		    this.root.vars.ui.start('#firebaseui-auth-container', uiConfig);
+		}
+
+		// Wait until the user has signed in
+		Repeat
+			Wait Vbl
+		Until USER_SIGNED_IN = 1
+
+		// Show the AOZ canvas
+		AOZ Show
+	End If
+
+
+MAIN_MENU:
+
+	REQUEST_COMPLETED = 0
+	{
+		self = this;
+		var db = firebase.firestore();
+
+		// Gets all the to do list items for this user from the Firestore Database
+		// Note - This will fail if the user is not authenticated
+		db.collection("todolist").where("userId", "==", self.root.vars.USER_ID$).orderBy("timestamp").limit(1000)
+		    .get()
+		    .then((querySnapshot) => {
+
+				var i = 0;
+
+		        querySnapshot.forEach((doc) => {
+					// Populate the AOZ Array Variables with the returned data
+					var data = doc.data();
+					// This is the unique identifier for the record in the database
+					// We need this id when we want to delete an item
+					var id = doc.id;
+					self.root.vars.TODO_ID$_array.setValue([i], id);
+					self.root.vars.TODO_TEXT$_array.setValue([i], data.toDoText);
+					i++;
+		        });
+
+				// Track the total number of database records
+				self.root.vars.TODO_TOTAL = i;
+				self.root.vars.REQUEST_COMPLETED = 1;
+		    })
+		    .catch((error) => {
+				self.root.vars.REQUEST_COMPLETED = 1;
+				console.log(error);
+		    });
+	}
+
+	// Wait here until the items have been retrieved from the database
+	Repeat
+		Wait Vbl
+	Until REQUEST_COMPLETED = 1
+
+DISPLAY_TO_DO_LIST:
+
+	Gosub DISPLAY_HEADER
+
+	// Scroll offset
+	offset = 0
+
+	IF TODO_TOTAL > 0
+		// Limit the selected item
+		If SELECTED_ITEM > TODO_TOTAL
+			SELECTED_ITEM = TODO_TOTAL
+		End If
+
+		// Set the offset when scrolling (page size 15)
+		If SELECTED_ITEM > 15
+			offset = SELECTED_ITEM - 15
+		End If
+
+		// Show the list of to do items
+		For i = offset to Min(offset + 15, TODO_TOTAL) - 1
+			If (i + 1) = SELECTED_ITEM
+				Pen 11
+				Locate 1, i + 4 - offset: Print "*"
+			Else
+				Pen 1
+			End If
+			Locate 3, i + 4 - offset: Print Str$(i + 1)
+
+			ITEM$ = TODO_TEXT$(i)
+			If Len(ITEM$) > 70
+				ITEM$ = Mid$(ITEM$,0, 67) + "..."
+			End If
+
+			Locate 8, i + 4 - offset: Print ITEM$
+		Next i
+	Else
+		Set Font "allerta stencil", 60
+		Ink 11: Text DW / 2, DH / 2 - 100,"Well Done !!", "#center"
+		Set Font "allerta stencil", 40
+		Ink 1: Text DW / 2, DH / 2,"Your to do list is empty", "#center"
+	End If
+
+	// Show footer menu
+	//[x, y, width, height, borderWidth, txt$, fontSize, txtYoffset, mouseZone, borderColour, fontColour]
+	SetupButton[ 350, DH - 115, 250, 80, 5, "Add", 40, 12, 1, 11, 3]
+	SetupButton[ 650, DH - 115, 250, 80, 5, "Edit", 40, 12, 2, 16, 3]
+	SetupButton[ 950, DH - 115, 250, 80, 5, "Delete", 40, 12, 3, 6, 3]
+	SetupButton[ 1250, DH - 115, 250, 80, 5, "Log Out", 40, 12, 4, 3, 3]
+
+	Do
+		Gosub UPDATE_MOUSE
+
+		If Mouse Click
+			If Mouse Zone = 1: Goto ADD_TO_DO_LIST: End If
+			If Mouse Zone = 4: Goto SIGN_OUT: End If
+			If TODO_TOTAL > 0 and Mouse Zone = 3: Goto DELETE_TO_DO_ITEM: End If
+			If TODO_TOTAL > 0 and Mouse Zone = 2: Goto UPDATE_TO_DO_ITEM:End If
+		End If
+
+		// Enter Key
+		If KEY_TRIGGER = 0 and Key State(13)
+			KEY_TRIGGER = 1
+			If TODO_TOTAL > 0: Goto UPDATE_TO_DO_ITEM:End If
+		End If
+
+		// Del Key
+		If KEY_TRIGGER = 0 and Key State(46)
+			KEY_TRIGGER = 1
+			If TODO_TOTAL > 0: Goto DELETE_TO_DO_ITEM: End If
+		End If
+
+		// Up Arrow Key
+		If KEY_TRIGGER = 0 and Key State(38)
+			KEY_TRIGGER = 1
+			If SELECTED_ITEM > 1
+				Add SELECTED_ITEM, -1
+				Goto DISPLAY_TO_DO_LIST
+			End If
+		End If
+
+		// Down Arrow Key
+		If KEY_TRIGGER = 0 and Key State(40)
+			KEY_TRIGGER = 1
+			If SELECTED_ITEM < TODO_TOTAL
+				Add SELECTED_ITEM, 1
+				Goto DISPLAY_TO_DO_LIST
+			End If
+		End If
+
+		// Reset key trigger
+		If Key State(38) = False and Key State(40) = False and Key State(13) = False and Key State(46) = False
+			KEY_TRIGGER = 0
+		End If
+
+		Wait Vbl
+	Loop
+
+UPDATE_TO_DO_ITEM:
+	Gosub DISPLAY_HEADER
+	Set Font "allerta stencil", 40
+	Ink 16: Text 240, 350,"Edit Item",
+
+	A$ = TODO_TEXT$(SELECTED_ITEM -1)
+
+	Gosub GET_CUSTOM_INPUT
+	Cls
+
+	// Trim the input
+	A$ = Trim$(A$)
+
+	// Dont update blank items
+	If A$ = ""
+		KEY_TRIGGER = 1
+		Goto DISPLAY_TO_DO_LIST
+	End If
+
+	// Get the database id reference so we can update it from the Firestore database
+	itemId$ = TODO_ID$(SELECTED_ITEM -1)
+
+	REQUEST_COMPLETED = 0
+	{
+		self = this;
+		var db = firebase.firestore();
+
+		// Call the API to update an item in the database
+		db.collection("todolist").doc(vars.itemId$).update({ toDoText: vars.A$}).then(() => {
+			self.root.vars.REQUEST_COMPLETED = 1
+		}).catch((error) => {
+		    self.root.vars.REQUEST_COMPLETED = 1
+		});
+	}
+
+	Repeat
+		Wait Vbl
+	Until REQUEST_COMPLETED = 1
+
+	Goto MAIN_MENU
+
+DELETE_TO_DO_ITEM:
+	Gosub DISPLAY_HEADER
+	Set Font "allerta stencil", 40
+	Ink 6: Text 360, 400,"Delete Item", "#center"
+
+	Reset Zone
+
+	Pen 1: Locate 10, 10: Print "'" + Mid$(TODO_TEXT$(SELECTED_ITEM -1), 0, 67) + "'"
+	Locate 10, 12: Print "Are you sure ?"
+
+	SetupButton[ 240, 600, 250, 80, 5, "YES", 40, 12, 1, 11, 3]
+	SetupButton[ 550, 600, 250, 80, 5, "NO", 40, 12, 2, 6, 3]
+
+	Do
+		Gosub UPDATE_MOUSE
+		If Mouse Click
+			// OK
+			If Mouse Zone = 1
+				Exit
+			End If
+
+			// Cancel
+			If Mouse Zone = 2
+				Goto DISPLAY_TO_DO_LIST
+			End If
+		End If
+
+		// ESC Key
+		If Key State(27)
+			Goto DISPLAY_TO_DO_LIST
+		End If
+
+		// Enter Key
+		If Key State(13) and KEY_TRIGGER = 0
+			KEY_TRIGGER = 1
+			Exit
+		End If
+
+		// Reset key trigger
+		If Key State(27) = False and Key State(13) = False
+			KEY_TRIGGER = 0
+		End If
+
+		Wait Vbl
+	Loop
+
+	// Get the database id reference so we can delete it from the Firestore database
+	itemId$ = TODO_ID$(SELECTED_ITEM -1)
+
+	REQUEST_COMPLETED = 0
+	{
+		self = this;
+		var db = firebase.firestore();
+
+		// Call the API to delete an item from the database
+		db.collection("todolist").doc(vars.itemId$).delete().then(() => {
+			self.root.vars.REQUEST_COMPLETED = 1
+		}).catch((error) => {
+		    self.root.vars.REQUEST_COMPLETED = 1
+		});
+	}
+
+	Repeat
+		Wait Vbl
+	Until REQUEST_COMPLETED = 1
+
+	Goto MAIN_MENU
+
+ADD_TO_DO_LIST:
+	Gosub DISPLAY_HEADER
+
+	Set Font "allerta stencil", 40
+	Ink 16: Text 240, 350,"Add Item",
+
+	A$ = ""
+	Gosub GET_CUSTOM_INPUT
+	Cls
+
+	// Trim the input
+	A$ = Trim$(A$)
+
+	// Dont add blank items
+	If A$ = ""
+		KEY_TRIGGER = 1
+		Goto DISPLAY_TO_DO_LIST
+	End If
+
+	REQUEST_COMPLETED = 0
+	REQUEST_SUCCESS = 0
+	{
+		self = this;
+		var db = firebase.firestore();
+
+		// Call the API to add a new document to the todolist database collection
+		db.collection("todolist").add({
+		    toDoText: vars.A$,
+		    userId: self.root.vars.USER_ID$,
+		    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+		})
+		.then((docRef) => {
+			self.root.vars.REQUEST_COMPLETED = 1
+			self.root.vars.REQUEST_SUCCESS = 1
+		})
+		.catch((error) => {
+			self.root.vars.REQUEST_COMPLETED = 1
+		});
+	}
+
+	Repeat
+		Wait Vbl
+	Until REQUEST_COMPLETED = 1
+
+	If REQUEST_SUCCESS = 1
+		// Select the new item
+		SELECTED_ITEM = TODO_TOTAL + 1
+	End If
+
+	Goto MAIN_MENU
+
+GET_CUSTOM_INPUT:
+
+	Reset Zone
+
+	SetupButton[ 240, 600, 250, 80, 5, "OK", 40, 12, 1, 11, 3]
+	SetupButton[ 550, 600, 250, 80, 5, "CANCEL", 40, 12, 2, 6, 3]
+
+	INPUT_SUBMIT = 0
+
+	SetupTextInput[false, "todotextinput", 240, 400, 1400, "Enter to do text here..."]
+	SetTextInputValue["todotextinput", A$]
+	TextInputSetFocus["todotextinput"]
+
+	Repeat
+		Gosub UPDATE_MOUSE
+		If Mouse Click
+			// OK
+			If Mouse Zone = 1
+				Exit
+			End If
+
+			// Cancel
+			If Mouse Zone = 2
+				DestroyTextInput["todotextinput"]
+				Goto DISPLAY_TO_DO_LIST
+			End If
+		End If
+
+		// ESC Key
+		If Key State(27) And KEY_TRIGGER = 0
+			KEY_TRIGGER = 1
+			DestroyTextInput["todotextinput"]
+			Goto DISPLAY_TO_DO_LIST
+		End If
+
+		// Enter Key
+		If Key State(13) and KEY_TRIGGER = 0
+			KEY_TRIGGER = 1
+			Exit
+		End If
+
+		// Reset key trigger
+		If Key State(27) = False and Key State(13) = False
+			KEY_TRIGGER = 0
+		End If
+
+		Wait Vbl
+	Until INPUT_SUBMIT = 1
+
+	GetTextInput["todotextinput"]
+	A$ = PARAM$
+	DestroyTextInput["todotextinput"]
+
+	Return
+
+DISPLAY_HEADER:
+	Cls 0: Set Font "baloo", 70
+	Paste Bob 0, 0, "bg"
+	Ink 16:	Text DW / 2, 80, USER_DISPLAY_NAME$ +"'s AOZ To Do List", "#center"
+	Ink 11
+	Set Font "allerta stencil", 30
+	Text 150, 80, Str$(TODO_TOTAL) + " Items", "#center"
+	Ink 4
+	Text 1800, 80, "v" + VERSION$, "#center"
+	Return
+
+UPDATE_MOUSE:
+	If Mouse Zone > 0: Change Mouse 4: Else: Change Mouse 1: End If
+	Return
+
+SIGN_OUT:
+	Reset Zone
+	REQUEST_COMPLETED = 0
+	{
+		self = this;
+		firebase.auth().signOut().then(() => {
+		  // Sign-out successful.
+		  self.root.vars.REQUEST_COMPLETED = 1
+		}).catch((error) => {
+		  // An error happened.
+		  self.root.vars.REQUEST_COMPLETED = 1
+		});
+	}
+	Repeat
+		Wait Vbl
+	Until REQUEST_COMPLETED = 1
+
+	Goto DO_USER_SIGN_IN
+
+Procedure SetupButton[x, y, width, height, borderWidth, txt$, fontSize, txtYoffset, mouseZone, borderColour, fontColour]
+	Ink borderColour
+	Bar x, y, width, height
+	Ink 0
+	Bar x + borderWidth, y + borderWidth, width - borderWidth * 2, height - borderWidth * 2
+	Ink fontColour: Set Font "allerta stencil", fontSize
+	Text x + (width / 2), y + (height / 2) + txtYoffset, txt$, "#center"
+	Set Zone mouseZone, x, y, width, height
+End Proc
+
+
+
+
+// ********************************************************************
+//
+// AOZ Text Input Wrapper Procedures
+//
+// ********************************************************************
+// Place the following at the top of you AOZ code and uncomment
+//
+// INPUT_SUBMIT = 0
+// Global INPUT_SUBMIT
+// Load JS "resources/custom/CanvasInput.js"
+// Load CSS "resources/custom/CanvasInput.css"
+// JS_LOADED = 0
+// Repeat
+// 	Wait Vbl
+// 	{
+// 		if (typeof CanvasInput === 'function') {
+// 			vars.JS_LOADED = 1;
+// 		};
+// 	}
+// Until JS_LOADED = 1
+// ********************************************************************
+
+Procedure DestroyTextInput[id$]
+	//id$ = ""
+	{
+		if (this.root.vars[this.vars.id$]) {
+			var inputCanvas = document.getElementById(this.vars.id$);
+			this.root.vars[this.vars.id$].destroy();
+			inputCanvas.remove();
+		}
+	}
+End Proc
+
+Procedure SetTextInputValue[id$, textValue$]
+	//id$ = ""
+	{
+		if (this.root.vars[this.vars.id$]) {
+			this.root.vars[this.vars.id$].value(this.vars.textValue$);
+		}
+	}
+End Proc
+
+Procedure TextInputSetFocus[id$, textValue$]
+	//id$ = ""
+	{
+		if (this.root.vars[this.vars.id$]) {
+			this.root.vars[this.vars.id$].focus();
+		}
+	}
+End Proc
+
+Procedure GetTextInput[id$]
+	//id$ = ""
+	{
+		if (this.root.vars[this.vars.id$]) {
+			this.vars.TEXTVALUE$ = this.root.vars[this.vars.id$].value();
+		}
+	}
+End Proc[TEXTVALUE$]
+
+Procedure SetupTextInput[isPassword, id$, xPos, yPos, textWidth, placeHolder$, textValue$]
+	//id$ = ""
+	{
+		// Calculate the position and width for the input element based on the AOZCanvas size
+		self = this;
+		var canvas = document.getElementById('AOZCanvas');
+		var aozWidth = canvas.getBoundingClientRect().width;
+		var aozHeight = canvas.getBoundingClientRect().height;
+
+		var wFits = aozWidth / this.root.vars.DW;
+		var hFits = aozHeight / this.root.vars.DH;
+		var minFits = wFits > hFits ? hFits : wFits;
+
+		var width = this.root.vars.DW * minFits;
+		var height = this.root.vars.DH * minFits;
+
+		var x = this.vars.xPos * (width / this.root.vars.DW) + (aozWidth - width) / 2;
+		var y = this.vars.yPos * (height / this.root.vars.DH) + (aozHeight - height) / 2;
+		var inputWidth = vars.textWidth * minFits;
+
+		// If the element already exists, remove
+		var inputCanvas = document.getElementById(this.vars.id$);
+		if (inputCanvas) {
+			this.root.vars[this.vars.id$].destroy();
+			inputCanvas.remove();
+		}
+
+		// Add a canvas element for the text input
+		inputCanvas = document.createElement('canvas');
+		inputCanvas.id = this.vars.id$;
+		inputCanvas.setAttribute('width', inputWidth + 32);
+		inputCanvas.setAttribute('height', 50);
+		inputCanvas.setAttribute('style', 'top: ' + parseInt(y) + 'px; ' + 'left: ' + parseInt(x) + 'px' );
+		// This class ensures the input canvas appears in front of the AOZCanvas
+		inputCanvas.setAttribute('class', 'input-canvas');
+		document.body.appendChild(inputCanvas);
+
+		this.root.vars[this.vars.id$] = new CanvasInput({
+					canvas: inputCanvas,
+					isPassword: this.vars.isPassword,
+					fontSize: 18,
+					fontFamily: 'Arial',
+					fontColor: '#212121',
+					fontWeight: 'bold',
+					width: inputWidth,
+					padding: 15,
+					borderWidth: 1,
+					borderColor: '#000',
+					borderRadius: 5,
+					boxShadow: '0px 0px 0px #fff',
+					innerShadow: '0px 0px 0px rgba(0, 0, 0, 0.5)',
+					placeHolder: this.vars.placeHolder$,
+					value: this.vars.textValue$,
+					x: 0,
+					y: 0,
+					onsubmit: function(){
+						// User press the enter key
+						self.root.vars.INPUT_SUBMIT = 1
+					}
+				});
+	}
+End Proc

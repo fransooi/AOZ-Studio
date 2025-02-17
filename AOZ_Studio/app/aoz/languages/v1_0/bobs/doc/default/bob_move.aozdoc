@@ -1,0 +1,7 @@
+<i>Bob Move</i>
+<b>Bob Move</b> xxxxxxx
+=
+The instruction has been added to AOZ to allow you to declare movement in just one instruction instead of two, namely "Move X" and "Move Y".
+
+Each string contains the definition of the movement for it's axe. The syntax of the string is identical to the one used in "Move X" and "Move Y".
+

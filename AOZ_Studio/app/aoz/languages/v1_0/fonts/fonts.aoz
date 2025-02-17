@@ -1,0 +1,158 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Font Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Fonts
+@description:Instructions and functions to handle fonts
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Get Font Number
+@description:Return the number of fonts available to the application
+@return:integer:The number of fonts found
+@compatible: aoz
+@content:
+This function returns the number oof fonts that have been inserted in the application.
+There will always be at least one font available as soon as your application displays anything.
+api*/
+Function Get Font Number
+{
+	#errors
+}
+End Function( {aoz.fonts.getNumberOfFonts()} )
+
+/**api
+@name:Set Font
+@description:Select font for use by Text command in the current screen
+@param:font:any:The name or index of the font, case insensitive in case of a string
+@param:*height:integer:The height of the font
+@param:*weight$:string:The Javascript-like definition of the weight of the font, "normal" is used if not defined
+@param:*italic$:string:The Javascript-like italic definition, "normal" is used if not defined
+@param:*stretch$:string:The Javascript-like strech definition, "normal" is used if not defined
+@examples:instructions:i_79
+@compatible: aoz, amos
+@content:
+AOZ offers a full support of Google Font, and cherry on the cake the fonts are embedded inside of the application: they will be displayed even if the application is ran offline.
+
+You can with the tag "googleFont" at the beginning of your application add as many fonts as you want. You can also define the fonts in the manifest of the application itself...
+Amiga lovers can add real Amiga fonts with the tag: "amigaFont": ... both Google and Amiga fonts can be mixed in the display.
+
+Once the font is set, it will be used by all graphical text- related instructions.
+This command is used to select the character set to be employed by a TEXT instruction, like this:
+~~~
+googleFont: "Francois One"
+amigaFont: "Ruby"
+
+// Print a big hello in the middle of the screen
+Set Font "Francois One", 50, "bold" 
+Text "Welcome to AOZ", Screen Width / 2, Screen Height / 2, "center middle"
+
+// And a little line in the bottom of the screen
+Set Font "Ruby", 16
+Text "Remember this Amiga font?", Screen Width / 2, Screen Height - 100, "center top"
+~~~
+api*/
+Instruction Set Font, index=(index), height, weight$, italic$, stretch$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.currentScreen,callFunction:"setFont",waitFunction:"setFont_wait",args:[%index,%height,%weight$,%italic$,%stretch$]};
+}
+End Instruction
+
+/**api
+@name:Font$
+@description:Return details of available fonts
+@param:fontname:any:The index or name of the font in the list of fonts
+@compatible: aoz, amos
+@examples:instructions:i_79
+@content:
+This function is used to examine an existing font list and make a report, giving details of the specified font.
+The report is given as a string of 38 characters, holding the following information: the name of the font, its physical
+height in pixels and its status set to either Disc or Rom. For example:
+~~~                
+Get Fonts : Set Font 2
+Print Font$(2)
+~~~
+api*/
+Function Font$, fontname=(any)
+{
+	#errors
+}
+End Function( {aoz.fonts.getFont$(%fontname)} )
+
+/**api
+@name:Set Bitmap Font
+@description:Set a bitmapped font from an image of the images bank
+@param:Index:index:Number of the bitmap font to set: this number should match the ASCII code of the letters.
+@param:Image:index:Number of the image from the images bank
+@param:*Width:integer:Width of a char in pixels. 8 by default
+@param:*Height:integer:Height of a char in pixels. 8 by default
+@param:*SaleX:integer:Value of the horizontal scaling of the bitmap font. 1.0 by default
+@param:*ScaleY:integer:Value of the vertical scaling of the bitmap font. 1.0 by default
+@param:*SpacingX:integer:Value of the horizontal spacing between the characters. 0 by default
+@param:*SpacingY:integer:Value of the vertical spacing between the characters. 0 by default
+@compatible: aoz
+@content:
+Bitmap fonts are less flexible than ordinary fonts, but have the great advantage to be in full color.
+Actually, a graphical font can contain other things than letters, icons, arrows etc.
+
+Use the "Bitmap text" to display any text after you have defined
+api*/
+Instruction Set Bitmap Font, Index=(index), Image=(index), Width = 8, Height = 8, ScaleX = 1.0, ScaleY = 1.0, SpacingX = 0, SpacingY = 0
+{
+	#errors
+	aoz.fonts.bitmapFont( %Index, %Width, %Height, %Image, %ScaleX, %ScaleY, %SpacingX, %SpacingY );
+}
+End Instruction
+
+/**api
+@name:Bitmap Text
+@description:Draw a text on the currentscreen with a bitmapped font store in the images bank
+@param:Index:index:Number or name of the bitmap font to set
+@param:Text$:string:Text to draw
+@param:*X:integer:Horizontal position in pixel of the text. 0 by default
+@param:*Y:integer:Vertical position in pixel of the text. 0 by default
+@param:FontStyle:integer:Style of the font to draw the text 1 by default
+@compatible: aoz
+api*/
+Instruction Bitmap Text, Text$, X = 0, Y = 0, FontStyle = 1, FontIndex=(index)
+{
+    #errors
+    aoz.fonts.bitmapText( %Text$, %X, %Y, %FontIndex, %FontStyle );
+}
+End Instruction

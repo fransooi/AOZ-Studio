@@ -1,0 +1,950 @@
+:root {
+	color-scheme: light dark;
+}
+
+@font-face {
+    font-family: 'Avenir Next LT Pro';
+    src: url('fonts/avenir-nlpb.woff2') format('woff2'),
+        url('fonts/avenir-nlpb.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Avenir Next LT Pro';
+    src: url('fonts/avenir-nlpi.woff2') format('woff2'),
+        url('fonts/avenir-nlpi.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Avenir Next LT Pro';
+    src: url('fonts/avenir-nlpr.woff2') format('woff2'),
+        url('fonts/avenir-nlpr.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ===== Scrollbar CSS ===== */
+/* Firefox */
+* {
+	scrollbar-width: auto;
+	scrollbar-color: #626165 #444141;
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar
+{
+    width: 8px;
+    margin: 4px;
+}
+
+*::-webkit-scrollbar-track
+{
+    background: #444141;
+    margin: 4px;
+}
+
+*::-webkit-scrollbar-thumb 
+{
+	background-color: #303040;
+    border-radius: 10px;
+    border: 0px none #ffffff;
+    margin: 4px;
+}
+
+body {
+	font-family: 'Avenir Next LT Pro';
+	font-size: 14px;
+	margin: 0;
+	overflow: hidden;
+}
+
+hr {
+	border: 0;
+	border-top: 1px solid #ccc;
+}
+
+button {
+	position: relative;
+}
+
+input {
+	vertical-align: middle;
+}
+
+	input[type="color"]::-webkit-color-swatch-wrapper {
+		padding: 0;
+	}
+	input[type="color"]::-webkit-color-swatch {
+		border: none;
+	}
+
+textarea {
+	tab-size: 4;
+	white-space: pre;
+	word-wrap: normal;
+}
+
+	textarea.success {
+		border-color: #8b8 !important;
+	}
+
+	textarea.fail {
+		border-color: #f00 !important;
+		background-color: rgba(255,0,0,0.05);
+	}
+
+textarea, input { outline: none; } /* osx */
+
+.Panel {
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+
+	/* No support for these yet */
+	-o-user-select: none;
+	user-select: none;
+}
+
+.TabbedPanel {
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+
+	/* No support for these yet */
+	-o-user-select: none;
+	user-select: none;
+	position: relative;
+	display: block;
+	width: 100%;
+}
+
+.TabbedPanel .Tabs {
+	position: relative;
+	display: block;
+	width: 100%;
+	min-width: 300px;
+}
+
+	.TabbedPanel .Tabs .Tab {
+		padding: 10px;
+		text-transform: uppercase;
+	}
+
+	.TabbedPanel .Panels {
+		position: relative;
+		display: block;
+		width: 100%;
+		height: 100%;
+		min-width: 300px;
+	}
+
+/* Listbox */
+.Listbox {
+	color: #444;
+	background-color: #fff;
+	padding: 0;
+	width: 100%;
+	min-height: 140px;
+	font-size: 12px;
+	cursor: default;
+	overflow: auto;
+}
+
+.Listbox .ListboxItem {
+	padding: 6px;
+	color: #666;
+	white-space: nowrap;
+}
+
+.Listbox .ListboxItem.active {
+	background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* CodeMirror */
+
+.CodeMirror {
+
+	position: absolute !important;
+	top: 37px;
+	width: 100% !important;
+	height: calc(100% - 37px) !important;
+
+}
+
+	.CodeMirror .errorLine {
+
+		background: rgba(255,0,0,0.25);
+
+	}
+
+	.CodeMirror .esprima-error {
+
+		color: #f00;
+		text-align: right;
+		padding: 0 20px;
+
+	}
+
+/* outliner */
+
+#outliner .opener {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	margin: 0px 4px;
+	vertical-align: top;
+	text-align: center;
+}
+
+	#outliner .opener.open:after {
+		content: '−';
+	}
+
+	#outliner .opener.closed:after {
+		content: '+';
+	}
+
+#outliner .option {
+
+	border: 1px solid transparent;
+
+}
+
+#outliner .option.drag {
+
+	border: 1px dashed #999;
+
+}
+
+#outliner .option.dragTop {
+
+	border-top: 1px dashed #999;
+
+}
+
+#outliner .option.dragBottom {
+
+	border-bottom: 1px dashed #999;
+
+}
+
+#outliner .type {
+	display: inline-block;
+	text-align: center;
+	color: #eeaaee00;
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 20px;
+    height: 20px;
+}
+
+#outliner .type:after {
+	content: '●';
+}
+
+/* */
+
+#outliner .Scene {
+    background-image: url(../images/scene.png);
+}
+
+#outliner .Camera {
+    background-image: url(../images/camera.png);
+}
+
+#outliner .Light {
+    background-image: url(../images/light.png);
+}
+
+/* */
+
+#outliner .Object3D {
+    background-image: url(../images/3dobject.png);
+}
+
+#outliner .Mesh {
+    background-image: url(../images/mesh.png);
+}
+
+#outliner .Line {
+	color: #88ee88;
+}
+
+#outliner .LineSegments {
+	color: #88ee88;
+}
+
+#outliner .Points {
+	color: #ee8888;
+}
+
+/* */
+
+#outliner .Geometry {
+	background-image: url(../images/geometry.png);
+}
+
+#outliner .Material {
+    background-image: url(../images/material.png);
+}
+
+/* */
+
+#outliner .Script:after {
+	content: '◎'
+}
+
+/*  */
+
+button {
+	color: #FFDD33;
+	background-color: #202020;
+	border: 0px;
+	margin: 0px; /* GNOME Web */
+	padding: 5px 8px;
+	font-size: 12px;
+	text-transform: uppercase;
+	cursor: pointer;
+	outline: none;
+}
+
+	button:hover {
+		background-color: #FFDD33;
+		color: #202020;
+	}
+
+	button.selected {
+		background-color: rgb(44, 73, 110);
+		color: #FFFFFF;
+	}
+
+input, textarea {
+	border: 1px solid transparent;
+	color: #444;
+}
+
+input.Number {
+	color: #08f!important;
+	font-size: 12px;
+	border: 0px;
+	padding: 2px;
+}
+
+select {
+	color: #FFDD33;
+	background-color: #202020;
+	border: 1px #aaa solid;
+	text-transform: uppercase;
+	cursor: pointer;
+	outline: none;
+}
+
+	select:hover {
+		background-color: rgba(21,60,94,1);;
+	}
+
+/* UI */
+
+#resizer {
+	position: absolute;
+	top: 80px;
+	right: 295px;
+	width: 5px;
+	bottom: 0px;
+	/* background-color: rgba(255,0,0,0.5); */
+	cursor: col-resize;
+}
+
+#viewport {
+	position: absolute;
+	top: 80px;
+	left: 0;
+	right: 300px;
+	bottom: 0;
+}
+
+	#viewport #info {
+		text-shadow: 1px 1px 0 rgba(0,0,0,0.25);
+		pointer-events: none;
+	}
+
+#script {
+	position: absolute;
+	top: 80px;
+	left: 0;
+	right: 300px;
+	bottom: 0;
+	opacity: 0.9;
+}
+
+#player {
+	position: absolute;
+	top: 80px;
+	left: 0;
+	right: 300px;
+	bottom: 0;
+}
+
+#menubar {
+	position: absolute;
+	width: 100%;
+	height: 32px;
+	background: #202020;
+	padding: 0;
+	margin: 0;
+	right: 0;
+	top: 0;
+}
+
+	#menubar .menu {
+		float: left;
+		cursor: pointer;
+		padding-right: 8px;
+		color: #FFDD33;
+	}
+
+	#menubar .menu.right {
+		float: right;
+		cursor: auto;
+		padding-right: 0;
+		text-align: right;
+	}
+
+		#menubar .menu .title {
+			display: inline-block;
+			color: #FFDD33;
+			margin: 0;
+			padding: 8px;
+			line-height: 16px;
+		}
+
+		#menubar .menu .options {
+			position: fixed;
+			display: none;
+			padding: 5px 0;
+			background: #202020;
+			width: 150px;
+			max-height: calc(100% - 80px);
+			overflow: auto;
+		}
+
+		#menubar .menu:hover .options {
+			display: block;
+		}
+
+			#menubar .menu .options hr {
+				border-color: #ddd;
+			}
+
+			#menubar .menu .options .option {
+				color: #FFBB22;
+				background-color: transparent;
+				padding: 5px 10px;
+				margin: 0 !important;
+			}
+
+				#menubar .menu .options .option:hover {
+					color: #fff;
+					background-color: #08f;
+				}
+
+				#menubar .menu .options .option:active {
+					color: #666;
+					background: transparent;
+				}
+
+		#menubar .menu .options .inactive {
+			color: #bbb;
+			background-color: transparent;
+			padding: 5px 10px;
+			margin: 0 !important;
+		}
+
+#main_toolbar
+{
+	position: relative;
+	width: 100%;
+	height:48px;
+	top: 32px;
+	background-color:#4d4d4d;
+	border-bottom: 1px #bbbbbb solid;
+}
+
+	#main_toolbar .tool
+	{
+		position: relative;
+		width: 40px;
+		height: 40px;
+		display: inline-block;
+		background-repeat: no-repeat;
+		background-size: contain;
+		cursor: pointer;
+	}
+
+	#new_file
+	{
+		background-image: url( 'icons/new_file.png' );
+	}
+
+	#open_file
+	{
+		background-image: url( 'icons/open_file.png' );
+	}	
+	
+	#save_file
+	{
+		background-image: url( 'icons/save.png' );
+	}
+
+	#import_file
+	{
+		background-image: url( 'icons/import.png' );
+	}
+
+	.separator
+	{ 
+		display: inline-block;
+		position: relative;
+		border: 1px solid #c5b4b4;
+		width: 2px;
+		background-color: #827979;
+		box-sizing: content-box;
+		height: 40px;
+		margin-left: 8px;
+		margin-right: 8px;
+		margin-top: 2px;
+	}
+
+	#new_group
+	{
+		background-image: url( 'icons/group.png' );
+	}
+
+	#new_box
+	{
+		background-image: url( 'icons/box.png' );
+	}
+
+	#new_sphere
+	{
+		background-image: url( 'icons/sphere.png' );
+	}
+
+	#new_plane
+	{
+		background-image: url( 'icons/plane.png' );
+	}
+
+	#new_cone
+	{
+		background-image: url( 'icons/cone.png' );
+	}
+
+	#new_sprite
+	{
+		background-image: url( 'icons/sprite.png' );
+	}
+
+	#new_ring
+	{
+		background-image: url( 'icons/ring.png' );
+	}
+
+	#new_cylinder
+	{
+		background-image: url( 'icons/cylinder.png' );
+	}
+
+	#new_dodecahedron
+	{
+		background-image: url( 'icons/dodecahedron.png' );
+	}
+
+	#new_ambient_light
+	{
+		background-image: url( 'icons/ambient_light.png' );
+	}
+
+	#new_direct_light
+	{
+		background-image: url( 'icons/direct_light.png' );
+	}
+
+	#new_persp_camera
+	{
+		background-image: url( 'icons/persp_cam.png' );
+	}
+
+	#new_ortho_camera
+	{
+		background-image: url( 'icons/ortho_cam.png' );
+	}
+
+
+#sidebar {
+	position: absolute;
+	right: 0;
+	top: 80px;
+	bottom: 0;
+	width: 300px;
+	background: #202020;
+	overflow: auto;
+}
+
+	#sidebar .Panel {
+		color: #FFDD33;
+		padding: 10px;
+		border-top: 1px solid #ccc;
+	}
+
+	#sidebar .Panel.collapsed {
+		margin-bottom: 0;
+	}
+
+	#sidebar .Row {
+		display: flex;
+		align-items: center;
+		min-height: 24px;
+		margin-bottom: 10px;
+	}
+
+#tabs {
+	background-color: #202020;
+	border-top: 1px solid #ccc;
+}
+
+	#tabs span {
+		color: #aaa;
+		border-right: 1px solid #ccc;
+		padding: 10px;
+	}
+
+	#tabs span.selected {
+		color: rgb(30, 86, 207);
+		background-color: #eee;
+	}
+
+#toolbar {
+	position: absolute;
+	left: 10px;
+	top: 82px;
+	width: 32px;
+	background: #202020;
+	border: 1px #eee solid;
+	text-align: center;
+}
+
+	#toolbar button, #toolbar input {
+		height: 32px;
+	}
+
+		#toolbar button img {
+			width: 16px;
+			opacity: 0.5;
+		}
+
+.Outliner {
+	color: #444;
+	background-color: #fff;
+	padding: 0;
+	width: 100%;
+	height: 140px;
+	font-size: 15px;
+	cursor: default;
+	overflow: auto;
+	resize: vertical;
+	outline: none !important;
+}
+
+	.Outliner .option {
+		padding: 4px;
+		color: #666;
+		white-space: nowrap;
+	}
+
+	.Outliner .option:hover {
+		background-color: #08f;
+		color: #ffffff;
+	}
+
+	.Outliner .option.active {
+		background-color: rgb(44, 73, 110);
+		color: #ffffff;
+	}
+
+
+.TabbedPanel .Tabs {
+	background-color: #202020;
+	border-top: 1px solid #ccc;
+}
+
+	.TabbedPanel .Tab {
+		color: #FFDD33;
+		border-right: 1px solid #ccc;
+	}
+
+	.TabbedPanel .Tab.selected {
+		color: #ffffff;
+		background-color: rgb(44, 73, 110);
+	}
+
+.Listbox {
+	color: #444;
+	background-color: #fff;
+}
+
+.Panel {
+	color: #888;
+}
+
+/* */
+
+@media all and ( max-width: 600px ) {
+
+	#resizer {
+		display: none;
+	}
+
+	#menubar .menu .options {
+		max-height: calc(100% - 372px);
+	}
+
+	#menubar .menu.right {
+		display: none;
+	}
+
+	#viewport {
+		left: 0;
+		right: 0;
+		top: 80px;
+		height: calc(100% - 352px);
+	}
+
+	#script {
+		left: 0;
+		right: 0;
+		top: 80px;
+		height: calc(100% - 352px);
+	}
+
+	#player {
+		left: 0;
+		right: 0;
+		top: 80px;
+		height: calc(100% - 352px);
+	}
+
+	#sidebar {
+		left: 0;
+		width: 100%;
+		top: calc(100% - 320px);
+		bottom: 0;
+	}
+
+}
+
+/* DARK MODE */
+
+@media ( prefers-color-scheme: dark ) {
+
+	button {
+		color: #aaa;
+		background-color: #222;
+	}
+
+		button:hover {
+			color: #ccc;
+			background-color: #444;
+		}
+
+		button.selected {
+			color: #fff;
+			background-color: #08f;
+		}
+
+	input, textarea {
+		background-color: #222;
+		border: 1px solid transparent;
+		color: #888;
+	}
+
+	select {
+		color: #aaa;
+		background-color: #222;
+	}
+
+		select:hover {
+			color: #ccc;
+			background-color: #444;
+		}
+
+	/* UI */
+
+	#menubar {
+		background: #111;
+	}
+
+			#menubar .menu .options {
+				background: #111;
+			}
+
+				#menubar .menu .options hr {
+					border-color: #222;
+				}
+
+				#menubar .menu .options .option {
+					color: #888;
+				}
+
+			#menubar .menu .options .inactive {
+				color: #444;
+			}
+
+	#sidebar {
+		background-color: #111;
+	}
+
+		#sidebar .Panel {
+			border-top: 1px solid #222;
+		}
+
+		#sidebar .Panel.Material canvas {
+			border: solid 1px #5A5A5A;
+		}
+
+	#tabs {
+		background-color: #1b1b1b;
+		border-top: 1px solid #222;
+	}
+
+		#tabs span {
+			color: #555;
+			border-right: 1px solid #222;
+		}
+
+		#tabs span.selected {
+			background-color: #111;
+		}
+
+	#toolbar {
+		background-color: #111;
+	}
+
+		#toolbar img {
+			filter: invert(1);
+		}
+
+	.Outliner {
+		color: #888;
+		background: #222;
+	}
+
+		.Outliner .option:hover {
+			background-color: rgba(21,60,94,0.5);
+		}
+
+		.Outliner .option.active {
+			background-color: rgba(21,60,94,1);
+		}
+
+	.TabbedPanel .Tabs {
+		background-color: #1b1b1b;
+		border-top: 1px solid #222;
+	}
+
+		.TabbedPanel .Tab {
+			color: #555;
+			border-right: 1px solid #222;
+		}
+
+		.TabbedPanel .Tab.selected {
+			color: #888;
+			background-color: #111;
+		}
+
+	.Listbox {
+		color: #888;
+		background: #222;
+	}
+
+	.Listbox .ListboxItem:hover {
+		background-color: rgba(21,60,94,0.5);
+	}
+
+	.Listbox .ListboxItem.active {
+		background-color: rgba(21,60,94,1);
+		color: #ffffff;
+	}
+
+}
+
+div.mask
+{
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	background-color: rgba(0,0,0,0.8);
+	width: 100%;
+	height: 100%;
+	z-index: 5000;
+}
+
+div.logo
+{
+    position: relative;
+    width: 640px;
+    height: 405px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10%;
+    background-repeat: no-repeat;
+    background-size: 640px 405px;
+    background-position: center;
+	background-image: url('../images/logo.png');
+}
+
+div.about_panel
+{
+    position: relative;
+    width: 640px;
+    height: 405px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10%;
+    background-repeat: no-repeat;
+    background-size: 640px 405px;
+    background-position: center;
+    background-image: url(../images/about.png);
+}
+
+div.about_text
+{
+	position: absolute;
+    width: 364px;
+    height: 351px;
+    left: 231px;
+    top: 11px;
+    background-color: #FFFFFF;
+    overflow: hidden;
+    overflow-y: auto;
+    box-shadow: inset 0px 0px 10px rgb(0 0 0 / 90%);
+    padding: 16px;
+}
+
+div.loading_anim
+{
+	position:relative;
+	display:none;
+	width: 100%;
+	height: 100%;
+	background-repeat: no-repeat;
+	background-size: 160px 160px;
+	background-position: center;
+	background-image: url('../images/loading.gif');
+}

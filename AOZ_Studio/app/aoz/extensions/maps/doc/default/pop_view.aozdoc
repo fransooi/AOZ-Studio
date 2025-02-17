@@ -1,0 +1,22 @@
+<i>Pop View</i>
+<b>Pop View</b> xxxxxxx
+=
+This instruction associated with the "View Pop" instruction allow you to change anything in your view, the value of tiles and even the map itself safely, knowing that everything can be recovered in its initial state later...
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"						// Display it
+
+Push View "MapView"
+Replace Tiles "MapView", 1000, 1001			// Replace all "1000" tiles with 1001
+Redraw View "MapView"						// Display it
+Wait Key
+View Pop "MapView"
+
+Redraw View "MapView"
+Print "back to normal!"
+@code
+

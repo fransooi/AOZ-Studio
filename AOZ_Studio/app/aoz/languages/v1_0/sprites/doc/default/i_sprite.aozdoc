@@ -1,0 +1,6 @@
+<i>I Sprite</i>
+<b>I Sprite</b> xxxxxxx
+=
+This function returns the current image number being used by the specified Sprite. If the Sprite is not displayed, a
+value of zero will be returned.
+

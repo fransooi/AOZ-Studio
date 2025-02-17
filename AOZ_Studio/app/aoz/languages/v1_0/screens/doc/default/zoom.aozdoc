@@ -1,0 +1,11 @@
+<i>Zoom</i>
+<b>Zoom</b> xxxxxxx
+=
+This one command allows you to produce a range of remarkable effects that change the size of the image in any
+rectangular area of the screen. Depending on the relative sizes of the source and destination areas, images can be
+magnified, shrunk, squashed and stretched as you wish. ZOOM is qualified by the number of the screen from where
+your source picture will be taken, followed by the coordinates of the top left-hand corner and bottom right-hand
+corner of the area to be grabbed, After the TO structure, give the, number of the destination screen and the new
+coordinates of the area which is to hold the zoomed image. AOZ Studio will automatically re-size the
+image.
+

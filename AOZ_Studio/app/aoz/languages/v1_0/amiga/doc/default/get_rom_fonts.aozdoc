@@ -1,0 +1,17 @@
+<i>Get Rom Fonts</i>
+<b>Get Rom Fonts</b> xxxxxxx
+=
+This instruction has no effect in AOZ and is left for compatibility with AMOS applications.
+
+(extracted from the AMOSPro manual)
+
+As you might expect, this command produces a list of the fonts that are built into the computer's ROM chips. At time of writing, the choice is rather limited:
+@code
+Screen Open 0,640,200,16,Hires
+Get Rom Fonts
+For A=1 To 10
+Set Font A : A$="Hello, I'm "+ Font$(A) : Text 0,100,A$
+Wait Key : Cls
+Next A
+@code
+

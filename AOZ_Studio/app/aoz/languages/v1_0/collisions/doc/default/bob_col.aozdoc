@@ -1,0 +1,14 @@
+<i>Bob Col</i>
+<b>Bob Col</b> xxxxxxx
+=
+The BOB COL function checks the screen for collisions between Blitter Objects. It is invaluable in the type of arcade games that rely on hitting or avoiding moving objects. To test for a collision with BOB COL, simply specify the number of the Bob you are interested in (in brackets) and a value of -1 (true) will be returned if a collision occurs. Otherwise zero (false) is generated
+
+Note that the AOZ collision system uses "masks", and so it is sensitive to the physical shape of your
+objects. This means that when different objects have extremely varied appearances, the collision will only be
+detected when the objects happen to overlap on screen.'
+
+Normally, BOB COL will check for collisions between the specified Bob and any other Bitmap Object, but you can
+also monitor the movements of a particular range of Bobs using this As optional parameters, after the specified Bob
+number, you may set the range of Bobs to be checked for collision from the first to the last in your Bob list
+
+

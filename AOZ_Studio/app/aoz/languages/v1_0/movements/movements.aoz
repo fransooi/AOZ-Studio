@@ -1,0 +1,1135 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The Movement Instruction and Classes
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 22/09/2020
+ */
+#noWarning:"instruction_not_implemented"
+#need_module: "collisions"
+
+/**doc
+@name:Movement Commands
+@description:Instructions, functions and objects to make things move on the screen
+@author:Francois Lionet
+doc*/
+
+
+//
+// Initialization
+//
+{
+	this.aoz.moduleMovements = this;
+
+	this.checkCollisions = function( channel )
+	{
+		if ( this.vars.collProc$ )
+		{
+			var self = this;
+			if ( channel.className == 'bob' )
+			{
+				if ( self.aoz.collisions.bobCol( channel.index, channel.screen ) )
+				{
+					for ( var i in this.aoz.collisions.collisionList )
+					{
+						self.aoz.runProcedure( this.vars.collProc$, { INDEX1: channel.indexIsNumber ? channel.index : -1, INDEX1$: '' + channel.index, INDEX2: i, INDEX2$: '' + i } );
+					}
+				};
+			}
+			if ( channel.className == 'sprite' )
+			{
+				if ( self.aoz.collisions.spriteCol( channel.index ) )
+				{
+					for ( var i in this.aoz.collisions.collisionList )
+					{
+						self.aoz.runProcedure( this.vars.collProc$, { INDEX1: channel.indexIsNumber ? channel.index : -1, INDEX1$: '' + channel.index, INDEX2: i, INDEX2$: '' + i } );
+					}
+				};
+			}
+		}
+	};
+	this.handleLimits = function( channel )
+	{
+		var flags = 0;
+		if ( this.x < this.limits.x )
+		{
+			this.x = this.limits.x;
+			flags |= 0b0100;
+		}
+		else if ( this.x >= this.limits.x + this.limits.width )
+		{
+			this.x = this.limits.x + this.limits.width - 1;
+			flags |= 0b1000;
+		}
+		if ( this.y < this.limits.y )
+		{
+			this.y = this.limits.y;
+			flags |= 0b0001;
+		}
+		else if ( this.y >= this.limits.y + this.limits.height )
+		{
+			this.y = this.limits.y + this.limits.height - 1;
+			flags |= 0b0010;
+		}
+		if ( flags && this.vars.limitProc$ )
+		{
+			var direction$ = '';
+			if ( flags & 0b0100 )
+				direction$ += "#left ";
+			if ( flags & 0b1000 )
+				direction$ += "#right ";
+			if ( flags & 0b0010 )
+				direction$ += "#up ";
+			if ( flags & 0b0001 )
+				direction$ += "#down ";
+			this.aoz.runProcedure( this.vars.limitProc$, { direction$: direction$, direction: flags, index: channel.indexIsNumber ? channel.index : -1, index$: '' + channel.index } );
+		}
+	};
+	this.rotate = function( cx, cy, x, y, angle )
+	{
+        var cos = Math.cos( angle );
+        var sin = Math.sin( angle );
+        var nx = ( cos * ( x - cx ) ) + ( sin * ( y - cy ) ) + cx;
+        var ny = ( cos * ( y - cy ) ) - ( sin * ( x - cx ) ) + cy;
+    	return { x: nx, y: ny };
+	};
+	this.setLimits = function( x, y, width, height )
+	{
+		this.limits =
+		{
+			x: x,
+			y: y,
+			width: width,
+			height: height
+		};
+	};
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+// TODOFL: add a tag to indicate if properties must be initialized or not, saves code and time.
+// TODOFL: sort once for all '' and "" !
+Class Joystick Movement, speed = 1000, acceleration = 1000000, deceleration = 1000000, mask = $F, rotation = True, gamepad = 0, state$ = "on", collProc$, limitProc$
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#friendClass:"Actor"
+		#class:"Movement"
+		#noVariableInit:true
+
+		// Overwrite only the parameters that need verification
+		this.set_speed = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.speed = value;
+		};
+		this.set_acceleration = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.acceleration = value;
+		};
+		this.set_deceleration = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.deceleration = value;
+		};
+		this.set_gamepad = function( value )
+		{
+			if ( value < 0 || value > 3 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.gamepad = value;
+		};
+		this.joystickToAngle =
+		[
+			undefined,						// 0x0000 -
+			270 * Math.PI / 180,			// 0x0001 - up
+			90 * Math.PI / 180,				// 0x0010 - down
+			undefined,						// 0x0011 -
+			180 * Math.PI / 180,			// 0x0100 - left
+			225 * Math.PI / 180,			// 0x0101 - up / left
+			135 * Math.PI / 180,			// 0x0110 - down / left
+			undefined,						// 0x0111 -
+			0,								// 0x1000 - right
+			45 * Math.PI / 180,				// 0x1001 - up / right
+			315 * Math.PI / 180,			// 0x1010 - down / right
+			undefined,						// 0x1011 -
+			undefined,						// 0x1100 -
+			undefined,						// 0x1101 -
+			undefined,						// 0x1110 -
+			undefined,						// 0x1111 -
+		];
+		this.vars.protected =
+		{
+			speed: 0,
+			angle: 0,
+			x: 0,
+			y: 0,
+			rotation: this.vars.rotation
+		}
+		this.set_speed(this.vars.speed);
+		this.set_acceleration(this.vars.acceleration);
+		this.set_deceleration(this.vars.deceleration);
+		this.set_gamepad(this.vars.gamepad);
+		this.addToSynchro = true;
+	}
+
+	Method Update, channel, deltaTime
+	{
+		var root = this.root;
+		var protected = root.vars.protected;
+		if ( root.vars.state$ == 'on' )
+		{
+			// Grab the coordinates if they have been changed by an instruction
+			var x = vars.channel.get_x( '#update' );
+			if ( typeof x != 'undefined' )
+				protected.x = x;
+			var y = vars.channel.get_y( '#update' );
+			if ( typeof y != 'undefined' )
+				protected.y = y;
+
+			// Get the joystick
+			var joystick = this.aoz.joy( root.vars.gamepad ) & root.vars.mask & 0x0F;
+			var angle = root.joystickToAngle[ joystick ];
+
+			// Acceleration / deceleration
+			if ( typeof angle != 'undefined' )
+			{
+				protected.speed = Math.min( root.vars.speed + root.vars.acceleration * ( vars.deltaTime / 1000 ), root.vars.speed );
+				root.vars.angle = angle;
+			}
+			else
+				protected.speed = Math.max( root.vars.speed - root.vars.deceleration * ( vars.deltaTime / 1000 ), 0 );
+
+			// Movement
+			if ( protected.speed )
+			{
+				var x = protected.x;
+				var y = protected.y;
+				protected.x += Math.cos( root.vars.angle ) * root.vars.speed * ( vars.deltaTime / 1000 );
+				protected.y += Math.sin( root.vars.angle ) * root.vars.speed * ( vars.deltaTime / 1000 );
+
+				// Call limits
+				if ( root.limits )
+					this.aoz.moduleMovements.handleLimits.call( root, vars.channel );
+
+				// Set coordinates
+				vars.channel.set_x( protected.x );
+				vars.channel.set_y( protected.y );
+			}
+			// Call collisions
+			if ( root.vars.collProc$ )
+				this.aoz.moduleMovements.checkCollisions.call( root, vars.channel );
+		}
+	}
+	End Method
+
+	Method Set Limits, x1, y1 To x2, y2
+	{
+		this.root.setLimits( { x: vars.x1, y:vars.y1, width:vars.x2-vars.x1, y: vars.y2-vars.y1 } );
+	}
+	End Method
+End Class
+
+Class Line Movement, speed = 1000, angle = 90, xGoal, yGoal, x1, y1, x2, y2, rotation = True, state$ = "on", limitProc$, collProc$
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#class:"Movement"
+		#noVariableInit:true
+
+		this.set_speed = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.speed = value;
+			this.vars.protected.speed = value;
+		};
+		this.set_angle = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.angle = value * this.aoz.degreeRadian;			// FLTODO: system should be generic, lower than that.
+			this.vars.protected.angle = this.vars.angle;
+			this.vars.protected.recalculate = true;
+		};
+		this.set_x1 = function( value )
+		{
+			this.vars.x1 = value;
+			this.vars.protected.recalculate = true;
+		};
+		this.set_y1 = function( value )
+		{
+			this.vars.y1 = value;
+			this.vars.protected.recalculate = true;
+		};
+		this.set_x2 = function( value )
+		{
+			this.vars.x2 = value;
+			this.vars.protected.xGoal = value;
+			this.vars.protected.recalculate = true;
+		};
+		this.set_y2 = function( value )
+		{
+			this.vars.y2 = value;
+			this.vars.protected.yGoal = value;
+			this.vars.protected.recalculate = true;
+		};
+		this.set_xGoal = function( value )
+		{
+			this.vars.xGoal = value;
+			this.vars.protected.recalculate = true;
+		};
+		this.set_yGoal = function( value )
+		{
+			this.vars.yGoal = value;
+			this.vars.protected.recalculate = true;
+		};
+		this.set_state$ = function( state )
+		{
+			this.vars.state$ = state;
+			this.vars.protected.recalculate = true;
+		};
+		this.vars.protected =
+		{
+			speed: 0,
+			angle: 0,
+			xGoal: x2,
+			yGoal: y2,
+			recalculate: true
+		};
+		this.set_speed( args.speed );
+		this.set_angle( args.angle )
+		this.addToSynchro = true;
+	}
+
+	Method Update, channel, deltaTime
+	{
+		var root = this.root;
+		var protected = root.vars.protected;
+		var recalculateCount = 0;
+		while ( root.vars.state$ == 'on' )
+		{
+			// Grab the coordinates if they have been changed by an instruction
+			var x = vars.channel.get_x( '#update' );
+			if ( typeof x != 'undefined' )
+				root.vars.x = x;
+			var y = vars.channel.get_y( '#update' );
+			if ( typeof y != 'undefined' )
+				root.vars.y = y;
+
+			// Set the goal?
+			if ( typeof root.vars.xGoal != 'undefined' && typeof root.vars.yGoal != 'undefined' )
+			{
+				if ( typeof root.vars.x1 != 'undefined' )
+				{
+					protected.x = root.vars.x1;
+					root.vars.x1 = undefined;
+				}
+				if ( typeof root.vars.y1 != 'undefined' )
+				{
+					protected.y = root.vars.y1;
+					root.vars.y1 = undefined;
+				}
+				protected.angle = Math.atan2( root.vars.xGoal - protected.y, root.vars.yGoal - protected.x );
+				root.vars.xGoal = undefined;
+				root.vars.yGoal = undefined;
+			}
+
+			// Movement
+			x = protected.x;
+			y = protected.y;
+			protected.x += Math.cos( protected.angle ) * root.speed * ( vars.deltaTime / 1000 );
+			protected.y += Math.sin( protected.angle ) * root.speed * ( vars.deltaTime / 1000 );
+			if ( x != root.x || y != root.y )
+			{
+				// Call limits
+				if ( root.limits )
+				{
+					this.aoz.moduleMovements.handleLimits.call( root, vars.channel );
+					if ( root.recalculate && recalculateCount == 0 )
+					{
+						recalculateCount++;
+						root.recalculate = false;
+						continue;
+					}
+				}
+
+				// Change position
+				vars.channel.set_x( root.x );
+				vars.channel.set_y( root.y );
+			}
+			// Call collisions
+			if ( root.vars.collProc$ )
+			{
+				this.aoz.moduleMovements.checkCollisions.call( root, vars.channel );
+				if ( root.recalculate && recalculateCount < 2 )
+				{
+					recalculateCount++;
+					root.recalculate = false;
+					continue;
+				}
+			}
+			break;
+		}
+	}
+	End Method
+
+	Method Set Limits, x1, y1 To x2, y2
+	{
+		this.root.setLimits( { x: vars.x1, y: vars.y1, width: vars.x2-vars.x1, height: vars.y2-vars.y1} );
+	}
+	End Method
+End Class
+
+Class Offset Movement, baseObject = (index), xOffset, yOffset, horizontal = True, vertical = True, rotation = True, state$ = "on", limitProc$, collProc$
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#class:"Movement"
+		#noVariableInit:true
+
+		this.set_baseObject = function( value )
+		{
+			this.vars.baseObject = value;
+			this.vars.protected.baseObject = null;
+		};
+		this.set_xOffset = function( value )
+		{
+			this.vars.xOffset = value;
+			this.vars.protected.xOffset = value;
+		};
+		this.set_yOffset = function( value )
+		{
+			this.vars.yOffset = value;
+			this.vars.protected.yOffset = value;
+		};
+		this.set_horizontal = function( value )
+		{
+			this.vars.horizontal = value;
+		};
+		this.set_vertical = function( value )
+		{
+			this.vars.vertical = value;
+		};
+		this.set_rotation = function( value )
+		{
+			this.vars.rotation = value;
+			this.vars.protected.rotation = value;
+		};
+		this.set_collProc$ = function( value )
+		{
+			this.vars.collProc$ = value;
+		};
+		this.set_limitProc$ = function( value )
+		{
+			this.vars.limitProc$ = value;
+		};
+		this.set_state$ = function( state )
+		{
+			this.vars.state$ = state;
+			this.vars.protected.recalculate = true;
+		};
+		this.vars.protected =
+		{
+			baseObject: args.baseObject,
+			xOffset: args.xOffset,
+			yOffset: args.yOffset,
+			rotation: args.rotation,
+			recalculate: true
+		};
+		this.addToSynchro = true;
+	}
+
+	Method Update, channel, deltaTime
+	{
+		var root = this.root;
+		while ( root.vars.state$ == 'on' )
+		{
+			// Set the baseObject
+			if ( !root.vars.baseObject )
+			{
+				protected.baseObject = this.aoz.getObjectFromType( vars.channel.className, root.vars.baseObject );
+				if ( protected.baseObject )
+				{
+					if ( typeof protected.xOffset == 'undefined' )
+						protected.xOffset = vars.channel.get_x( '#update' ) - protected.baseObject.get_x( '#update' );
+					if ( typeof root.vars.yOffset == 'undefined' )
+						protected.yOffset = vars.channel.get_y( '#update' ) - protected.baseObject.get_y( '#update' );
+				}
+			}
+			if ( typeof protected.xOffset != 'undefined' && typeof protected.yOffset != 'undefined' )
+			{
+				x = root.vars.x;
+				y = root.vars.y;
+				var baseObject = this.aoz.getObjectFromType( vars.channel.className, protected.baseObject );
+				if ( baseObject )
+				{
+					if ( root.vars.horizontal )
+						root.vars.x = protected.baseObject.get_x() + protected.xOffset;
+					if ( root.vars.vertical )
+						root.vars.y = protected.baseObject.get_y() + protected.yOffset;
+					if ( baseObject.movement_current )
+					{
+						root.vars.speed = baseObject.movement_current.vars.speed;
+						root.vars.angle = baseObject.movement_current.vars.angle;
+					}
+					else
+					{
+						root.vars.angle = Math.atan2( root.vars.y - y, root.vars.x - x );
+						root.speed = this.aoz.utilities.getDistance( x, y, root.vars.x, root.vars.y ) * 1;
+					}
+					if ( x != root.vars.x || y != root.vars.y )
+					{
+						// Call limits
+						if ( root.vars.limits )
+						{
+							this.aoz.moduleMovements.handleLimits.call( root, vars.channel );
+						}
+
+						// Change position
+						vars.channel.set_x( root.vars.x );
+						vars.channel.set_y( root.vars.y );
+					}
+				}
+			}
+			// Call collisions
+			if ( root.vars.collProc$ )
+			{
+				this.aoz.moduleMovements.checkCollisions.call( root, vars.channel );
+			}
+			break;
+		}
+	}
+	End Method
+
+	Method Set Limits, x1, y1 To x2, y2
+	{
+		this.root.setLimits( { x: vars.x1, y: vars.y1, width: vars.x2-vars.x1, height: vars.y2-vars.y1} );
+	}
+	End Method
+End Class
+
+Class Circular Movement, speed = 1, xSpeed, ySpeed, angle = 0, angleStart = 0, ray = 100, xRay, yRay, rotation = True, state$ = "on", limitProc$, collProc$
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#class:"Movement"
+		#noVariableInit:true
+
+		this.set_speed = function( value )
+		{
+			this.vars.xSpeed = value;
+			this.vars.ySpeed = value;
+			this.vars.protected.speed = value * 1000;
+		};
+		this.set_xSpeed = function( value )
+		{
+			this.vars.xSpeed = value;
+			this.vars.protected.speed = value * 1000;
+		};
+		this.set_ySpeed = function( value )
+		{
+			this.vars.ySpeed = value;
+			this.vars.protected.speed = value * 1000;
+		};
+		this.set_angleStart = function( value )
+		{
+			this.vars.angleStart = value;
+			this.vars.angleStartX = value;
+			this.vars.angleStartY = value;
+			this.vars.protected.currentAngleX = value;
+			this.vars.protected.currentAngleY = value;
+		};
+		this.set_ray = function( value )
+		{
+			this.vars.xRay = value;
+			this.vars.yRay = value;
+		};
+		this.set_rotation = function( value )
+		{
+			this.vars.protected.rotation = value;
+			this.vars.rotation = value;
+		};
+		this.vars.protected =
+		{
+			rotation: args.rotation,
+			currentAngleX: args.angleStart,
+			currentAngleY: args.angleStart,
+			speed: args.speed,
+			xCenter: 100,
+			yCenter: 100,
+			angle: 0,
+			x: 0,
+			y: 0
+		};
+		var xSpeed = args.xSpeed;
+		var ySpeed = args.ySpeed;
+		this.set_speed( args.speed );
+		if ( typeof xSpeed != 'undefined' )
+			this.set_xSpeed( xSpeed );
+		if ( typeof ySpeed != 'undefined' )
+			this.set_ySpeed( ySpeed );
+
+		var xRay = args.xRay;
+		var yRay = args.yRay;
+		this.set_ray( args.ray );
+		if ( typeof xRay != 'undefined' )
+			this.vars.xRay = xRay;
+		if ( typeof yRay != 'undefined' )
+			this.vars.yRay = yRay;
+
+		this.set_angleStart( this.vars.angleStart );
+		this.addToSynchro = true;
+	}
+
+	Method Update, channel, deltaTime
+	{
+		var root = this.root;
+		var protected = root.vars.protected;
+		if ( root.vars.state$ == 'on' )
+		{
+			// Grab the coordinates if they have been changed by an instruction
+			var x = vars.channel.get_x( '#update' );
+			if ( typeof x != 'undefined' )
+				protected.xCenter = x;
+			var y = vars.channel.get_y( '#update' );
+			if ( typeof y != 'undefined' )
+				protected.yCenter = y;
+
+			// Movement
+			var setAngle = ( typeof x != 'undefined' );
+			protected.currentAngleX = ( protected.currentAngleX + Math.PI * root.vars.xSpeed * ( vars.deltaTime / 1000 ) ) % ( Math.PI * 2 );
+			protected.currentAngleY = ( protected.currentAngleY + Math.PI * root.vars.ySpeed * ( vars.deltaTime / 1000 ) ) % ( Math.PI * 2 );
+			var rotate = this.aoz.moduleMovements.rotate( 0, 0, root.vars.xRay * Math.cos( protected.currentAngleX ), root.vars.yRay * Math.sin( protected.currentAngleY ), root.vars.angle * root.aoz.degreeRadian );
+			if ( rotate.x != protected.x || rotate.y != protected.y )
+			{
+				var x = protected.x;
+				var y = protected.y;
+				protected.x = rotate.x;
+				protected.y = rotate.y;
+
+				// Change position
+				vars.channel.set_x( protected.xCenter + protected.x );
+				vars.channel.set_y( protected.yCenter + protected.y );
+				root.vars.angle = Math.atan2( protected.y - y, protected.x - x );
+				root.vars.speed = this.aoz.utilities.getDistance( x, y, protected.x, protected.y ) * 1;
+
+				// Call limits
+				if ( root.limits )
+					this.aoz.moduleMovements.handleLimits.call( root, vars.channel );
+
+				// Call collisions
+				if ( root.vars.collProc$ )
+					this.aoz.moduleMovements.checkCollisions.call( root, vars.channel );
+			}
+		}
+	}
+	End Method
+
+	Method Set Limits, x1, y1 To x2, y2
+	{
+		this.root.setLimits( { x: vars.x1, y: vars.y1, width: vars.x2-vars.x1, height: vars.y2-vars.y1} );
+	}
+	End Method
+End Class
+
+Class Wave Movement, speed = 1000, sineSpeed = 1, direction = 0, angleStart = 0, sineWidth = 100, rotation = True, state$ = "on", limitProc$, collProc$
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#class:"Movement"
+		#noVariableInit:true
+
+		this.set_speed = function( value )
+		{
+			this.vars.speed = value;
+			this.vars.protected.currentSpeed = value;
+			this.vars.protected.speed = value;
+		};
+		this.set_sineSpeed = function( value )
+		{
+			this.vars.sineSpeed = value;
+			this.vars.protected.sineSpeed = value * 1000;
+		};
+		this.set_sineWidth = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.sineWidth = value;
+		};
+		this.set_angleStart = function( value )
+		{
+			this.vars.angleStart = value * this.aoz.degreeRadian;
+			this.vars.protected.currentAngle = value * this.aoz.degreeRadian;
+		};
+		this.set_rotation = function( value )
+		{
+			this.vars.protected.rotation = value;
+			this.vars.rotation = value;
+		};
+		this.vars.protected =
+		{
+			rotation: args.rotation,
+			sineWidth: args.sineWidth,
+			sineSpeed: args.sineSpeed,
+			currentSpeed: args.currentSpeed,
+			xPosition: 0,
+			yPosition: 0
+		};
+		this.set_angleStart( this.vars.angleStart );
+		this.addToSynchro = true;
+	}
+
+	Method Update, channel, deltaTime
+	{
+		var root = this.root;
+		var protected = this.vars.protected;
+		if ( root.vars.state$ == 'on' )
+		{
+			// Grab the coordinates if they have been changed by an instruction
+			var x = vars.channel.get_x( '#update' );
+			if ( typeof x != 'undefined' )
+			{
+				root.vars.xStart = x;
+				protected.currentAngle = root.vars.angleStart;
+			}
+			var y = vars.channel.get_y( '#update' );
+			if ( typeof y != 'undefined' )
+			{
+				root.vars.yStart = y;
+				protected.currentAngle = root.vars.angleStart;
+			}
+
+			// Movement
+			protected.currentAngle = ( protected.currentAngle + Math.PI * root.vars.sineSpeed * ( vars.deltaTime / 1000 ) ) % ( Math.PI * 2 );
+			protected.xPosition += protected.currentSpeed * ( vars.deltaTime / 1000 );
+			protected.yPosition = -root.vars.sineWidth * Math.sin( protected.currentAngle );
+			var rotate = this.aoz.moduleMovements.rotate( 0, 0, protected.xPosition, protected.yPosition, root.vars.direction * this.aoz.degreeRadian );
+			protected.x = protected.xStart + rotate.x;
+			protected.y = protected.yStart + rotate.y;
+
+			// Change position
+			vars.channel.set_x( protected.x );
+			vars.channel.set_y( protected.y );
+			protected.angle = Math.atan2( protected.y - y, protected.x - x );
+			protected.speed = this.aoz.utilities.getDistance( x, y, protected.x, protected.y ) * 1;
+
+			// Call limits
+			if ( root.limits )
+				this.aoz.moduleMovements.handleLimits.call( root, vars.channel );
+
+			// Call collisions
+			if ( root.vars.collProc$ )
+				this.aoz.moduleMovements.checkCollisions.call( root, vars.channel );
+		}
+	}
+	End Method
+
+	Method Set Limits, x1, y1 To x2, y2
+	{
+		this.root.setLimits( { x: vars.x1, y: vars.y1, width: vars.x2-vars.x1, height: vars.y2-vars.y1} );
+	}
+	End Method
+End Class
+
+
+Class Chase Movement, goalIndex = (index), speed = 1000, frequency = 100, minDistance = 0, maxDistance = 10000, rotation = True, acceleration = 1000, deceleration = 1000, state$ = "on", limitProc$, collProc$
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#class:"Movement"
+		#noVariableInit:true
+
+		this.set_frequency = function( value )
+		{
+			if ( value <= 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.frequency = value;
+		};
+		this.set_acceleration = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.acceleration = value;
+		};
+		this.set_deceleration = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.deceleration = value;
+		};
+		this.set_minDistance = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.minDistance = value;
+		};
+		this.set_maxDistance = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.maxDistance = value;
+		};
+		this.vars.protected =
+		{
+			speed: 0,
+			angle: 0,
+			resamplingCount: 1
+		};
+		// FLTODO: define parameters limits automatically in instruction definition
+		this.set_frequency(this.vars.speed);
+		this.set_acceleration(this.vars.acceleration);
+		this.set_deceleration(this.vars.deceleration);
+		this.set_minDistance(this.vars.minDistance);
+		this.set_maxDistance(this.vars.maxDistance);
+		this.addToSynchro = true;
+	}
+
+	Method Update, channel, deltaTime
+	{
+		var root =  this.root;
+		var protected = root.vars.protected;
+		if ( root.vars.state$ == 'on' )
+		{
+			// Grab the coordinates if they have been changed by an instruction
+			var x = vars.channel.get_x( '#update' );
+			if ( typeof x != 'undefined' )
+				protected.x = x;
+			var y = vars.channel.get_y( '#update' );
+			if ( typeof y != 'undefined' )
+				protected.y = y;
+
+			// Re-sample?
+			protected.resamplingCount -= vars.deltaTime;
+			if ( protected.resamplingCount <= 0 )
+			{
+				protected.resamplingCount = root.vars.frequency;
+				protected.goalChannel = this.aoz.getObjectFromType( vars.channel.className, root.vars.goalIndex );
+				if ( !protected.goalChannel )
+				{
+					root.vars.state$ = 'off';
+					return;
+				}
+				var goalX = protected.goalChannel.get_x();
+				var goalY = protected.goalChannel.get_y();
+				var distance = this.aoz.utilities.getDistance( goalX, goalY, protected.x, protected.y );
+				if ( distance >= root.vars.minDistance && distance <= root.vars.maxDistance )
+				{
+					root.vars.angle = Math.atan2( goalY - protected.y, goalX - protected.x );
+					protected.mode = 'accelerate';
+				}
+			}
+			if ( protected.mode == 'accelerate' )
+			{
+				protected.speed = Math.min( protected.speed + root.vars.acceleration * ( vars.deltaTime / 1000 ), root.vars.speed );
+			}
+
+			// Movement
+			if ( protected.speed )
+			{
+				protected.x += Math.cos( root.vars.angle ) * protected.speed * ( vars.deltaTime / 1000 );
+				protected.y += Math.sin( root.vars.angle ) * protected.speed * ( vars.deltaTime / 1000 );
+
+				var distance = this.aoz.utilities.getDistance( protected.goalChannel.get_x(), protected.goalChannel.get_y(), protected.x, protected.y );
+				if ( distance <= root.vars.minDistance )
+					root.mode = 'decelerate';
+
+				// Check the limits
+				if ( root.limits )
+					this.aoz.moduleMovements.handleLimits.call( root, vars.channel );
+
+				// Set coordinates
+				vars.channel.set_x( protected.x );
+				vars.channel.set_y( protected.y );
+			}
+			else
+			{
+				// Keep an eye on the goal
+				root.vars.angle = Math.atan2( protected.goalChannel.get_y() - protected.y, protected.goalChannel.get_x() - protected.x );
+			}
+
+			if ( protected.mode == 'decelerate' )
+			{
+				protected.speed = Math.max( protected.speed - root.vars.deceleration * ( vars.deltaTime / 1000 ), 0 );
+				if ( protected.speed = 0 )
+					protected.mode = '';
+			}
+
+			// Call collisions
+			if ( root.vars.collProc$ )
+				this.aoz.moduleMovements.checkCollisions.call( root, vars.channel );
+		}
+	}
+	End Method
+
+	Method Set Limits, x1, y1 To x2, y2
+	{
+		this.root.setLimits( { x: vars.x, y: vars.y, width: vars.x2 - vars.x1, height: vars.y2 - vars.y1 } );
+ 	}
+	End Method
+End Class
+
+
+Class Tank Movement, speed = 1000, acceleration = 1000000, deceleration = 1000000, angle = 0, rotationSpeed = 1, rotation = True, allowReverse = True, gamepad = 0, state$ = "on", collProc$, limitProc$
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#class:"Movement"
+		#noVariableInit:true
+
+		this.set_speed = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.speed = value;
+		};
+		this.set_acceleration = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.acceleration = value;
+		};
+		this.set_deceleration = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.deceleration = value;
+		};
+		this.set_angle = function( value )
+		{
+			this.vars.angle = value;
+			this.vars.protected.angle = value;
+		};
+		this.set_rotationSpeed = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.protected.rotationSpeed = value;
+		};
+		this.set_rotation = function( value )
+		{
+			this.vars.rotation = value;
+			this.vars.protected.rotation = value;
+		};
+		this.set_gamepad = function( value )
+		{
+			if ( value < 0 || value > 3 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.gamepad = value;
+		};
+		this.vars.protected =
+		{
+			angle: args.angle,
+			rotationSpeed: args.rotationSpeed,
+			currentSpeed: currentSpeed,
+		};
+		this.addToSynchro = true;
+	}
+
+	Method Update, channel, deltaTime
+	{
+		var root = this.parent;
+		var protected = root.vars.protected;
+		if ( root.state$ == 'on' )
+		{
+			// Grab the coordinates if they have been changed by an instruction
+			var x = vars.channel.get_x( '#update' );
+			if ( typeof x != 'undefined' )
+				root.x = x;
+			var y = vars.channel.get_y( '#update' );
+			if ( typeof y != 'undefined' )
+				root.y = y;
+
+			// Get the joystick
+			var joystick = aoz.joy( root.vars.gamepad );
+
+			// Left / Right -> rotate
+			if ( joystick & 0b1100 )
+			{
+				var direction = ( joystick & 0b1000 ) ? -1 : 1;
+				protected.angle =  ( protected.angle - direction * Math.PI * root.vars.rotationSpeed * ( vars.deltaTime / 1000 ) ) % ( Math.PI * 2 );
+			}
+
+			// Acceleration
+			if ( joystick & 0b0001 )
+			{
+				protected.currentSpeed = Math.min( protected.currentSpeed + root.vars.acceleration * ( vars.deltaTime / 1000 ), root.vars.speed );
+			}
+			if ( root.vars.allowReverse && ( joystick & 0b0010 ) != 0 )
+			{
+				protected.currentSpeed = Math.max( protected.currentSpeed - root.vars.acceleration * ( vars.deltaTime / 1000 ), -root.vars.speed );
+			}
+			if ( ( joystick & 0b0011 ) == 0 )
+			{
+				if ( protected.currentSpeed < 0 )
+					protected.currentSpeed = Math.min( protected.currentSpeed + root.vars.deceleration * ( vars.deltaTime / 1000 ), 0 );
+				else if ( protected.currentSpeed > 0 )
+					protected.currentSpeed = Math.max( protected.currentSpeed - root.vars.deceleration * ( vars.deltaTime / 1000 ), 0 );
+			}
+			protected.speed = Math.abs( protected.currentSpeed );
+
+			// Movement
+			if ( protected.currentSpeed )
+			{
+				var x = protected.x;
+				var y = protected.y;
+				protected.x += Math.cos( protected.angle ) * protected.currentSpeed * ( vars.deltaTime / 1000 );
+				protected.y += Math.sin( protected.angle ) * protected.currentSpeed * ( vars.deltaTime / 1000 );
+
+				// Call limits
+				if ( root.limits )
+					this.aoz.moduleMovements.handleLimits.call( root, vars.channel );
+
+				// Set coordinates
+				vars.channel.set_x( protected.x );
+				vars.channel.set_y( protected.y );
+			}
+			// Call collisions
+			if ( root.vars.collProc$ )
+				this.aoz.moduleMovements.checkCollisions.call( root, vars.channel );
+		}
+	}
+	End Method
+
+	Method Set Limits, x1, y1 To x2, y2
+	{
+		this.root.setLimits( { x: vars.x, y: vars.y, width: vars.x2 - vars.x1, height: vars.y2 - vars.y1 } );
+	}
+	End Method
+End Class
+
+Class Mouse Movement, rotation = True, absolute = True, horizontal = True, vertical = True, rotationSpeed = 2.5, state$ = "on", collProc$, limitProc$
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#class:"Movement"
+		#noVariableInit:true
+
+		this.set_rotation = function( value )
+		{
+			this.vars.rotation = value;
+			this.vars.protected.rotation = value;
+		};
+		this.set_rotationSpeed = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.rotationSpeed = value;
+		};
+		this.vars.protected =
+		{
+			rotation: args.rotation,
+			rotationSpeed: args.rotationSpeed,
+			speed: 0,
+			angle: 0
+		};
+		this.addToSynchro = true;
+	}
+
+	Method Update, channel, deltaTime
+	{
+		var root = this.parent;
+		var protected = root.vars.protected;
+		if ( root.state$ == 'on' )
+		{
+			// Grab the coordinates if they have been changed by an instruction
+			var x = vars.channel.get_x( '#update' );
+			if ( typeof x != 'undefined' )
+			{
+				protected.x = x;
+				protected.previousXMouse = aoz.xMouse;
+			}
+			var y = vars.channel.get_y( '#update' );
+			if ( typeof y != 'undefined' )
+			{
+				protected.y = y;
+				protected.previousYMouse = aoz.yMouse;
+			}
+
+			var x = protected.x;
+			var y = protected.y;
+
+			// Left / Right -> rotate
+			if ( !root.vars.absolute )
+			{
+				if ( root.vars.horizontal )
+				{
+					root.x += ( this.aoz.xMouse - protected.previousXMouse );
+					protected.previousXMouse = root.aoz.xMouse;
+				}
+				if ( root.vars.vertical )
+				{
+					protected.y += ( this.aoz.yMouse - protected.previousYMouse );
+					protected.previousYMouse = aoz.yMouse;
+				}
+			}
+			else
+			{
+				if ( root.vars.horizontal )
+				{
+					protected.x = aoz.xMouse;
+				}
+				if ( root.vars.vertical )
+				{
+					protected.y = aoz.yMouse;
+				}
+			}
+
+			// Movement
+			if ( x != protected.x || y != protected.y )
+			{
+				protected.speed = this.aoz.utilities.getDistance( x, y, protected.x, protected.y ) * 1;
+
+				var angle = Math.atan2( protected.y - y, protected.x - x );
+				if ( angle > protected.angle )
+					protected.angle = Math.min( protected.angle - Math.PI * root.vars.rotationSpeed * ( vars.deltaTime / 1000 ), angle );
+				else
+					protected.angle = Math.max( protected.angle + Math.PI * root.vars.rotationSpeed * ( vars.deltaTime / 1000 ), angle );
+
+				// Call limits
+				if ( root.limits )
+					this.aoz.moduleMovements.handleLimits.call( root, vars.channel );
+
+				// Set coordinates
+				vars.channel.set_x( protected.x );
+				vars.channel.set_y( protected.y );
+			}
+			// Call collisions
+			if ( root.vars.collProc$ )
+				this.aoz.moduleMovements.checkCollisions.call( root, vars.channel );
+		}
+	}
+	End Method
+
+	Method Set Limits, x1, y1 To x2, y2
+	{
+		this.root.setLimits( { x: vars.x, y: vars.y, width: vars.x2 - vars.x1, height: vars.y2 - vars.y1 } );
+	}
+	End Method
+End Class
+

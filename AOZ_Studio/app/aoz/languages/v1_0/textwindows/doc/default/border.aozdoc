@@ -1,0 +1,12 @@
+<i>Border</i>
+<b>Border</b> xxxxxxx
+=
+This command allows you to change the style and colour of the current window border. Border style numbers range
+from 1 to 16, and the paper and pen colours can be selected from any available colour index numbers. Any of these
+parameters can be omitted from the BORDER instruction as long as the commas are included for any missing
+values: If the last example is still on screen, enter these lines from direct mode:
+@code
+Border 3,2,3
+Border 2,,
+@code
+

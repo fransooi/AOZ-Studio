@@ -1,0 +1,17 @@
+<i>Sample</i>
+<b>Sample</b> xxxxxxx
+=
+This is the most powerful of the wave commands. SAMPLE is used to assign the specified sound sample number, which is already stored in the Sample Bank, directly to the current wave form. The voices to be used are set in the usual way. When PLAY is used, this sample will be taken from the Sample Bank and used as the "musical
+instrument" to be played. Try this example:
+@code
+Load "AMOSPro_Examples:Samples/Mixture.Abk",6
+Sam Bank 6
+Sample 5 To 15
+For S=20 To 50
+Play S,50
+Next S
+@code
+The pitch values that can be applied to any particular sample will vary, but normally anything between 10 and 50 is
+satisfactory.
+
+

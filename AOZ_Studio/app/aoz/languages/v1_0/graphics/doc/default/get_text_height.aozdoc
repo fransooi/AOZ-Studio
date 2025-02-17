@@ -1,0 +1,14 @@
+<i>Get Text Height</i>
+<b>Get Text Height</b> xxxxxxx
+=
+This command is used to get the height of a text box.
+@code
+TXT$ = "Silent, Silent Night : <br> Silent, silent Night <br> Quench the holy light <br> Of thy torches bright. <br> <br> For possess'd of Day <br> Thousand spirits stray <br> That sweet joys betray. <br> <br> Why should joys be sweet <br> Used with deceit <br> Nor with sorrows meet? <br> <br> But an honest joy <br> Does itself destroy <br> For a harlot coy. <br> <br> William Black."
+
+Rem Get the Height of the text box for the text and a width of 300 pixels
+H = Get Text Height( TXT$, 300 )
+
+Rem Draw the text box
+Format Text Text$ = TXT$, X = 0, Y = 0, Width = 300, Height = H
+@code
+

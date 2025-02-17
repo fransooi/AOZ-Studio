@@ -1,0 +1,5 @@
+<i>Tile Width</i>
+<b>Tile Width</b> xxxxxxx
+=
+This function returns the width of each tile of the tileset affected to the view.
+

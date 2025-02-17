@@ -1,0 +1,7 @@
+<i>Scroll</i>
+<b>Scroll</b> xxxxxxx
+=
+Moves the pixels in the desired direction. The empty zones at the extremities of the scrollign area, on left, top and/or right and bottom are left unchanged and will have to be cleared
+
+To scroll a screen zone already specified with a DEF SCROLL setting, use SCROLL followed by the zone number you require.
+

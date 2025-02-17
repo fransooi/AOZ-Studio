@@ -1,0 +1,183 @@
+{
+    colour_palette_and_animation_commands:
+    { 
+        name: "TODO"
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "get_palette":
+            [
+                This command copies the colours from a specified screen, and loads them into the current screen. This is useful
+when data is being moved from one screen to another with a SCREEN COPY command, and the same colour
+settings need to be shared for both screens. An optional mask can be added after the screen number, allowing only
+selected colours to be loaded. This works in exactly the same way as a mask for a GET SPRITE PALETTE
+command, and is explained in Chapter 7.1  
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "get_images_palette":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "colour":
+            [
+                It is not difficult to find which colours are occupying the colour index, and analyse how much Red, Green and Blue is used to make up each shade. The COLOUR function can take an index number from 0 to 31, and returns the colour value assigned to that number. Hex$ is used for this purpose, as follows  
+                '''
+                ~~~                
+		   Curs Off : Flash Off
+		   For C=0 To 15: Ink C
+		     Print Hex$(Colour(C),3)
+		     Circle 160,75,(C+1)*4
+	 	   Next C
+                ~~~
+                '''
+            ]
+            "rgb$":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "rgb":
+            [
+                  
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "flash":
+            [
+                When FLASH is followed by the index number of any colour, that colour will display animated flashing every time it is used, until FLASH OFF is called. Up to 16 colours can be cycled to customise your flashing effects, and the rate of delay from one colour change to the next can be individually set. Try this  
+                '''
+                ~~~                
+		Flash 1 ,"(0A0,10)(F0F,40)"
+                ~~~
+                '''
+                In that example, the colour to be affected is set to index number 1. After the comma, the set of quotation marks can contain up to 16 pairs of brackets, and each pair of brackets contains the colour that is next on the list to be flashed, and the time it will appear for. Colour is set in RGB component values, which are fully explained in the next Chapter. Delay time is set in units of a 50th of a second. So the last example has the effect of flashing colour number 1 between a green value and a violet value once every second. The next example is more subtle  
+                '''
+                ~~~                
+		Cls : Centre "SILENT MOVIES"
+		Flash 1,"(111,4)(333,4)(555,4)(777,4)(555,7)(333,7)
+		Curs Off : Wait 250 : Flash Off
+                ~~~
+                '''
+            ]
+            "flash_off": //TODO
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "shift_up":
+            [
+                This command takes the values held in the colour registers and shunts them forwards. The delay between colour shifts is set in 50ths of a second, similarly to the FADE command  
+""
+Next the values of the colours to be affected are set, from the first colour to the last colour in the sequence. The first colour in the list will be copied to the second, the second to the third, and so on until the last colour in the series is reached  
+""
+Finally, a flag is set to either 0 or 1. When this flag is set to zero, the last colour is discarded, and the rotation will cycle for the number of times it takes to replace all colours with the first colour in the list  
+""
+Alternatively, if the flag is set to one, the last colour index in the list is copied into the first, causing the colours to rotate continuously on screen  
+""
+Each of your screens can have its own set of animated colour rotations, and because they are executed using
+interrupts they will not affect the running of your programs  
+
+            ]
+            "shift_down":
+            [
+                This command is identical to SHIFT UP, except for the fact that colours are rotated in the opposite direction, so that
+the second colour is copied into the first, the third to the second, and so on. With the final flag set to zero, all colours
+are eventually replaced with the last colour in the list  
+
+            ]
+            "shift_off":
+            [
+                Use this command to terminate all colour rotations previously set by the SHIFT UP and SHIFT DOWN instructions  
+
+            ]
+            "fade":
+            [
+                "The classic "fade to black" movie effect takes the current palette and gradually fades all values to zero. Set the speed of the fade by choosing the number of vertical blank periods between each colour change. Try this  
+                '''
+                ~~~
+		   Flash Off : Curs Off
+		   Centre "GOOD NIGHT"
+		   Fade 5                
+                ~~~
+                '''
+Fade effects are executed using interrupts, so it is sensible to wait until the fade has ended before going on to the next program instruction. The length of wait required can be calculated with this formula  
+                '''
+                ~~~
+		wait = fade speed * 15
+                ~~~
+                '''
+So that last example is sure to work with the rest of your program if the third line is changed to this  
+                '''
+                ~~~
+		   Fade 5 : Wait 75
+                ~~~
+                '''
+By adding a list of colour values, the fade effect will generate a new palette directly from your list, and it is used like this  
+                '''
+                ~~~
+		   Flash Off : Curs Off
+		   Centre "RED SKY AT NIGHT"
+		   Fade 10,$100,$F00,$300
+		   Wait 150
+                ~~~
+                '''
+Any number of new colours can be set up like this, depending on the maximum number allowed in your current
+screen mode. Any settings that are omitted will leave those colours completely unaffected by the fade, as long as you
+include the right number of commas. For example  
+                '''
+                ~~~
+		   Fade 5,,$100,,,$200,$300
+                ~~~
+                '''
+There is an even more powerful use of the FADE command, which takes the palette from another screen and fades it
+into the colours of the current screen. Set the speed of the fade as usual, then give the number of the screen whose
+palette is to be accessed. By using a negative number instead of a screen number, the palette from the sprite bank
+will be loaded instead  
+""
+There is one more parameter that can be added, and this creates a mask that only permits certain colours to be faded
+in. Each colour is associated with a single bit in the pattern, numbered from 0 to 15, and any bit that is set to 1 will be affected by a colour change. For example  
+                '''
+                ~~~
+		   Load "AMOSPro_Tutorial:Objects/Bobs.Abk"
+		   Screen Open 1,320,90,16,Lowres
+		   Flash Off : Get Object Palette
+		   Paste Bob 100,0,1
+		   Wait 100
+		   Fade 1 To 0,%01111000011001010
+		   Wait 15"
+                ~~~
+                '''
+            ]
+            "default":
+            [
+                The DEFAULT instruction closes all currently opened screens and restores the display back to the original default
+setting  
+
+            ]
+            
+        }
+    }
+}

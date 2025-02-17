@@ -1,0 +1,12 @@
+<i>Phybase</i>
+<b>Phybase</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+PHYBASE returns the address in memory of the specified bit-plane number for the current screen. If this plane does
+not exist, a value of zero is given. For example:
+@code
+Loke Phybase(0),0 : Rem Poke a thin line directly onto screen
+@code
+
+

@@ -1,0 +1,17 @@
+<i>SPack</i>
+<b>SPack</b> xxxxxxx
+=
+Note: this instruction will be implemented with ZIP compression in a near future.
+
+(extracted from the AMOSPro manual)
+
+The image must always be unpacked into an existing screen. Also there will be a slight flicker when the image is
+unpacked, unless the screens have been double buffered, so it is better to use single buffered screens here. Screen
+numbers, memory bank numbers and optional coordinates for smaller sections of the screen to be packed are used in
+exactly the same way as with the SPACK command, and x-coordinates are rounded to the nearest 8 pixel boundary
+too.
+
+SPACK is fully compatible with the standard AUTOBACK system explained in Chapter 7.2, so it is easy to
+combine compacted images with moving screens. Images can even be unpacked behind existing Bobs, so it is
+possible to exploit this command together with SCREEN OFFSET to create superb scrolling backgrounds.
+

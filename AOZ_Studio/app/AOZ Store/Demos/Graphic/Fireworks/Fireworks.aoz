@@ -1,0 +1,498 @@
+/ **********************
+// *     Fireworks      *
+// *  By Paul Kitching  *
+// *                    *
+reldate$="07/03/2021"
+// **********************
+
+// This started off as 'I wonder if I could make a firework explosion' and grew into this unplanned demo.
+// I added quite a few options to give it some replay value.
+
+// Bugs: 	1)	AOZ has a problem at time of writing where closing a second window moves the contents of the first one.
+//				This is apparent when you move between tick boxes on the options screen.
+//			2)	The volume command doesn't work, so it's far too loud.  I've reduced the volume a lot, so will be almost silent
+//				when the sound is working properly.  I'll send out a new version when that happens.
+
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+//#fullScreen:true
+#googleFont:"akronim"
+#googleFont:"baloo"
+#googleFont:"roboto"
+#splashScreen:false
+#speed:"graphics"
+
+//#fps:false
+hot spot 2,$00
+hot spot 2,$02
+hot spot 3,$02
+hot spot 4,$02
+hot spot 5,$12
+hot spot 10,$11
+hot spot 11,$11
+hot spot 12,$11
+hot spot 13,$11
+ver$="v1.3"
+// --------------------- Init ---------------------
+sx=1920:sy=1080                   // screen x/y size
+cls 0
+screen open 0,sx,sy,32,lowres     // open the screen
+curs off:flash off                // turn off the cursor and flashing effects
+totfw=120                         // total fireworks to set off
+groundfw=5                        // total ground based fireworks
+totparts=200                      // total particles any firework can have
+minparts=40                       // minimum particles it can have
+endtime=3000                      // number of loops (length of sim)
+maxsize=3                         // max size of a particle
+maxlifespan=120                   // number of loops a firework lasts
+minlifespan=50                    // shortest time a firework lasts
+horizon=900                       // how far down the screen the ground based ones are
+gravity#=0.05:airres#=0.02        // gravity and sideways air resistance
+gndextra=200                      // extra time for ground fireworks to finish
+fwshape=0                         // dot or square
+holdsparkler$="Y"                 // mouse controlled sparkler
+retro$="N"                        // blocky mode
+trails$="N"                       // leave trails behind
+manual$="N"                       // start in automatic mode
+winy=120						  // Option window y pos
+windy=winy+480					  // Option description window y pos
+windx=1250						  // Option window x pos
+txtheight=35					  // Option text height
+numoptions=12
+optbobx=1020
+dim opty(numoptions)					  // Option text y pos
+dim optt(numoptions,4)					  // Option type (1=tick boxes, 2=slider),value (0/1=off/on, or actual value for sliders),min,max
+global optt(),opty(),optbobx
+
+for oy=1 to numoptions		// read option data (type,value,max,min)
+	opty(oy)=(winy+290)+((oy-1)*txtheight)
+	read optt(oy,1),optt(oy,2),optt(oy,3),optt(oy,4)
+next oy
+
+do
+	gosub main
+loop
+end
+
+main:
+load image "FireworksTitle.png"   // Load a title screen.
+// Set colours.  Several brightnesses for each firework colour, to simulate them burning out over time.
+palette $000000,$FFFFFF,$FF0000,$00FF00,$0000FF,$00FFFF,$FF00FF,$FFFF00,$BBBBBB,$BB0000,$00BB00,$0000BB,$00BBBB,$BB00BB,$BBBB00,$777777,$770000,$007700,$000077,$007777,$770077,$777700,$333333,$330000,$003300,$000033,$003333,$330033,$333300
+ink 2								// set ink colour to red (colour 2)
+textx=250							// title screen text x pos
+set font "akronim",130				// set font and size
+text textx,140,"Fireworks","#center"	// text command lets you position text by the pixel, not by character blocks. #centre centres the text, it doesn't print that.
+set font "baloo",30						// set font smaller than above
+text textx,200,"By Paul Kitching","#center"
+//text textx,250,reldate$,"#center"
+finished=false
+while not finished
+	if x mouse>130 and x mouse<370 and y mouse>330 and y mouse<360
+		ink 3:text textx,350,"Info. and Options","#center"
+		if mouse key<>0 then gosub options
+	else
+		ink 2:text textx,350,"Info. and Options","#center"
+	end if
+	if x mouse>210 and x mouse<285 and y mouse>390 and y mouse<410
+		ink 3:text textx,410,"Start","#center"
+		if mouse key<>0 then finished=true
+	else
+		ink 2:text textx,410,"Start","#center"
+	end if
+	wait vbl
+Wend
+hide                              // hide the mouse
+cls 0
+// fw# holds the position and direction of the particles.  e.g. fw#(1,2,3) is firework 1, y position, particle 3
+// Firework No. |  x(10), y(10), x+/-(10), y+/-(10) | total particles for each one
+// fw#(x,1/2,0)=start x/y
+dim fw#(optt(1,4),4,optt(3,4))
+// fwmisc holds the firework number in the first number, then the second has 6 elements to it, with each holding a value for the properties of the firework.
+// Dimension 1: firework number.  Dimension 2: 1=colour; 2=time to detonation; 3=lifespan; 4=No. of particles; 5=size of particles; 6=sparkle
+dim fwmisc(optt(1,4),6)
+sparktot=30															// affects the spread and lifespan of sparkler sparks.
+dim spark#(optt(3,4),4)
+dim spcount(optt(3,4))                                               // sparkler counter used when re-using the spark number after it dies
+for sparkcount=1 to sparktot
+	spark#(sparkcount,1)=x mouse                                      // x pos
+	spark#(sparkcount,2)=y mouse                                      // y pos
+	spark#(sparkcount,3)=0                                            // x direction
+	spark#(sparkcount,4)=0                                            // y direction
+	spcount(sparkcount)=sparkcount                                    // Spreads out the sparkles so they don't just come out in bursts
+next sparkcount
+
+for fireworks=1 to totfw
+	fw#(fireworks,1,0)=rnd(sx)										// starting x pos
+	if fireworks<=groundfw                                            // if it's a ground based firework
+		fw#(fireworks,2,0)=horizon                                      // starting y pos
+		fwmisc(fireworks,3)=maxlifespan                                 // lifespan
+		fwmisc(fireworks,4)=fwmisc(fireworks,3)                         // particles
+		fwmisc(fireworks,5)=2                                           // size
+	else                                                              // air based firework
+		fw#(fireworks,2,0)=rnd(250)+30                                  // starting y pos
+		fwmisc(fireworks,3)=rnd(maxlifespan-minlifespan)+minlifespan    // lifespan
+		fwmisc(fireworks,4)=rnd(totparts-minparts)+minparts             // particles
+		fwmisc(fireworks,5)=rnd(maxsize-1)+1                            // size
+	end if
+	fwmisc(fireworks,1)=rnd(6)+1                                      // set firework colour
+	if manual$="N"
+		fwmisc(fireworks,2)=rnd(endtime-(maxlifespan+200))              // launch time
+	else
+		fwmisc(fireworks,2)=9999999                                     // launch time.  We don't want one in manual mode
+	end if
+	fwmisc(fireworks,6)=rnd(5)                                        // sparkle effect
+	if fwmisc(fireworks,6)=1 then inc fwmisc(fireworks,5)             // make sparkly ones bigger particles
+	gosub setparticles
+next fireworks
+manualcount=1
+finished=false:lcount=0
+degr#=1
+// -------------------------------------- Main loop ---------------------------------------
+while not finished
+	if trails$<>"Y" then cls 0
+	manualkey$=inkey$
+	if manual$="Y" and manualkey$<>"" and manualcount<=totfw        // manual mode
+		fwmisc(manualcount,2)=lcount                                  // set explode time to now
+		if val(manualkey$)<>0                                         // random or positioned explosion
+			fw#(manualcount,1,0)=(sx/11)*val(manualkey$)                // split into 11ths, with 9 firing positions
+			fireworks=manualcount                                       // set firework number for below subroutine
+			gosub setparticles
+		end if
+		inc manualcount                                               // this one is set, so move to the next firework number
+	end if
+	for fireworks=1 to totfw
+		fend=fwmisc(fireworks,2)+fwmisc(fireworks,3)                                 //firework end (death)
+		// ================== ground fireworks ================
+		if lcount>=fwmisc(fireworks,2) and lcount<fend+gndextra and fireworks<=groundfw
+			if lcount=fwmisc(fireworks,2) then sam play 5                              // play the sound when it appears
+			gend=lcount-fwmisc(fireworks,2)+1
+			if gend>fwmisc(fireworks,3) then gend=fwmisc(fireworks,3)
+			if gend>totparts then gend=totparts
+			for particles=1 to gend
+				if fw#(fireworks,2,particles)<=horizon
+					fw#(fireworks,1,particles)=fw#(fireworks,1,particles)+fw#(fireworks,3,particles)		// change x/y for next frame
+					fw#(fireworks,2,particles)=fw#(fireworks,2,particles)+fw#(fireworks,4,particles)
+				end if
+				if fw#(fireworks,4,particles)<5 then fw#(fireworks,4,particles)=fw#(fireworks,4,particles)+gravity#   // y gravity
+				ageband=gndextra/5                                                                           // split lifespan of firework into 5ths
+				if lcount>fwmisc(fireworks,2) and lcount<fend+(ageband*2) then agecol=0    // full brightness
+				if lcount>=fend+(ageband*2) and lcount<fend+(ageband*3) then agecol=7      // darker
+				if lcount>=fend+(ageband*3) and lcount<fend+(ageband*4) then agecol=14     // even darker
+				if lcount>=fend+(ageband*4) then agecol=21                                 // really dark
+				if retro$="Y"                                             // Retro mode
+					bx=int(fw#(fireworks,1,particles)/10)*10
+					by=int(fw#(fireworks,2,particles)/10)*10
+					ink fwmisc(fireworks,1)+agecol
+					bar bx,by to bx+10,by+10
+				else                                                       // normal mode
+					ink fwmisc(fireworks,1)+agecol
+        			if fwshape=0                                            // pixel
+            			bar fw#(fireworks,1,particles),fw#(fireworks,2,particles) to fw#(fireworks,1,particles)+fwmisc(fireworks,5),fw#(fireworks,2,particles)+fwmisc(fireworks,5)		// plot a particle
+        			else                                                    // box
+						box fw#(fireworks,1,particles)-fwmisc(fireworks,5),fw#(fireworks,2,particles)-fwmisc(fireworks,5) to fw#(fireworks,1,particles)+fwmisc(fireworks,5),fw#(fireworks,2,particles)+fwmisc(fireworks,5)// plot a particle
+        			end if
+					// sparkle effect on ground ones
+					if fwmisc(fireworks,6)<=2 then ink 1+agecol:draw fw#(fireworks,1,particles),fw#(fireworks,2,particles) to fw#(fireworks,1,particles)+(rnd(10)-5),fw#(fireworks,2,particles)+(rnd(10)-5)
+				end if
+			next particles
+		end if
+		// ================== air ================
+		if lcount>=fwmisc(fireworks,2) and lcount<fend and fireworks>groundfw
+			if lcount=fwmisc(fireworks,2)
+				if fwmisc(fireworks,6)=1                      // play sound when it appears
+					sam play rnd(1)+3
+				else
+					sam play rnd(1)+1
+				end if
+			end if
+			for particles=1 to fwmisc(fireworks,4)
+				fw#(fireworks,1,particles)=fw#(fireworks,1,particles)+fw#(fireworks,3,particles)		                  // change x/y for next frame
+				fw#(fireworks,2,particles)=fw#(fireworks,2,particles)+fw#(fireworks,4,particles)
+				if fw#(fireworks,4,particles)<5 then fw#(fireworks,4,particles)=fw#(fireworks,4,particles)+gravity#   // y gravity
+				if fw#(fireworks,3,particles)>0.1 and fwmisc(fireworks,6)<>1 then fw#(fireworks,3,particles)=fw#(fireworks,3,particles)-airres#   // x air resistance for normal parts
+				if fw#(fireworks,3,particles)<-0.1 and fwmisc(fireworks,6)<>1 then fw#(fireworks,3,particles)=fw#(fireworks,3,particles)+airres#   // x air resistance for normal parts
+				ageband=fwmisc(fireworks,3)/5                                                                           // split lifespan of firework into 5ths
+				if lcount<fwmisc(fireworks,2)+(ageband*2) then agecol=0                                                 // full brightness
+				if lcount>=fwmisc(fireworks,2)+(ageband*2) and lcount<fwmisc(fireworks,2)+(ageband*3) then agecol=7     // darker
+				if lcount>=fwmisc(fireworks,2)+(ageband*3) and lcount<fwmisc(fireworks,2)+(ageband*4) then agecol=14    // even darker
+				if lcount>=fwmisc(fireworks,2)+(ageband*4) then agecol=21                                               // really dark
+				if retro$="Y"                                             // Retro mode
+					bx=int(fw#(fireworks,1,particles)/10)*10
+					by=int(fw#(fireworks,2,particles)/10)*10
+					ink fwmisc(fireworks,1)+agecol
+					bar bx,by to bx+10,by+10
+				else                                                                                        // sparkle effect
+					if fwmisc(fireworks,6)=1 then ink 1+agecol:draw fw#(fireworks,1,particles),fw#(fireworks,2,particles) to fw#(fireworks,1,particles)+(rnd(10)-5),fw#(fireworks,2,particles)+(rnd(10)-5)
+					ink fwmisc(fireworks,1)+agecol
+					if fwshape=0
+						bar fw#(fireworks,1,particles),fw#(fireworks,2,particles) to fw#(fireworks,1,particles)+fwmisc(fireworks,5),fw#(fireworks,2,particles)+fwmisc(fireworks,5)		// plot a particle
+					else
+						box fw#(fireworks,1,particles)-fwmisc(fireworks,5),fw#(fireworks,2,particles)-fwmisc(fireworks,5) to fw#(fireworks,1,particles)+fwmisc(fireworks,5),fw#(fireworks,2,particles)+fwmisc(fireworks,5)// plot a particle
+					end if
+					if lcount=fwmisc(fireworks,2) and particles<=25      // small explosion at start of firework  Some bobs and some random graphics
+						if not(isbob(50))
+							etype=rnd(4)
+							if etype<4
+								bob 50,fw#(fireworks,1,particles),fw#(fireworks,2,particles),10+etype
+								esize=rnd(1)
+								bob scale 50,esize+1,esize+1
+								timer=0
+							end if
+						end if
+						ink 1:circle fw#(fireworks,1,particles),fw#(fireworks,2,particles),rnd(7)+2
+						draw fw#(fireworks,1,particles)+(rnd(20)-15),fw#(fireworks,2,particles)+(rnd(30)-15) to fw#(fireworks,1,particles)+(rnd(30)-15),fw#(fireworks,2,particles)+(rnd(30)-15)
+					end if
+				end if
+			next particles
+		end if
+		if timer>0.18 then bob off 50
+	next fireworks
+	if holdsparkler$="Y"
+		if showsparkler$="Y" then bob 1,x mouse,y mouse,1
+		for sparkcount=1 to sparktot
+			if spcount(sparkcount)=1                // Set direction of spark when it appears
+				distx#=rnd(60)-30                     // two stages, otherwise you end up with an integer
+				distx#=distx#/10
+				disty#=rnd(60)-30
+				disty#=disty#/10
+				spark#(sparkcount,1)=x mouse          // set co-ords of sparkler to mouse position
+				spark#(sparkcount,2)=y mouse
+				spark#(sparkcount,3)=distx#
+				spark#(sparkcount,4)=disty#
+			end if
+			spcolage=0                              // sparkler colour age, added to ink colour to make it darker based on age
+			if spcount(sparkcount)>sparktot*0.5 then spcolage=7
+			if spcount(sparkcount)>sparktot*0.8 then spcolage=14
+			if mouse key=0
+				spark#(sparkcount,1)=spark#(sparkcount,1)+spark#(sparkcount,3)
+				spark#(sparkcount,2)=spark#(sparkcount,2)+spark#(sparkcount,4)
+			end if
+			if retro$="Y"                                    // Retro mode
+				bx=int(spark#(sparkcount,1)/10)*10
+				by=int(spark#(sparkcount,2)/10)*10
+				ink 1+spcolage
+				bar bx,by to bx+10,by+10                       // draws a 10x10 filled box for each spark in a set grid position
+			else
+				ink 1+spcolage:bar spark#(sparkcount,1),spark#(sparkcount,2) to spark#(sparkcount,1)+2,spark#(sparkcount,2)+2		          // plot a particle
+				draw spark#(sparkcount,1),spark#(sparkcount,2) to spark#(sparkcount,1)+(rnd(10)-5),spark#(sparkcount,2)+(rnd(10)-5)       // random sparkly bits
+			end if
+			inc spcount(sparkcount)
+			if spcount(sparkcount)>sparktot then spcount(sparkcount)=1
+		next sparkcount
+	end if
+	inc lcount
+	if lcount=endtime or (manual$="N" and manualkey$<>"") or (manual$="Y" and manualkey$="q") or (manual$="Y" and manualcount=totfw) then finished=true      // we finish if the selected number of loops is up, or you press q
+	wait vbl                                                                        // wait for the next screen update
+Wend
+bob off
+cls 0
+show      // show the mouse
+return
+
+// ##############################################################################################################################
+
+// --------------------
+options:
+// --------------------
+winxchars=49:winychars=21
+wind save                                             // window for displaying the text
+wind open 1,350,winy,winxchars,winychars,1
+curs off
+border 2,0,7
+set paint 0
+ink 3:text sx/2,winy+60,"Info. and Options.","#center":ink 2
+text sx/2,winy+110,"Best in fullscreen mode (F11 in a browser), in the dark.","#center"
+text sx/2,winy+140,"Move the mouse to move your sparkler around the screen.","#center"
+text sx/2,winy+170,"Hold mouse button to change sparkler type.","#center"
+text sx/2,winy+200,"Any key to quit demo (or 'q' when in manual launch mode).","#center"
+ink 22
+set font "roboto",25
+text sx/2,winy+(winychars*txtheight)+90,"Version "+ver$+" ("+reldate$+")","#center"
+text sx/2,winy+(winychars*txtheight)+120,"Sound effects obtained from https://www.zapsplat.com","#center"
+
+set font "baloo",30
+lefttxt=450
+gosub optionstext																	// draw the text for the options
+for optbob=1 to numoptions															// display the bob graphics and values next to the sliders
+	bob optbob,optbobx,opty(optbob),optt(optbob,1)
+	if optt(optbob,1)=4 then text optbobx+340,opty(optbob),str$(optt(optbob,2))		// if slider, show value text
+	updateslider[302,optt(optbob,3),optt(optbob,4),optbob]
+next optbob
+inoptions=true:subwinopen=false:warnmessage=false
+while inoptions
+    bob 30,x mouse,y mouse,6														// bob 30 is for the mouse collision with option bobs.
+	if bob col(30,1 to numoptions) and mouse key<>0									// holding a button on a slider or tick box
+		for colchk=1 to numoptions
+		    if col(colchk) and optt(colchk,1)=4
+				tmpoptclick=x mouse-optbobx											// how many pixels into the slider you are
+				tmpoptsize#=302/(optt(colchk,4)+1-optt(colchk,3))					// width/(max-min)
+				optt(colchk,2)=optt(colchk,3)+(tmpoptclick/tmpoptsize#)
+				if colchk=1 and optt(1,2)<optt(2,2) then optt(2,2)=optt(1,2)		// stop total being < ground
+				if colchk=2 and optt(2,2)>optt(1,2) then optt(1,2)=optt(2,2)		// stop ground being > total
+				if colchk=3 and optt(3,2)<optt(4,2) then optt(4,2)=optt(3,2)		// stop max being < min
+				if colchk=4 and optt(4,2)>optt(3,2) then optt(3,2)=optt(4,2)		// stop min being > max
+			else if col(colchk) and optt(colchk,1)=2 and (colchk<>10 or (colchk=10 and optt(9,2)=1)) and (colchk<>8 or (colchk=8 and optt(7,2)=1))
+				optt(colchk,2)=1:optt(colchk,1)=3
+				bob colchk,optbobx,opty(colchk),optt(colchk,1)
+				wait 0.2
+			else if col(colchk) and optt(colchk,1)=3 and (colchk<>10 or (colchk=10 and optt(9,2)=1)) and (colchk<>8 or (colchk=8 and optt(7,2)=1))
+				optt(colchk,2)=0:optt(colchk,1)=2
+				bob colchk,optbobx,opty(colchk),optt(colchk,1)
+				wait 0.2
+			end if
+			if colchk=7
+				if optt(7,2)=1 then ink 1 else ink 22
+				text lefttxt,opty(8),"Show the sparkler?":ink 1
+			end if
+			if colchk=9
+				if optt(9,2)=1 then ink 1 else ink 22
+				text lefttxt,opty(10),"Outlines on retro 'pixels'":ink 1
+			end if
+			if optt(colchk,1)=4 then ink 1:text optbobx+340,opty(colchk),str$(optt(colchk,2))+"    "
+			updateslider[302,optt(colchk,3),optt(colchk,4),colchk]
+		next colchk
+	else if bob col(30,7 to numoptions)				// mouse over a tick box
+		for colchk=1 to numoptions
+			if col(colchk) and subwinopen=false
+				wind save
+				wind open 2,windx,windy,24,5,1
+				curs off
+				border 2,0,7
+				set paint 0
+				subwinopen=true
+				if colchk=7
+					text windx+35,windy+40,"Move a sparkler around the screen with"
+					text windx+35,windy+70,"the mouse while the firework display"
+					text windx+35,windy+100,"is running."
+				else if colchk=8
+					text windx+35,windy+40,"Show the graphic for the sparkler?"
+				else if colchk=9
+					text windx+35,windy+40,"Make the display look like a low"
+					text windx+35,windy+70,"resolution 8-bit screen."
+				else if colchk=10
+					text windx+35,windy+40,"Makes the retro pixels have an outline."
+				else if colchk=11
+					text windx+35,windy+40,"Leaves trails where the firework sparks"
+					text windx+35,windy+70,"have been."
+				else
+					text windx+35,windy+40,"Manually launch each firework."
+					text windx+35,windy+70,"Press 1-9 to fire in a specific location"
+					text windx+35,windy+100,"(1=left of screen, 9=right side)."
+			        text windx+35,windy+130,"Other keys for random position."
+			        text windx+35,windy+160,"Press q to quit this mode."
+				end if
+				wait 0.2
+			end if
+		next colchk
+	else if subwinopen
+		wind close:subwinopen=false
+		gosub optionstext											// update the options text.
+	end if
+	stufftemp1=optt(1,2)-optt(2,2)									// total - ground = air
+	stufftemp2=(optt(3,2)+optt(4,2))/2								// average particles for air (max+min)/2
+	stufftemp3=optt(2,2)*maxlifespan								// ground particles
+	stuffonscreen=(stufftemp1*stufftemp2+stufftemp3+(optt(7,2)*60))/optt(5,2)		// divided by time for average per second
+	//locate 0,0:print stuffonscreen;"   "							// show average particles
+	if stuffonscreen>500
+		ink 3:text sx/2,opty(12)+80,"Complexity high.  Consider longer time, less particles, less fireworks, etc.","#center"
+		warnmessage=true
+	else if stuffonscreen<=500 and warnmessage
+		ink 0:bar 430,opty(12)+40 to 1470,opty(12)+90
+		warnmessage=false
+	end if
+	//if subwinopen then wind close:subwinopen=false
+	if x mouse>920 and x mouse<1000 and y mouse>885 and y mouse<925
+	    ink 3:text sx/2,opty(numoptions)+120,"Close","#center"
+	    if mouse key<>0 then inoptions=false
+    else
+    	ink 2:text sx/2,opty(numoptions)+120,"Close","#center"
+    end if
+	wait vbl
+wend
+
+bob off
+totfw=optt(1,2)
+groundfw=optt(2,2)
+totparts=optt(3,2)
+minparts=optt(4,2)
+endtime=optt(5,2)*60		// assuming 60 fps
+fwshape=optt(6,2)
+if optt(7,2)=1 then holdsparkler$="Y" else holdsparkler$="N"
+if optt(8,2)=1 then showsparkler$="Y" else showsparkler$="N"
+if optt(9,2)=1 then retro$="Y" else retro$="N"
+if optt(10,2)=1 then set paint 1 else set paint 0
+if optt(11,2)=1 then trails$="Y" else trails$="N"
+if optt(12,2)=1 then manual$="Y" else manual$="N"
+wind close
+set font "baloo",30
+return
+
+// -----------------
+optionstext:
+// -----------------
+ink 1
+text lefttxt,opty(1),"Total fireworks"
+text lefttxt,opty(2),"Ground based fireworks"
+text lefttxt,opty(3),"Maximum particles per firework"
+text lefttxt,opty(4),"Minimum particles per firework"
+text lefttxt,opty(5),"Time in seconds for entire simulation"
+text lefttxt,opty(6),"Particle shape 0=dot, 1=square"
+text lefttxt,opty(7),"Hold a sparkler?"
+if optt(7,2)=1 then ink 1 else ink 22
+text lefttxt,opty(8),"Show the sparkler?":ink 1
+text lefttxt,opty(9),"Retro mode?"
+if optt(9,2)=1 then ink 1 else ink 22
+text lefttxt,opty(10),"Outlines on retro 'pixels'":ink 1
+text lefttxt,opty(11),"Leave trails?"
+text lefttxt,opty(12),"Manual launching?"
+return
+
+// -----------------
+setparticles:
+// -----------------
+for particles=1 to totparts
+	fw#(fireworks,1,particles)=fw#(fireworks,1,0)	              	  // set start x/y for each part (same as fw start pos above)
+	fw#(fireworks,2,particles)=fw#(fireworks,2,0)
+ 	if fireworks<=groundfw
+		distx#=rnd(10)-5                                              // two stages, otherwise you end up with an integer
+    	distx#=distx#/10
+    	disty#=rnd(20)-50
+    	disty#=disty#/10
+  	else
+    	distx#=5.0:disty#=5.0
+    	while (fwmisc(fireworks,6)<>1 and abs(distx#)+abs(disty#)>7.0) or (fwmisc(fireworks,6)=1 and abs(distx#)+abs(disty#)>3.6)      // get rid of square explosions
+			distx#=rnd(100)-50                    // two stages, otherwise you end up with an integer
+			distx#=distx#/10
+			disty#=rnd(100)-50
+			disty#=disty#/10
+			if fwmisc(fireworks,6)=1              // sparkly ones are half size
+				distx#=distx#/2
+				disty#=disty#/2
+			end if
+		wend
+	end if
+	fw#(fireworks,3,particles)=distx#		  		// set random angle for x/y
+	fw#(fireworks,4,particles)=disty#
+next particles
+return
+
+procedure updateslider[ssize,smin,smax,bnum]
+	tmpoptsize#=ssize/(smax-smin)
+	if optt(bnum,1)=4 then bob bnum+20,optbobx+(optt(bnum,2)*tmpoptsize#)-(tmpoptsize#*smin),opty(bnum),5
+end proc
+
+// data format: 4(slider)/3(tick on)/2(tick off),value,min,max
+data 4,100,1,400	// total fw
+data 4,5,0,100		// ground
+data 4,150,50,500	// max particles
+data 4,40,1,100		// min particles
+data 4,40,5,200		// time
+data 4,0,0,1		// shape
+data 3,1,0,1		// sparkler?
+data 3,1,0,1		// sparkler bob?
+data 2,0,0,1		// retro?
+data 2,0,0,1		// outline?
+data 2,0,0,1		// trails?
+data 2,0,0,1		// manual?
+

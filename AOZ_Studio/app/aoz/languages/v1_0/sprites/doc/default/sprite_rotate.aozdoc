@@ -1,0 +1,21 @@
+<i>Sprite Rotate</i>
+<b>Sprite Rotate</b> xxxxxxx
+=
+This instruction allows you to rotate any sprite instantly...
+
+A positive angle rotates the sprite clockwise and a negative angle will rotate it counter-clockwise.
+The rotation also affects collision detection, and the collisions will only be generated on the rotated object.
+
+The next example displays a bob on the screen and rotates it slowly..
+@code
+Degree										// Switch to degrees
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load images from disc
+Cls 0 										// Set up screen
+Sprite 1, 100, 100, 2 						// Display Sprite at position
+
+For A = 0 To 360
+Sprite Rotate 1, A
+Wait Vbl
+Next
+@code
+

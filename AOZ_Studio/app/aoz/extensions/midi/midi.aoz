@@ -1,0 +1,228 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The QR Code Instructions Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 17/10/2020
+ */
+#need_javascript_file:"MidiPlayer-master/javascript/midi.min.js"
+#useSounds:true
+
+{
+	this.utilities = aoz.utilities;
+	this.banks = aoz.banks;
+	this.load_done = true;
+	this.musics = [];
+
+	this.playMusic = function( path )
+	{
+		var self = this;
+		while( true )
+		{
+			var bank = this.aoz.banks.getBank( undefined, 'application', 'musics', throwError = false );
+			if ( bank )
+			{
+				var musicFile = bank.getElement( path, true );
+				if ( musicFile )
+				{
+					startMusic( musicFile.getBlobUrl( 'audio/midi' ) );
+					break;
+				}
+			}
+			if ( path.toLowerCase().substring( 0, 7 ) == 'http://' || path.toLowerCase().substring( 0, 7 ) == 'https://' )
+			{
+				startMusic( index );
+				break;
+			}
+			else
+			{
+				var descriptor = this.aoz.filesystem.getFile( path, { noErrors: true } );
+				if ( !descriptor.error )
+				{
+					this.aoz.filesystem.loadFile( descriptor, { responseType: 'binary' }, function( response, arrayBuffer, extra )
+					{
+						if ( response )
+						{
+							var blob = new Blob( [ arrayBuffer ], { type: 'audio/midi' } );
+							var urlCreator = window.URL || window.webkitURL;
+							startMusic( urlCreator.createObjectURL( blob ) );
+						}
+					} );
+					break;
+				}
+				throw { error: 'music_not_defined', parameter: index };
+			}
+		}
+
+		function startMusic( url )
+		{
+			// Pause all previous musics
+			var musicIndex = self.musics.length;
+			for ( var m = 0; m < self.musics.length; m++ )
+			{
+				if ( !self.musics[ m ].stopped )
+				{
+					self.musics[ m ].noPop = true;
+					self.musics[ m ].player.stop();
+					self.musics[ m ].stopped = true;
+					self.musics[ m ].noPop = false;
+				}
+			}
+			var self2 = self;
+			var player = new MidiPlayer( url, 'AOZCanvas', false, 0, function()
+			{
+				var mus = self2.musics[ self2.musics.length - 1 ];
+				if ( mus && !mus.noPop )
+				{
+					self2.musics.pop();
+
+					// Restart previous musics
+					if ( self2.musics.length > 0 )
+					{
+						self2.musics[ self2.musics.length - 1 ].player.play();
+						self2.musics[ self2.musics.length - 1 ].stopped = false;
+					}
+				}
+			} );
+			self.musics.push( { player: player, stopped: false, index: musicIndex } );
+			player.play();
+		}
+	}
+	this.stopMusic = function()
+	{
+		if ( this.musics.length > 0 )
+		{
+			this.musics[ this.musics.length - 1 ].player.stop();
+		}
+	}
+	this.stopAllMusic = function()
+	{
+		var musics = this.musics;
+		this.musics = [];
+		for ( var m = 0; m < musics.length; m++ )
+			musics[ m ].stop();
+	};
+	this.setMusicTempo = function( tempo )
+	{
+
+	};
+	this.setMusicVolume = function( volume )
+	{
+
+	};
+	this.load_wait = function()
+	{
+		return this.load_done;
+	};
+}
+
+/**doc
+@name:Midi files
+@description:Commands to play MIDI files.
+@author:Francois Lionet
+doc*/
+
+/**api
+@name:Music
+@description:Play a piece of MIDI music. Playing AMOS musics is not yet implemented.
+@param:number:integer:The index of the music in the music bank
+@compatible: aoz
+@content:
+The MUSIC command is used to start playing the specified melody. Up to three different melodies can be started at
+the same time, but each new MUSIC instruction will halt the current melody and hold its status in a stack. When the
+new song has ended, the original music will start again exactly where it left off. 
+api*/
+Instruction Music, index=(index)
+{
+    #errors
+	aoz.ext_midi.playMusic( %index )
+}
+End Instruction
+
+/**api
+@name:Music Stop
+@description:Stop a MIDI music.
+@compatible: aoz
+@content:
+This instruction brings the current single passage of music to a halt. If there is any other active music held in the
+stack and waiting to be played, that music will begin to play at once.
+
+api*/
+Instruction Music Stop
+{
+    #errors
+	aoz.ext_midi.stopMusic();
+}
+End Instruction
+
+/**api
+@name:Music Off
+@description:Turn off all music
+@compatible: aoz
+api*/
+Instruction Music Off
+{
+    #errors
+	aoz.ext_midi.stopAllMusic();
+}
+End Instruction
+
+/**api
+@name:MVolume
+@description:Set the volume of a piece of music. May not be implemented in favor of tracker musics.
+@compatible: amos,aoz
+@examples:instructions:i_75
+@content:
+To set the volume of a piece of music, or to change its current volume, this command is followed by a number
+ranging from zero for complete silence, up to 63 for as loud as possible.
+Obviously, by setting up a simple loop, you can fade your music up or down.
+
+api*/
+Instruction MVolume, volume
+{
+    #errors
+	aoz.ext_midi.setMusicVolume( %volume );
+}
+End Instruction
+
+/**api
+@name:Tempo
+@description:Change the speed of a piece of music.
+@param:tempo:integer:The tempo, from 1 (really slow) to 100 (really fast)
+@compatible: aoz,amos
+@examples:instructions:i_75
+@content:
+To set the volume of a piece of music, or to change its current volume, this command is followed by a number
+ranging from zero for complete silence, up to 63 for as loud as possible.
+Obviously, by setting up a simple loop, you can fade your music up or down.
+
+api*/
+Instruction Tempo, tempo
+{
+    #errors
+	aoz.ext_midi.setMusicTempo( %tempo );
+}
+End Instruction
+
+

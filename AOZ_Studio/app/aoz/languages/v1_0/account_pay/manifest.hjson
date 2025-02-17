@@ -1,0 +1,45 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Instructions Module Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 9 and above
+	versionModule: "1"					// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "AOZ Account Pay Instructions"
+		author: "By Baptiste Pillot"
+		version: "Version 0.0.1"
+		date: "11/28/2022"
+		copyright: "(c) AOZ Studio 2019-2022"
+		start: "account_pay.aoz"
+		name: "Account Pay"
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+			]
+			fr:
+			[
+			]
+		}
+	}
+}

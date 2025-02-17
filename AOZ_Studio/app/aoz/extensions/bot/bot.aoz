@@ -1,0 +1,1790 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Companion Extension
+ * By Francois Lionet
+ *
+ * Interface between Aoz Command and Aoz Companion server
+ *
+ * @author FL
+ * @date first pushed on 11/10/2021
+ */
+#noWarning:"instruction_not_implemented"
+#need_extension: "companion"
+#need_module: "sounds"
+#need_module: "three_d"
+
+{
+    this.error = undefined;
+    this.status = { mbot: 'disconnected', cyberpi: 'disconnected' };
+	this.waiting = false;
+	this.botDisplay = null;
+	this.bots = [];
+    this.connect = function( args )
+    {
+		var self = this;
+		if ( this.bots[ args.index ] )
+			bot = this.bots[ args.index ];
+		else 
+		{
+		var bot = 
+		{
+			status: 'disconnected',
+			screenOnly: args.screenOnly,
+			interpreter: null,
+			}
+		this.bots[ args.index ] = bot;
+		this.waiting = false;
+		}
+		if ( !args.screenOnly )
+		{
+			this.waiting = true;
+			bot.screenOnly = false;
+		this.aoz.extensionCompanion.directConnect( 'aoz', function( response, data, extra )
+		{
+			if ( response )
+			{
+				var count = args.names.length;
+				for ( var n = 0; n < args.names.length; n++ )
+				{
+					var name = args.names[ n ];
+					if ( self.status[ name ] != 'connected' )
+					{
+						self.aoz.extensionCompanion.directOpenAPI( name, function( response, data, extra ) 
+						{
+							count--;
+							if ( count == 0 )
+								{
+								self.waiting = false;
+									bot.status = 'connected';
+								}
+						}, { toOpen: name } )
+					}
+					else
+					{
+						count--;
+						if ( count == 0 )
+							self.waiting = false;
+					}
+				}
+			}
+			else
+			{
+				self.error = 'companion_server_not_running';
+					bot.screenOnly = true;
+			}
+		}, {} );
+		}
+    };
+	this.isConnected = function( index )
+	{
+		var bot = this.bots[ index ];
+		if ( bot )
+			return !bot.screenOnly;
+		return false;
+	}
+	this.idle = function( index )
+	{
+		var bot = this.bots[ index ];
+		if ( bot )
+		{
+			var idle = true;
+			if ( !bot.screenOnly )
+				idle &= ( !bot.executing );
+			if ( bot.interpreter )
+				idle &= ( !bot.interpreting );
+			return idle;
+		}
+		return false;
+	}
+    this.callAPI = function( args )
+    {
+		var bot = this.bots[ args.name ];
+		if ( !bot )
+			throw { error: 'bot_not_connected', parameter: index };
+
+		var command = args.command1 + ' ';
+		var commandText = 'Bot ' + args.command1 + ' '; 
+		if ( args.command2 && args.command2 != '' )
+		{
+			command += args.command2 + ' ';
+			commandText += args.command2 + '';
+		}
+		if ( args.type == 'function' )
+		{
+			command += '(';
+			commandText += '(';
+		}
+		commandText += ' "' + args.name + '", ';
+		var isArg = false;
+		if ( typeof args.p1 != 'undefined' )
+		{
+			isArg = true;
+			command += args.p1 + ' ';
+			if ( typeof args.p1 == 'string' )
+				commandText += ' "' + args.p1 + '",';
+			else
+				commandText += ' ' + args.p1 + ',';
+		}
+		if ( typeof args.p2 != 'undefined' )
+		{
+			isArg = true;
+			command += args.p2 + ' ';
+			if ( typeof args.p2 == 'string' )
+				commandText += ' "' + args.p2 + '",';
+			else
+				commandText += ' ' + args.p2 + ',';
+		}
+		if ( typeof args.p3 != 'undefined' )
+		{
+			isArg = true;
+			command += args.p3 + ' ';
+			if ( typeof args.p3 == 'string' )
+				commandText += ' "' + args.p3 + '",';
+			else
+				commandText += ' ' + args.p3 + ',';
+		}
+		if ( typeof args.p4 != 'undefined' )
+		{
+			isArg = true;
+			command += args.p4;
+			if ( typeof args.p4 == 'string' )
+				commandText += ' "' + args.p4 + '",';
+			else
+				commandText += ' ' + args.p4 + ',';
+		}
+		if ( isArg )
+			commandText = commandText.substring( 0, commandText.length - 1 );
+		if ( args.type == 'function' )
+		{
+			command += ')';
+			commandText += ')';
+		}
+		if ( !bot.screenOnly )
+		{
+	        if ( bot.status != 'connected' )
+    	        throw { error: 'bot_not_connected' }
+
+			this.waiting = true;
+		var self = this;
+			bot.executing = true;
+		this.aoz.extensionCompanion.directCallAPI( args.name, command, function( response, data, extra )
+		{
+				bot.executing = false;
+			if ( response )
+				self.result = data;
+			else
+				self.error = { error: data.error, parameter: data.parameter };
+			self.waiting = false;
+		}, {} );
+		}
+		if ( bot.interpreter )
+		{
+			args.commandText = commandText;
+			var result = bot.interpreter( bot, args );
+			if ( !bot.screenOnly )
+				this.result = result;
+		}
+    };
+    this.disconnect = function( args )
+    {
+		var count = args.indexes.length;
+		for ( var n = 0; n < args.indexes.length; n++ )
+		{
+			var index = args.indexes[ n ];
+			var bot = this.bots[ index ];
+			if ( bot && bot.status == 'connected' )
+			{
+				this.aoz.extensionCompanion.directCloseAPI( name, function( response, data, extra )
+				{
+					bot.status = 'disconnected';
+					count--;
+					if ( count == 0 )
+						self.bots[ extra.index ] = null;
+				}, { index: index, toClose: name } );
+			}
+		}
+    };
+    this.wait = function()
+    {
+        if ( error = this.error )
+        {
+			this.waiting = false;
+            this.error = null;
+            throw error;
+        }
+        return !this.waiting;
+    }
+}
+
+Class BotMovement, Extends Movement, Type$ = "MBot", BotIndex = (index), ScaleX# = 1, ScaleY# = 1, LED0 = 0, LED1 = 0, LED2 = 0, LED3 = 0, LED4 = 0
+	{
+		#errors
+		#waiting
+		#noDefaults
+
+		// Initialize default variables if object is not created
+		if ( !this.isInitialized )
+		{
+			for ( var p in this.defaults )
+			{
+				if ( typeof vars[ p ] == 'undefined' )
+					vars[ p ] = this.defaults[ p ];
+			}
+			this.isIntialized = true;
+			args.XToAxe$ = typeof args.XToAxe$ == 'undefined' ? 'x' : args.XToAxe$;
+			args.YToAxe$ = typeof args.YToAxe$ == 'undefined' ? 'z' : args.YToAxe$;
+			args.AngleToAxe$ = typeof args.AngleToAxe$ == 'undefined' ? 'y' : args.AngleToAxe$;
+			if ( typeof vars.BotIndex == 'undefined' )
+				throw { error: 'missing_parameter', parameter: 'BotIndex' }
+			this.vars = vars;
+		}
+		this.wheelDiameter = 0.065;
+		this.wheelPerimeter = this.wheelDiameter * Math.PI;
+		this.wheelDistance = 0.012;
+		this.maxRpm = 200;
+		this.speedFactor = 0.001;		// Until the physics engine.
+		this.angleFactor = 5000;
+
+		var self = this;
+		this.clearTimeouts = function()
+		{
+			if ( self.handleTimeout )
+			{
+				clearTimeout( self.handleTieout );
+				self.handleTimeout = 0;
+			}
+			if ( self.handleInterval )
+			{
+				clearTimeout( self.handleInterval );
+				self.handleInterval = 0;
+			}
+		};
+
+		// Commands
+		this.move = function( args )
+		{
+			if ( args.p1 > -this.maxRpm && args.p1 < this.maxRpm )
+			{
+				this.bot.speed = ( args.p1 / 60 ) * this.speedFactor;	// RPM-> RPS
+				if ( args.p2 )
+				{
+					if ( this.handleTimeout )
+						clearTimeout( this.handleTimeout );
+
+					var self = this;
+					this.busyCount++;
+					this.handleTimeout = setTimeout( function()
+					{
+						self.busuCount--;
+						self.bot.speed = 0;
+						clearTimeout( self.handleTimeout );
+						self.handleTimeout = 0;
+					}, args.p2 * 1000 );
+				}
+	 			return undefined;
+			}
+			throw { error: 'illegal_function_call', parameter: args.p1 };
+		}
+		this.rotate = function( args )
+		{
+			if ( args.p1 > -360 && args.p1 < 360 )
+			{
+				var bot = this.bot;
+				var deltaAngle = args.p1 * this.aoz.degreeRadian;
+				var goalAngle = bot.angle + deltaAngle;
+				var direction = deltaAngle < 0 ? 'left' : 'right';
+				bot.angleSpeed = bot.speed * this.angleFactor;
+				if ( args.p2 )
+					bot.angleSpeed = ( args.p2 / 60 ) * this.speedFactor * this.angleFactor;
+
+				if ( this.handleInterval )
+					clearInterval( this.handleInterval );
+
+				var self = this;
+				bot.busyCount++;
+				this.handleInterval = setInterval( function()
+				{
+					if ( direction == 'left' )
+					{
+						if ( bot.angle < goalAngle )
+						{
+							bot.busyCount--;
+							bot.angleSpeed = 0;
+							bot.angle = goalAngle;
+							clearInterval( self.handleInterval );
+							self.handleInterval = 0;
+						}
+					}
+					else
+					{
+						if ( bot.angle > goalAngle )
+						{
+							bot.busyCount--;
+							bot.angleSpeed = 0;
+							bot.angle = goalAngle;
+							clearInterval( self.handleInterval );
+							self.handleInterval = 0;
+						}
+					}
+				}, 20 );
+				return undefined;
+			}
+			throw { error: 'illegal_function_call', parameter: args.p1 };
+		}
+		this.turn = function( args )
+		{
+			if ( args.p1 != 'left' && args.p1 != 'right' )
+				throw { error: 'illegal_function_call', parameter: args.p1 };
+			if ( args.p2 < -200 || args.p2 > 200 )
+				throw { error: 'illegal_function_call', parameter: args.p2 };
+
+			var bot = this.bot;
+			bot.angleSpeed = ( args.p2 / 60 ) * this.speedFactor * this.angleFactor * ( args.p1 == 'left' ? -1 : 1 );
+
+			if ( this.handleInterval )
+				clearTimeout( this.handleInterval );
+
+			if ( args.p3 )
+			{
+				var self = this;
+				bot.busyCount++;
+				this.handleTimeout = setTimeout( function()
+				{
+					bot.busyCount--;	
+					bot.angleSpeed = 0;
+					self.handleTimeout = null;
+				}, args.p3 * 1000 );
+			}
+			return undefined;
+		}
+		this.led_play = function( args )
+		{
+			if ( this.bot.LEDAnimation == null )
+			{
+				var anims = [ 'rainbow', 'spoondrift', 'meteor_blue', 'meteor_green', 'flash_red', 'flash_orange', 'firefly', 'welcome' ];
+				var found;
+				for ( var a = 0; a < anims.length; a++ )
+				{
+					if ( anims[ a ] == args.p1.toLowerCase() )
+					{
+						found = args.p1.toLowerCase();
+						break;
+					}
+				}
+				if ( !found )
+					throw { error: 'illegal_function_call', parameter: args.p1 };
+				this.bot.busyCount++;
+				this.bot.LEDAnimation = found;
+				this.bot.LEDAnimStep = 0;
+			}
+			return undefined;
+		}
+		this.play_audio = function( args )
+		{
+			try
+			{
+				var self = this;
+				this.bot.busyCount++;			
+				this.aoz.sounds.callVoices( 'play', undefined, [ args.p1, 
+				{ 
+					contextName: aoz.ext_bot.contextName, 
+					type: 'sound', 
+					callback: function( response, data, extra )
+					{
+						self.bot.busyCount--;
+					} 
+				} ] );					
+			}
+			catch ( e )
+			{
+			}
+			return undefined;
+		}
+		this.play_drum = function( args )
+		{
+			try
+			{
+				var self = this;
+				this.bot.busyCount++;			
+				this.aoz.sounds.callVoices( 'play', undefined, [ args.p1, 
+				{ 
+					contextName: aoz.ext_bot.contextName, 
+					type: 'sound',
+					callback: function( response, data, extra )
+					{
+						self.bot.busyCount--;
+					} 
+				} ] );					
+			}
+			catch ( e )
+			{
+			}
+			return undefined;
+		}
+		this.play_sound = function( args )
+		{
+			try
+			{
+				var self = this;
+				this.bot.busyCount++;			
+				this.aoz.sounds.callVoices( 'playNote', 1, [ args.p1, 
+				{ 
+					duration: 1,
+					callback: function( response, data, extra )
+					{
+						self.bot.busyCount--;
+					} 
+				} ] );
+			}
+			catch ( e )
+			{
+
+			}
+			return undefined;
+		}
+
+		// List of all commands
+		this.commandList = 
+		{
+			'audio play': 		{ 'f': this.play_audio, 		'p': '2', 		'd': [ 'hello' ] },
+			'sound play': 		{ 'f': this.play_sound, 		'p': '012', 	'd': [ 33, 1, 'piano' ] },
+			'drum play': 		{ 'f': this.play_drum, 			'p': '21', 		'd': [ 'crash-cymbal', 1 ] },
+			'volume':			{ 'f': this.set_vol,			'p': '0',		'd': [ 100 ] },
+			'volume_f':			{ 'f': this.get_vol,			'p': '',		'd': [ ] },
+			'tempo_f':			{ 'f': this.get_tempo,			'p': '',		'd': [ ] },
+			'tempo':			{ 'f': this.set_tempo,			'p': '0',		'd': [ 100 ] },
+			'tone play':		{ 'f': this.play_tone,			'p': '01',		'd': [ 330, 1 ] },
+			'record play':		{ 'f': this.play_record,		'p': '',		'd': [ ] },
+			'record':			{ 'f': this.record,				'p': '',		'd': [ ] },
+			'record stop':		{ 'f': this.stop_record,		'p': '',		'd': [ ] },
+			'audio stop':		{ 'f': this.stop_audio,			'p': '',		'd': [ ] },
+			'led on':			{ 'f': this.led_on,				'p': '0000',	'd': [ 255, 255, 255, 0 ] },
+			'led off':			{ 'f': this.led_off,			'p': '0',		'd': [ 0 ] },
+			'led play':			{ 'f': this.led_play,			'p': '2',		'd': [ 'rainbow' ] },
+			'led show':			{ 'f': this.led_show,			'p': '2',		'd': [ 'w w w w w' ] },
+			'led move':			{ 'f': this.led_move,			'p': '0',		'd': [ 1 ] },
+			'led bright':		{ 'f': this.set_bri,			'p': '0',		'd': [ 100 ] },
+			'led bright_f':		{ 'f': this.get_bri,			'p': '',		'd': [ ] },
+			'rotation reset':	{ 'f': this.reset_rotation,		'p': '0',		'd': [ 0 ] },
+			'gyro_f':			{ 'f': this.gyro,				'p': '0',		'd': [ 1 ] },
+			'acc_f':			{ 'f': this.acc,				'p': '0',		'd': [ 1 ] },
+			'yaw reset':		{ 'f': this.reset_yaw,			'p': '',		'd': [ '' ] },
+			'yaw_f':			{ 'f': this.yaw,				'p': '',		'd': [ '' ] },
+			'roll_f':			{ 'f': this.roll,				'p': '',		'd': [ '' ] },
+			'pitch_f':			{ 'f': this.pitch,				'p': '',		'd': [ '' ] },
+			'wave speed_f':		{ 'f': this.wavespeed,			'p': '',		'd': [ '' ] },
+			'freefall_f':		{ 'f': this.freefall,			'p': '',		'd': [ '' ] },
+			'wave_f':			{ 'f': this.wave,				'p': '2',		'd': [ 'up' ] },
+			'shake_f':			{ 'f': this.shake,				'p': '',		'd': [ ] },
+			'handstand_f':		{ 'f': this.handstand,			'p': '',		'd': [ ] },
+			'stand_f':			{ 'f': this.stand,				'p': '',		'd': [ ] },
+			'face_f':			{ 'f': this.face,				'p': '2',		'd': [ 'up' ] },
+			'tilt_f':			{ 'f': this.tilt,				'p': '2',		'd': [ 'forward' ] },
+			'language_f':		{ 'f': this.get_language,		'p': '',		'd': [ '' ] },
+			'print':			{ 'f': this.prnt,				'p': '2',		'd': [ '' ] },
+			'println':			{ 'f': this.prnt_ln,			'p': '2',		'd': [ '' ] },
+			'label show':		{ 'f': this.show_label,			'p': '2000',	'd': [ '', 16, 0, 0 ] },
+			'display rotate':	{ 'f': this.rotate_display,		'p': '0',		'd': [ 90 ] },
+			'display clear':	{ 'f': this.clear_display,		'p': '',		'd': [ ] },
+			'display off':		{ 'f': this.display_off,		'p': '',		'd': [ ] },
+			'controller_f':		{ 'f': this.controller,			'p': '2',		'd': [ 'a' ] },
+			'controller count_f':{ 'f': this.controller_count,	'p': '2',		'd': [ 'a' ] },
+			'controller reset':	{ 'f': this.controller_reset,	'p': '2',		'd': [ 'a' ] },
+			'brightness_f':		{ 'f': this.get_brightness,		'p': '',		'd': [ ] },
+			'loudness_f':		{ 'f': this.get_loudness,		'p': '2',		'd': [ 'maximum' ] },
+			'mac address_f':	{ 'f': this.get_mac_address,	'p': '',		'd': [ ] },
+			'battery_f':		{ 'f': this.get_battery,		'p': '',		'd': [ ] },
+			'botname_f':		{ 'f': this.get_name,			'p': '',		'd': [ ] },
+			'botname':			{ 'f': this.set_name,			'p': '2',		'd': [ 'aoz' ] },
+			'accelerometer_f':	{ 'f': this.get_accelerometer,	'p': '2',		'd': [ 'z' ] },
+			'gyro_f':			{ 'f': this.get_gyro,			'p': '2',		'd': [ 'z' ] },
+			'pin analog_f':			{ 'f': this.pin_analog_f,		'p': '0',		'd': [ 1 ] },
+			'pin pwm':				{ 'f': this.pin_pwm,			'p': '000',		'd': [ 0, 1, 0 ] },
+			'pin_f':				{ 'f': this.pin_read,			'p': '0',		'd': [ 1 ] },
+			'pin':					{ 'f': this.pin_write,			'p': '00',		'd': [ 0, 0 ] },
+			'strip brigh_f':		{ 'f': this.strip_get_brightness,'p': '0',		'd': [ 1 ] },
+			'strip bright':			{ 'f': this.strip_set_brightness,'p': '00',		'd': [ 0, 0 ] },
+			'strip off':			{ 'f': this.strip_off,			'p': '00',		'd': [ 0, 0 ] },
+			'strip move':			{ 'f': this.strip_move,			'p': '000',		'd': [ 1, 10, 0 ] },
+			'strip show':			{ 'f': this.strip_show,			'p': '20',		'd': [ 'w', 0 ] },
+			'strip on':				{ 'f': this.strip_on,			'p': '00010',	'd': [ 255, 255, 255, 0, 0 ] },
+			'servo drive':			{ 'f': this.servo_drive,		'p': '1111',	'd': [ 0, -1, -1, -1 ] },
+			'servo release':		{ 'f': this.servo_release,		'p': '0',		'd': [ 0 ] },
+			'servo angle_f':		{ 'f': this.servo_get_angle,	'p': '0',		'd': [ 1 ] },
+			'servo angle':			{ 'f': this.servo_set_angle,	'p': '10',		'd': [ 0, 0 ] },
+			'motor stop':			{ 'f': this.motor_stop,			'p': '2',		'd': [ 0 ] },
+			'motor drive':			{ 'f': this.motor_drive,		'p': '11',		'd': [ 0, 0 ] },
+			'motor speed':			{ 'f': this.set_motor_speed,	'p': '10',		'd': [ 0, 0 ] },
+			'motor speed_f':		{ 'f': this.get_motor_speed,	'p': '0',		'd': [ 1 ] },
+			'motor power':			{ 'f': this.set_motor_power,	'p': '10',		'd': [ 0, 0 ] },
+			'motor power_f':		{ 'f': this.get_motor_power,	'p': '0',		'd': [ 1 ] },
+			'wheel power_f':		{ 'f': this.get_wheel_power,	'p': '0',		'd': [ 1 ] },
+			'wheel angle_f':		{ 'f': this.get_wheel_angle,	'p': '0',		'd': [ 1 ] },
+			'wheel reset':			{ 'f': this.wheel_reset,		'p': '0',		'd': [ 0 ] },
+			'wheel turn':			{ 'f': this.wheel_turn,			'p': '010',		'd': [ 90, 100, 0 ] },
+			'wheel speed':			{ 'f': this.set_wheel_speed,	'p': '00',		'd': [ 100, 0 ] },
+			'wheel speed_f':		{ 'f': this.get_wheel_speed,	'p': '0',		'd': [ 1 ] },
+			'wheel power':			{ 'f': this.set_wheel_power,	'p': '00',		'd': [ 100, 0 ] },
+			'wheel power_f':		{ 'f': this.get_wheel_power,	'p': '0',		'd': [ 1 ] },
+			'wheel lock':			{ 'f': this.lock_wheel,			'p': '00',		'd': [ 0, 0 ] },
+			'stop':					{ 'f': this.stop,				'p': '',		'd': [ ] },
+			'speed':				{ 'f': this.set_speed,			'p': '11',		'd': [ 100, 'a' ] },
+			'rotate':				{ 'f': this.rotate,				'p': '11',		'd': [ 90, 100 ] },
+			'rotation_f':			{ 'f': this.rotation,			'p': '2',		'd': [ ''] },
+			'go':					{ 'f': this.go,					'p': '11',		'd': [ 10, 100 ] },
+			'turn':					{ 'f': this.turn,				'p': '201',		'd': [ 'right', 100, 1 ] },
+			'move':					{ 'f': this.move,				'p': '01',		'd': [ 50, 0 ] },
+		};
+	}
+
+	Method FriendUpdate
+	{
+		var self = this;
+
+		function interpret( bot, args )
+		{
+			var methodName = args.command1.toLowerCase();
+			if ( args.command2.length  )
+				methodName += ' ' + args.command2.toLowerCase();
+			if ( args.function )
+				methodName += '_f';
+			var commandInfo = self.commandList[ methodName ];
+			if ( commandInfo )
+			{
+				bot.lastCommand = args.commandText;
+				if ( commandInfo.f )
+				{
+					var result = commandInfo.f.call( self, args );
+					if ( typeof result != 'undefined' )
+					{
+						bot.result = result;
+						self.aoz.ext_bot.result = result;
+						self.results[ self.currentResult ] = result;
+					}
+				}
+				else
+				{
+					bot.result = 'Error';
+					self.aoz.ext_bot.result = result;
+					self.results[ self.currentResult ] = result;
+					//throw { error: 'emulation_not_implemented', parameter: args.command1 + args.command2 };
+				}
+			}
+			else
+			{
+				throw { error: 'syntax_error', parameter: args.command1 + args.command2 };
+			}
+			return bot.return;
+		}
+		function startRGBFade( rgb, RGBStart, RGBEnd, numberOfSteps )
+		{
+			rgb.current = self.aoz.utilities.getRGBColors( RGBStart );
+			rgb.end = self.aoz.utilities.getRGBColors( RGBEnd );			
+			rgb.steps = {};
+			rgb.steps.r = ( rgb.end.r - rgb.current.r ) / numberOfSteps;
+			rgb.steps.g = ( rgb.end.g - rgb.current.g ) / numberOfSteps;
+			rgb.steps.b = ( rgb.end.b - rgb.current.b ) / numberOfSteps;
+			rgb.step = numberOfSteps;
+		}
+		function rgbFade( rgb )
+		{
+			if ( rgb.step > 0 )
+			{
+				rgb.step--;
+				rgb.current.r += rgb.steps.r;
+				rgb.current.g += rgb.steps.g;
+				rgb.current.b += rgb.steps.b;
+			}
+			else
+			{
+				rgb.current.r = rgb.end.r;
+				rgb.current.g = rgb.end.g;
+				rgb.current.b = rgb.end.b;
+			}
+			return self.aoz.utilities.getAOZRGB( rgb.current.r, rgb.current.g, rgb.current.b );
+		}
+		function rgbRandom()
+		{
+			var r = Math.floor( Math.random() * 256 );
+			var g = Math.floor( Math.random() * 256 );
+			var b = Math.floor( Math.random() * 256 );
+			return self.aoz.utilities.getAOZRGB( r, g, b );
+		}
+		if ( this.friend )
+		{
+			var bot = this.bot;
+			if ( !bot )
+			{
+				bot = this.aoz.ext_bot.bots[ this.vars.BotIndex ];
+				if ( !bot )
+					return 0;
+				this.bot = bot;
+				bot.interpreter = interpret;
+				bot.x = 0;
+				bot.y = 0;
+				bot.angle = 0;
+				bot.speed = 0;
+				bot.angleSpeed = 0;			
+				bot.RGBs = [ {}, {}, {}, {}, {} ];
+				bot.LED0 = 0x000000;
+				bot.LED1 = 0x000000;
+				bot.LED2 = 0x000000;
+				bot.LED3 = 0x000000;
+				bot.LED4 = 0x000000;
+				bot.LEDAnimation = 'welcome';
+				bot.LEDAnimStep = 0;
+				bot.lastCommand = '';
+				bot.idle = true;
+				bot.busyCount = 1;
+				this.friend.bot = bot;
+			}
+
+			/*
+			// Update of variables?
+			if ( this.varsModified )
+			{
+				if ( this.varsModified.X_f ) 
+				bot.x = vars.X_f;
+				if ( this.varsModified.Z_f ) 
+				bot.y = vars.Z_f;
+				if ( this.varsModified.AngleY_f ) 
+				bot.angle = vars.AngleY_f;
+				return;
+			}
+			*/
+
+			// Movement
+			var angle = bot.angle + bot.angleSpeed * ( this.deltaTime / 1000 );
+			var x = bot.x + bot.speed * Math.cos( bot.angle );
+			var y = bot.y + bot.speed * Math.sin( bot.angle );
+			if ( angle != bot.angle || x != bot.x || y != bot.y )
+			{
+				bot.x = x;
+				bot.y = y;
+				bot.angle = angle;
+				var varsModified = {};
+				varsModified[ this.vars.XToAxe$.toUpperCase() + '_f' ] = bot.x * this.vars.ScaleX_f;
+				varsModified[ this.vars.YToAxe$.toUpperCase() + '_f' ] = bot.y * this.vars.ScaleY_f;
+				varsModified[ 'Angle' + this.vars.AngleToAxe$.toUpperCase() + '_f' ] = -bot.angle / this.aoz.degreeRadian;
+				aoz.updateObject( this.friend, varsModified, this );				
+			}
+
+			// LED
+			if ( bot.LEDAnimation )
+			{
+				var anim;
+				var timeStep = 10;
+				switch ( bot.LEDAnimation )
+				{
+					case 'rainbow':
+						anim = 
+						[
+							{ start: true, loops: 10 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ rgbRandom(), rgbRandom(), rgbRandom(), rgbRandom(), rgbRandom() ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ end: true },
+						];
+						break
+					case 'spoondrift':
+						anim = 
+						[
+							{ start: true, loops: 1 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ end: true },
+						];
+						break;
+					case 'meteor_blue':
+						anim = 
+						[
+							{ start: true, loops: 1 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x997cfc, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x997cfc, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x997cfc, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x997cfc, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x997cfc ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0xd0deff, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0xd0deff, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0xd0deff, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0xd0deff, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0xd0deff ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x997cfc, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x997cfc, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x997cfc, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x997cfc, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x997cfc ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ end: true },							
+						];
+						break;
+					case 'meteor_green':
+						anim = 
+						[
+							{ start: true, loops: 1 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x1cba65, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x1cba65, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x1cba65, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x1cba65, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x1cba65 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x4aff00, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x4aff00, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x4aff00, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x4aff00, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x4aff00 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x1cba65, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x1cba65, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x1cba65, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x1cba65, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x1cba65 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ end: true },							
+						];
+						break;
+					case 'flash_red':
+						anim = 
+						[
+							{ start: true, loops: 1 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 5 * timeStep, RGBs: [ 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 2 * timeStep, RGBs: [ 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 2 * timeStep, RGBs: [ 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000 ] },
+							{ end: true },
+						];
+						break;
+					case 'flash_orange':
+						anim = 
+						[
+							{ start: true, loops: 1 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 5 * timeStep, RGBs: [ 0xFFA500, 0xFFA500, 0xFFA500, 0xFFA500, 0xFFA500 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 2 * timeStep, RGBs: [ 0xFFA500, 0xFFA500, 0xFFA500, 0xFFA500, 0xFFA500 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 2 * timeStep, RGBs: [ 0xFFA500, 0xFFA500, 0xFFA500, 0xFFA500, 0xFFA500 ] },
+							{ end: true },
+						];
+						break;
+					case 'firefly':
+						anim = 
+						[
+							{ start: true, loops: 1 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ end: true },
+						];
+						var RGB = 0xFFFF00;
+						for ( var n = 0; n < 10; n++ )
+						{
+							var y = Math.floor( 10 * Math.random() );
+							var x = Math.floor( 5 * Math.random() );
+							anim[ 2 + y ].RGBs[ x ] = RGB;
+						}
+						break;
+					case 'welcome':
+						anim = 
+						[
+							{ start: true, loops: 1 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x0000FF, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x0000FF, 0x0000FF, 0x000000, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x0000FF, 0x0000FF, 0x0000FF, 0x000000, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x0000FF, 0x0000FF, 0x0000FF, 0x0000FF, 0x000000 ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x0000FF, 0x0000FF, 0x0000FF, 0x0000FF, 0x0000FF ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x0000FF, 0x0000FF, 0x0000FF, 0x0000FF ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x0000FF, 0x0000FF, 0x0000FF ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x0000FF, 0x0000FF ] },
+							{ timeStep: 1 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x0000FF ] },
+							{ timeStep: 10 * timeStep, RGBs: [ 0xFF7200, 0xFF7200, 0xFF7200, 0xFF7200, 0xFF7200 ] },
+							{ timeStep: 10 * timeStep, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ end: true },
+						];
+						break
+					default:
+						anim = 
+						[
+							{ start: true, loops: 1 },
+							{ timeStep: 1, RGBs: [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000 ] },
+							{ end: true },
+						];
+						break;
+				}
+				while ( anim )
+				{
+					var step = anim[ bot.LEDAnimStep ];
+					if ( step.start )
+					{
+						bot.LEDAnimStepCounter = 1;
+						bot.LEDAnimLoops = typeof step.loops != 'undefined' ? step.loops : 1;
+					}
+					bot.LEDAnimStepCounter--;
+					if ( bot.LEDAnimStepCounter == 0 )
+					{
+						bot.LEDAnimStep++;
+						step = anim[ bot.LEDAnimStep ];
+						if ( step.end )
+						{
+							bot.LEDAnimLoops--;
+							if ( bot.LEDAnimLoops == 0 )
+							{
+								bot.busyCount--;
+								bot.LEDAnimation = null;
+								break;
+							}
+							bot.LEDAnimStep = 1;
+						}
+						step = anim[ bot.LEDAnimStep ];
+						bot.LEDAnimStepCounter = step.timeStep;
+						for ( var l = 0; l < 5; l++ )
+						{
+							startRGBFade( bot.RGBs[ l ], bot[ 'LED' + l ], step.RGBs[ l ], step.timeStep );
+						}
+					}
+					var text = 'LEDs: ';
+					for ( var l = 0; l < 5; l++ )
+					{						
+						bot[ 'LED' + l ] = rgbFade( bot.RGBs[ l ] )
+						this.root.vars[ 'LED' + l ] = bot[ 'LED' + l ];
+						text += this.aoz.hex$( bot[ 'LED' + l ], 8 ) + ', ';
+					}
+					break;
+				}
+			}
+			bot.interpreting = ( bot.busyCount > 0 );
+		}
+		return 1;
+	}
+	End Method 
+End Class
+
+
+/**doc
+@name:Aoz Bot extension
+@description:The Aoz Bot extension allows you to connect and control any type of robots connected to Aoz.
+@description:If order to function, Aoz launches the Aoz Copmpanion server, programmed in Python. Your Aoz application sends the Bot commands to the server who relays them to the robot connected to your computer.
+@keywords:robot,websocket,hardware,python
+@author:Francois Lionet
+@since:Beta 13
+@last:0.9.5.1
+doc*/
+
+
+/**api
+@name:Bot Connect
+@description:Establishes the connection with a Bot robot connected to your machine.
+@compatible: aoz
+@content:
+In order to function, you must have previously installed and lanched the MLink application on your computer AND the Bot must be connected to your computer by USB or Bluetooth.
+
+The Bot connect performs several tasks that might take a little time before returning.
+
+1. it launches the Aoz Companion server, written in Python that handles the communication between your
+application and the robot
+2. when the server is launched, it established a secure local connection to the server and starts the dialog.
+
+Bot will say "Hello" once the connection is successful.
+
+The Bot Connect command opens the entiere "Bot" set of commands. Whatever the kind of robot connected to the computer, they will not generate errors. The Companion server doing its best to adapt ach command to the connected robot.
+
+Please note that the Bot should be connected to your machine before using the Bot Connect command.
+
+Once the command returns, your Aoz application is connected to the robot and you can send commands to it.
+api*/
+Instruction Bot Connect, index = (index), ScreenOnly = False
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.ext_bot,callFunction:"connect",waitFunction:"wait", args:{names:['bot'],index:%index,screenOnly:%ScreenOnly}};
+}
+End Instruction
+
+Function BOT Connected, index = (index)
+{
+    #errors
+}
+End Function({aoz.ext_bot.isConnected(%index)})
+
+/**api
+@name:Bot Disconnect
+@description:Close a running connection to Bot.
+@compatible: aoz
+@content:
+
+api*/
+Instruction BOT Disconnect, index = (index)
+{
+    #errors
+    aoz.ext_bot.disconnect({names:[%index]});
+}
+End Instruction
+
+Instruction BOT (command1$) (command2$), index = (index), p1=(any), p2=(any), p3=(any), p4=(any)
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.ext_bot,callFunction:"callAPI",waitFunction:"wait",args:{name:%index,command1:%command1$,command2:%command2$,p1:%p1,p2:%p2,p3:%p3,p4:%p4}};
+}
+End Instruction
+
+Function BOT (command1$) (command2$), index = (index), p1=(any), p2=(any), p3=(any), p4=(any)
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.ext_bot,callFunction:"callAPI",waitFunction:"wait",args:{type:'function',name:%index,command1:%command1$,command2:%command2$,p1:%p1,p2:%p2,p3:%p3,p4:%p4}};
+}
+End Function( {aoz.ext_bot.result} )
+
+Function BOT Idle, index = (index)
+{
+    #errors
+}
+End Function( {aoz.ext_bot.idle(%index)} )
+
+Instruction ___Bot___
+{
+	console.log( "Including bot sources" );
+}
+End Instruction
+
+/**api
+@name: BOT Audio Play
+@description:Play a preset audio file
+@param: content$:string:The name of the audio file to play
+@compatible: aoz
+@content:
+This instruction plays a preset audio file on the connected Bot and waits for the sound to be over to return.
+
+Bot offers a variety of sounds, and the name$ parameter can take the following values:
+* hello
+* hi
+* bye
+* yeah
+* wow
+* laugh
+* hum
+* sad
+* sigh
+* annoyed
+* angry
+* surprised
+* yummy
+* curious
+* embarrassed
+* ready
+* sprint
+* sleepy
+* meow
+
+* start
+* switch
+* beeps
+* buzzing
+* explosion
+* jump
+* laser
+* level-up
+* low-energy
+* prompt-tone
+* right
+* wrong
+* ring
+* score
+* wake
+* warning
+
+* metal-clash
+* shot
+* glass-clink
+* inflator
+* running water
+* clockwork
+* click
+* current
+* switch
+* wood-hit
+* iron
+* drop
+* bubble
+* wave
+* magic
+* spitfire
+* heartbeat
+* load
+api*/
+
+/**api
+@name: BOT Sound Play
+@description:Plays the specified note of the specified instrument for the specified beats
+@param:type$:string:The name of the instrument to use for playing, default to "piano"
+@param:note:integer:The frequency of the note to be played, from 0 (C-1 / Do 1) to 127 (G-9 / Sol 9)
+@param:note$:string:The name of the note to play
+@param:beat:float:The duration of the note, expressed in seconds
+@compatible: aoz
+@content:
+This instruction plays a note file on the connected Bot and waits for the sound to be over to return.
+
+The type$ parameter can take the following values:
+* piano
+* snare
+* bass-drum
+* side-stick
+* crash-cymbal
+* open-hi-hat
+* closed-hi-hat
+* tambourine
+* hand-clap
+* claves
+api*/
+
+/**api
+@name: BOT Record
+@description:Starts to record sounds
+@compatible: aoz
+@content: comment on récupère le son facilement ? (pour l'utiliser ailleurs)
+When this instruction is executed, Bot starts to record sounds until an Bot Record Stop is executed or the recording exceeds 10 seconds.
+
+This instruction returns immediately.
+
+The recorded file is stored in RAM, and so the recorded file is lost if Bot is turned off or restarted.
+api*/
+
+/**api
+@name: BOT Record Play
+@description:Play the recorded sounds
+@compatible: aoz
+@content:
+This instruction returns when the sounds have finished playing.
+api*/
+
+
+/**api
+@name: BOT Tempo
+@description:Sets the playing speed of speaker
+@param:percentage:integer:Percentage of the normal playing speed; setting range: 25–400%
+@compatible: aoz
+@content:
+After using this instruction, the output of the speaker (example a recorded sound) will play faster or slower.
+api*/
+
+/**api
+@name: BOT Tempo
+@description:Returns the current tempo of the speaker
+@return:integer:The current tempo, an integer ranging from 25% to 400%
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Volume
+@description:Sets the playing volume of speaker
+@param:percentage:integer:Percentage of the playing volume; setting range: 0–100%
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Volume
+@description:Returns the current volume of the speaker
+@return:integer:The current volume, an integer rangin from 0% to 100%
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Led On
+@description:Sets the colors of the Bot LEDs
+@param:r:integer:The RED value of the color to set (0 - 255)
+@param:g:integer:The GREEN value of the color to set (0 - 255)
+@param:b:integer:The BLUE value of the color to set (0 - 255)
+@param:number:integer:The number of the LED to affect, from 1 to 5. -1 indicating all the LEDs at once
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Led Play
+@description:Displays the specified LED animation on the Bot LED strip
+@param:content$:string:The name of the animation to play
+@compatible: aoz
+@content:
+This instruction returns after the animation has finished. The name$ parameter can take the following values:
+* rainbow
+* spoondrift
+* meteor_blue
+* meteor_green
+* flash_red
+* flash_orange
+* firefly
+api*/
+
+/**api
+@name: BOT Led Move
+@description:Makes the colors of the LEDs roll from left to right by the specified number of positions
+@param:step:integer:number of positions by which the colors of the LEDs roll; setting range: -4–+4; default value: 1
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Led Show
+@description:Sets the color of the five LEDs of the connected Bot
+@param:colors$:string:A string indicating the color(s) of the five LEDs, set in the "color1 color2 color3 color4 color5" mode, with one space between any two colors.
+@compatible: aoz
+@content:
+The colors$ string contains a suite of letters followed by spaces to indicate the color of each LED.
+* red: "r"
+* green: "g"
+* blue: "b"
+* yellow: "y"
+* cyan: "c"
+* purple: "p"
+* white: "w"
+* orange: "o"
+* black: "k"
+
+Example of strings:
+* "r r r r r": turns all LEDs to red
+* "b b g b b": turns the first and last two LEDs to blue and the middle one to green
+api*/
+
+/**api
+@name: BOT Led Bright
+@description:Sets the brightness of all five LEDs of the connected Bot
+@param:bright:integer:The percentage of brightness to set, from 0 (off) to 100 (maximum)
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Led Bright
+@description:Returns the current brightness of the Bot LEDs
+@return:integer:The brightness of the LEDs, a number from 0 to 100
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Strip On
+@description:Lights up the LEDs on the LED strip or ring connected to the specified port in the specified color(s).
+@param:r:integer:The RED value of the color to set (0 - 255)
+@param:g:integer:The GREEN value of the color to set (0 - 255)
+@param:b:integer:The BLUE value of the color to set (0 - 255)
+@param:number:integer:The number of the LED to affect, from 1 to 36. 0 indicating all the LEDs at once
+@param:port:integer:The number of the port where the strip is connected, 1, 2, or 0 for all ports
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Strip Off
+@description:Turns off the specified LED(s) on the LED strip or ring connected to the specified port.
+@param:number:integer:The number of the LED in the strip to turn off (1 to 36, 0 for all LEDs)
+@param:port:integer:The number of the port where the strip is connected, 1, 2, or 0 for all ports
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Strip Show
+@description:Sets the color(s) of all LEDs on the LED strip or ring connected to the specified port.
+@param:colors$:string:A string indicating the color(s) of the LEDs, set in the "color1 color2 color3 color4 color5..." mode, with one space between any two colors.
+@param:port:integer:The number of the port where the strip is connected, 1, 2, or 0 for all ports
+@compatible: aoz
+@content:
+The colors$ string contains a suite of letters followed by spaces to indicate the color of each LED.
+* red: "r"
+* green: "g"
+* blue: "b"
+* yellow: "y"
+* cyan: "c"
+* purple: "p"
+* white: "w"
+* orange: "o"
+* black: "k"
+
+Example of strings:
+* "r r r r r": turns all 5 first LEDs to red
+* "b b b b g b b b b": turns the first and last four LEDs to blue and the middle one to green
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Strip Move
+@description:Makes the colors of the LEDs on the LED strip connected to the specified port roll from left to right by the specified number of positions.
+@param:step:integer:Number of positions by which the colors of the LEDs roll; setting range: -36 to +36; the default value is 1.
+@param:step:integer:Range of the LED color rolling; setting range: 1–36.
+@param:port:integer:The number of the port where the strip is connected, 1, 2, or 0 for all ports
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Strip Bright
+@description:Sets the brightness of the LED strip or ring connected to the specified port.
+@param:brightness:integer:The brightness of the LED strip or ring; setting range: -100 to +100, in percentage.
+@param:port:integer:The number of the port where the strip is connected, 1, 2, or 0 for all ports
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Strip Bright
+@description:Obtains the brightness of the LED strip or ring connected to the specified port.
+@param:port:integer:The number of the port where the strip is connected, 1, 2, or 0 for all ports
+@return:integer:The brightness of the LED strip, from 0 to 100
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Move
+@description:Moves the connected Bot forward or backward at the given speed.
+@param:speed:integer:The speed at which to move Bot. A positive value indicate a move forward, and a negative a move backward, ranging from -200 to 200.
+@param:duration:float:The duration of the movement, in seconds, ranging from 0 to ﹢∞, in seconds. When "null", it indicates that Bot keeps moving at the specified speed until it receives a command instructing it to stop moving.
+@compatible: aoz
+@content:
+This instruction returns when the movement is over. Bot keeps moving until it moves the specified distance or duration or another instruction is executed.
+For example, when Stop is executed, Bot stops moving.
+api*/
+
+/**api
+@name: BOT Turn
+@description:Turn the connected Bot to the left or the right.
+@param:direction$:string:"left" or "right"
+@param:speed:integer:The speed at which to move Bot. A positive value indicate a move forward, and a negative a move backward, ranging from -200 to 200.
+@param:duration:float:The duration of the movement, in seconds, ranging from 0 to ﹢∞, in seconds. When "null", it indicates that Bot keeps moving at the specified speed until it receives a command instructing it to stop moving.
+@compatible: aoz
+@content:
+This instruction returns when the movement is over.
+api*/
+
+/**api
+@name: BOT Rotate
+@description:Rotates the connected Bot to a specified angle
+@param:angle:integer:The angle of the rotation
+@param:speed:integer:The speed of the movement, from -200 to 200 RPM.
+@compatible: aoz
+@content:
+To ensure the accuracy of the angle Bot turns, it moves at the preset speed when this instruction is executed.
+When this instruction is executed, Bot keeps turning until it turns the specified angle or another instruction is executed.
+For example, when Bot Stop is executed, Bot stops turning.
+api*/
+
+/**api
+@name: BOT Rotation
+@description:Obtains the angle Bot rotates around the specified axis, with the clockwise direction as the positive direction.
+@param:axis$:string:The axis to return
+@return:integer:The current angle in the given axis in degrees
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Speed
+@description:Sets the speed of the two motors
+@param:speedLeft:integer:The new speed of the left motor, from -220 to 200 RPM
+@param:speedRight:integer:The new speed of the right motor, from -220 to 200 RPM
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Stop
+@description:Stops the rotation of the two motors
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Wheel Power
+@description:Sets the power of wheel
+@param:speed:float:The new power of the wheel, from -100 to 100
+@param:motor:integer:The number of the wheel, 1 for left wheel, 2 for right wheel, 0 for both
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Wheel Power
+@description:Obtains, in real time, the power of the encoder motor connected to the specified port
+@param:motor:integer:The number of the motor, 1 for left motor, 2 for right motor
+@return:integer:The power of the given motor, from -100 to 100
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Wheel Speed
+@description:Sets the speed of wheel
+@param:speed:float:The new speed of the wheel, from -200 to 200 RPM
+@param:motor:integer:The number of the wheel, 1 for left wheel, 2 for right wheel, 0 for both
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Wheel Speed
+@description:Get the speed of a wheel
+@param:motor:integer:The number of the wheel, 1 for left, 2 for right wheel
+@return:integer:The speed of the given wheel
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Wheel Turn
+@description:Sets the angle the wheel connected to the specified port
+@param:angle:integer:Number of degrees the specified wheel turns counterclockwise
+@param:speed:float:Rotating speed of the specified wheel when it turns counterclockwise, ranging from –200 to +200 RPM
+@param:motor:integer:The number of the motor, 1 for left wheel, 2 for right wheel, 0 for both
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Wheel Angle
+@description:Get the angle of the wheel connected to the specified port
+@param:motor:integer:The number of the wheel, 1 for left wheel, 2 for right wheel
+@return:integer:The angle of the given wheel
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Wheel Reset
+@description:Resets the angle of the wheel
+@param:motor:integer:The number of the wheel, 1 for left, 2 for right, 0 for both
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Wheel Lock
+@description:Enables the self-locking function of a wheel
+@param:motor:integer:The number of the wheel, 1 for left, 2 for right, 0 for both
+@compatible: aoz
+@content:
+When the self-locking function is enabled, the motor of the wheel attempts to stay in the current position after its motion. This function is disabled by default.
+api*/
+
+/**api
+@name: BOT Motor Speed
+@description:Sets the rotating speed of a motor connected to the specified port
+@param:speed:float:Power of the motor from -100 to 100%
+@param:port:integer:The number of the port to which the motor is connected, 1, 2 or 0 for both
+@compatible: aoz
+@content:
+When power > 0, the output shaft of the motor rotates counterclockwise; and when power < 0, the output shaft rotates clockwise.
+
+This may not be true for all the motors due to the features of motors. Some motors may require large start current and therefore can’t work when power is low.
+api*/
+
+/**api
+@name: BOT Motor Speed
+@description:Obtains the speed of the motor connected to the specified port
+@param:port:integer:The number of the port to which the motor is connected, 1 or 2
+@return:float:The speed of the motor from -100 to 100
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Motor Power
+@description:Sets the power output of the motors connected to ports M1 and M2
+@param:power1:float:The power output of the motor connected to port M1; setting range: –100 to +100, in percentage
+@param:power2:float:The power output of the motor connected to port M2; setting range: –100 to +100, in percentage
+@compatible: aoz
+@content:
+This API is used to set the power output of the motors connected to M1 and M2 and thus can synchronize the motion of the two motors.
+api*/
+
+/**api
+@name: BOT Motor Power
+@description:Returns the power output of the motor connected to the specified port
+@param:port:integer:The number of the port to which the motor is connected, 1 or 2
+@return:integer:The current power of the motor, from -100 to 100
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Motor Stop
+@description:Sets the power output of the motor connected to the specified port to zero
+@param:port:integer:The number of the port to which the motor is connected, 1, 2 or 0 for both
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Servo Angle
+@description:Sets the angle of the servo connected to a given port
+@param:angle:string:The angle to set, in degrees from 0 to 180
+@param:port:integer:The number of the port to which the motor is connected, 1 to 4 or 0 for all
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Servo Angle
+@description:Obtains the angle of the servo connected to a given port
+@param:port:integer:The number of the port to which the motor is connected, 1 to 4
+@return:integer:The current angle of the servo in degrees, from 0 to 180
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Servo Release
+@description:Releases the angle of the servo connected to the specified port
+@param:port:integer:The number of the port to which the motor is connected, 1 to 4 or 0 for all
+@compatible: aoz
+@content:
+When this instruction is executed, the output shaft of the servo is no longer locked until the Bot Servo Angle instruction is executed.
+api*/
+
+/**api
+@name: BOT Servo Drive
+@description:Sets the angles of the servos connected to ports 1 to 4 at the same time
+@param:angle1:integer:Angle of the servo connected to port S1; setting range: 0–180, in degrees
+@param:angle2:integer:Angle of the servo connected to port S2; setting range: 0–180, in degrees
+@param:angle3:integer:Angle of the servo connected to port S3; setting range: 0–180, in degrees
+@param:angle4:integer:Angle of the servo connected to port S4; setting range: 0–180, in degrees
+@compatible: aoz
+@content:
+This instruction is used to set the angles of the servos connected to S1, S2, S3, and S4, and thus can synchronize the motion of the servos.
+api*/
+
+/**api
+@name: BOT Print
+@description:Print a message on the screen of the Bot with automatic line breaks
+@param:text$:string:The text to print
+@compatible: aoz
+@content:
+When this instruction is executed, texts are displayed on the same line, and when a line is full, the texts are continued on new lines.
+api*/
+
+/**api
+@name: BOT PrintLn
+@description:Print a message on the screen of the Bot with forced line breaks
+@param:text$:string:The text to print
+@compatible: aoz
+@content:
+api*/
+
+/**api
+@name: BOT Label Show
+@description:Displays a text in the specified position of Bot’s screen
+@param:text$:string:The text to display
+@param:size:integer:The size of the text to display, authorised values are 16, 24 and 32
+@param:x:integer:The horizontal position of the text, from 0 to 128
+@param:y:string:The vertical position of the text, from 0 to 128
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Display Rotate
+@description:Sets Bot’s screen to the specified displaying direction (angles)
+@param:angle:integer:The angle of the display direction. Authorised values are -90, 0, 90, 180 and -180
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Display Clear
+@description:Clears the display of the connected Bot
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Display Off
+@description:Turns the display of the Bot off
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Controller
+@description:Determines whether the specified Bot button is pressed or the joystick is moved to the specified direction
+@param:name$:string:The name of the button or joytick direction to test
+@return:bool:True if the specified button is pressed or False if not
+@compatible: aoz
+@content:
+The name$ parameter can take the following values:
+
+* "a": button A (in the square shape)
+* "b": button B (in the rectangle shape)
+* "up": joystick moved up
+* "down": joystick moved down
+* "left": joystick moved to the left
+* "right": joystick moved to the right
+* "middle": joystick pressed in the center
+* "any_direction": joystick moved in any one direction
+* "any_button": button A or B
+* "any": any button or joystick moving direction
+
+api*/
+
+/**api
+@name: BOT Controller
+@description:Obtains the number of times the specified Bot button is pressed or the joystick is moved to the specified direction
+@param:name$:string:The name of the button or joytick direction to test
+@return:integer:Number of times
+@compatible: aoz
+@content:
+The name$ parameter can take the following values:
+
+* "a": button A (in the square shape)
+* "b": button B (in the rectangle shape)
+* "up": joystick moved up
+* "down": joystick moved down
+* "left": joystick moved to the left
+* "right": joystick moved to the right
+* "middle": joystick pressed in the center
+
+api*/
+
+/**api
+@name: BOT Controller Reset
+@description:Resets the number of times the specified Bot button is pressed or the joystick is moved to the specified direction
+@param:name$:string:The name of the button or joystick direction to test
+@compatible: aoz
+@content:
+The name$ parameter can take the following values:
+
+* "a": button A (in the square shape)
+* "b": button B (in the rectangle shape)
+* "up": joystick moved up
+* "down": joystick moved down
+* "left": joystick moved to the left
+* "right": joystick moved to the right
+* "middle": joystick pressed in the center
+* "any_direction": joystick moved in any one direction
+* "any_button": button A or B
+* "any": any button or joystick moving direction
+
+api*/
+
+/**api
+@name: BOT Brightness
+@description:Obtains the ambient light brightness detected by the light sensor on Bot
+@return:integer:The current brightness, a value ranging from 0 to 100. When the value returned is 100, the upper measuring limit is reached.
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Loudness
+@description:Obtains the ambient sound loudness detected by the microphone on the Bot
+@param:mode$:string:The level of detection
+@return:integer:The current loudness, a value ranging from 0 to 100. When the value returned is 100, the upper measuring limit of the microphone is reached.
+@compatible: aoz
+@content:
+The mode$ parameter can take the following values:
+* "average": average loudness in a period
+* "maximum": maximum loudness in a period; obviously, this mode is preferable for sound-sensitive projects.
+api*/
+
+/**api
+@name: BOT Tilt
+@description:Determines whether Bot is tilted forward
+@param:direction$:string:The direction to test
+@return:bool:True if the Bot is tilted in the given direction, False if it is not
+@compatible: aoz
+@content:
+The direction$ parameter can take the following values:
+* "left"
+* "right"
+* "forward"
+* "back"
+api*/
+
+/**api
+@name: BOT Face
+@description:Determines whether Bot is facing up or down
+@param:direction$:string:The direction to test
+@return:bool:True if the Bot is facing the given direction, False if it is not
+@compatible: aoz
+@content:
+The direction$ parameter can take the following values:
+* "up"
+* "down"
+api*/
+
+/**api
+@name: BOT Stand
+@description:Determines whether Bot is placed perpendicular to the ground, with the LED strip on the bottom.
+@return:bool:True if the Bot is placed perpendicular to the ground, False if it is not
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Handstand
+@description:Determines whether Bot is placed perpendicular to the ground, with the LED strip on the top.
+@return:bool:True if the Bot is placed perpendicular to the ground LED strip on the top, False if it is not
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Shake
+@description:Determines whether Bot is shaken and returns the shaking strenght
+@return:integer:The strength of shaking, from 0 to 100
+@compatible: aoz
+@content:
+It is determined that Bot is shaken when the shaking strength is higher than 20.
+api*/
+
+/**api
+@name: BOT Wave
+@description:Determine whether Bot is waved and returns the waving strength.
+@param:direction$:string:The direction to test
+@return:integer:0 if the Bot is not waved, and the value of the wave if it is, in degrees, from -179 to 180
+@compatible: aoz
+@content:
+The direction$ parameter can take the following values:
+* "up"
+* "down"
+* "left"
+* "right"
+api*/
+
+/**api
+@name: BOT Wave Speed
+@description:Returns the speed of the last wave.
+@return:integer:A value from 0 to 100 representing the speed of the wave.
+@compatible: aoz
+@content:
+The speed is positively related to but not equal to the actual moving speed of Bot. A large error may be caused in the value obtained due to the integral error.
+api*/
+
+/**api
+@name: BOT Pitch
+@description:Returns the current pitch of the connected Bot.
+@return:integer:A value ranging from –90 to 90 is returned, in degrees.
+@compatible: aoz
+@content:
+The pitch angle refers to the angle between the y-axis and horizontal plane.
+api*/
+
+/**api
+@name: BOT Roll
+@description:Returns the current roll angle of the connected Bot.
+@return:integer:A value ranging from –179 to 180 is returned, in degree.
+@compatible: aoz
+@content:
+The roll angle refers to the angle between the x-axis and horizontal plane.
+api*/
+
+/**api
+@name: BOT Yaw
+@description:Returns the current yaw angle of the connected Bot.
+@return:integer:A value ranging from –180 to 180 is returned, in degree.
+@compatible: aoz
+@content:
+The yaw angle refers to the angle Bot rotates around the z-axis.
+api*/
+
+/**api
+@name: BOT Reset Yaw
+@description:Resets the yaw angle.
+@compatible: aoz
+@content:
+No compass is configured in Bot, and therefore, reset_yaw() is used to reset the yaw angle to 0.
+api*/
+
+/**api
+@name: BOT Accelerometer
+@description:Obtains the output (in m/s²) of the accelerometer on the specified axis.
+@param:axis$:string:The axis to return
+@return:float:The current acceleration in the given axis.
+@compatible: aoz
+@content:
+The axis$ parameter can take the following values: "x", "y" and "z"
+Note that the accelerometer measures Earth’s gravity. When Bot is placed on a desk, the output of the accelerometer on the z-axis is –9.8m/s² (1g = 9.8m/s²).
+api*/
+
+/**api
+@name: BOT Gyro
+@description:Obtains the angular speed around the specified axis.
+@param:axis$:string:The axis to return
+@return:integer:A value ranging from –500 to 500 is returned, in degree/seconds (°/s).
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Pin Analog
+@description:Sets the digital input for the specified pin(s).
+@param:level:bool:True for high level input, False for low-level input
+@param:port:integer:The number of the port where the pins are located, 1, 2, or 0 for all ports
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Pin Analog
+@description:Obtains the voltage at the specified pin
+@param:port:integer:The number of the port where the pin is located, 1, 2
+@return:float:A float value ranging from 0 to 5 is returned, in volts
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Pin
+@description:Obtains the digital input at the specified pin.
+@param:port:integer:The number of the port where the pins are located, 1, 2
+@return:integer:A value ranging from 0 to 1 is returned, where 0 indicates a low electrical level and 1 indicates a high electrical level.
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Pin Pwm
+@description:Sets the specified pin(s) to output PWM signals with the specified frequency and duty cycle.
+@param:duty:integer:Duty cycle of the PWM signals to be output; setting range: 0–100, in percentage
+@param:frequency:integer:Frequency of the PWM signals to be output; setting range: 1–2000, in Hz
+@param:port:integer:The number of the port where the pins are located, 1, 2 or 0 for all
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT Mac Address$
+@description:Obtains the media access control address (MAC address) of the Wi-Fi
+@return:string:The value returned is a 12-byte str value, for example, FFEE33445566.
+@compatible: aoz
+@content:
+The address obtained may be wrong if Wi-Fi is not connected.
+api*/
+
+/**api
+@name: BOT BotName$
+@description:Obtains the name of the connected Bot
+@return:string:The name of the connected Bot
+@compatible: aoz
+api*/
+
+/**api
+@name: BOT BotName$
+@description:Changes the name of the connected Bot
+@param:string:The new name of the connected Bot
+@compatible: aoz
+api*/
+
+
+/**api
+@name: BOT Language$
+@description:Obtains the current language of the connected Bot
+@return:string:The name of the language
+@compatible: aoz
+@content:
+The returned string can have the following values:
+
+* "chinese": Chinese
+* "cantonese": Cantonese
+* "japanese": Japanese
+* "english": English
+* "french": French
+* "german": German
+* "spanish": Spanish
+* "portuguese": Portuguese
+* "russian": Russian
+* "korean": Korean
+* "italian": Italian
+* "dutch": Dutch
+api*/

@@ -1,0 +1,12 @@
+<i>IntCall</i>
+<b>IntCall</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The INTCALL function calls a command directly from the Intuition library. Before using this function, it is vital to
+load the appropriate control parameters into the registers D0 to D7 and A0 to A3. This can be done with the AREG
+and DREG variables from an AOZ Studio program. When the function has been executed, the contents of
+D0 will be returned back to your program as the result. Please note that this function is particularly dangerous,
+unless you are familiar with the Intuition library.
+
+

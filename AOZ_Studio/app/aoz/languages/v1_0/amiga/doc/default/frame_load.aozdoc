@@ -1,0 +1,37 @@
+<i>Frame Load</i>
+<b>Frame Load</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+Use this function to load one or more IFF frames directly into memory. The parameters in brackets are as follows:
+
+The channel number is the number of an animation file that is currently opened using the OPEN IN command.
+
+Next, specify the memory address or bank number where the frames are to be stored. If an address is specified, the
+entire file will be loaded into the chosen memory area, exactly like a BLOAD instruction. If you give a bank
+number, a new memory bank will be reserved automatically. It will hold your animation frames and be a permanent
+data bank in fast memory, called "IFF". Please note that bank numbers can range from 1 to 65535. To avoid
+overrunning your memory area and crashing the system, it is vital that enough space is reserved to hold the entire
+animation sequence in memory. The actual storage requirements may be calculated with the FRAME LENGTH
+function, which is explained later.
+
+Finally, there is an optional parameter that specifies the number of animation frames to be loaded. If this number is
+omitted, only Frame 1 will be loaded, but if your request is greater than the total number of available frames, all of
+the images will be grabbed in the current file, if memory allows. This can be exploited to load entire sequences no
+matter what their length, by setting this optional parameter to an overlarge number, as no error will be generated.
+
+FRAME LOAD returns the number of frames that have been successfully loaded into memory. This value may be
+saved into a variable once the animation has been loaded, and made use of when the sequence is to be played. For
+example:
+@code
+Rem Open animation file for reading
+Open In 1,"AMOSPro_Tutorial:Iff_Anim/AMOS.Anim"
+Rem Load all frames in current file
+Rem use overlarge value of 1000 to grab all available images to bank 10
+N=Frame Load (1 To 10,1000)
+Close
+Rem N now holds the number of actual frames
+Print "Number of frames in this file is ";N
+@code
+
+

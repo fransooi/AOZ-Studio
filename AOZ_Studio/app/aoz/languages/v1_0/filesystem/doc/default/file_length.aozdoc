@@ -1,0 +1,18 @@
+<i>File Length</i>
+<b>File Length</b> xxxxxxx
+=
+This example will load the file in a memory bank, and display it's content in hexadecimal...
+@code
+F$ = FSel$( "*.*", " ", "Please choose a file..." )
+If F$ <> ""
+L = File Length( F$ )			// Get the length of the file
+Reserve As Data 10, L			// Reserve the space in memory bank number 10
+Bload F4, 10					// Load the file into the bank.
+
+For P = 0 To Length( 10 )
+Print Hex$( Peek( Start( 10 ) + P ), 2 );" ";
+Next
+End If
+
+@code
+

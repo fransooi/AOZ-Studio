@@ -1,0 +1,12 @@
+<i>Erase Temp</i>
+<b>Erase Temp</b> xxxxxxx
+=
+This instruction is used to erase all of the temporary work banks from the current program. Any permanent data banks used for holding Sprites, music or samples will be completely unaffected. For example:
+@code
+Reserve As Data 5,1000: Rem Reserve 1000 bytes of permanent data
+Reserve As Work 6,1000: Rem Reserve 1000 bytes of temporary workspace
+Reserve As Chip Work 7,2000: Rem Reserve 2000 bytes of chip memory
+Erase Temp
+List Bank
+@code
+

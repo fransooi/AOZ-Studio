@@ -1,0 +1,20 @@
+<i>Bob Scale</i>
+<b>Bob Scale</b> xxxxxxx
+=
+This instruction allows you to zoom any bob instantly and adapt the size of it's image to your game.
+the scale also affects collision detect6ion, and the collisions will only be generated on the new surface.
+
+Bob Scale also worjks with negative value... in case of a negative scale value, the bob will be mirrored in this direction. Hot Spot are also affected by this instruction.
+
+The next example displays a bob on the screen and zooms it until it is bigger than the screen...
+@code
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load Bob images from disc
+Cls 0 										// Set up screen
+Bob 1, 100, 100, 2 		// Display Bob at position
+
+For S# = 1 To 100
+Bob Scale 1, S#, S#
+Wait Vbl
+Next
+@code
+

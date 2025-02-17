@@ -1,0 +1,11 @@
+<i>function:returns the Y position of the Actor</i>
+value=<b>Actor Y</b>(number)
+value=<b>Actor Y</b>(name$)
+=
+@code
+Cls 0
+Actor 1, x=100, y=50, image$="magic"
+Print Str$( Actor Y( 1 ) )
+@code
+Display "50" on the screen
+

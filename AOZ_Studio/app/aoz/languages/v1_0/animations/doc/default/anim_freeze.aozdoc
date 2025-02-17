@@ -1,0 +1,7 @@
+<i>Anim Freeze</i>
+<b>Anim Freeze</b> xxxxxxx
+=
+The ANIM FREEZE command suspends all animation sequences on screen, leaving them frozen in place. An
+optional number may be given to freeze that specific sequence only. Animations can be started again with a simple
+call to ANIM ON.
+

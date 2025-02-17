@@ -1,0 +1,29 @@
+<i>Gr Writing</i>
+<b>Gr Writing</b> xxxxxxx
+=
+This command is used to set the various modes used for drawing lines, shapes, filled shapes and graphical text.
+Settings are made using a bit pattern, whose values give the following results:
+@code
+Bit 0 = 0 only draw graphics using the current ink colour.
+Bit 0 = 1 replace any existing graphics with new graphics (default condition).
+Bit 1 = 1 change old graphics that overlap with new graphics, using XOR.
+Bit 2 = 1 reverse ink and paper colours, creating inverse video effect.
+@code
+The normal drawing state is where new graphics overwrite old graphics, like this:
+@code
+Ink 2,5 : Text 100,80, "NORMAL TEXT"
+Wait 100 : Gr Writing 1
+Text 10 ,80, "REPLACE"
+@code
+Try the next example for some simple demonstrations of alternative settings:
+@code
+Ink 2,5 : Text 100,80,"NORMAL TEXT"
+Wait 100 : Gr Writing 0
+Text 100,80, "MERGED"
+Wait 100 : Gr Writing 4
+Text 100,90, "STENCIL"
+Wait 100 : Gr Writing 5
+Text 100,100, "REVERSE"
+@code
+
+

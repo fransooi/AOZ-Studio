@@ -1,0 +1,34 @@
+ASSIGN AMOS: DH0:AMOS_Pro
+
+APCMP DH0:AOZTranspiler/tmp/code.asc TOKEN TEMP=DH0:AOZTranspiler/tmp/
+APCMP DH0:AOZTranspiler/tmp/code.amos TO DH0:AOZTranspiler/tmp/code TYPE=0 NOWB ERR DEFAULT INCLIB
+
+DELETE DH0:AOZTranspiler/tmp/code.asc
+;DELETE DH0:AOZTranspiler/tmp/code.amos
+
+ASK "Run Program [Y] / Create Bootable Disc [N]"
+
+IF WARN
+
+    CD DH0:AOZTranspiler/tmp
+    code
+    
+ELSE
+
+    ASK "Do you want format a floppy disc? [Y/N]" 
+    IF WARN
+        FORMAT DRIVE DF0: NAME AOZDISK
+    ENDIF
+    INSTALL DF0:
+
+    COPY DH0:AOZTRANSPILER/boot TO DF0: ALL
+    COPY DH0:AOZTRANSPILER/tmp TO DF0: ALL
+
+    IFF2Icon DH0:AOZTRANSPILER/icons/floppy.ilbm TO DF0:
+    IFF2Icon/IFF2Icon DH0:AOZTRANSPILER/icons/program.ilbm TO DF0:CODE.info Tool
+
+    ASK "Reboot Amiga? [Y/N]"
+    IF WARN
+        REBOOT
+    ENDIF
+ENDIF

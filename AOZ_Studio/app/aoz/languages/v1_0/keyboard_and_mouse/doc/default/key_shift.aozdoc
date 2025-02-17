@@ -1,0 +1,29 @@
+<i>Key Shift</i>
+<b>Key Shift</b> xxxxxxx
+=
+KEY SHIFT is used to report the current status of those keys which cannot be detected by either INKEY$ or
+SCANCODE because they do not carry the relevant codes. These "control keys can kb tested individually, or a test
+can be set up for any combination of such keys pressed together. A single call to the KEY SHIFT function can test
+for all eventualities, by examining a bit map in the following format"
+@code
+Bit 	Key 		Tested Notes
+0 	left [Shift] 	Only one [Shift] key can be tested at a time
+1 	right [Shift] 	Only one [Shift] key can be tested at a time
+2 	[Caps Lock] 	Either ON or OFF
+3 	[Ctrl]
+4 	left [Alt]
+5 	right [Alt]
+6 	left [Platform] 	This is the Windows key on windows platforms, Amiga key on the Amiga etc.
+7 	right [Platform]
+@code
+If the report reveals that a bit is set to 1, then the associated key has been held down by the user, otherwise a 0 is
+given. Here is a practical example:
+@code
+Centre "Please press some Control keys"
+Curs Off
+Do
+Locate 14,4: Print Bin$(Key Shift,8)
+Loop
+@code
+These keys can also be used when setting up macro definitions, using the "SCAN$" and "KEY$" functions...
+

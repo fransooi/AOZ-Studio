@@ -1,0 +1,27 @@
+<i>Frame Length</i>
+<b>Frame Length</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This function is used to calculate the precise amount of memory needed to hold the selected frames of an IFF animation file. To find the exact size of the required data area with FRAME
+
+LENGTH, simply give the channel number of the IFF file previously opened with the OPEN IN command.
+
+You may also specify the number of frames to be taken into consideration. If this number is omitted, only the first
+frame in the animation with be checked. Alternatively, if an overlarge number is specified, the exact memory
+requirements of all the frames in the current file will be returned.
+
+FRAME LENGTH does not change the position of the file pointer, but leaves it at the start of the next animation
+frame to be loaded. So it can be used immediately before a FRAME LOAD command to check the memory
+requirement of your new animation. For example:
+@code
+Open In 1 ,"AMOSPro_Tutorial:Iff_Anim/AMOS.Anim"
+Rem Load first frame only into memory
+L=Frame Length(1)
+Rem Reserve space for the frame in Bank 10
+Reserve As Work 10,L
+N=Frame Load(1 To 10)
+Close
+Print "Required memory for frame 1=";L
+@code
+

@@ -1,0 +1,193 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Variable Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Variables
+@description_file:intro.aozdoc
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+/**api
+@name:Add
+@description_file:add.aozdoc
+@param:variable:variable:The variable to add to
+@param:expression:integer:The value to add
+@param:base:number:Optional.
+@param:top:integer:Optional, if specified behavior will be identical to : VARIABLE = VARIABLE + EXPRESSION : If VARIABLE < BASE Then VARIABLE = TOP : If VARIABLE > TOP Then VARIABLE = BASE
+@examples:instructions:i_1
+api*/
+
+/**api
+@name:Array
+@description_file:array.aozdoc
+@param:array:array:The array to get the address from
+@return:integer:0 until implemented
+@compatible: notimplemented
+api*/
+//Function Array, variable
+//{
+//	#notimplemented
+//}
+//End Function( {0} )
+
+/**api
+@name:Data
+@description_file:data.aozdoc
+@compatible: all
+@examples:instructions:5/i_46
+api*/
+
+/**api
+@name:Dec
+@description_file:dec.aozdoc
+@param:variable:The variable to decrement
+@compatible: all
+@examples:instructions:i_1
+api*/
+
+/**api
+@name:Dim
+@description_file:dim.aozdoc
+@param:dimension1:integer:First dimension
+@param:dimension2:integer:Second dimension
+@param:dimensionX:integer:Any number of dimensions, only limited by memory.
+@compatible: all
+api*/
+
+/**api
+@name:False
+@description_file:false.aozdoc
+@return:boolean:FALSE
+@compatible: all
+api*/
+
+/**api
+@name:Global
+@description_file:global.aozdoc
+@param:variable:variable:Variable to share
+@compatible: all
+api*/
+
+/**api
+@name:Inc
+@description_file:inc.aozdoc
+@param:variable:variable:The variable to increment
+@compatible: all
+@examples:instructions:i_1
+api*/
+
+/**api
+@name:Is Defined
+@description_file:is_defined.aozdoc
+@return:boolean:TRUE if the variable is defined, FALSE if not
+@compatible: notimplemented
+api*/
+//Function Is Defined, variable
+//{
+//}
+//End Function( {(typeof %variable!='undefined')} )
+
+/**api
+@name:Match
+@description_file:match.aozdoc
+@param:array:array:The array to search
+@param:value:any:The value to find. Must be of the same type (number or string) than the array
+@return:integer:The index of the item if found, -1 if not found
+@compatible: all
+@example:tutorials:instructions/i_4
+api*/
+
+/**api
+@name:Read
+@description_file:read.aozdoc
+@param:variable:variable:The variable to read the data into.
+@compatible: all
+@examples:instructions:5/i_46
+api*/
+
+/**api
+@name:Restore
+@description_file:restore.aozdoc
+@param:*label:label:Indicate the position int he source code to restore to
+@examples:instructions:5/i_46
+@compatible: all
+api*/
+
+/**api
+@name:Shared
+@description_file:shared.aozdoc
+@param:variable:variable:Variable to share
+@compatible: all
+api*/
+
+/**api
+@name:Sort
+@description_file:sort.aozdoc
+@param:array:array:The array to sort
+@compatible: all
+@examples:instructions:i_4
+api*/
+
+/**api
+@name:Swap
+@description_file:swap.aozdoc
+@param:variable1:variable:First variable
+@param:variable2:variable:Second variable
+@examples:instructions:i_24
+@compatible: all
+api*/
+
+/**api
+@name:True
+@description_file:true.aozdoc
+@return:boolean:True
+@compatible: all
+api*/
+
+
+/**api
+@name:Varptr
+@description_file:varptr.aozdoc
+@param:variable:variable:Variable to get the "address" from
+@return:integer:A magic number referencing the variable
+@compatible: notimplemented
+api*/
+/*
+Function Varptr, variable
+{
+
+}
+End Function( {0} )
+*/

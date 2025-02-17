@@ -1,0 +1,17 @@
+<i>Plot</i>
+<b>Plot</b> xxxxxxx
+=
+This is the simplest drawing command of all, and plots a single pixel of ink colour between graphic coordinates 0,0
+and 319,199. When followed by specific x,y-coordinates, the current ink colour will be plotted at this new position.
+You are allowed to omit either the x or the y- coordinate, provided the comma is left in the correct position. If an
+optional colour index number is added the new colour will be used for this and all subsequent drawing operations.
+For example:
+@code
+Cls: Curs Off
+Do
+Plot Rnd(1920),Rnd(1080),Rnd(15)
+Wait vbl
+Loop
+@code
+
+

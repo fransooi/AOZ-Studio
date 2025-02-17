@@ -1,0 +1,414 @@
+{
+    bank_commands:
+    { 
+        name: "Memory Banks"
+        intro:""
+        conclusion:""
+        commands:
+        {
+            "bank_swap":
+            [
+                The BANK SWAP command switches over the memory pointers assigned to a pair of selected banks, so that the first bank is assigned to the second bank's memory block and the second bank grabs the locations used by the first.
+""
+Note that the items held in these banks are completely unaffected by this operation, and the only thing that changes
+is the number and type of the memory bank to which the items are assigned.
+""
+BANK SWAP is commonly used in conjunction with Objects, Icons and music banks. For example, it can be used
+to instantly flick between the images in an Icon bank and an Object bank, like this:
+                '''
+                ~~~                
+		   Load "Objects.Abk" : Rem Please use your own filename
+		   Load "Icons.Abk" : Rem Select appropriate filename
+		   Bank Swap 1,2 : Rem Banks 1 and 2 normally used for Sprites and Icons
+                ~~~
+                '''
+Another possibility is to store several different music banks in memory, and swap them as required.
+            ]
+            "bank_shrink":
+            [
+                This instruction does not erase a bank at all, but shrinks it! BANK SHRINK will not work with Object or Icon banks, but it is used to reduce the length of a previously reserved memory bank to the specified smaller length. The excess memory will be returned for use by the main program without complications.
+""
+This feature is very useful if you create a bank by poking it into memory, and wish to save it with a more suitable
+size. For example:
+                '''
+                ~~~                
+		   Reserve As Data 10,1000000: Rem Very large bank
+		   Poke$ Start(10)-8,"My Bank" : Rem Rename bank 8 bytes
+                   Poke$ Start(10),"This is a small bank!" : Rem Poke some data
+                   Bank Shrink 10 To 100: Rem Shrink bank to 100 bytes
+                   Save "My_Bank.Abk",10
+                ~~~
+                '''
+            ]
+            "start":
+            [
+                Use the START function to reveal the address of the memory area allocated to a bank, whose number is specified in brackets. The address will usually remain fixed for the duration of a program, but it can be changed by a BANK SWAP command.
+""
+If the specified bank number does not exist, AOZ Studio will give a "Bank not reserved" error report. This
+can be avoided by checking the status of a bank with the LENGTH function, like this:
+                '''
+                ~~~                
+		   If Length(N)>0: Rem give N a suitable bank number
+		      Print "Address of the bank is ";Start(N)
+		   Else
+		      Print "This bank does not exist!"
+		   End If
+                ~~~
+                '''
+The FAST FREE and CHIP FREE functions that are used to find the amount of relevant free memory have already
+been explained. These should not be confused with the FREE function, which reports the amount of free memory in
+the variable area.
+""
+###Grabbing accessory program memory banks
+Any memory banks that are used by an accessory are independent from the main program. Existing AMOS users
+will find that the system for grabbing memory banks has been greatly enhanced for AOZ Studio
+programmers.
+""
+The PRG UNDER command is used to check whether a program is accessible "under" the current program, and if
+all is well, its memory banks can be grabbed for the current program. As many different programs as memory
+allows can be run using the PRUN command, and full details of these commands as well as communication between
+programs is explained in Chapter 11.4. Here are the available bank-grabbing instructions and functions:
+            ]
+            "length":
+            [
+                The LENGTH function is used to find the size of the bank whose number is specified in brackets. Normally, this is measured in bytes, but if the bank contains Objects or Icon data, the number of images in that bank will be given.
+  
+A value of zero is returned for any bank that has not been defined. For example:
+                '''
+                ~~~                
+		   Load Fsel$("*.Abk"," ","Load an Object bank") : Rem Bank 1
+		   Print "There are ";Length(1);" images available."
+                ~~~
+                '''
+            ]
+            "erase":
+            [
+                The ERASE command clears the memory space used by the specified bank number, and returns this memory to the main program, for future use. For example:"
+                '''
+                ~~~                
+		   Reserve as Chip Work 5,1000: Rem Reserve temporary work bank 5
+		   Print "Free Chip Memory = ";Chip Free
+		   Wait Key
+		   Erase 5
+		   Print "There is now ";Chip Free; "available bytes."
+                ~~~
+                '''
+            ]
+            "erase_all":
+            [
+This command is used to erase all memory banks that are assigned to the current program, quickly and completely!
+""
+Memory banks allocated to certain types of computer games can often become much larger than the actual program
+listings. In this case, it is sensible to store all Objects in separate files on disc, and only load them into memory when they are specifically needed in the game. This dramatically reduces the size of program files and makes it very easy to change the Objects independently of the main routines. It also allows the same Objects to be used for several
+different programs.
+""
+In order to exploit this system, all the memory banks used by the program need to be carefully erased before the
+program is saved to disc, otherwise masses of useless data could be stored as part of the program listing. Use the
+ERASE ALL command carefully to save large amounts of valuable disc space.
+            ]
+            "erase_temp":
+            [
+                This instruction is used to erase all of the temporary work banks from the current program. Any permanent data banks used for holding Sprites, music or samples will be completely unaffected. For example:
+                '''
+                ~~~                
+		   Reserve As Data 5,1000: Rem Reserve 1000 bytes of permanent data
+		   Reserve As Work 6,1000: Rem Reserve 1000 bytes of temporary workspace
+		   Reserve As Chip Work 7,2000: Rem Reserve 2000 bytes of chip memory
+		   Erase Temp
+		   List Bank
+                ~~~
+                '''
+            ]
+            "list_bank":
+            [
+                The LIST BANK instruction is used to provide a complete list of all the banks that are available from the current program. Information about the banks is listed in the following order:
+""
+- The bank number, ranging from 1 to 65536
+- A single letter indicating the type of bank, with "F" for Fast or "C" indicating Chip Ram.
+- The name of the bank, held in a string of eight characters. Please note that Object banks are identified with the
+letters "Sprite", even though the same images can be used equally well for Sprites or Bobs.
+- The address of the start of the bank in memory, using hexadecimal notation.
+- The length of the bank in normal decimal format. In the case of "Sprite" or "Icon" banks, the number of
+images in the bank will be given instead.
+""
+LIST BANK will result in the following sort of report appearing on the screen:
+  
+
+                '''
+                ~~~                
+		1-C- Sprites S:C61298 	L:0000005
+		3-C- Music   S:C60E80 	L:0001000
+		6-F- Work    S:100000 	L:0010000
+                ~~~
+                '''
+            ]
+            "reserve_as_work":
+            [
+                This allocates a temporary workspace of the requested length from fast memory, if it is available.
+""
+The work data will be erased every time the program is run from the Editor, and it will be discarded when the listing is saved onto disc. A quick check can be made to see if the data area has been successfully assigned to fast memory, using the FAST FREE function, like this:
+                '''
+                ~~~                
+		   M=Fast Free : Rem Give the amount of available FAST memory
+		   Reserve As Work 10,1000
+		   If M<>Fast Free
+		      Print "The Data has been stored in FAST Ram"
+		   Else
+		      Print "Sorry, there is only CHIP Ram available"
+		   End If
+                ~~~
+                '''
+            ]
+            "reserve_as_chip_work":
+            [
+                This command allocates the selected block of temporary memory using Chip Ram, and it is often used with the DOUBLE BUFFERED sampling system, to play samples directly from hard disc. Here are some typical examples of
+the different RESERVE AS commands:
+                '''
+                ~~~                
+		   Reserve As Chip Work 10,10000: Rem 10000 bytes of chip workspace to bank 10
+		   Reserve As Work 11,5000: Rem 5000 bytes of fast workspace to bank 11
+		   Reserve As Chip Data 12,2000 : Rem 2000 bytes of permanent chip data to bank 12
+		   Reserve as Data 13,1000 : Rem 1000 bytes of fast data to bank 13
+                ~~~
+                '''
+            ]
+            "reserve_as_data":
+            [
+                This reserves the selected bank number with the number of bytes specified as its length. Data banks are permanent, and wherever possible, their memory will be allocated from fast memory, so this type of bank should not be used for information such as Objects and samples which need to be accessed directly by the Amiga's hardware chips.
+            ]
+            "reserve_as_chip_data":
+            [
+                Use this variation of the RESERVE AS instruction to allocate a permanent area of memory using Chip Ram. If there is none available, an "Out of Memory" error will be reported. You can obtain an instant read-out of the
+remaining chip memory by calling the CHIP FREE function, as follows:
+                '''
+                ~~~                
+		   CF=Chip Free
+		   Print "Remaining Chip memory = ";CF;" bytes."
+                ~~~
+                '''
+Once a bank has been defined by this command, it will be saved automatically, along with your AOZ Studio
+Basic program.
+            ]
+            "image_width":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "image_height":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "hrev":
+            [
+                This function reverses an image from left to right, creating a mirror image. Use HREV by specifying the existing image number (in brackets) to be flipped horizontally, in order to create a new identification number for the reversed image. This new image number can be freely used with any of the standard Bob commands.
+""
+Here is an example:
+
+                '''
+                ~~~                
+		   Load "AMOSPro_Tutorial:Objects/Bobs.abk" : Rem Load Bob images from disc
+		   Curs Off.: Cls 0 : Rem Set up screen
+		   Flash Off : Get Bob Palette : Rem Grab Bob colours from image bank
+		   Double Buffer : Rem Engage Double Buffering
+		   For X=360 To -60 Step -4: Rem Move Bob across screen
+		   	Bob 1,X,100,2 : Rem Display Bob at a new position
+			Wait Vbl : Rem Wait for next vertical blank period
+		   Next X
+		   For X=-60 To 400 Step 4: Rem Flip image and move from left to right
+		   	Bob 1,X,100,Hrev(2) : Rem Display Bob at new position
+		   	Wait Vbl : Rem Wait 50th of second for Vbl
+		   Next X
+                ~~~
+                '''
+There is a hexadecimal version of this function, and the value returned by the HREV function is in the following
+format:
+                '''
+                ~~~ 
+		$800+n
+                ~~~
+                '''
+Where $8000 is a "flag" telling AOZ Studio to reverse the Bob whenever it is displayed on screen, and
+where n is the number of your image. This technique can be used to flip images directly from an AMAL animation
+sequence.
+""
+Supposing your original sequence was created with this:
+                '''
+                ~~~ 
+		   "Anim 0,(1,2)(2,2)(3,2)(4,2)"
+                ~~~
+                '''
+To reverse these images, either of the following two lines could be used:
+                '''
+                ~~~ 
+		   "Anim 0,($8000+1,2)($8000+2,2)($8000+3,2)($8000+4,2)"
+		   "Anim 0,($8001,2)($8002,2)($8003,2)($8004,2)"
+                ~~~
+                '''
+When an image is reversed like this, the location of the hot spot is reversed horizontally too. So if the hot spot was originally in the top left-hand corner, the hot spot of the HREV image will be in the top right-hand corner:
+Depending on the image involved, this can have a great effect on the way your image is displayed on screen. Be
+careful to position your hot spots sensibly, or avoid any risks by setting them centrally, using the appropriate HOT
+SPOT command.
+            ]
+            "vrev":
+            [
+                VREV is identical to HREV, except that it takes the specified image and turns it upside down before displaying it on the screen. This is best used for animated objects that move vertically, although comic effects can be achieved with cartoon characters.
+  
+As with HREV, there is an equivalent hexadecimal version of the VREV function, which can be used with AMAL
+animation strings. The format is:
+                '''
+                ~~~ 
+		$4000+n
+                ~~~
+                '''
+WWhere $4000 acts as the reversal flag, and n is the image number. Here are two typical AMAL string of reversed
+animation:
+                '''
+                ~~~ 
+		   "Anim 0,($4000+1,2)($4000+2,2)($4000+3,2)($4000+4,2)"
+		   "Anim 0,($4001,2)($4002,2)($4003,2)($4004,2)"
+                ~~~
+                '''
+            ]
+            "rev":
+            [
+                REV combines HREV and VREV into a single function. It takes the image whose number is held in brackets, reverses it from left to right and then performs another reversal from top to bottom. For example:
+                '''
+                ~~~                
+		   Load "AMOSPro Tutorial:Objects/Bobs.abk"
+		   Curs Off : Cls 0
+		   Flash Off : Get Bob Palette
+		   Double Buffer
+		   For Y=200 To -40 Step -1
+			Bob 1,Y*2,Y,1
+			Wait Vbl
+		   Next Y
+		   For Y=-40 To 200
+			Bob 1,Y*2,Y,Rev(1)
+			Wait Vbl
+		   Next Y
+                ~~~
+                '''
+            ]
+            "ins_sprite":
+            [
+                INS SPRITE inserts a blank image at the numbered position in the current Object Bank. All of the images after this numbered position will then be moved down one place in the numerical order. The second version of this command allows you to create several spaces in a single operation, by giving the range of new gaps between the first and last image numbers that you specify.
+
+            ]
+            "del_sprite":
+            [
+                The DEL SPRITE command permanently deletes one or more Sprite images from the Object Bank. To erase a single image, simply give the image number to be deleted, like this:
+                '''
+                ~~~                
+		   Del Sprite 2
+                ~~~
+                '''
+                Whenever an image is deleted, all the subsequent images in the Bank are moved up one place in the numerical order. For instance, if the Bank originally contained four images, the above example would remove image number 2 from memory, leaving a gap between images 1 and 3. This gap would be filled immediately, as the old image numbers 3 and 4 were shunted up one place, to become the new image numbers 2 and 3.
+""
+If more than one image is to be removed from the Bank, you can set the range from the first image to the last after a DEL SPRITE command. The following example would delete Sprite images 4,5,6 and 7:
+                '''
+                ~~~                
+		   Del Sprite 4 To 7
+                ~~~
+                '''
+  
+After the last image has been deleted from the Object Bank, the entire Bank is erased automatically.
+            ]
+            "ins_bob":
+            [
+                INS BOB inserts a blank image at the numbered position in the current Object Bank. All of the images after this
+numbered position will then be moved down one place in the numerical order. The second version of this command
+allows you to create several spaces in a single operation, by giving the range of new gaps between the first and last
+image numbers that you specify.
+""
+Any of these new image spaces are completely empty, and so cannot be allocated to a Bob or displayed directly on
+screen while they are still blank. An actual image must first be grabbed into the Object Bank, using a GET SPRITE
+or GET BOB command. If this is not done, the appropriate error message will be given as soon as you try to access
+the empty image.
+""
+Both DEL BOB and INS BOB are provided to be used with the GET BOB and GET SPRITE commands. They
+allow you to modify and adjust your Bob images from inside AOZ Studio programs, with complete
+freedom. They may be used to create numerous special effects such as interactive screen animations and animated
+brushes.
+
+            ]
+            "del_bob":
+            [
+                The DEL BOB command permanently deletes one or more Bob images from the Object Bank. To erase a single image, simply give the image number to be deleted, like this:
+                '''
+                ~~~                
+		   Del Bob 2
+                ~~~
+                '''
+                Whenever an image is deleted, all the subsequent images in the Bank are moved up one place in the numerical order.
+For instance, if the Bank originally contained four images, the above example would remove image number 2 from
+memory, leaving a gap between images 1 and 3. This gap would be filled immediately, as the old image numbers 3
+and 4 were shunted up one place, to become the new image numbers 2 and 3.
+""
+If more than one image is to be removed from the Bank, you can set the range from the first image to the last after a DEL BOB command. The following example would delete Bob images 4,5,6 and 7:
+                '''
+                ~~~                
+		   Del Bob 4 To 7
+                ~~~
+                '''
+After the last image has been deleted from the Object Bank, the entire Bank is erased automatically.
+""
+Both DEL BOB and INS BOB are provided to be used with the GET BOB and GET SPRITE commands. They
+allow you to modify and adjust your Bob images from inside AOZ Studio programs, with complete
+freedom. They may be used to create numerous special effects such as interactive screen animations and animated
+brushes.
+
+            ]
+            "ins_image":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "make_mask":
+            [
+                This command creates a mask around every one of the images in the Object Bank, and may take
+a little time, depending on the number of objects involved. If an optional number is given, then a mask is created for that specified image only.
+ 
+            ]
+            "no_mask":
+            [
+                A "mask" means that the background colour (colour zero) around a Bob is made transparent, so t hat the screen graphics show through. The mask is also used by certain collision detection routines. A mask is automatically set up for every Bob, and the NO MASK command takes away this mask, so that the entire Bob image is drawn on the screen, including its original background colour and any other graphics in colour zero. To remove a mask, simply use this command followed by the number of the Bob image you are interested in.
+""
+Never remove a mask from a Bob while it is being displayed on screen, or its image will be scrambled! Remember
+to always use the BOB OFF command first.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "hot_spot":
+            [
+                The HOT SPOT command sets the hot spot of an image stored in the current Object Bank. The hot spot x,y-offset is measured from the top left-hand corner of the image, and is added to those coordinates before use, as illustrated in the following diagram:
+""           
+			![example1](/img/bank_commands/bank_com_ex1.png)
+
+                It is perfectly legal to position the hot spot outside of the current screen display. This can be used for automatic conversion of all screen coordinates, as explained above, or to set up a games sequence with Sprites appearing from off-screen.
+""
+There is another version of this instruction, allowing automatic positioning of the hot spot to any one of nine pre-set positions. These positions are shown in the following diagram, with the central point of the Object image
+represented by the value $11. The value for a pre-set hot spot at the top right-hand corner of the image is $20, for
+the bottom left-hand corner $02, and so on.
+          
+			![example2](/img/bank_commands/bank_com_ex2.png)
+
+            ]
+        }
+    }
+}

@@ -1,0 +1,13 @@
+<i>Pen</i>
+<b>Pen</b> xxxxxxx
+=
+This command sets the colour of the text displayed in the current window, when followed by the colour index
+number of your choice. The default setting of the pen colour is index number 2, which is white, and alternative
+colours may be selected from one of up to 64 choices, depending on the current graphics mode. For example:
+@code
+For INDEX=0 To 15
+Pen INDEX
+Print "Pen number ";INDEX
+Next INDEX
+@code
+

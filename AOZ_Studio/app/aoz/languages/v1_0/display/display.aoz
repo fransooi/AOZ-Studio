@@ -1,0 +1,234 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ display and renderer Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Display and Renderer
+@description:Instructions and functions to manage the display and the renderer system
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Freeze
+@description:Prevent the display to be updated while keeping the application running in the back
+@compatible: aoz, amos
+@content:
+This instruction completely removes the call to the renderer at the end of the loop of your application.
+It will continue to run in the back with the display staying what it was when this instruction was called.
+
+api*/
+Instruction Freeze
+{
+	aoz.renderer.freezeDisplay(true); 
+}
+End Instruction
+
+/**api
+@name:Unfreeze
+@description:Restore display update after "Freeze" has been used.
+@compatible: aoz, amos
+@content:
+restores the redenrer drawing process if it has been freeze previously..
+api*/
+Instruction Unfreeze
+{
+	aoz.renderer.freezeDisplay(false);
+}
+End Instruction
+
+/**api
+@name:View
+@description:If "Auto View Off" has been used, update the display immediately
+@compatible: aoz, amos
+@content:
+When the AUTO VIEW OFF instruction is engaged, VIEW can be used to display any changes that have been made to the current screen settings, and they will be displayed at the next vertical blank period following the VIEW command.
+
+api*/
+Instruction View
+{
+	aoz.renderer.view();
+}
+End Instruction
+
+/**api
+@name:Auto View Off
+@description:Toggle viewing mode off
+@compatible: aoz, amos
+@content:
+When SCREEN OPEN is used to create a new screen, the screen is usually displayed at once. This may be
+inconvenient during the initialisation stages of a program, in which case the AUTO VIEW OFF command can be
+used to disable this automatic display system. Screens can then be updated at a convenient point, using the VIEW
+instruction. To re-activate the automatic screen updating system, use the AUTO VIEW ON command.
+
+api*/
+Instruction Auto View Off
+{
+	aoz.renderer.setView(false);
+}
+End Instruction
+
+/**api
+@name:Auto View On
+@description:Toggle viewing mode on
+@compatible: aoz, amos
+@content:
+When SCREEN OPEN is used to create a new screen, the screen is usually displayed at once. This may be
+inconvenient during the initialisation stages of a program, in which case the AUTO VIEW OFF command can be
+used to disable this automatic display system. Screens can then be updated at a convenient point, using the VIEW
+instruction. To re-activate the automatic screen updating system, use the AUTO VIEW ON command.
+
+api*/
+Instruction Auto View On
+{
+	aoz.renderer.setView(true);
+}
+End Instruction
+
+/**api
+@name:Update Off
+@description:Turn off the automatic Object re-drawing system
+@compatible: aoz, amos
+@seealso: Update On, Update, Update Every
+@content:
+UPDATE OFF turns off the automatic re-drawing system, so that any Bob or Sprite commands will appear to be completely ignored. In actual fact, they are still going on invisibly, in the background.
+Any other graphical command (like drawing in the screens, moving or rotating them) will be preserved: Update Off only affects graphical objects.
+
+api*/
+Instruction Update Off
+{
+	aoz.setUpdate(false);
+}
+End Instruction
+
+/**api
+@name:Update On
+@description:Turn on the automatic Object re-drawing system
+@compatible: aoz, amos
+@seealso: Update Off, Update, Update Every
+@content:
+UPDATE ON returns the updating system back to the original automatic setting after Update Off has been used. Sprites and Bobs will move again on the screen.
+
+api*/
+Instruction Update On
+{
+	aoz.setUpdate(true);
+}
+End Instruction
+
+/**api
+@name:Update Every
+@description:Fix the rate of the automatic update system
+@param:delay:integer:Time, in 1/1000th of second (PC mode) and 1/50th of seconds (Amiga / retro emulations) between the update of the display
+@compatible:amos
+@content:
+The UPDATE EVERY command slows down the updating process, so that even the largest Object can be re-drawn during a single screen update. 
+The animation system is regulated by this process, once again providing smooth movement. After the UPDATE EVERY command, simply specify the number of vertical blank periods between
+each screen update, in 50ths of a second. Begin your timing changes with a value of two, and increase the value by
+one unit at a time until the animation becomes smooth.
+
+One useful effect of using UPDATE EVERY is to reserve more time for AOZ to execute the main
+program. In fact, with careful use of this instruction, it is possible to speed up programs by as much as one third,
+and still maintain excellent animation.
+api*/
+Instruction Update Every, delay
+{
+	aoz.updateEvery(%delay);
+}
+End Instruction
+
+/**api
+@name:Update
+@description:Force an update of the display. Will only work in "Auto Mode Off" mode.
+@compatible: aoz, stos, amos
+@content:
+The UPDATE commands are a combination of the BOB UPDATE and SPRITE UPDATE families, and they are
+used to re-draw all objects on the screen in a single operation.
+
+UPDATE displays any objects which have moved since the last update. You are recommended to add a WAIT VBL
+instruction to ensure a smooth effect.
+
+api*/
+Instruction Update
+{
+	aoz.update(true);
+}
+End Instruction
+
+/**api
+@name:Display Width
+@description:Return the width of the display canvas in PC mode
+@examples:instructions:i_76
+@compatible: aoz
+@content:
+The width of the display is defined in the manifest of the application. You can also use the #displayWidth tag at the beginning of your application to set the size of the canvas without editing the manifest.
+api*/
+Function Display Width
+{
+}
+End Function( {aoz.displayWidth()} )
+
+/**api
+@name:Display Height
+@description:Return the width of the display canvas in PC mode
+@examples:instructions:i_76
+@content:
+The height of the display is defined in the manifest of the application. You can also use the #displayHeight tag at the beginning of your application to set the size of the canvas without editing the manifest.
+api*/
+Function Display Height
+{
+}
+End Function( {aoz.displayHeight()} )
+
+/**api
+@name:Smoothing On
+@description:Turn On the graphic antialiasing
+api*/
+Instruction Smoothing On
+{
+	#errors
+	application.aoz.manifest.display.smoothing = true;
+}
+End Instruction
+
+/**api
+@name:Smoothing Off
+@description:Turn Off the graphic antialiasing
+api*/
+Instruction Smoothing Off
+{
+	#errors
+	application.aoz.manifest.display.smoothing = false;
+}
+End Instruction

@@ -1,0 +1,15 @@
+<i>Dir First$</i>
+<b>Dir First$</b> xxxxxxx
+=
+This function returns a string containing the name and the length of the first file on the current disc that matches up
+with your chosen search path. For example, the next routine reports the first file or folder in the current directory,
+followed by the first IFF file in the directory. Obviously, this could be the same file.
+
+@code
+Print Dir First$("*.*")
+Print Dir First$("*.PNG")
+@code
+
+When DIR FIRST$ is used, the whole directory listing is loaded into memory, so you can continue to discover the
+name of the next file in the current directory with the following function.
+

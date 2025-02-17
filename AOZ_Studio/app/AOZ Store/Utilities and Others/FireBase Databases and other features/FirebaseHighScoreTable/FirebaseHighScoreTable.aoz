@@ -1,0 +1,180 @@
+// #######################################################################
+// Firebase High Score Table Demo V1.0
+// By Phil Bell
+// Created April 2022
+// phil@aozwithphil.com
+// ############################################################################
+// Uses The Google Firebase Platform data storage
+//
+// The Google Firestore Database is a NoSQL cloud database
+//
+// Login to your Firebase console here (you can create a free account)
+// https://console.firebase.google.com/
+//
+// Check out the Firebase documentation here:
+// https://firebase.google.com/docs/firestore
+//
+// Download the following guide for help with setting up a Firebase project
+// https://aozwithphil.com/download/AOZFirebaseQuickStartGuide.pdf
+// ############################################################################
+
+#useAssetsResources:False
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#fps:false
+#clean:true
+
+Curs Off: Flash Off
+
+// Initialise Firebase
+// *********************************************************************
+// ** IMPORTANT !! DO NOT USE THESE CREDENTIALS IN YOUR OWN PROJECTS  **
+// *********************************************************************
+Firebase Init apiKey$ = "AIzaSyB6G9pk1ElrqK71ENgYC87nKAr2JDNdwyk", authDomain$ = "highscoretabledemo.firebaseapp.com", projectId$ = "highscoretabledemo", storageBucket$ = "highscoretabledemo.appspot.com", messagingSenderId$ = "229465548146", appId$ = "1:229465548146:web:91f07aaf6ef3c2268569eb"
+
+If FirebaseAuth AuthState() = false
+	// User is not signed in
+	Goto SIGN_IN
+End If
+
+MAIN:
+	MainScreenUI
+	UI Value "lblPlayerName", value$ = FirebaseAuth UserDisplayName$()
+	GetHighScores
+	Do
+		If FirebaseAuth AuthState() = false
+			// User is not signed in or has signed out
+			Goto SIGN_IN
+		End If
+
+		Wait Vbl
+	Loop
+
+SIGN_IN:
+	UI Cls
+	// Uses a built in user interface to sign in and also registers new users
+	// Additional configuration is required in the Authentication section in the Firebase console for the specified providers
+	// signInFlow$ is optional, remove if you dont want to signin flow to be displayed in a popup window
+	FirebaseAuth SignInWithBuiltInUI signInFlow$="popup", provider$="google,email"
+
+	// Wait here until the user is signed in
+	Do
+		If FirebaseAuth AuthState() = true
+			Goto MAIN
+		End If
+
+		Wait Vbl
+	Loop
+
+Procedure ON_ADD_SCORE_CLICK[ID$]
+	score$ = UI Value$("txtScore")
+
+	If score$ <> "" and Val(score$) > 0
+		// Get the document from the "hiscores" collection where the Document ID is equal to the signed in User ID
+		Firebase DocumentGet collection$="hiscores", docId$=FirebaseAuth UserID$(), onData$="ON_GOT_USER_DATA"
+	End If
+End Proc
+
+Procedure ON_GOT_USER_DATA[ERROR$, EXISTS, DOCUMENT_ID$, DOCUMENT_REF$]
+
+	If ERROR$ = "" And EXISTS = True
+		// The DOCUMENT_REF$ variable is used to access the document fields
+		score = Firebase GetDocumentValue(docRef$ = DOCUMENT_REF$, field$="score")
+
+		// If the new score is greater the the current score, then update the existing document
+		If Val(UI Value$("txtScore")) > score
+			docRef$ = Firebase NewDocument$()
+			Firebase SetDocumentValue docRef$ = docRef$, field$ = "score", value = Val(UI Value$("txtScore"))
+			Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "updated"
+			Firebase DocumentUpdate collection$ = "hiscores", docId$ = FirebaseAuth UserID$(), docRef$ = docRef$
+		End If
+
+	Else
+		// Create a new Firebase document (held in memory) and return a reference to it, this can then be used to access the document fields
+		docRef$ = Firebase NewDocument$()
+
+		// Set the document field values
+		Firebase SetDocumentValue docRef$ = docRef$, field$ = "score", value = Val(UI Value$("txtScore"))
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "playerName", value$ = FirebaseAuth UserDisplayName$()
+		Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "updated"
+
+		// Add the document to the Firebase 'hiscores' collection, the collection is created if it doesnt already exist
+		Firebase DocumentSet collection$ = "hiscores", docId$ = FirebaseAuth UserID$(), docRef$ = docRef$
+
+		// Remove the document from memory
+		Firebase DocumentDispose docRef$
+	End If
+End Proc
+
+
+Procedure GetHighScores
+	// Get a reference to a new query for the "hiscore" Firestore database collection
+	queryRef$ = Firebase NewQuery$ (collection$ = "hiscores", onData$="ON_HIGH_SCORE_DATA_RECEIVED")
+
+	// Order the documents by score in decending order
+	Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "score", direction$ = "desc"
+
+	// Listen to the results of the query, the onData$ event will be called each time
+	// the query results change (that is, when a document is added, removed, or modified)
+	// !! Important
+	// You should use "Firebase QueryDispose" to stop listening to the collection query
+	// when it is no longer needed. Use "Firebase QueryGet" if you only need to get the results one time
+
+	// We can limit the query results to 10 documents by setting the limit parameter
+	Firebase QuerySubscribe queryRef$, limit = 10
+End Proc
+
+Procedure ON_HIGH_SCORE_DATA_RECEIVED[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	// Procedure is called when changes are detected in the collection query
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Remove only the components used to display the score table
+		UI Cls group$="scoreTable"
+
+		If DOCUMENT_COUNT > 0
+			For row = 0 To DOCUMENT_COUNT -1
+				// Get the Firebase document ID for a specific row in the query results
+				// We then use the document ID to access the document fields
+				docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+				// Read the document fields using the Firebase document ID as a reference
+				playerName$ = Firebase QueryGetString$(QUERY_REF$, docId$, "playerName")
+				score = Firebase QueryGetValue(QUERY_REF$, docId$, "score")
+
+				// By default, ServerTimeStamp fields are returned as "yyyy-mm-ddTHH:mm:ss"
+				created$ = Firebase QueryGetDate$(QUERY_REF$, docId$, "updated", format$="DD MMM YYYY HH:mm:ss")
+
+				// Display the data
+				UI TextBlock "lblPosition" + docId$, x=100, y=340 + row * 50, width=50, content$=Str$(row + 1) + ".", class$="text-light", group$="scoreTable"
+				UI TextBlock "lblPlayerName" + docId$, x=140, y=340 + row * 50, width=320, content$=playerName$, class$="text-light", group$="scoreTable"
+				UI TextBlock "lblPlayerScore" + docId$, x=450, y=340 + row * 50, width=100, content$=str$(score), class$="text-light text-end", group$="scoreTable"
+				UI TextBlock "lblCreated" + docId$, x=550, y=340 + row * 50, width=250, content$=created$, class$="text-light text-end", group$="scoreTable"
+			Next row
+		End If
+
+	End If
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure MainScreenUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "lblPlayerName", x=100, y=160, width=315, content$="#", class$="text-light"
+UI TextBox "txtScore", x=428, y=160, width=192, placeHolder$="Enter score...", type$="number", class$="form-control"
+UI Button "btnAddScore", x=640, y=160, width=178, height=50, content$="Add New Score", class$="btn btn-success", onClick$="ON_ADD_SCORE_CLICK"
+UI TextBlock "UITextBlock3", x=100, y=120, width=276, content$="Player name", class$="text-light"
+UI TextBlock "UITextBlock0", x=420, y=120, width=276, content$="Score", class$="text-light"
+UI TextBlock "UITextBlock5", x=100, y=260, height=62, fontSize=30, content$="Top 10 Players", class$="text-light"
+UI TextBlock "lblTitle", x=100, y=40, width=569, height=60, fontSize=30, content$="Firebase High Score Table Demo", class$="text-light"
+UI Button "btnSignOut", x=640, y=40, width=178, height=50, content$="Sign Out", class$="btn btn-danger", onClick$="ON_SIGN_OUT_CLICK"
+End Proc
+
+Procedure ON_SIGN_OUT_CLICK[ID$]
+    FirebaseAuth SignOut
+End Proc

@@ -1,0 +1,15 @@
+<i>Display View</i>
+<b>Display View</b> xxxxxxx
+=
+This instruction should normally be used after you have open a view, but you can also use it anywhere in yoru application.
+
+It defines the rectangle in which to display the map. Width and Height do *not* need to be multiples of the width or height of the tiles...
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 255, 25, 999, 500	// Any size is possible
+Redraw View
+@code
+

@@ -1,0 +1,20 @@
+<i>Sam Raw</i>
+<b>Sam Raw</b> xxxxxxx
+=
+SAM RAW plays a raw sample, and can be used to scan through any program or sound library discs, searching for a
+sample that matches the given parameters.
+
+The voice parameter has already been explained. Address refers to the location address of the sound sample, which
+is normally inside an AOZ Studio memory bank, but can be anywhere. The length parameter confirms the
+length in bytes of the sample to be played. Finally, frequency dictates the playback speed of the original sample,
+given in Hertz.
+
+A typical raw sample command looks like this:
+@code
+Reserve as work 10,21480
+R$="AMOSPro_Examples:Samples/Mixture.Abk"
+Bload R$,Start(10)
+Sam Raw 15,Start(10),length(10),3000
+@code
+
+

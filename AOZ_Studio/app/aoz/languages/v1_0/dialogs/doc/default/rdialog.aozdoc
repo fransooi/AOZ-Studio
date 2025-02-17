@@ -1,0 +1,11 @@
+<i>RDialog</i>
+<b>RDialog</b> xxxxxxx
+=
+This function is used to read the position of a particular button or selector. Specify the number of an open Interface channel, and then give the number of the button or zone to be tested. There is also an optional parameter which can be specified to check one of several objects that have been assigned to a current zone number. If this object number is omitted, then the status of the first object defined in the current zone number will be returned. Object numbers are arranged according to the order in which they have been defined in the Interface program, so the first button has an object number of zero, the second will be read as 1, and so on
+
+The result returned by the RDIALOG function depends on the type of zone being scrutinised. In the case of a simple
+button, its current value will be given, but there are special numerical edit zones (explained later) which will return a
+new value entered by the user. If a text zone is checked in this way, a result of zero will given, and the RDIALOG$
+function should be used instead. This is explained next
+
+

@@ -1,0 +1,24 @@
+<i>Exit If</i>
+<b>Exit If</b> xxxxxxx
+=
+It is often necessary to leave a loop as a result of a specific set of conditions, and this can be simplified by using the
+EXIT IF instruction. As explained above, in conditional operations, the value -1 represents True, whereas a zero
+represents False. After using EXIT IF, an expression is given which consists of one or more tests in standard AOZ format.
+The EXIT will only be performed IF the result is found to be true.
+
+As before, an optional number can be given to specify the number of loops to be jumped from, otherwise only the
+current loop will be aborted.
+
+For example:
+@code
+While L=0
+A=0
+Do
+A=A+1
+For X=0 To 100
+Exit If A=10,2 : Rem Exit from DO and FOR loops
+Next X
+Loop
+Exit 1: Rem Exit from WHILE loop
+Wend
+

@@ -1,0 +1,8 @@
+<i>Player Name$</i>
+<b>Player Name$</b> xxxxxxx
+=
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Print Player IsGuest()
+@code
+

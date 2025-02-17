@@ -1,0 +1,28 @@
+<i>VuMeter</i>
+<b>VuMeter</b> xxxxxxx
+=
+Volume meters (Vu-meters) are a familiar sight on the control panels of audio equipment. AOZ Studio is not
+only able to monitor the volume level of any selected voice number from 0 to 3, it can also use the value of the
+volume intensity to make graphics dance around in response to the intensity of a soundtrack!"
+
+The value returned is given as the volume intensity, ranging from silence (0) up to full volume (63).
+
+The best way to understand the effect of all the commands in this Chapter is to hear them working. Be sure to try out
+all of the demonstration programs that are available via the HELP feature.
+
+Playing music
+The AOZ Studio music system allows backing tracks to be added to any program. Music can be created
+from a variety of sources, including original samples and compositions, which are explained in the following two
+Chapters. These backing tracks are converted into the AOZ Studio format, and held in the Music Bank.
+
+Music tracks are loaded with the MUSIC command, volume is controlled by MVOLUME, and speed by
+MVOLUME. Individual music passages can be halted using the MUSIC STOP instruction, and all music is halted
+by MUSIC OFF.
+
+For a taster of these techniques in action, load this ready-made example:
+@code
+Load "AMOSPro_Examples:Music/Music.Abk"
+Music 1: Mvolume 63 : Tempo 35
+@code
+
+

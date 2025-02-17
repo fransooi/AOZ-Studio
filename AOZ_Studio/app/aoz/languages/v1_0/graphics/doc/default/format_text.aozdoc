@@ -1,0 +1,28 @@
+<i>Format Text</i>
+<b>Format Text</b> xxxxxxx
+=
+The Format Text is a very powerful instruction and function that allow you to display any formatted text withing a given rectangle.
+
+The format of the text can be:
+- Native AOZ text, containing commands like =Ink$(), =Zone$(), =Url$() etc.
+- Markdown UTF-8 text, with support of all the tags including table, code, links and images.
+- Simple HTML tags, like <bold></bold>, <link></link> etc.
+- Break lines are supported with "\r" or "<br>"
+
+It can be used either as a function or an instruction.
+
+If you use it as a function, the "height" parameter has a special role...
+- if you do NOT define it, nothing will be printed ont he screen and and Format Text will return the height of the displayed text, allowing you to prepare the display
+- if you DO define the height parameter, then the output will be visible, and it will still return the height of the text on screen.
+
+The instruction also supports tags to indicate the format:
+- '#left', '#center', '#right', '#start', '#end' : horizontal align
+- '#html' : indicates a text formatted in HTML
+- '#md' : indicates a markdown text
+- '#nozones' : will ignore the =Zone$() AOZ commands
+- '#animate' : will render the links and images displayed on screen to be active, by starting a mouse-detection background process
+
+This instruction also has this unique of drawing such a text inside of a Javascript canvas that you can grab later as a bob or a texture.
+
+A good example of the use of this instruction is the documentation application that you will find ion the aoz/help folder: all texts and info are displayed using Markdown and Format Text.
+

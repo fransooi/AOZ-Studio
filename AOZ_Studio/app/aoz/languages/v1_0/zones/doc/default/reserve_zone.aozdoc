@@ -1,0 +1,11 @@
+<i>Reserve Zone</i>
+<b>Reserve Zone</b> xxxxxxx
+=
+The RESERVE ZONE instruction must be used to allocate enough memory for the exact number of zones required,
+before a SET ZONE command is given. There is no limit to the number that can be specified, apart from the amount
+of available memory.
+
+To erase all current zone definitions and restore the allocated memory to the main program, simply give the
+RESERVE ZONE command without any number parameter.
+
+

@@ -1,0 +1,11 @@
+<i>Copy</i>
+<b>Copy</b> xxxxxxx
+=
+As normal memory is unaccessible on modern machines, AOZ solves the address by using the "Start" function to get the address of a bank (magical number) and adding the offset.
+
+The COPY command is used to move large sections of memory banks from one place to another.
+
+Specify the start and finish locations of the data to be moved, then give the destination of the position of memory
+area which is to be loaded with the data.
+
+

@@ -1,0 +1,508 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ WebSocket extension
+ * By Francois Lionet
+ *
+ * @author FL
+ * @date first pushed on 01/06/2020
+ *
+ */
+#basicRemarks:false
+#need_extension:"json"
+
+/**doc
+@name:WebSocket
+@description:Instructions and functions to use WebSockets
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+	this.context = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+
+    this.WebSocket = function( aoz, url, protocol, tags )
+    {
+        this.aoz = aoz;
+		this.url = url;
+		this.protocol = protocol;
+		this.tags = tags;
+		this.newMessages = [];
+		this.newErrors = [];
+		this.error = undefined;
+		this.connected = false;
+		this.displayErrors = true;
+		this.maximumMessageLength = 2 * 1012;
+		this.logInEvents = [];
+		this.logOutEvents = [];
+		this.logInEventsON = true;
+		this.logOutEventsON = true;
+		this.logEventsMax = 100;
+		this.callbacks =
+		{
+			onopen: [],
+			onmessage: [],
+			onclose: [],
+			onerror: [],
+		}
+
+		// Check the URL...
+		if ( url.substring( 0, 5 ).toLowerCase() != 'ws://' && url.substring( 0, 6 ).toLowerCase() != 'wss://' )
+			throw { error: "websocket_incorrect_url", parameter: url };
+
+		var self = this;
+		this.webSocket = new WebSocket( url, protocol );
+		this.webSocket.aoz = this.aoz;
+		this.webSocket.addEventListener( 'open', function( event )
+		{
+			console.log( 'Websocket open: ', event );
+
+			self.connected = true;
+
+			// Todo, please: eventually display small popup "connected".
+			self.logInEvent( event );
+			self.logOutEvent( event );
+			self.callCallbacks( 'onopen', true, event );
+		} );
+		this.webSocket.onclose = function( event )
+		{
+			console.log( 'Websocket closed: ', event );
+
+			self.connected = false;
+			if ( !self.theEnd )
+			{
+				if ( !event.wasClean )
+				{
+					var newError = { error: 'websocket_connexion_died', parameter: event.reason + ' (code returned: ' + event.code + ')' };
+					self.newErrors.push( newError );
+					if ( self.displayErrors )
+						self.aoz.popupError = newError;
+					self.callCallbacks( 'onclose', false, { error: newError, event: event } );
+				}
+				else
+				{
+					self.callCallbacks( 'onclose', true, { event: event } );
+				}
+				self.logInEvent( event );
+				self.logOutEvent( event );
+			}
+		};
+		this.webSocket.onerror = function( event )
+		{
+			console.log( 'Websocket error: ', event );
+
+			if ( !self.theEnd )
+			{
+				var newError = { error: 'websocket_error', parameter: event.message + ' (code returned: ' + event.code + ')' };
+				self.newErrors.push( newError );
+				if ( self.displayErrors )
+					self.aoz.popupError = newError;
+				self.logInEvent( event );
+				self.logOutEvent( event );
+				self.callCallbacks( 'onerror', false, { error: newError, event: event } );
+			}
+		};
+		this.webSocket.onmessage = function( event )
+		{
+			console.log( 'Websocket received: ' + event.data, event );
+
+			var timeStamp = new Date().getTime();
+			self.newMessages.push( event );
+			self.logInEvent( event );
+			self.callCallbacks( 'onmessage', timeStamp, event );
+		}
+		this.aoz.callAtEndOfApplication( this, function()
+		{
+			this.theEnd = true;
+			this.webSocket.close();
+		} );
+    };
+	this.WebSocket.prototype.close = function()
+	{
+		this.webSocket.close();
+	}
+	this.WebSocket.prototype.sendMessage = function( message, throwError, tags )
+	{
+		if ( typeof message != 'string' )
+		{
+			message = 'json:' + JSON.stringify( message );
+		}
+		this.webSocket.send( message );
+		this.logOutEvent( message );
+	};
+	this.WebSocket.prototype.addCallback = function( type, yourself, callback, extra )
+	{
+		if ( typeof this.callbacks[ type ] != 'undefined' )
+		{
+			var identifier = this.aoz.utilities.getUniqueIdentifier( 'websocket' );
+			this.callbacks[ type ].push( { identifier: identifier, self: yourself, callback: callback, extra: extra } );
+			return identifier;
+		}
+		return null;
+	};
+	this.WebSocket.prototype.removeCallback = function( identifier )
+	{
+		for ( var c in this.callbacks )
+		{
+			for ( var cc = 0; cc < this.callbacks.length; cc++ )
+			{
+				if ( this.callbacks[ cc ].identifier )
+				{
+					this.callbacks = this.utilities.cleanObject( this.callbacks, this.callbacks[ cc ] );
+				}
+				return true;
+			}
+		}
+		return false;
+	};
+	this.WebSocket.prototype.callCallbacks = function( type, response, data )
+	{
+		if ( this.callbacks[ type ] )
+		{
+			var callbacks = this.callbacks[ type ];
+			for ( var cc = 0; cc < callbacks.length; cc++ )
+			{
+				callbacks[ cc ].callback.call( callbacks[ cc ].self, response, data, callbacks[ cc ].extra );
+			}
+		}
+	};
+	this.WebSocket.prototype.logOutEvent = function( event )
+	{
+		if ( this.logOutEventsON )
+		{
+			var time = new Date().getTime();
+			this.pushToLog( { event: event, timeStamp: time }, this.logOutEvents );
+		}
+	};
+	this.WebSocket.prototype.logInEvent = function( event )
+	{
+		if ( this.logInEventsON )
+		{
+			var time = new Date().getTime();
+			this.pushToLog( { event: event, timeStamp: time }, this.logInEvents );
+		}
+	};
+	this.WebSocket.prototype.pushToLog = function( message, log )
+	{
+		if ( log.length == this.logEventsMax )
+			{
+			for ( var l = 0; l <= this.logEventsMax - 1; l++ )
+				log[ l ] = log[ l + 1 ];		
+			log[ this.logEventsMax - 1 ] = message;
+			}
+		else
+		{
+			log.push( message );
+		}
+	};
+	this.WebSocket.prototype.isConnected = function()
+	{
+		return this.connected;
+	};
+	this.WebSocket.prototype.isMessage = function( tags )
+	{
+		return this.newMessages.length != 0;
+	};
+	this.WebSocket.prototype.getMessage = function( tags )
+	{
+		if ( this.newMessages.length )
+		{
+			var event = this.newMessages.pop();
+			return event.data;
+		}
+		return undefined;
+	};
+	this.WebSocket.prototype.isError = function( tags )
+	{
+		return this.newErrors.length != 0;
+	};
+	this.WebSocket.prototype.getError = function( tags )
+	{
+		if ( this.newErrors.length )
+		{
+			var event = this.newErrors.pop();
+			return event.message;
+		}
+		return undefined;
+	};
+
+    // Waiting function for stopping messages
+   	this.wait = function()
+	{
+		if ( this.load_done )
+		{
+            if ( this.error )
+                throw this.error;
+			this.aoz.waiting = null;
+		}
+	};
+}
+
+
+/**api
+@name:WebSocket Open
+@description:Open a Web Socket channel, enabling you to send and receive messages and files
+@param:index:index:Index of the channel
+@param:url$:string:URL of the server
+@param:protocol$:string:List of sub-protocols, as described in the Javascript WebSocket object documentation.
+@content:
+The WebSocket extension allows you to connect to several servers at the same time. To do so, it works with channels, each channel corresponding to a connection. The first parameter of each WebSocket instruction is therefore the index of the channel.
+
+AOZ tries to connect immediately after this instruction but does not wait for the connection to be established. In order to know if the destination WebSocket server has been effectively reached, you must use the "WebSocket Is Connected" function.
+~~~      
+URL$ = "ws://my_url.me:3000"          
+WebSocket Open 1, URL$ 
+~~~
+api*/
+Instruction WebSocket Open, index=(index), url$="http://aoz.studio", protocol$, tags$
+{
+    #errors
+	var webSocket = new aoz.ext_websocket.WebSocket( aoz, %url$, %protocol$, %tags$ );
+	aoz.ext_websocket.context.setElement( aoz.currentContextName, webSocket, %index, true );
+}
+End Instruction
+
+/**api
+@name:WebSocket Close
+@description:Destroys a WebSocket channel and all data associated
+@param:index:index:Index of the channel
+@content:
+Closes any connection and destroys the channel. Any pending message will be lost, the connection is cut without any warning to the other side.
+
+Example:
+~~~                
+URL$ = "ws://my_url.me:3000"          
+WebSocket Open 1, URL$ 
+Repeat 
+	Wait Vbl 
+Until WebSocket Is Connected( 1 )
+WebSocket Close 1
+~~~
+api*/
+Instruction WebSocket Close, index=(index)
+{
+    #errors
+	aoz.ext_websocket.context.getElement(aoz.currentContextName,%index,'websocket_channel_not_defined').close();
+    aoz.ext_websocket.context.deleteElement(aoz.currentContextName,%index);
+}
+End Instruction
+
+/**api
+@name:WebSocket Send Message
+@description:Send a message through a WebSocket channel
+@param:index:index:Index of the channel
+@param:message$:string:Message to send, no check on length is performed.
+@content:
+The WebSocket channel must be of course connnected for this instruction to work. The message is send without any verification of reception, it might get lost or some parts of it deleted in case of a bad connection.
+It is suggested for important data, to ask for a confirmation feed-back from the server side.
+
+Example:
+~~~                
+URL$ = "ws://my_url.me:3000"          
+WebSocket Open 1, URL$ 
+Repeat 
+	Wait Vbl 
+Until WebSocket Is Connected( 1 )
+WebSocket Send Message 1, "Hello"
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+~~~
+api*/
+Instruction WebSocket Send Message, index=(index), message$="", tags$
+{
+    #errors
+	aoz.ext_websocket.context.getElement(aoz.currentContextName,%index,'websocket_channel_not_defined').sendMessage(%message$,%tags$);
+}
+End Instruction
+
+/**api
+@name:WebSocket Is Message
+@description:Returns TRUE if a new message is available, FALSE if not
+@param:idnex:integer:Index of the channel
+@return:boolean:TRUE or FALSE if a new message is available
+@content:
+This function is designed to be used in the main loop of your application. 
+If it returns true, it means that one or more messages are available, and that you should ask for them with the "WebSocket Message$" function.
+
+This example connects to a server, sends a message and disconnects as soon as it receives a response from the server...
+~~~                
+URL$ = "ws://my_url.me:3000"          
+WebSocket Open 1, URL$ 
+Repeat 
+	Wait Vbl 
+Until WebSocket Is Connected( 1 )
+
+WebSocket Send Message 1, "Hello"
+Repeat
+	Wait Vbl
+Until WebSocket Is Message( 1 )
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+~~~
+api*/
+Function WebSocket Is Message, index=(index), tags$
+{
+    #errors
+}
+End Function( {aoz.ext_websocket.context.getElement(aoz.currentContextName,%index,'websocket_channel_not_defined').isMessage(%tags$)} )
+
+/**api
+@name:WebSocket Message$
+@description:Returns a newly arrived string message
+@param:index:index:Index of the channel
+@return:string:The message
+@content:
+If a message is available in the pile of received messages, this function unpiles the last one and returns it.
+As several messages can be received in a short period of time, or if your application leaves the main loop for a moment, you should unpile all the messages and ensure that the message pile stays empty.
+(use the "WebSocket Is Message()" function to get this information) 
+
+The next examples opens a connection, send a message, then wait and print incoming messages. If the incoming messages is equl to quit, then it quits!
+~~~                
+URL$ = "ws://my_url.me:3000"          
+WebSocket Open 1, URL$ 
+Repeat 
+	Wait Vbl 
+Until WebSocket Is Connected( 1 )
+
+WebSocket Send Message 1, "Hello"
+Repeat
+	If WebSocket Is Message( 1 )
+		message$ = WebSocket Message$( 1 )
+		If message$ = "quit" Then Exit
+	End If
+	Wait Vbl
+Until Inkey$ <> ""
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+~~~
+api*/
+Function WebSocket Message$, index=(index), tags$
+{
+    #errors
+}
+End Function( {aoz.ext_websocket.context.getElement(aoz.currentContextName,%index,'websocket_channel_not_defined').getMessage(%tags$)} )
+
+/**api
+@name:WebSocket Is Error
+@description:Returns TRUE if a an error has occurred, FALSE if OK
+@param:index:integer:Index of the channel
+@return:boolean:TRUE or FALSE if an error has occured.
+@content:
+This function reports any error with the connection. You can get the description of the error (directly from your browser's response, in its language and format) with the "WebSocket Error$" function.
+
+Example:
+~~~                
+URL$ = "ws://my_url.me:3000"          
+WebSocket Open 1, URL$ 
+Repeat 
+	Wait Vbl 
+Until WebSocket Is Connected( 1 )
+
+WebSocket Send Message 1, "Hello"
+Repeat
+	If WebSocket Is Error
+		Print "Connection aborted!"
+		End
+	End If
+	Wait Vbl
+Until Inkey$ <> ""
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+~~~
+
+api*/
+Function WebSocket Is Error, index=(index), tags$
+{
+    #errors
+}
+End Function( {aoz.ext_websocket.context.getElement(aoz.currentContextName,%index,'websocket_channel_not_defined').isError(%tags$)} )
+
+/**api
+@name:WebSocket Is Connected
+@description:Returns TRUE if the WebSocket has succesfully connected to the server
+@param:index:integer:Index of the channel
+@return:boolean:TRUE or FALSE if the WebSocket is connected or not.
+@content:
+This function allows you to wait for the socket to be connected.
+
+Example:
+~~~
+URL$ = "ws://my_url.me:3000"
+WebSocket Open 1, URL$
+Repeat
+	Wait Vbl
+Until WebSocket Is Connected( 1 )
+
+WebSocket Send Message 1, "Hello"
+Repeat
+	If WebSocket Is Error
+		Print "Connection aborted!"
+		End
+	End If
+	Wait Vbl
+Until Inkey$ <> ""
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+~~~
+
+api*/
+Function WebSocket Is Connected, index=(index), tags$
+{
+    #errors
+}
+End Function( {aoz.ext_websocket.context.getElement(aoz.currentContextName,%index,'websocket_channel_not_defined').isConnected(%tags$)} )
+
+/**api
+@name:WebSocket Error$
+@description:Returns the last error message
+@param:index:integer:Index of the channel
+@return:string:The message
+@content:
+You should always in your main program loop check for errors if you have connections running in the back.
+To do so, first use the "WebSocket Is Error()" function, that returns true if an error occured, and then ask for the description of the error with this function.
+
+If you are stuck with a indesciferable message, just Google it; you will see tyhat you were not the only one!
+
+Example:
+~~~                
+URL$ = "ws://my_url.me:3000"          
+WebSocket Open 1, URL$ 
+Repeat 
+	Wait Vbl 
+Until WebSocket Is Connected( 1 )
+
+WebSocket Send Message 1, "Hello"
+Repeat
+	If WebSocket Is Error
+		Print "Connection aborted, error: ";WebSocket Error$( 1 )
+		End
+	End If
+	Wait Vbl
+Until Inkey$ <> ""
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+~~~
+api*/
+Function WebSocket Error$, index=(index), tags$
+{
+    #errors
+}
+End Function( {aoz.ext_websocket.context.getElement(aoz.currentContextName,%index,'websocket_channel_not_defined').getError$(%tags$)} )

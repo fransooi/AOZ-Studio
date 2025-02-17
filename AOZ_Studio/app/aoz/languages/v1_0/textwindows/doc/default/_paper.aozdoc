@@ -1,0 +1,10 @@
+<i> Paper</i>
+<b> Paper</b> xxxxxxx
+=
+@code
+Paper 2
+Print Paper			// Will print 2
+Paper 3
+Print Paper			// Will print 3
+@code
+

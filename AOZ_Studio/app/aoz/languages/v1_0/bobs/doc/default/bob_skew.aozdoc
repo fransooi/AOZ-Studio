@@ -1,0 +1,18 @@
+<i>Bob Skew</i>
+<b>Bob Skew</b> xxxxxxx
+=
+This instruction allows you to generate interesting distortion effects.
+
+The next example displays a bob on the screen and demonstrates the effect with random values...
+@code
+Degree							// Switch to degrees
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load Bob images from disc
+Cls 0 										// Set up screen
+Bob 1, 100, 100, 2 		// Display Bob at position
+
+Do
+Bob Skew 1, Rnd() * 2, Rnd() * 2
+Wait Vbl
+Next
+@code
+

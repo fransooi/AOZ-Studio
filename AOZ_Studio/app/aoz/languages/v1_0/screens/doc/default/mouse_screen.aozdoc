@@ -1,0 +1,9 @@
+<i>Mouse Screen</i>
+<b>Mouse Screen</b> xxxxxxx
+=
+Use MOUSE SCREEN to return the number of the screen where the mouse pointer is currently located, like this:
+@code
+X=Mouse Screen
+Print X
+@code
+

@@ -1,0 +1,15 @@
+<i>CLine</i>
+<b>CLine</b> xxxxxxx
+=
+This command is used to clear the line currently occupied by the text cursor. If CLINE is qualified by a number,
+then that number of characters get cleared, starting from the current cursor position and leaving the cursor exactly
+where it is. For example:
+@code
+Print "Testing Testing Testing";
+Cmove -7,
+Cline 7
+Wait Key
+Cline
+@code
+This instruction does not move the cursor.
+

@@ -1,0 +1,12 @@
+<i>Player IsGuest</i>
+<b>Player IsGuest</b> xxxxxxx
+=
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+If Player IsGuest() = true
+Print "Player is using a guest account"
+Else
+Print "Player is using a registered account"
+End If
+@code
+

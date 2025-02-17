@@ -1,0 +1,4658 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The Firebase Instructions
+ * By Phil Bell April 2022
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author PB
+ * @date first pushed on 20/04/2022
+ */
+#noWarning:"instruction_not_implemented"
+
+#need_javascript_file:"https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"
+#need_javascript_file:"https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"
+#need_javascript_file:"https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"
+#need_javascript_file:"https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"
+#need_javascript_file:"https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.js"
+#need_javascript_file:"https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js"
+#need_css_file:"https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.css"
+
+{
+    this.aoz.firebase = this;
+	var self = this;
+
+	this.api_error = null;
+	this.api_done = null;
+	this.api_pending = false;
+
+	this.authState = false;
+	this.ui = null;
+
+	this.querys = [];
+	this.documents = [];
+	this.files = [];
+
+	class Query {
+		constructor(ref, options) {
+			this.ref = ref;
+			this.options = options;
+			this.where = [];
+			this.orderBy = [];
+			this.results = [];
+			this.unsubscribe = null;
+		}
+
+		dispose() {
+			if (this.unsubscribe) {
+				this.unsubscribe();
+			}
+		}
+
+		subscribe(args, fb) {
+			var db = firebase.firestore();
+			var col = db.collection( this.options.collection );
+
+			for (var i = 0; i < this.where.length; i++) {
+				col = col.where(this.where[i].field, this.where[i].operator, this.where[i].value);
+			}
+
+			for (var i = 0; i < this.orderBy.length; i++) {
+				if (this.orderBy[i].direction) {
+					col = col.orderBy(this.orderBy[i].field, this.orderBy[i].direction);
+				} else {
+					col = col.orderBy(this.orderBy[i].field);
+				}
+			}
+
+			if (args.limit) {
+				col = col.limit(args.limit);
+			}
+
+			var self = this;
+
+			// Subscribe to real-time updates, stores a ref so we can unsubscribe the listener
+			this.unsubscribe = col.onSnapshot((querySnapshot) => {
+				self.results = [];
+
+				querySnapshot.forEach((doc) => {
+					var result = {}
+					result.data = doc.data();
+					result.id = doc.id;
+
+					self.results.push(result);
+				});
+
+				fb.api_pending = false;
+				fb.api_done = true;
+
+				if (self.options.onData) {
+					fb.aoz.runProcedure( self.options.onData, { DOCUMENT_COUNT: self.results.length, QUERY_REF$: self.ref, ERROR$: "", ERROR_CODE: 0 } );
+				}
+			}, (error) => {
+				fb.api_pending = false;
+				fb.api_done = true;
+				fb.api_error = true;
+
+				if (self.options.onData) {
+					fb.aoz.runProcedure( self.options.onData, { DOCUMENT_COUNT: 0, QUERY_REF$: self.ref, ERROR$: error.message, ERROR_CODE: error.code } );
+				}
+				console.log(error);
+    		});
+		}
+
+		get(args, fb) {
+			var db = firebase.firestore();
+			var col = db.collection( this.options.collection );
+
+			for (var i = 0; i < this.where.length; i++) {
+				col = col.where(this.where[i].field, this.where[i].operator, this.where[i].value);
+			}
+
+			for (var i = 0; i < this.orderBy.length; i++) {
+				if (this.orderBy[i].direction) {
+					col = col.orderBy(this.orderBy[i].field, this.orderBy[i].direction);
+				} else {
+					col = col.orderBy(this.orderBy[i].field);
+				}
+			}
+
+			if (args.limit) {
+				col = col.limit(args.limit);
+			}
+
+			var self = this;
+
+			col.get().then((querySnapshot) => {
+
+				self.results = [];
+
+				querySnapshot.forEach((doc) => {
+					var result = {}
+					result.data = doc.data();
+					result.id = doc.id;
+
+					self.results.push(result);
+				});
+
+				fb.api_pending = false;
+				fb.api_done = true;
+
+				if (self.options.onData) {
+					fb.aoz.runProcedure( self.options.onData, { DOCUMENT_COUNT: self.results.length, QUERY_REF$: self.ref, ERROR$: "", ERROR_CODE: 0 } );
+				}
+
+			}).catch((error) => {
+				fb.api_pending = false;
+				fb.api_done = true;
+				fb.api_error = true;
+
+				if (self.options.onData) {
+					fb.aoz.runProcedure( self.options.onData, { DOCUMENT_COUNT: 0, QUERY_REF$: self.ref, ERROR$: error.message, ERROR_CODE: error.code } );
+				}
+				console.log(error);
+			});
+
+		}
+	}
+
+	class Document {
+		constructor(ref) {
+			this.ref = ref;
+			this.doc = {};
+			this.unsubscribe = null;
+			this.onData = null;
+		}
+
+		dispose() {
+			if (this.unsubscribe) {
+				this.unsubscribe();
+			}
+		}
+
+		subscribe(args, fb) {
+			var db = firebase.firestore();
+			var col = db.collection( args.collection ).doc(args.docId);
+			this.onData = args.onData;
+
+			var self = this;
+
+			// Subscribe to real-time updates, stores a ref so we can unsubscribe the listener
+			this.unsubscribe = col.onSnapshot((doc) => {
+
+				self.doc = doc.data();
+				self.doc.id = doc.id;
+
+				fb.api_pending = false;
+				fb.api_done = true;
+
+				if (self.onData) {
+					fb.aoz.runProcedure( self.onData, { DOCUMENT_REF$: self.ref, ERROR$: '', ERROR_CODE: 0 } );
+				}
+			}, (error) => {
+				fb.api_pending = false;
+				fb.api_done = true;
+				fb.api_error = true;
+
+				if (self.options.onData) {
+					fb.aoz.runProcedure( self.options.onData, { DOCUMENT_REF$: self.ref, ERROR$: error.message, ERROR_CODE: error.code } );
+				}
+				console.log(error);
+    		});
+		}
+	}
+
+	this.load_wait = function()
+	{
+		if ( this.api_error )
+		{
+			var error = this.api_error;
+			this.api_error = null;
+			throw error;
+		}
+		return this.api_done;
+	};
+
+	this.init = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.apiKey == 'undefined' )
+		{
+			throw 'firebase_apikey_argument_missing';
+		}
+
+		if ( typeof args.authDomain == 'undefined' )
+		{
+			throw 'firebase_authdomain_argument_missing';
+		}
+
+		if ( typeof args.projectId == 'undefined' )
+		{
+			throw 'firebase_projectid_argument_missing';
+		}
+
+		if ( typeof args.storageBucket == 'undefined' )
+		{
+			throw 'firebase_storagebucket_argument_missing';
+		}
+
+		if ( typeof args.messagingSenderId == 'undefined' )
+		{
+			throw 'firebase_messagingsenderid_argument_missing';
+		}
+
+		if ( typeof args.appId == 'undefined' )
+		{
+			throw 'firebase_appid_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		firebase.initializeApp(args);
+
+		firebase.auth().onAuthStateChanged(function(user) {
+		  if (user) {
+			// User is signed in.
+			user.getIdToken().then(function(accessToken) {
+				self.api_pending = false;
+				self.api_done = true;
+				self.authState = true;
+
+				// Show AOZ
+				var el =  document.getElementById('AOZCanvas');
+				el.style.display = 'block';
+			});
+
+		  } else {
+			// User is signed out.
+			self.api_pending = false;
+			self.api_done = true;
+			self.authState = false;
+		  }
+
+		});
+	}
+
+	this.hideBuiltInUI = function ( args ) {
+		if (this.ui) {
+			var el =  document.getElementById('firebaseui-auth-container');
+			if (el) {
+				document.body.removeChild(el);
+				// Show AOZ
+				el =  document.getElementById('AOZCanvas');
+				el.style.display = 'block';
+			}
+
+			// Reset the built in UI
+			this.ui.reset();
+		}
+	}
+
+	this.signInWithBuiltInUI = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.provider == 'undefined' )
+		{
+			throw 'firebase_provider_argument_missing';
+		}
+
+		var options = [];
+		var el;
+
+		args.provider = args.provider.toLowerCase();
+
+		if (args.provider.indexOf('google') >= 0) {
+			options.push(firebase.auth.GoogleAuthProvider.PROVIDER_ID);
+		}
+
+		if (args.provider.indexOf('github') >= 0) {
+			options.push(firebase.auth.GithubAuthProvider.PROVIDER_ID);
+		}
+
+		if (args.provider.indexOf('twitter') >= 0) {
+			options.push( firebase.auth.TwitterAuthProvider.PROVIDER_ID);
+		}
+
+		if (args.provider.indexOf('anonymous') >= 0) {
+			options.push( firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID);
+		}
+
+		if (args.provider.indexOf('email') >= 0) {
+			options.push({
+			  provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+			  // Whether the display name should be displayed in the Sign Up page.
+			  requireDisplayName: true
+			});
+		}
+
+		if (args.provider.indexOf('microsoft') >= 0) {
+			options.push({
+				provider: 'microsoft.com',
+	  			loginHintKey: 'login_hint'
+			});
+		}
+
+		if (args.provider.indexOf('apple') >= 0) {
+			options.push({
+				provider: 'apple.com',
+			});
+		}
+
+		if (args.provider.indexOf('facebook') >= 0) {
+			options.push({
+				provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+		        scopes :[
+		          'public_profile',
+		          'email',
+		          'user_likes',
+		          'user_friends'
+		        ]
+			});
+		}
+
+		var uiConfig = {
+
+		  signInOptions: options,
+		  callbacks: {
+			  signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+				 return false; // Just tells the UI not to redirect
+			  },
+			  signInFailure: function(error) {
+				// Some unrecoverable error occurred during sign-in.
+				return false;
+			  },
+			  uiShown: function() {
+				  // Hide AOZ
+				  el =  document.getElementById('AOZCanvas');
+				  el.style.display = 'none';
+			  }
+		  },
+		  tosUrl: args.termsOfServiceUrl,
+		  privacyPolicyUrl: function() {
+			window.location.assign(args.privacyPolicyUrl);
+		  }
+		};
+
+		if (args.signInFlow) {
+			uiConfig.signInFlow = args.signInFlow;
+		}
+
+		// Initialize the FirebaseUI Widget using Firebase.
+		// The FirebaseUI is an open source project providing pre-build sign in UI's
+		if (!this.ui) {
+			this.ui = new firebaseui.auth.AuthUI(firebase.auth());
+		}
+
+		el =  document.getElementById('firebaseui-auth-container');
+		if (!el) {
+			el = document.createElement('div');
+			el.setAttribute('id', 'firebaseui-auth-container');
+
+			if (args.class) {
+				el.setAttribute('class', args.class);
+			}
+
+			document.body.appendChild(el);
+		}
+
+		// The start method will wait until the DOM is loaded.
+		this.ui.start('#firebaseui-auth-container', uiConfig);
+
+	}
+
+	this.createUserWithEmailAndPassword = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.displayName == 'undefined' )
+		{
+			args.displayName = '';
+		}
+
+		if ( typeof args.email == 'undefined' )
+		{
+			throw 'firebase_email_argument_missing';
+		}
+
+		if ( typeof args.password == 'undefined' )
+		{
+			throw 'firebase_password_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		firebase.auth().createUserWithEmailAndPassword(args.email, args.password).then((userCredential) => {
+
+			if (args.displayName == '') {
+				self.api_pending = false;
+				self.api_done = true;
+				if (args.onCompleted) {
+					self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+				}
+			} else {
+				var user = firebase.auth().currentUser;
+
+				user.updateProfile({ displayName: args.displayName }).then(() => {
+					self.api_pending = false;
+					self.api_done = true;
+
+					if (args.onCompleted) {
+						self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+					}
+				}).catch((error) => {
+					self.api_pending = false;
+					self.api_done = true;
+					this.api_error = true;
+
+					if (args.onCompleted) {
+						self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+					}
+					console.log(error);
+				});
+			}
+
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.signInWithGoogle = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var provider = new firebase.auth.GoogleAuthProvider();
+
+		firebase.auth()
+		  .signInWithPopup(provider)
+		  .then((result) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			  }
+		  }).catch((error) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+			  this.api_error = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			  }
+			  console.log(error);
+		  });
+	}
+
+	this.signInWithFaceBook = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var provider = new firebase.auth.FacebookAuthProvider();
+		firebase.auth().useDeviceLanguage();
+		provider.setCustomParameters({
+  			'display': 'popup'
+		});
+
+		firebase.auth()
+		  .signInWithPopup(provider)
+		  .then((result) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			  }
+		  }).catch((error) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+			  this.api_error = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			  }
+			  console.log(error);
+		  });
+	}
+
+	this.signInWithApple = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var provider = new firebase.auth.OAuthProvider('apple.com');
+		provider.addScope('email');
+		provider.addScope('name');
+
+		firebase.auth()
+		  .signInWithPopup(provider)
+		  .then((result) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			  }
+		  }).catch((error) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+			  this.api_error = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			  }
+			  console.log(error);
+		  });
+	}
+
+	this.signInWithGitHub = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var provider = new firebase.auth.GithubAuthProvider();
+
+		firebase.auth()
+		  .signInWithPopup(provider)
+		  .then((result) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			  }
+		  }).catch((error) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+			  this.api_error = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			  }
+			  console.log(error);
+		  });
+	}
+
+	this.signInWithMicrosoft = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var provider = new firebase.auth.OAuthProvider('microsoft.com');
+
+		firebase.auth()
+		  .signInWithPopup(provider)
+		  .then((result) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			  }
+		  }).catch((error) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+			  this.api_error = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			  }
+			  console.log(error);
+		  });
+	}
+
+	this.signInWithTwitter = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var provider = new firebase.auth.TwitterAuthProvider();
+		firebase.auth().useDeviceLanguage();
+
+		firebase.auth()
+		  .signInWithPopup(provider)
+		  .then((result) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			  }
+		  }).catch((error) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+			  this.api_error = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			  }
+			  console.log(error);
+		  });
+	}
+
+	this.signInAnonymously = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		firebase.auth()
+		  .signInAnonymously()
+		  .then((result) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			  }
+		  }).catch((error) => {
+			  self.api_pending = false;
+			  self.api_done = true;
+			  this.api_error = true;
+
+			  if (args.onCompleted) {
+				  self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			  }
+			  console.log(error);
+		  });
+	}
+
+	this.signInWithEmailAndPassword = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.email == 'undefined' )
+		{
+			throw 'firebase_email_argument_missing';
+		}
+
+		if ( typeof args.password == 'undefined' )
+		{
+			throw 'firebase_password_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		firebase.auth().signInWithEmailAndPassword(args.email, args.password).then((userCredential) => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.updateDisplayName = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.displayName == 'undefined' )
+		{
+			throw 'firebase_displayname_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var user = firebase.auth().currentUser;
+
+		user.updateProfile({ displayName: args.displayName }).then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.updatePhotoUrl = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.photoUrl == 'undefined' )
+		{
+			throw 'firebase_photourl_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var user = firebase.auth().currentUser;
+
+		user.updateProfile({ photoURL: args.photoUrl }).then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.updateEmail = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.email == 'undefined' )
+		{
+			throw 'firebase_email_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var user = firebase.auth().currentUser;
+
+		user.updateEmail( args.email ).then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.sendEmailVerification = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		firebase.auth().currentUser.sendEmailVerification().then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.sendPasswordResetEmail = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.email == 'undefined' )
+		{
+			throw 'firebase_email_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		firebase.auth().sendPasswordResetEmail( args.email ).then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.updatePassword = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.password == 'undefined' )
+		{
+			throw 'firebase_password_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var user = firebase.auth().currentUser;
+
+		user.updatePassword( args.password ).then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.deleteUser = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var user = firebase.auth().currentUser;
+
+		user.delete().then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0 } );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.makeRandom = function(lengthOfCode) {
+	    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+
+	    let text = '';
+	    for (var i = 0; i < lengthOfCode; i++) {
+	      text += possible.charAt(Math.floor(Math.random() * possible.length));
+	    }
+	    return text;
+  	}
+
+	this.getUserId = function () {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		return firebase.auth().currentUser.uid;
+	}
+
+	this.getDisplayName = function () {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		if (firebase.auth().currentUser.displayName)
+			return firebase.auth().currentUser.displayName;
+		else
+			return '';
+	}
+
+	this.getEmail = function () {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		return firebase.auth().currentUser.email;
+	}
+
+	this.getPhotoUrl = function () {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		if (firebase.auth().currentUser.photoURL)
+			return firebase.auth().currentUser.photoURL;
+		else
+			return '';
+	}
+
+	this.getEmailVerified = function () {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if (!firebase.auth().currentUser) {
+			throw 'firebase_not_authenticated';
+		}
+
+		return firebase.auth().currentUser.emailVerified;
+	}
+
+	this.signOut = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		// Remove any listeners from the documents
+		for (i = 0; i < self.documents.length; i++) {
+			self.documents[i].dispose();
+		}
+
+		// Remove any listeners from the querys
+		for (i = 0; i < self.querys.length; i++) {
+			self.querys[i].dispose();
+		}
+
+		self.querys = [];
+		self.documents = [];
+		self.files = [];
+
+		firebase.auth().signOut();
+	}
+
+
+	this.newQuery = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.collection == 'undefined' )
+		{
+			throw 'firebase_collection_argument_missing';
+		}
+
+		var query = new Query(this.makeRandom(20), args);
+		this.querys.push(query);
+
+		return query.ref;
+	}
+
+	this.queryDispose = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		var index = this.querys.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.querys[index].dispose();
+			this.querys.splice(index, 1);
+		}
+	}
+
+	this.queryAddWhere = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.operator == 'undefined' )
+		{
+			throw 'firebase_operator_argument_missing';
+		}
+
+		if ( typeof args.field == 'undefined' )
+		{
+			throw 'firebase_field_argument_missing';
+		}
+
+		if ( typeof args.value == 'undefined' )
+		{
+			throw 'firebase_value_argument_missing';
+		}
+
+		if (args.operator == '=') args.operator = '==';
+
+		var index = this.querys.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.querys[index].where.push(args);
+		} else {
+			throw 'firebase_query_not_found';
+		}
+	}
+
+	this.queryAddOrderBy = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.field == 'undefined' )
+		{
+			throw 'firebase_field_argument_missing';
+		}
+
+		if ( typeof args.direction == 'undefined' )
+		{
+			throw 'firebase_direction_argument_missing';
+		}
+
+		var index = this.querys.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.querys[index].orderBy.push(args);
+		} else {
+			throw 'firebase_query_not_found';
+		}
+	}
+
+	this.queryGetFieldValue = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.docId == 'undefined' )
+		{
+			throw 'firebase_docid_argument_missing';
+		}
+
+		if ( typeof args.field == 'undefined' )
+		{
+			throw 'firebase_field_argument_missing';
+		}
+
+		var index = this.querys.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			var rowIndex = this.querys[index].results.findIndex(d => d.id === args.docId);
+
+			var row = this.querys[index].results[rowIndex];
+
+			if (row == undefined) {
+				throw 'firebase_row_not_found';
+			} else {
+				var v = row.data[args.field];
+				return v;
+			}
+
+		} else {
+			throw 'firebase_query_not_found';
+		}
+	}
+
+	this.getDocumentValue = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.field == 'undefined' )
+		{
+			throw 'firebase_field_argument_missing';
+		}
+
+		var index = this.documents.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+ 			var v = this.documents[index].doc[args.field];
+			return v
+		} else {
+			throw 'firebase_document_not_found';
+		}
+	}
+
+	this.setDocumentValue = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.field == 'undefined' )
+		{
+			throw 'firebase_field_argument_missing';
+		}
+
+		if ( typeof args.value == 'undefined' )
+		{
+			throw 'firebase_value_argument_missing';
+		}
+
+		var index = this.documents.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.documents[index].doc[args.field] = args.value;
+		} else {
+			throw 'firebase_document_not_found';
+		}
+	}
+
+	this.setDocumentServerTimestamp = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.field == 'undefined' )
+		{
+			throw 'firebase_field_argument_missing';
+		}
+
+		var index = this.documents.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.documents[index].doc[args.field] = firebase.firestore.FieldValue.serverTimestamp();
+		} else {
+			throw 'firebase_document_not_found';
+		}
+	}
+
+	this.setDocumentIncrement = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.field == 'undefined' )
+		{
+			throw 'firebase_field_argument_missing';
+		}
+
+		if ( typeof args.value == 'undefined' )
+		{
+			throw 'firebase_value_argument_missing';
+		}
+
+		var index = this.documents.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.documents[index].doc[args.field] = firebase.firestore.FieldValue.increment(args.value);
+		} else {
+			throw 'firebase_document_not_found';
+		}
+	}
+
+	this.documentDispose = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		var index = this.documents.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.documents[index].dispose();
+			this.documents.splice(index, 1);
+		}
+	}
+
+	this.getDocumentCount = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		var index = this.querys.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			return this.querys[index].results.length;
+		} else {
+			throw 'firebase_query_not_found';
+		}
+	}
+
+	this.queryGet = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var index = this.querys.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.querys[index].get(args, this);
+		} else {
+			self.api_pending = false;
+			self.api_done = true;
+			throw 'firebase_query_not_found';
+		}
+	}
+
+	this.querySubscribe = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var index = this.querys.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.querys[index].subscribe(args, this);
+		} else {
+			self.api_pending = false;
+			self.api_done = true;
+			throw 'firebase_query_not_found';
+		}
+	}
+
+	this.documentUpdate = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.collection == 'undefined' )
+		{
+			throw 'firebase_collection_argument_missing';
+		}
+
+		if ( typeof args.docId == 'undefined' )
+		{
+			throw 'firebase_docid_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var index = this.documents.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			var db = firebase.firestore();
+			var doc = this.documents[index].doc;
+
+			var query = db.collection( args.collection ).doc(args.docId);
+
+			query.update(doc).then(() => {
+				self.api_pending = false;
+				self.api_done = true;
+
+				if (args.onCompleted) {
+					self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0, DOCUMENT_ID$: args.docId, DOCUMENT_REF$: args.ref } );
+				}
+			}).catch((error) => {
+				self.api_pending = false;
+				self.api_done = true;
+				this.api_error = true;
+
+				if (args.onCompleted) {
+					self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code, DOCUMENT_ID$: args.docId, DOCUMENT_REF$: args.ref } );
+				}
+				console.log(error);
+			});
+
+		} else {
+			self.api_pending = false;
+			self.api_done = true;
+			throw 'firebase_document_not_found';
+		}
+	}
+
+	this.documentSet = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.docId == 'undefined' )
+		{
+			throw 'firebase_docid_argument_missing';
+		}
+
+		if ( typeof args.collection == 'undefined' )
+		{
+			throw 'firebase_collection_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var option = {};
+
+		if ( typeof args.merge !== 'undefined' && args.merge == true)
+		{
+			option.merge = true;
+		}
+
+		var index = this.documents.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			var db = firebase.firestore();
+			var doc = this.documents[index].doc;
+
+			var query = db.collection( args.collection ).doc(args.docId);
+
+			query.set(doc, option).then(() => {
+				self.api_pending = false;
+				self.api_done = true;
+
+				if (args.onCompleted) {
+					self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0, DOCUMENT_ID$: args.docId, DOCUMENT_REF$: args.ref } );
+				}
+			}).catch((error) => {
+				self.api_pending = false;
+				self.api_done = true;
+				this.api_error = true;
+
+				if (args.onCompleted) {
+					self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code, DOCUMENT_ID$: args.docId, DOCUMENT_REF$: args.ref } );
+				}
+				console.log(error);
+			});
+
+		} else {
+			self.api_pending = false;
+			self.api_done = true;
+			throw 'firebase_document_not_found';
+		}
+	}
+
+	this.documentAdd = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.collection == 'undefined' )
+		{
+			throw 'firebase_collection_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var index = this.documents.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			var db = firebase.firestore();
+			var doc = this.documents[index].doc;
+
+			var query = db.collection( args.collection );
+
+			query.add(doc).then((ref) => {
+				self.api_pending = false;
+				self.api_done = true;
+
+				if (args.onCompleted) {
+					self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0, DOCUMENT_ID$: ref.id, DOCUMENT_REF$: args.ref} );
+				}
+			}).catch((error) => {
+				self.api_pending = false;
+				self.api_done = true;
+				this.api_error = true;
+
+				if (args.onCompleted) {
+					self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code, DOCUMENT_ID$: "", DOCUMENT_REF$: args.ref } );
+				}
+				console.log(error);
+			});
+
+		} else {
+			self.api_pending = false;
+			self.api_done = true;
+			throw 'firebase_document_not_found';
+		}
+	}
+
+	this.documentGet = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.docId == 'undefined' )
+		{
+			throw 'firebase_docid_argument_missing';
+		}
+
+		if ( typeof args.collection == 'undefined' )
+		{
+			throw 'firebase_collection_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var db = firebase.firestore();
+		var col = db.collection( args.collection ).doc(args.docId)
+
+		col.get().then((ref) => {
+
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (ref.exists) {
+				var docRef = self.newDocument();
+				var index = self.documents.findIndex(d => d.ref === docRef);
+				var doc = ref.data();
+
+				self.documents[index].doc = doc;
+
+				if (args.onData) {
+					self.aoz.runProcedure( args.onData, { ERROR$: "", ERROR_CODE: 0, EXISTS: true, DOCUMENT_ID$: args.docId, DOCUMENT_REF$: docRef } );
+				}
+
+			} else {
+				if (args.onData) {
+					self.aoz.runProcedure( args.onData, { ERROR$: "", ERROR_CODE: 0, EXISTS: false, DOCUMENT_ID$: "", DOCUMENT_REF$: "" } );
+				}
+			}
+
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onData) {
+				self.aoz.runProcedure( args.onData, { ERROR$: error.message, ERROR_CODE: error.code, EXISTS: false, DOCUMENT_REF$: "" } );
+			}
+			console.log(error);
+		});
+	}
+
+	this.documentSubscribe = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.docId == 'undefined' )
+		{
+			throw 'firebase_docid_argument_missing';
+		}
+
+		if ( typeof args.collection == 'undefined' )
+		{
+			throw 'firebase_collection_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var docRef = this.newDocument();
+		var index = this.documents.findIndex(d => d.ref === docRef);
+		this.documents[index].subscribe(args, this);
+
+	}
+
+	this.documentDelete = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.docId == 'undefined' )
+		{
+			throw 'firebase_docid_argument_missing';
+		}
+
+		if ( typeof args.collection == 'undefined' )
+		{
+			throw 'firebase_collection_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var db = firebase.firestore();
+
+		var query = db.collection( args.collection ).doc(args.docId);
+
+		query.delete().then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0} );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+
+	}
+
+	this.newDocument = function ( args ) {
+		var item = new Document(this.makeRandom(20))
+		this.documents.push(item);
+
+		return item.ref;
+	}
+
+	this.queryGetDocumentId = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.row == 'undefined' )
+		{
+			throw 'firebase_row_argument_missing';
+		}
+
+		var index = this.querys.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			var row = this.querys[index].results[args.row];
+
+			if (row == undefined) {
+				throw 'firebase_row_not_found';
+			} else {
+				return row.id;
+			}
+
+		} else {
+			throw 'firebase_query_not_found';
+		}
+	}
+
+	this.selectFile = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.onSelected == 'undefined' )
+		{
+			throw 'firebase_onselected_argument_missing';
+		}
+
+		var el = document.createElement('input');
+		el.setAttribute('type', 'file');
+
+		var handler = function (event) {
+			event.preventDefault();
+
+			var item = {};
+			item.ref = self.makeRandom(20);
+			item.file = event.target.files[0];
+			self.files.push(item);
+
+			el.removeEventListener("input", handler, false);
+			delete el;
+
+			if (args.onSelected) {
+				self.aoz.runProcedure( args.onSelected, { FILE_REF$: item.ref, NAME$: item.file.name, SIZE: item.file.size, TYPE$: item.file.type } );
+			}
+		}
+
+		el.addEventListener( 'input', handler, false);
+		el.click();
+	}
+
+	this.readFileImageDataUrl = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.onRead == 'undefined' )
+		{
+			throw 'firebase_onread_argument_missing';
+		}
+
+		var index = this.files.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			var item = this.files[index];
+
+			if (item.file.type.match(/image.*/)) {
+
+				var reader = new FileReader();
+
+                reader.onload = (event) => {
+
+					var dataUrl = event.target.result;
+
+					if (!args.maxSize) {
+						if (args.onRead) {
+							self.aoz.runProcedure( args.onRead, { FILE_REF$: item.ref, DATA_URL$: dataUrl } );
+							return;
+						}
+					} else {
+						var image = new Image();
+						var canvas = document.createElement('canvas');
+
+						const resize = () => {
+				          let width = image.width;
+				          let height = image.height;
+
+				          if (width > height) {
+				              if (width > args.maxSize) {
+				                  height *= args.maxSize / width;
+				                  width = args.maxSize;
+				              }
+				          } else {
+				              if (height > args.maxSize) {
+				                  width *= args.maxSize / height;
+				                  height = args.maxSize;
+				              }
+				          }
+
+				          canvas.width = width;
+				          canvas.height = height;
+				          canvas.getContext('2d').drawImage(image, 0, 0, width, height);
+
+				          return canvas.toDataURL(item.file.type);
+				        };
+
+						image.onload = () => {
+							dataUrl = resize();
+							if (args.onRead) {
+								self.aoz.runProcedure( args.onRead, { FILE_REF$: item.ref, DATA_URL$: dataUrl } );
+							}
+						}
+
+						image.src = dataUrl;
+					}
+				}
+
+                reader.readAsDataURL(item.file);
+
+			} else {
+				throw 'firebase_file_not_a_valid_image';
+			}
+
+		} else {
+			throw 'firebase_file_not_found';
+		}
+	}
+
+	this.fileDispose = function ( args ) {
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		var index = this.files.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+			this.files.splice(index, 1);
+		}
+	}
+
+	this.uploadFileToFirebaseStorage = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.ref == 'undefined' )
+		{
+			throw 'firebase_ref_argument_missing';
+		}
+
+		if ( typeof args.storagePath == 'undefined' )
+		{
+			throw 'firebase_storagepath_argument_missing';
+		}
+
+		var index = this.files.findIndex(d => d.ref === args.ref);
+
+		if (index >= 0) {
+
+			this.api_done = false;
+			this.api_error = false;
+			this.api_pending = true;
+
+			var item = this.files[index];
+
+			var storageRef = firebase.storage().ref();
+			var uploadTask = storageRef.child(args.storagePath).put(item.file);
+
+			uploadTask.on(
+			    firebase.storage.TaskEvent.STATE_CHANGED,
+			    null,
+				function(error) {
+					 self.api_pending = false;
+					 self.api_done = true;
+					 this.api_error = true;
+
+					 if (args.onCompleted) {
+						 self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+					 }
+					 console.log(error);
+
+		        },
+			    function() {
+
+					uploadTask.snapshot.ref.getDownloadURL().then(function(downloadUrl) {
+						self.api_pending = false;
+						self.api_done = true;
+
+						if (args.onCompleted) {
+							self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0, FILE_REF$: args.ref, DOWNLOAD_URL$: downloadUrl, STORAGE_PATH$: args.storagePath, SIZE: item.file.size, TYPE$: item.file.type, NAME$: item.file.name } );
+						}
+					});
+
+			    });
+
+		} else {
+			throw 'firebase_file_not_found';
+		}
+	}
+
+	this.getFileMetaData = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.storagePath == 'undefined' )
+		{
+			throw 'firebase_storagepath_argument_missing';
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		var storageRef = firebase.storage().ref();
+		var fileRef = storageRef.child(args.storagePath);
+
+		// Get metadata properties
+		fileRef.getMetadata().then((metadata) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { 	ERROR$: "",
+															ERROR_CODE: 0,
+															BUCKET$: metadata.bucket,
+															GENERATION$: metadata.generation,
+															METAGENERATION$: metadata.metageneration,
+															FULLPATH$: metadata.fullPath,
+															NAME$: metadata.name,
+															SIZE: metadata.size,
+															TIMECREATED$: metadata.timeCreated,
+															UPDATED$: metadata.updated,
+															MD5HASH$: metadata.md5Hash,
+															CACHECONTROL$: metadata.cacheControl,
+															CONTENTDISPOSITION$: metadata.contentDisposition,
+															CONTENTENCODING$: metadata.contentEncoding,
+															CONTENTENLANGUAGE$: metadata.contentLanguage,
+															CONTENTENTYPE$: metadata.contentType } );
+			}
+		})
+		.catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+	}
+
+
+	this.deleteFileFromFirebaseStorage = function ( args ) {
+
+		if (firebase.apps.length === 0) {
+			throw 'firebase_not_initialised';
+		}
+
+		if ( args == undefined || args == null || args.length == 0)
+		{
+			throw 'firebase_arguments_missing';
+		}
+
+		if ( typeof args.storagePath == 'undefined' )
+		{
+			throw 'firebase_storagepath_argument_missing';
+		}
+
+		var storageRef = firebase.storage().ref();
+		var existingRef = storageRef.child(args.storagePath);
+
+		this.api_done = false;
+		this.api_error = false;
+		this.api_pending = true;
+
+		existingRef.delete().then(() => {
+			self.api_pending = false;
+			self.api_done = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: "", ERROR_CODE: 0} );
+			}
+		}).catch((error) => {
+			self.api_pending = false;
+			self.api_done = true;
+			this.api_error = true;
+
+			if (args.onCompleted) {
+				self.aoz.runProcedure( args.onCompleted, { ERROR$: error.message, ERROR_CODE: error.code } );
+			}
+			console.log(error);
+		});
+
+	}
+}
+
+/*
+	Initialise Firebase
+*/
+
+/**doc
+@name:Firebase Instructions
+@description:A set of instructions and functions that provide access to the Google Firebase Platform.
+@author:Phil Bell
+doc*/
+
+/**api
+@name:Firebase Init
+@description:Initialise Firebase using your web app's Firebase configuration
+@param:apiKey$:string:The apiKey configuration value
+@param:authDomain$:The authDomain configuration value
+@param:projectId$:The projectId configuration value
+@param:storageBucket$:The storageBucket configuration value
+@param:messagingSenderId$:The messagingSenderId configuration value
+@param:appId$:string:The appId configuration value
+@content:
+Firebase is Google's mobile development platform which is backed by the Google Cloud Platform.
+The Firebase platform is a backend-as-a-service solution both for mobile and web-based applications that includes services for building, testing, and managing apps.
+
+Read more about Firebase at https://firebase.google.com/
+
+Read about usage and limits here https://firebase.google.com/docs/firestore/quotas
+
+Before you begin using the AOZ Firebase instructions you will need to create your project in the Firebase web console.
+
+You can login to the Firebase web console here: -
+
+https://console.firebase.google.com/
+
+For help setting up your Firebase project, please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store.
+api*/
+Instruction "Firebase Init", apiKey$, authDomain$, projectId$, storageBucket$, messagingSenderId$, appId$
+{
+	#errors
+	#waiting
+
+	var args = {
+		apiKey: %apiKey$,
+		authDomain: %authDomain$,
+		projectId: %projectId$,
+		storageBucket: %storageBucket$,
+		messagingSenderId: %messagingSenderId$,
+		appId: %appId$
+	};
+
+	return{type:12,waitThis:this.aoz.firebase,callFunction:"init", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/*
+	Firebase Firestore Instructions
+*/
+
+/**api
+@name:Firebase NewQuery$
+@description:Create a new Firestore database query
+@param:collection$:string:The Firestore database collection name (collection names are case sensitive)
+@param:onData$:The procedure to be called when data has been retrieved from the Firestore database
+@return:string:A reference to a new query, used as an input parameter in the Firebase query instructions
+
+@content:
+You can use queries to retrieve individual, specific documents or to retrieve all the documents in a collection that match your query parameters. Your queries can include multiple, chained filters and combine filtering and sorting. They're also indexed by default, so query performance is proportional to the size of your result set, not your data set.
+
+Cloud Firestore ensures query performance by requiring an index for every query. The indexes required for the most basic queries are automatically created for you. As you use and test your app, Cloud Firestore generates error messages that help you create additional indexes your app requires.
+
+Read more here: https://firebase.google.com/docs/firestore/query-data/indexing
+~~~
+// First, we create a new collection query, a reference to the query is returned by the function.
+queryRef$ = Firebase NewQuery$ (collection$ = "HighScores", onData$="ON_DATA_RECEIVED")
+
+// We want the results to be returned with the best score first, so we add an order by clause to the query to ensure the documents are returned in descending order.
+Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "score", direction$ = "desc"
+
+// Finally, we get the data from the Firestore database, in this example we only want the top 10 scores, so we limit the results by setting the optional limit parameter.
+Firebase QueryGet queryRef$, limit = 10
+
+// Once the documents have been retrieved, the procedure named in the onData$ parameter is called. The procedure receives variables for the number of documents returned, an ERROR$ variable that can be checked to see if an error occurred, and a reference to the query that can be used to access the documents.
+
+Procedure ON_DATA_RECEIVED[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	For row = 0 To DOCUMENT_COUNT -1
+		// Get the Firebase Document ID for a specific row in the query results
+		docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+		// Read the document fields using the Firebase Document ID as a reference
+		Print Firebase QueryGetString$(QUERY_REF$, docId$, "playerName")
+		Print Firebase QueryGetValue(QUERY_REF$, docId$, "score")
+	Next row
+
+	// Remove the query and the documents from memory
+	Firebase QueryDispose QUERY_REF$
+End Proc
+~~~
+api*/
+Function "Firebase NewQuery$", collection$, onData$
+{
+	#errors
+}
+End function( { aoz.firebase.newQuery( { collection: %collection$, onData: %onData$ } ) } )
+
+/**api
+@name:Firebase QueryDispose
+@description:Removes a query and any retrieved collection documents from memory
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+
+@content:
+When you create and use a query with the Firebase NewQuery$ function, the query definition and any retrieved collection documents are stored in memory.
+
+It is good practive to always remove a query when you no longer need it in your AOZ application.
+~~~
+// Create a new query
+queryRef$ = Firebase NewQuery$ (collection$ = "HighScores", onData$="ON_DATA_RECEIVED")
+
+// Remove a query and any retrieved collection documents from memory
+Firebase QueryDispose queryRef$
+~~~
+api*/
+Instruction "Firebase QueryDispose", queryRef$
+{
+	#errors
+	aoz.firebase.queryDispose( { ref: %queryRef$ } )
+}
+End Instruction
+
+/**api
+@name:Firebase QueryAddWhere
+@description:Add a 'where' clause to an existing query to filter the query results
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:field$:string:The document field name to filter on (field names are case sensitive)
+@param:operator$:string:A comparison operator "<" less than, "<=" less than or equal to, "=" or "==" equal to, ">" greater than, ">=" greater than or equal to, "!=" not equal to
+@param:value$:string:A value used to filter the collection documents
+
+@content:
+Specify which documents you want to retrieve from a Firestore collection.
+
+Cloud Firestore ensures query performance by requiring an index for every query. The indexes required for the most basic queries are automatically created for you. As you use and test your app, Cloud Firestore generates error messages that help you create additional indexes your app requires.
+
+Read more here: https://firebase.google.com/docs/firestore/query-data/indexing
+~~~
+// Create a new query
+queryRef$ = Firebase NewQuery$ (collection$ = "HighScores", onData$="ON_DATA")
+
+// Filter the documents where the "playerName" field value is equal to "AOZ User"
+Firebase QueryAddWhere queryRef$ = queryRef$, field$ = "playerName", operator$ = "=", value$ = "AOZ User"
+
+// Get the collection documents from the Firestore database
+Firebase QueryGet QUERY_REF$
+~~~
+api*/
+Instruction "Firebase QueryAddWhere", queryRef$, field$, operator$, value$=""
+{
+	#errors
+	aoz.firebase.queryAddWhere( { ref: %queryRef$, field: %field$, operator: %operator$, value: %value$ } );
+}
+End Instruction
+
+/**api
+@name:Firebase QueryAddWhereValue
+@description:Add a 'where' clause to an existing query to filter the query results
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:field$:string:The document field name to filter on (field names are case sensitive)
+@param:operator$:string:A comparison operator "<" less than, "<=" less than or equal to, "=" or "==" equal to, ">" greater than, ">=" greater than or equal to, "!=" not equal to
+@param:value:integer:A value to use as the filter
+
+@content:
+Specify which documents you want to retrieve from a Firestore collection
+
+You can add multiple order by clauses to your queries
+
+Cloud Firestore ensures query performance by requiring an index for every query. The indexes required for the most basic queries are automatically created for you. As you use and test your app, Cloud Firestore generates error messages that help you create additional indexes your app requires.
+
+Read more here: https://firebase.google.com/docs/firestore/query-data/indexing
+~~~
+// Create a new query
+queryRef$ = Firebase NewQuery$ (collection$ = "HighScores", onData$="ON_DATA")
+
+// Filter the documents where the "score" field value is greater than 100
+Firebase QueryAddWhereValue queryRef$ = queryRef$, field$ = "score", operator$ = ">", value = 100
+
+// Get the collection documents from the Firestore database
+Firebase QueryGet QUERY_REF$
+~~~
+api*/
+Instruction "Firebase QueryAddWhereValue", queryRef$, field$, operator$, value
+{
+	#errors
+	aoz.firebase.queryAddWhere( { ref: %queryRef$, field: %field$, operator: %operator$, value: %value } );
+}
+End Instruction
+
+/**api
+@name:Firebase QueryAddOrderBy
+@description:Add an 'order by' clause to an existing query to order the query results
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:field$:string:The document field name used to order the query results (field names are case sensitive)
+@param:direction$:string:"desc" descending or "asc" ascending order
+
+@content:
+You can add multiple order by clauses to your queries
+
+Cloud Firestore ensures query performance by requiring an index for every query. The indexes required for the most basic queries are automatically created for you. As you use and test your app, Cloud Firestore generates error messages that help you create additional indexes your app requires.
+
+Read more here: https://firebase.google.com/docs/firestore/query-data/indexing
+~~~
+// Create a new query
+queryRef$ = Firebase NewQuery$ (collection$ = "HiScores", onData$="ON_DATA")
+
+// Order the documents by the "score" field value in decending order
+Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "score", direction$ = "desc"
+
+// Get the collection documents from the Firestore database
+Firebase QueryGet QUERY_REF$
+~~~
+api*/
+Instruction "Firebase QueryAddOrderBy", queryRef$, field$, direction$
+{
+	#errors
+	aoz.firebase.queryAddOrderBy( { ref: %queryRef$, field: %field$, direction: %direction$ } );
+}
+End Instruction
+
+/**api
+@name:Firebase QueryGetDocumentID$
+@description:Returns the Firebase collection Document ID for a specific row index in the query results
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:row:integer:A specific row index in the query results
+@return:string:The unique Firebase collection Document ID
+
+@content:
+For further information regarding the Firebase collection Document ID, please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store
+~~~
+// Create a new query
+queryRef$ = Firebase NewQuery$ (collection$ = "HighScores", onData$="ON_DATA_RECEIVED")
+
+We want the results to be returned with the best score first, so we add an order by clause to the query to ensure the documents are returned in descending order.
+Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "score", direction$ = "desc"
+
+Finally, we get the data from the Firestore database, in this example we only want the top 10 scores, so we limit the results by setting the optional limit parameter.
+Firebase QueryGet queryRef$, limit = 10
+
+Procedure ON_DATA_RECEIVED[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	For row = 0 To DOCUMENT_COUNT -1
+		// Get the Firebase Document ID for a specific row in the query results
+		docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+		// Read the document fields
+		Print Firebase QueryGetString$(QUERY_REF$, docId$, "playerName")
+		Print Firebase QueryGetValue(QUERY_REF$, docId$, "score")
+	Next row
+
+	// Remove the query and the documents from memory
+	Firebase QueryDispose QUERY_REF$
+End Proc
+~~~
+api*/
+Function "Firebase QueryGetDocumentID$", queryRef$, row
+{
+	#errors
+}
+End Function( { aoz.firebase.queryGetDocumentId( { ref: %queryRef$, row: %row } ) } )
+
+/**api
+@name:Firebase QueryGetString$
+@description:Returns the value of a field from a specific document within a querys results
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:docId$:string:The unique Firestore database collection Document ID
+@param:field$:string:The name of a document field (field names are case sensitive)
+@return:string:The value of the field as a string
+
+@content:
+~~~
+// Get the Firebase Document ID for a specific row in the query results
+docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+// Read the document field value
+Print Firebase QueryGetString$(QUERY_REF$, docId$, "playerName")
+~~~
+api*/
+Function "Firebase QueryGetString$", queryRef$, docId$, field$
+{
+	#errors
+	var val = aoz.firebase.queryGetFieldValue( { ref: %queryRef$, docId: %docId$, field: %field$ } );
+	if (!val) val = '';
+}
+End Function( { val.toString() } )
+
+/**api
+@name:Firebase QueryGetDate$
+@description:Returns the value of a field from a specific document within a querys results
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:docId$:string:The unique Firestore database collection Document ID
+@param:field$:string:The name of a document field (field names are case sensitive)
+@param:format$:string:Optional date format string. Default is "YYYY-MM-DDTHH:mm:ss"
+@return:string:The value of the field as a string
+
+@content:
+Date's are stored in the Firestore database as a Firebase TimeStamp object.
+
+A Timestamp represents a point in time independent of any time zone or calendar, represented as seconds and fractions of seconds at nanosecond resolution in UTC Epoch time.
+
+When using "Firebase SetDocumentDate", the date string given in the value$ parameter is converted to a Firebase TimeStamp object before it is stored in the Firestore database.
+
+When reading a TimeStamp field from a Firestore database document, you can use the format$ parameter to reformat the date to the desired format.
+
+~~~
+The Firebase instructions uses momentjs (https://momentjs.com) to format dates.
+
+// "25/01/2022"
+due_date$ = Firebase QueryGetDate$(QUERY_REF$, docId$, "dueDate", "DD/MM/YYYY")
+
+// "Today is Sunday"
+due_date$ = Firebase QueryGetDate$(QUERY_REF$, docId$, "dueDate", "[Today is] dddd")
+
+// "Sunday, February 14th 2010, 3:25:50 pm"
+due_date$ = Firebase QueryGetDate$(QUERY_REF$, docId$, "dueDate", "dddd, MMMM Do YYYY, h:mm:ss a")
+
+Read more about formatting dates here:-
+https://momentjs.com/docs/#/displaying/format/
+~~~
+api*/
+Function "Firebase QueryGetDate$", queryRef$, docId$, field$, format$
+{
+	#errors
+	var dateFormatted = '';
+	var val = aoz.firebase.queryGetFieldValue( { ref: %queryRef$, docId: %docId$, field: %field$ } );
+
+	if (val) {
+		if (val.seconds) {
+			var date = val.toDate();
+
+			if (%format$) {
+				dateFormatted = moment(date).format(%format$);
+			} else {
+				dateFormatted = moment(date).format("YYYY-MM-DDTHH:mm:ss");
+			}
+		}
+	}
+}
+End Function( { dateFormatted } )
+
+/**api
+@name:Firebase QueryGetValue
+@description:Returns the value of a field from a specific document within a querys results
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:docId$:string:The unique Firestore database collection Document ID
+@param:field$:string:The name of a document field (field names are case sensitive)
+@return:integer:The value of the field
+
+@content:
+~~~
+// Get the Firebase Document ID for a specific row in the query results
+docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+// Read the document field value
+SCORE = Firebase QueryGetValue(QUERY_REF$, docId$, "score")
+~~~
+api*/
+Function "Firebase QueryGetValue", queryRef$, docId$, field$
+{
+	#errors
+	var val = aoz.firebase.queryGetFieldValue( { ref: %queryRef$, docId: %docId$, field: %field$ } );
+	if (!val) val = 0;
+}
+End Function( { val } )
+
+/**api
+@name:Firebase QueryGetDocumentCount
+@description:Returns the number of documents that have been retrieved with a Firebase query
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@return:integer:The number of documents
+
+@content:
+~~~
+// Get a reference to a new collection query
+queryRef$ = Firebase NewQuery$ (collection$ = "players", onData$="ON_DATA")
+
+// Read the documents from the Firebase database
+Firebase QueryGet queryRef$
+
+// ....later in your program you can get the number of documents that have been retrived
+COUNT = Firebase QueryGetDocumentCount(queryRef$)
+~~~
+api*/
+Function "Firebase QueryGetDocumentCount", queryRef$
+{
+	#errors
+}
+End Function( { aoz.firebase.getDocumentCount( { ref: %queryRef$ } ) } )
+
+/**api
+@name:Firebase QueryGet
+@description:Retrieve the documents from a Firestore collection query
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:limit:integer:Optional paramter to limit the number of documents to retrieve, all documents are returned by default
+
+@content:
+You should use "Firebase QueryDispose" to remove the query results from memory when they are no longer needed.
+
+Cloud Firestore ensures query performance by requiring an index for every query. The indexes required for the most basic queries are automatically created for you. As you use and test your app, Cloud Firestore generates error messages that help you create additional indexes your app requires.
+
+Read more here: https://firebase.google.com/docs/firestore/query-data/indexing
+
+If you create a query that requires an index, details of how to create it are provided in the ERROR$ variable and also in the browser developer tools console window.
+~~~
+// Get a reference to a new collection query
+queryRef$ = Firebase NewQuery$ (collection$ = "players", onData$="ON_DATA")
+
+// Order the documents by the "score" field in decending order
+Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "score", direction$ = "desc"
+
+// Read the documents from the Firebase database
+// We can limit the query results to 10 documents by setting the optional limit parameter
+Firebase QueryGet queryRef$, limit = 10
+
+// The procedure is called once the documents have been retrieved
+Procedure ON_DATA[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+
+		If DOCUMENT_COUNT > 0
+			For row = 0 To DOCUMENT_COUNT -1
+				// Get the Firebase Document ID for a specific row in the query results
+				docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+				// We then use the Document ID to access the document fields
+
+				// Read the document fields using the Firebase Document ID as a reference
+				playerName$ = Firebase QueryGetString$(QUERY_REF$, docId$, "playerName")
+				score = Firebase QueryGetValue(QUERY_REF$, docId$, "score")
+
+				// Display the data
+				Print playerName$; score
+			Next row
+		End If
+
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase QueryGet", queryRef$, limit
+{
+	#errors
+	#waiting
+
+	var args = {
+		ref: %queryRef$,
+		limit: %limit
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"queryGet", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Firebase QuerySubscribe
+@description:Listen to the results of a query and automatically receive updates when changes are detected
+@param:queryRef$:string:The reference to a query created with the Firebase NewQuery$() function
+@param:limit:integer:Optional paramter to limit the number of documents to retrieve, all documents are returned by default
+
+@content:
+Listen to the results of a query, the onData$ procedure will be called each time the query results change (that is, when a document is added, removed, or modified)
+
+You should use "Firebase QueryDispose" to stop listening to the collection query when it is no longer needed to free up Firebase resources. Use "Firebase QueryGet" if you only need to get the results one time.
+
+Cloud Firestore ensures query performance by requiring an index for every query. The indexes required for the most basic queries are automatically created for you. As you use and test your app, Cloud Firestore generates error messages that help you create additional indexes your app requires.
+
+Read more here: https://firebase.google.com/docs/firestore/query-data/indexing
+
+If you create a query that requires an index, details of how to create it are provided in the ERROR$ variable and also in the browser developer tools console window.
+~~~
+// Get a reference to a new query for the "hiscore" Firestore database collection
+queryRef$ = Firebase NewQuery$ (collection$ = "hiscores", onData$="ON_HIGH_SCORE_DATA_RECEIVED")
+
+// Order the documents by the "score" field in decending order
+Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "score", direction$ = "desc"
+
+// We can limit the query results to 10 documents by setting the optional limit parameter
+Firebase QuerySubscribe queryRef$, limit = 10
+
+Procedure ON_HIGH_SCORE_DATA_RECEIVED[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	// Procedure is called when changes are detected in the collection query
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		UI Cls
+
+		If DOCUMENT_COUNT > 0
+			For row = 0 To DOCUMENT_COUNT -1
+				// Get the Firebase Document ID for a specific row in the query results
+				docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+				// We then use the Document ID to access the document fields
+
+				// Read the document fields using the Firebase Document ID as a reference
+				playerName$ = Firebase QueryGetString$(QUERY_REF$, docId$, "playerName")
+				score = Firebase QueryGetValue(QUERY_REF$, docId$, "score")
+
+				// By default, date fields are returned as "yyyy-mm-ddTHH:mm:ss"
+				// We can reformat the date using the format$ parameter
+				created$ = Firebase QueryGetDate$(QUERY_REF$, docId$, "created", format$="DD MMM YYYY HH:mm:ss")
+
+				// Display the data
+				UI TextBlock "lblPosition" + docId$, x=100, y=340 + row * 50, width=50, content$=Str$(row + 1) + ".", class$="text-light"
+				UI TextBlock "lblPlayerName" + docId$, x=140, y=340 + row * 50, width=320, content$=playerName$, class$="text-light"
+				UI TextBlock "lblPlayerScore" + docId$, x=450, y=340 + row * 50, width=100, content$=str$(score), class$="text-light text-end"
+				UI TextBlock "lblCreated" + docId$, x=550, y=340 + row * 50, width=250, content$=created$, class$="text-light text-end"
+			Next row
+		End If
+
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase QuerySubscribe", queryRef$, limit
+{
+	#errors
+	#waiting
+
+	var args = {
+		ref: %queryRef$,
+		limit: %limit
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"querySubscribe", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/*
+	Firebase Document Instructions
+*/
+
+/**api
+@name:Firebase NewDocument$
+@description:Create a new Firestore document
+@return:string:A reference to the document
+
+@content:
+Following Cloud Firestore's NoSQL data model, you store data in documents that contain fields mapping to values.
+
+These documents are stored in collections, which are containers for your documents that you can use to organize your data and build queries.
+
+When you create a new document or retrieve a document from the Firestore database, you can use the AOZ Firebase instructions to access the fields and values using the returned reference as an input parameter.
+
+References to documents are held in memory so it is good practice to always remove them when they are no longer needed in your AOZ Program.
+~~~
+// Create a new Firebase document (held in memory) and return a reference to it, this can then be used to access/set the document fields and values
+docRef$ = Firebase NewDocument$()
+
+// Set the document field values
+Firebase SetDocumentValue docRef$ = docRef$, field$ = "score", value = 50
+Firebase SetDocumentString docRef$ = docRef$, field$ = "playerName", value$ = "AOZ Player"
+Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+
+// Add the document to the Firebase 'hiscores' collection, the collection is created if it doesnt already exist
+Firebase DocumentAdd collection$ = "hiscores", docRef$ = docRef$, onCompleted$ = "ON_COMPLETED"
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+~~~
+api*/
+Function "Firebase NewDocument$"
+{
+	#errors
+}
+End function( { aoz.firebase.newDocument() })
+
+/**api
+@name:Firebase DocumentDispose
+@description:Remove a document reference from memory
+@param:docRef$:string:The document reference
+
+@content:
+When you create a new document or retrieve a document from the Firestore database, you can use the AOZ Firebase instructions to access the fields and values using the returned reference as an input parameter.
+
+References to documents are held in memory so it is good practice to always dispose them when they are no longer needed in your AOZ Program.
+~~~
+// Create a new Firebase document (held in memory) and return a reference to it, this can then be used to access/set the document fields and values
+docRef$ = Firebase NewDocument$()
+
+// Set the document field values
+Firebase SetDocumentValue docRef$ = docRef$, field$ = "score", value = 50
+Firebase SetDocumentString docRef$ = docRef$, field$ = "playerName", value$ = "AOZ Player"
+Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+
+// Add the document to the Firebase 'hiscores' collection, the collection is created if it doesnt already exist
+Firebase DocumentAdd collection$ = "hiscores", docRef$ = docRef$, onCompleted$ = "ON_COMPLETED"
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+~~~
+api*/
+Instruction "Firebase DocumentDispose", docRef$
+{
+	#errors
+	aoz.firebase.documentDispose( { ref: %docRef$ } )
+}
+End Instruction
+
+/**api
+@name:Firebase GetDocumentDate$
+@description:Returns the value of a document field
+@param:docRef$:string:The document reference
+@param:field$:string:The name of a document field (field names are case sensitive)
+@param:format$:string:Optional date format string. Default is "YYYY-MM-DDTHH:mm:ss"
+@return:string:The value of the document field
+
+@content:
+When you create a new document or retrieve a document from the Firestore database, you can use the AOZ Firebase instructions to access the fields and values using the returned reference as an input parameter.
+
+References to documents are held in memory so it is good practice to always dispose them when they are no longer needed in your AOZ Program.
+
+Date's are stored in the Firestore database as a Firebase TimeStamp object.
+
+A Timestamp represents a point in time independent of any time zone or calendar, represented as seconds and fractions of seconds at nanosecond resolution in UTC Epoch time.
+
+When using "Firebase SetDocumentDate", the date string given in the value$ parameter is converted to a Firebase TimeStamp object before it is stored in the Firestore database.
+
+When reading a TimeStamp field from a Firestore database document, you can use the format$ parameter to reformat the date to the desired format.
+~~~
+The Firebase instructions uses momentjs (https://momentjs.com) to format dates.
+
+// Create a new Firebase document (held in memory) and return a reference to it, this can then be used to access/set the document fields and values
+docRef$ = Firebase NewDocument$()
+
+// Add a date field to the document
+Firebase SetDocumentDate docRef$ = docRef$, field$ = "dueDate", value$ = "17 apr 2022 20:15:00"
+
+// "17/04/2022"
+due_date$ = Firebase GetDocumentDate$(docRef$, "dueDate", "DD/MM/YYYY")
+
+// "Today is Sunday"
+due_date$ = Firebase GetDocumentDate$(docRef$, "dueDate", "[Today is] dddd")
+
+// "Sunday, April 17th 2022, 08:15:00 pm"
+due_date$ = Firebase GetDocumentDate$(docRef$, "dueDate", "dddd, MMMM Do YYYY, h:mm:ss a")
+
+Read more about formatting dates here:-
+https://momentjs.com/docs/#/displaying/format/
+~~~
+api*/
+Function "Firebase GetDocumentDate$", docRef$, field$, format$
+{
+	#errors
+	var dateFormatted = '';
+	var val = aoz.firebase.getDocumentValue( { ref: %docRef$, field: %field$ } );
+	if (val) {
+		if (val.seconds) {
+			var date = val.toDate();
+
+			if (%format$) {
+				dateFormatted = moment(date).format(%format$);
+			} else {
+				dateFormatted = moment(date).format("YYYY-MM-DDTHH:mm:ss");
+			}
+		}
+	}
+}
+End Function( { dateFormatted } )
+
+/**api
+@name:Firebase GetDocumentString$
+@description:Returns the value of a document field
+@param:docRef$:string:The document reference
+@param:field$:string:The name of a document field (field names are case sensitive)
+@return:string:The value of the document field
+
+@content:
+When you create a new document or retrieve a document from the Firestore database, you can use the AOZ Firebase instructions to access the fields and values using the returned reference as an input parameter.
+
+References to documents are held in memory so it is good practice to always dispose them when they are no longer needed in your AOZ Program.
+~~~
+// Retrieve a document from the "profiles" collection where the Document ID is equal to the authenticated users ID
+Firebase DocumentGet collection$="profiles", docId$=FirebaseAuth UserID$(), onData$="ON_GOT_PROFILE_DATA"
+
+Procedure ON_GOT_PROFILE_DATA[ERROR$, EXISTS, DOCUMENT_ID$, DOCUMENT_REF$]
+	// The DOCUMENT_REF$ variable is used to access the document fields
+	If ERROR$ = "" And EXISTS = True
+		Print Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="firstName")
+		Print Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="lastName")
+		Print Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="country")
+		Print Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="city")
+		// Remove the document from memory
+		Firebase DocumentDispose DOCUMENT_REF$
+	End If
+End Proc
+~~~
+api*/
+Function "Firebase GetDocumentString$", docRef$, field$
+{
+	#errors
+	var val = aoz.firebase.getDocumentValue( { ref: %docRef$, field: %field$ } );
+	if (!val) val = '';
+}
+End Function( { val.toString() } )
+
+/**api
+@name:Firebase GetDocumentValue
+@description:Returns the value of a document field
+@param:docRef$:string:The document reference
+@param:field$:string:The name of a document field (field names are case sensitive)
+@return:integer:The value of the document field
+
+@content:
+When you create a new document or retrieve a document from the Firestore database, you can use the AOZ Firebase instructions to access the fields and values using the returned reference as an input parameter.
+
+References to documents are held in memory so it is good practice to always dispose them when they are no longer needed in your AOZ Program.
+~~~
+// Retrieve a document from the "playerStatistics" collection where the Document ID is equal to the authenticated users ID
+Firebase DocumentGet collection$="playerStatistics", docId$=FirebaseAuth UserID$(), onData$="ON_DATA"
+
+Procedure ON_DATA[ERROR$, EXISTS, DOCUMENT_ID$, DOCUMENT_REF$]
+	// The DOCUMENT_REF$ variable is used to access the document fields
+	If ERROR$ = "" And EXISTS = True
+		Print Firebase GetDocumentValue(docRef$ = DOCUMENT_REF$, field$="gamesPlayed")
+		Print Firebase GetDocumentValue(docRef$ = DOCUMENT_REF$, field$="playerXP")
+		Print Firebase GetDocumentValue(docRef$ = DOCUMENT_REF$, field$="maxLevel")
+		// Remove the document from memory
+		Firebase DocumentDispose DOCUMENT_REF$
+	End If
+End Proc
+~~~
+api*/
+Function "Firebase GetDocumentValue", docRef$, field$
+{
+	#errors
+	var val = aoz.firebase.getDocumentValue( { ref: %docRef$, field: %field$ } );
+	if (!val) val = 0;
+}
+End Function( { val } )
+
+/**api
+@name:Firebase SetDocumentString
+@description:Set the value of a document field
+@param:docRef$:string:The document reference
+@param:field$:string:The name of a document field (field names are case sensitive)
+@param:value$:string:The value to assign to the document field
+
+@content:
+When you create a new document or retrieve a document from the Firestore database, you can use the AOZ Firebase instructions to access the fields and values using the returned reference as an input parameter.
+
+References to documents are held in memory so it is good practice to always dispose them when they are no longer needed in your AOZ Program.
+~~~
+// Create a new Firebase document
+docRef$ = Firebase NewDocument$()
+
+// Set the document field values
+Firebase SetDocumentString docRef$ = docRef$, field$ = "playerName", value$ = "AOZ Player"
+
+//....add or update the document, see Firebase DocumentAdd, Firebase DocumentUpdate and Firebase DocumentSet
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+~~~
+api*/
+Instruction "Firebase SetDocumentString", docRef$, field$, value$
+{
+	#errors
+	aoz.firebase.setDocumentValue( { ref: %docRef$, field: %field$, value: %value$ } )
+}
+End Instruction
+
+/**api
+@name:Firebase SetDocumentDate
+@description:Set the value of a document field
+@param:docRef$:string:The document reference
+@param:field$:string:The name of a document field (field names are case sensitive)
+@param:value$:string:The value to assign to the document field
+
+@content:
+When you create a new document or retrieve a document from the Firestore database, you can use the AOZ Firebase instructions to access the fields and values using the returned reference as an input parameter.
+
+References to documents are held in memory so it is good practice to always dispose them when they are no longer needed in your AOZ Program.
+
+Date's are stored in the Firestore database as a Firebase TimeStamp object.
+
+A Timestamp represents a point in time independent of any time zone or calendar, represented as seconds and fractions of seconds at nanosecond resolution in UTC Epoch time.
+
+When using "Firebase SetDocumentDate", the date string given in the value$ parameter is converted to a Firebase TimeStamp object before it is stored in the Firestore database.
+~~~
+// Create a new Firebase document
+docRef$ = Firebase NewDocument$()
+
+// Set the document field value, must be a valid date or date & time string
+Firebase SetDocumentDate docRef$ = docRef$, field$ = "dateOfBirth", value$ = "7 Oct 1973"
+
+// Uses the Firebase DateNow$() function to get the current date & time
+Firebase SetDocumentDate docRef$ = docRef$, field$ = "lastLoggedIn", value$ = Firebase DateNow$()
+
+//....add or update the document, see Firebase DocumentAdd, Firebase DocumentUpdate and Firebase DocumentSet
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+~~~
+api*/
+Instruction "Firebase SetDocumentDate", docRef$, field$, value$
+{
+	#errors
+	try {
+		var date = moment(%value$).toDate();
+		var ts = firebase.firestore.Timestamp.fromDate(date);
+		aoz.firebase.setDocumentValue( { ref: %docRef$, field: %field$, value: ts } )
+	}
+	catch {
+		throw 'firebase_invalid_date_string';
+	}
+}
+End Instruction
+
+/**api
+@name:Firebase SetDocumentValue
+@description:Set the value of a document field
+@param:docRef$:string:The document reference
+@param:field$:string:The name of a document field (field names are case sensitive)
+@param:value:integer:The value to assign to the document field
+
+@content:
+When you create a new document or retrieve a document from the Firestore database, you can use the AOZ Firebase instructions to access the fields and values using the returned reference as an input parameter.
+
+References to documents are held in memory so it is good practice to always dispose them when they are no longer needed in your AOZ Program.
+~~~
+// Create a new Firebase document
+docRef$ = Firebase NewDocument$()
+
+// Set the document field value
+Firebase SetDocumentValue docRef$ = docRef$, field$ = "score", value = 10
+
+//....add or update the document, see Firebase DocumentAdd, Firebase DocumentUpdate and Firebase DocumentSet
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+~~~
+api*/
+Instruction "Firebase SetDocumentValue", docRef$, field$, value
+{
+	#errors
+	aoz.firebase.setDocumentValue( { ref: %docRef$, field: %field$, value: %value } )
+}
+End Instruction
+
+/**api
+@name:Firebase SetDocumentServerTimestamp
+@description:Set the value of a document field to a server-generated timestamp
+@param:docRef$:string:The document reference
+@param:field$:string:The name of a document field (field names are case sensitive)
+
+@content:
+When you call the Firebase SetDocumentServerTimestamp instruction, the actual value of the field doesn't actually contain any time data in it. The field value is set to a special token that is evaluated on the server.
+
+When the document is written to the Firestore database, Firestore writes a Timestamp representing the time the write hit the server.
+
+A Timestamp represents a point in time independent of any time zone or calendar, represented as seconds and fractions of seconds at nanosecond resolution in UTC Epoch time.
+
+References to documents are held in memory so it is good practice to always dispose them when they are no longer needed in your AOZ Program.
+~~~
+// Create and return a reference to a new document
+docRef$ = Firebase NewDocument$()
+
+// Set the document field value
+Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastUpdated"
+
+//....add or update the document, see Firebase DocumentAdd, Firebase DocumentUpdate and Firebase DocumentSet
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+~~~
+api*/
+Instruction "Firebase SetDocumentServerTimestamp", docRef$, field$
+{
+	#errors
+	aoz.firebase.setDocumentServerTimestamp( { ref: %docRef$, field: %field$ } )
+}
+End Instruction
+
+/**api
+@name:Firebase SetDocumentIncrement
+@description:A special token that tells the server to increment the field's current value by a given value
+@param:docRef$:string:The document reference
+@param:field$:string:The name of a document field (field names are case sensitive)
+@param:value:integer:The value to apply to the fields current value
+
+@content:
+When you call the Firebase SetDocumentIncrement instruction, the actual value of the field doesn't actually contain a value in it. The field value is set to a special token that is evaluated on the server.
+
+This instruction is useful when you need to increment a document fields current value.
+
+Increment operations are useful for implementing counters, but keep in mind that you can update a single document only once per second.
+~~~
+// Create and return a reference to a new document (held in memory)
+docRef$ = Firebase NewDocument$()
+
+// Set the document field value to be incremented by 10
+Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "playerXP", value = 10
+Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "gamesPlayed", value = 1
+
+// You can also use negative values to decrement the current field value
+Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "playerXP", value = -50
+Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "coins", value = -100
+
+//....add or update the document, see Firebase DocumentAdd, Firebase DocumentUpdate and Firebase DocumentSet
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+~~~
+api*/
+Instruction "Firebase SetDocumentIncrement", docRef$, field$, value
+{
+	#errors
+	aoz.firebase.setDocumentIncrement( { ref: %docRef$, field: %field$, value: %value } )
+}
+End Instruction
+
+/**api
+@name:Firebase DocumentUpdate
+@description:Update an existing document in a Firestore database collection
+@param:collection$:string:The name of a Firestore database collection (collection names are case sensitive)
+@param:docId$:string:The unique Firestore database collection Document ID
+@param:docRef$:string:The document reference
+@param:onCompleted$:string:The name of a Procedure to be called once the write operation has completed
+
+@content:
+Use this instruction to update some fields of an existing document without overwriting the entire document.
+
+You can update a single document only once per second. Sustaining a write rate above once per second increases latency and causes contention errors. This is not a hard limit, and you can surpass the limit in short bursts.
+
+Read more on usage and limits here https://firebase.google.com/docs/firestore/quotas
+
+The update operation will fail if the document does not exist.
+
+If you're not sure whether the document exists, use the Firebase DocumentSet instruction and pass the option to merge the new data with any existing document to avoid overwriting entire documents.
+~~~
+// Create and return a reference to a new document (held in memory)
+docRef$ = Firebase NewDocument$()
+
+// Set the document field values
+Firebase SetDocumentString docRef$ = docRef$, field$ = "fullname", value$ = "AOZ User"
+Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastUpdated"
+
+// Update the existing document in the Firestore "profiles" database collection where the Document ID is equal to the authenticated User ID
+Firebase DocumentUpdate collection$ = "profiles", docId$ = FirebaseAuth UserID$(), docRef$ = docRef$, onCompleted$ = "ON_SAVE_PROFILE_COMPLETED"
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+
+Procedure ON_SAVE_PROFILE_COMPLETED[ERROR$, ERROR_CODE, DOCUMENT_ID$, DOCUMENT_REF$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase DocumentUpdate", collection$, docId$, docRef$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		collection: %collection$,
+		docId: %docId$,
+		ref: %docRef$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"documentUpdate", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Firebase DocumentSet
+@description:Create or overwrite a single document in a Firestore database collection
+@param:collection$:string:The name of a Firestore database collection (collection names are case sensitive)
+@param:docId$:string:The unique Firestore database collection Document ID
+@param:docRef$:string:The document reference
+@param:onCompleted$:string:The name of a Procedure to be called once the write operation has completed
+
+@content:
+When you use Firebase DocumentSet to create a document, you must specify an ID for the document to create.
+
+If the document does not exist, it will be created. If the document does exist, its contents will be overwritten with the newly provided document data, unless you specify that the data should be merged into the existing document.
+
+Sustaining a write rate above once per second increases latency and causes contention errors. This is not a hard limit, and you can surpass the limit in short bursts.
+
+Read more on usage and limits here https://firebase.google.com/docs/firestore/quotas
+~~~
+// Create and return a reference to a new document (held in memory)
+docRef$ = Firebase NewDocument$()
+
+// Set the document field values
+Firebase SetDocumentString docRef$ = docRef$, field$ = "fullname", value$ = "AOZ User"
+Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastUpdated"
+
+// Create or overwrite the document in the Firestore "profiles" database collection where the Document ID is equal to the authenticated User ID
+Firebase DocumentSet collection$ = "profiles", docId$ = FirebaseAuth UserID$(), docRef$ = docRef$, onCompleted$ = "ON_SAVE_PROFILE_COMPLETED"
+
+// Create or update an existing document using the merge option
+Firebase DocumentSet collection$ = "profiles", docId$ = FirebaseAuth UserID$(), docRef$ = docRef$, merge = true, onCompleted$ = "ON_SAVE_PROFILE_COMPLETED"
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+
+Procedure ON_SAVE_PROFILE_COMPLETED[ERROR$, ERROR_CODE, DOCUMENT_ID$, DOCUMENT_REF$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase DocumentSet", collection$, docId$, docRef$, merge, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		collection: %collection$,
+		docId: %docId$,
+		ref: %docRef$,
+		merge: %merge,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"documentSet", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Firebase DocumentAdd
+@description:Create a single document in a Firestore database collection
+@param:collection$:string:The name of a Firestore database collection (collection names are case sensitive)
+@param:docRef$:string:The document reference
+@param:onCompleted$:string:The name of a Procedure to be called once the write operation has completed
+
+@content:
+Use this instruction to add new documents to a Firestore database collection with an auto-generated Document ID
+
+If you want to specifiy the Document ID yourself, use the Firebase DocumentSet instruction.
+
+The collection is created if it doesnt already exist.
+
+Sustaining a write rate above once per second increases latency and causes contention errors. This is not a hard limit, and you can surpass the limit in short bursts.
+
+Read more on usage and limits here https://firebase.google.com/docs/firestore/quotas
+~~~
+// Create a new Firebase document (held in memory)
+docRef$ = Firebase NewDocument$()
+
+// Set the document field values
+Firebase SetDocumentValue docRef$ = docRef$, field$ = "score", value = 20
+Firebase SetDocumentString docRef$ = docRef$, field$ = "playerName", value$ = "AOZ Player"
+Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+
+// Add the document to the Firebase 'hiscores' collection
+Firebase DocumentAdd collection$ = "hiscores", docRef$ = docRef$, onCompleted$ = "ON_COMPLETED"
+
+// Remove the document from memory
+Firebase DocumentDispose docRef$
+
+Procedure ON_COMPLETED[ERROR$, ERROR_CODE, DOCUMENT_ID$, DOCUMENT_REF$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase DocumentAdd", collection$, docRef$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		collection: %collection$,
+		ref: %docRef$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"documentAdd", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Firebase DocumentDelete
+@description:Delete a single document in a Firestore database collection
+@param:collection$:string:The name of a Firestore database collection (collection names are case sensitive)
+@param:docId$:string:The unique Firestore database collection Document ID
+@param:onCompleted$:string:The name of a Procedure to be called once the delete operation has completed
+
+@content:
+Sustaining a write rate above once per second increases latency and causes contention errors. This is not a hard limit, and you can surpass the limit in short bursts.
+
+Read more on usage and limits here https://firebase.google.com/docs/firestore/quotas
+~~~
+// Delete the document from the "profiles" collection where the Document ID is equal to the authenticated User ID
+Firebase DocumentDelete collection$ = "profiles", docId$ = FirebaseAuth UserID$(), onCompleted$ = "ON_DELETE_COMPLETED"
+
+Procedure ON_DELETE_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase DocumentDelete", collection$, docId$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		collection: %collection$,
+		docId: %docId$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"documentDelete", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Firebase DocumentGet
+@description:Retrieve the contents of a single document from a Firestore database collection
+@param:collection$:string:The name of a Firestore database collection (collection names are case sensitive)
+@param:docId$:string:The unique Firestore database collection Document ID
+@param:onData$:string:The name of a Procedure to be called once the read operation has completed
+
+@content:
+~~~
+// Get a document from the "profiles" collection where the Document ID is equal to the authenticated User ID
+Firebase DocumentGet collection$="profiles", docId$=FirebaseAuth UserID$(), onData$="ON_PROFILE_DATA"
+
+Procedure ON_PROFILE_DATA[ERROR$, EXISTS, DOCUMENT_ID$, DOCUMENT_REF$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		If EXISTS = False
+			// No profile document exists....
+		Else
+			// Access the documment fields
+			Print Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="fullname")
+			Print Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="profileImageUrl")
+		End If
+
+		// Remove the retrieved document from memory
+		Firebase DocumentDispose DOCUMENT_REF$
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase DocumentGet", collection$, docId$, onData$
+{
+	#errors
+	#waiting
+
+	var args = {
+		collection: %collection$,
+		docId: %docId$,
+		onData: %onData$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"documentGet", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Firebase DocumentSubscribe
+@description:Retrieve the contents of a single document and automatically receive updates when changes are detected
+@param:collection$:string:The name of a Firestore database collection (collection names are case sensitive)
+@param:docId$:string:The unique Firestore database collection Document ID
+@param:onData$:string:The name of a Procedure to be called each time the read operation has completed
+
+@content:
+~~~
+Listen to changes of a single Firebase collection document. The onData$ procedure will be called with the initial read and each time the document changes.
+
+You should use "Firebase DocumentDispose" to stop listening when it is no longer needed to free up Firebase resources. Use "Firebase DocumentGet" if you only need to get the document one time.
+
+//GAME_ID$ is a unique Firebase Document ID
+
+Firebase DocumentSubscribe collection$="games", docId$ = GAME_ID$, onData$ = "ON_GOT_GAME_DATA_UPDATE"
+
+Procedure ON_GOT_GAME_DATA_UPDATE[DOCUMENT_REF$, ERROR$, ERROR_CODE]
+	player1$ = Firebase GetDocumentString$(DOCUMENT_REF$, "player1")
+	player2$ = Firebase GetDocumentString$(DOCUMENT_REF$, "player2")
+
+	// Stop the listener if no longer needed
+	Firebase DocumentDispose DOCUMENT_REF$
+End proc
+
+~~~
+api*/
+Instruction "Firebase DocumentSubscribe", collection$, docId$, onData$
+{
+	#errors
+	#waiting
+
+	var args = {
+		collection: %collection$,
+		docId: %docId$,
+		onData: %onData$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"documentSubscribe", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/*
+	Firebase Storage Instructions
+*/
+
+/**api
+@name:Firebase UploadFile
+@description:Upload a file to your Firebase Storage bucket
+@param:fileRef$:string:The file reference, use the Firebase SelectFile instruction to get a reference to a user selected file
+@param:storagePath$:string:The full path and filename to be stored in the Firebase Storage bucket
+@param:onCompleted$:string:The name of a Procedure to be called once the file has been uploaded
+
+@content:
+Cloud Storage for Firebase allows you to quickly and easily upload files to a Cloud Storage bucket provided and managed by Firebase.
+
+Before you can upload files you need to setup your Firebase storage bucket in the Firebase web console.
+
+For help setting up your Firebase project, please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store.
+~~~
+// Open a file selector
+Firebase SelectFile onSelected$ = "FILE_SELECTED"
+
+Procedure FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file size is not greater than 10Mb
+	If SIZE >= 10485760
+		UI Popup "ErrorPopup", content$="File too large, must be 10Mb or less", placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Set the Firebase storage path (file is overitten if it already exists)
+		storagePath$ = FirebaseAuth UserID$() + "/uploads/" + NAME$
+
+		// Upload the file to Firebase storage
+		Firebase UploadFile fileRef$ = FILE_REF$, storagePath$ = storagePath$, onCompleted$ = "ON_FILE_UPLOADED"
+	End If
+End Proc
+
+Procedure ON_FILE_UPLOADED[ERROR$, FILE_REF$, DOWNLOAD_URL$, STORAGE_PATH$, SIZE, TYPE$, NAME$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// You can store the uploaded file details in a Firestore collection if required for your application.......
+		// You will need the STORAGE_PATH$ in order to delete the file using the Firebase DeleteFile instruction
+
+		// Display the image
+		UI Image "imgImage", src$ = DOWNLOAD_URL$
+
+		// Remove the file reference from memory
+		Firebase FileDispose fileRef$ = FILE_REF$
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase UploadFile", fileRef$, storagePath$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		ref: %fileRef$,
+		storagePath: %storagePath$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"uploadFileToFirebaseStorage", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Firebase FileDispose
+@description:Remove a file reference from memory
+@param:fileRef$:string:The file reference
+
+@content:
+~~~
+// Open a file selector
+Firebase SelectFile onSelected$ = "FILE_SELECTED"
+
+Procedure FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+
+	// handle the file, see Firebase UploadFile
+
+	// Remove the file reference from memory
+	Firebase FileDispose fileRef$ = FILE_REF$
+End Proc
+~~~
+api*/
+Instruction "Firebase FileDispose", fileRef$
+{
+	#errors
+	aoz.firebase.fileDispose( { ref: %fileRef$ } )
+}
+End Instruction
+
+/**api
+@name:Firebase ReadFileImageDataUrl
+@description:Returns an image file as a Data URL string
+@param:fileRef$:string:The file reference, use the Firebase SelectFile instruction to get a reference to a user selected file
+@param:onRead$:string:The name of a Procedure to be called once the file has been read
+@param:maxSize:integer:Optional value in pixels to resize the image
+
+@content:
+~~~
+// Opens a file selector
+Firebase SelectFile onSelected$ = "ON_FILE_SELECTED"
+
+Procedure ON_FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file is an image
+	If Instr(TYPE$, "image") >= 0
+		// Read the image file and return a dataUrl (base64) string
+		// when specifying the maxSize (optional), the image file will be resized to fit the value in pixels
+		Firebase ReadFileImageDataUrl fileRef$ = FILE_REF$, onRead$ = "ON_FILE_DATA_READ", maxSize = 250
+	Else
+		UI Popup "ErrorPopup", content$="Not a valid image file", placement$="top-center", delay=5000, class$="text-white bg-danger"
+	End If
+End Proc
+
+Procedure ON_FILE_DATA_READ[FILE_REF$, DATA_URL$]
+	// Display the image
+	UI Image "imgImage", src$ = DATA_URL$
+
+	// Remove the file reference from memory
+	Firebase FileDispose fileRef$ = FILE_REF$
+End Proc
+~~~
+api*/
+Instruction "Firebase ReadFileImageDataUrl", fileRef$, onRead$, maxSize
+{
+	#errors
+	aoz.firebase.readFileImageDataUrl( { ref: %fileRef$, onRead: %onRead$, maxSize: %maxSize  })
+}
+End Instruction
+
+/**api
+@name:Firebase DeleteFile
+@description:Delete a file from your Firebase Storage bucket
+@param:storagePath$:string:The full path and filename to an existing file in your Firebase Storage bucket
+@param:onCompleted$:string:The name of a procedure to be called once the file has been deleted
+
+@content:
+You may need to delete files that you have uploaded with the Firebase UploadFile instruction.
+
+You will need to know the full path to the file that you want to delete. This is the storagePath$ that was used when uploading the file.
+~~~
+// Open a file selector
+Firebase SelectFile onSelected$ = "FILE_SELECTED"
+
+Procedure FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file size is not greater than 10Mb
+	If SIZE >= 10485760
+		UI Popup "ErrorPopup", content$="File too large, must be 10Mb or less", placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Set the Firebase storage path (file is overitten if it already exists)
+		storagePath$ = NAME$
+
+		// Upload the file to Firebase storage
+		Firebase UploadFile fileRef$ = FILE_REF$, storagePath$ = storagePath$, onCompleted$ = "ON_FILE_UPLOADED"
+	End If
+End Proc
+
+Procedure ON_FILE_UPLOADED[ERROR$, FILE_REF$, DOWNLOAD_URL$, STORAGE_PATH$, SIZE, TYPE$, NAME$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Now the file has been uploaded you could also delete the file
+		Firebase DeleteFile storagePath$ = STORAGE_PATH$, onCompleted$="ON_DELETE_FILE_COMPLETED"
+
+		// Remove the file reference from memory
+		Firebase FileDispose fileRef$ = FILE_REF$
+	End If
+End Proc
+
+Procedure ON_DELETE_FILE_COMPLETED[ERROR$, ERROR_CODE]
+	// File has been deleted from Firebase storage
+End Proc
+
+~~~
+api*/
+Instruction "Firebase DeleteFile", storagePath$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		storagePath: %storagePath$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"deleteFileFromFirebaseStorage", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Firebase GetFileMetaData
+@description:Gets the list of available meta data for a file stored in your Firebase Storage bucket
+@param:storagePath$:string:The full path and filename to an existing file in your Firebase Storage bucket
+@param:onCompleted$:string:The name of a procedure to be called once the file meta data has been retrieved
+
+@content:
+File metadata contains common properties such as name, size, and contentType (often referred to as MIME type) in addition to some less common ones like contentDisposition and timeCreated.
+~~~
+// Get the meta data for a file stored in the Firebase Storage bucket
+Firebase GetFileMetaData storagePath$ = "MyTestDocument.docx", onCompleted$ = "ON_GET_META_DATA_COMPLETED"
+
+Procedure ON_GET_META_DATA_COMPLETED[ERROR$, ERROR_CODE, BUCKET$, NAME$, GENERATION$, METAGENERATION$, FULLPATH$, SIZE,TIMECREATED$, UPDATED$, MD5HASH$, CACHECONTROL$, CONTENTDISPOSITION$, CONTENTENCODING$, CONTENTENLANGUAGE$, CONTENTENTYPE$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		Print NAME$
+		Print SIZE
+		Print CONTENTENTYPE$
+	End If
+End Proc
+~~~
+api*/
+Instruction "Firebase GetFileMetaData", storagePath$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		storagePath: %storagePath$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"getFileMetaData", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/*
+	Firebase Authentication Instructions
+*/
+
+/**api
+@name:FirebaseAuth SignIn
+@description:Authenticate users with an email address and password
+@param:email$:string:The users email address
+@param:password$:string:The users password
+@param:onCompleted$:string:The name of a procedure to be called once the sign in operation has completed
+
+@content:
+Most apps need to know the identity of a user. Knowing a user's identity allows an app to securely save user data in the cloud and provide the same personalized experience across all of the user's devices.
+
+Firebase supports authentication using email & passwords, popular federated identity providers like Google, Facebook and Twitter, and more.
+
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+// Sign in using the provided email and password
+FirebaseAuth SignIn email$ = "phil@aozwithphil.com", password$ = "#########", onCompleted$="ON_SIGN_IN_COMPLETED"
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// User is now authenticated with Firebase
+
+		// You can use the FirebaseAuth AuthState() function to determine the authentication state
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SignIn", email$, password$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		email: %email$,
+		password: %password$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"signInWithEmailAndPassword", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignInWithGoogle
+@description:Authenticate users using their Google account
+@param:onCompleted$:string:The name of a procedure to be called once the sign in operation has completed
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+FirebaseAuth SignInWithGoogle onCompleted$="ON_SIGN_IN_COMPLETED"
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// User is now authenticated with Firebase
+
+		// You can use the FirebaseAuth AuthState() function to determine the authentication state
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SignInWithGoogle", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"signInWithGoogle", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignInWithFaceBook
+@description:Authenticate users using their Facebook account
+@param:onCompleted$:string:The name of a procedure to be called once the sign in operation has completed
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+FirebaseAuth SignInWithFacebook onCompleted$="ON_SIGN_IN_COMPLETED"
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// User is now authenticated with Firebase
+
+		// You can use the FirebaseAuth AuthState() function to determine the authentication state
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SignInWithFaceBook", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"signInWithFaceBook", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignInWithApple
+@description:Authenticate users using their Apple account
+@param:onCompleted$:string:The name of a procedure to be called once the sign in operation has completed
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+FirebaseAuth SignInWithApple onCompleted$="ON_SIGN_IN_COMPLETED"
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// User is now authenticated with Firebase
+
+		// You can use the FirebaseAuth AuthState() function to determine the authentication state
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SignInWithApple", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"signInWithApple", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignInWithTwitter
+@description:Authenticate users using their Twitter account
+@param:onCompleted$:string:The name of a procedure to be called once the sign in operation has completed
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+FirebaseAuth SignInWithTwitter onCompleted$="ON_SIGN_IN_COMPLETED"
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// User is now authenticated with Firebase
+
+		// You can use the FirebaseAuth AuthState() function to determine the authentication state
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SignInWithTwitter", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"signInWithTwitter", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignInWithGitHub
+@description:Authenticate users using their GitHub account
+@param:onCompleted$:string:The name of a procedure to be called once the sign in operation has completed
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+FirebaseAuth SignInWithGitHub onCompleted$="ON_SIGN_IN_COMPLETED"
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// User is now authenticated with Firebase
+
+		// You can use the FirebaseAuth AuthState() function to determine the authentication state
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SignInWithGitHub", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"signInWithGitHub", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignInWithMicrosoft
+@description:Authenticate users using their Microsoft account
+@param:onCompleted$:string:The name of a procedure to be called once the sign in operation has completed
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+FirebaseAuth SignInWithMicrosoft onCompleted$="ON_SIGN_IN_COMPLETED"
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// User is now authenticated with Firebase
+
+		// You can use the FirebaseAuth AuthState() function to determine the authentication state
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SignInWithMicrosoft", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"signInWithMicrosoft", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignInAnonymously
+@description:Authenticate users anonymously
+@param:onCompleted$:string:The name of a procedure to be called once the sign in operation has completed
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+FirebaseAuth SignInAnonymously onCompleted$="ON_SIGN_IN_COMPLETED"
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// User is now authenticated with Firebase
+
+		// You can use the FirebaseAuth AuthState() function to determine the authentication state
+
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SignInAnonymously", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"signInAnonymously", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignInWithBuiltInUI
+@description:A prebuilt user interface to add a complete signin system to your Firebase web application
+@param:signInFlow$:string:Optional parameter to control the UI flow. Set to "popup" to use a popup window
+@param:provider$:string:Comma separated list of provider names
+@param:class$:string:Opional CSS class to apply to the prebuilt UI HTML container
+@param:termsOfServiceUrl$:string:Optional URL to your terms of service document
+@param:privacyPolicyUrl$:string:Optional URL to your privacy policy document
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+
+You can sign in users to your app either by using a complete drop-in auth solution or by using the FirebaseAuth instructions to manually integrate one or several sign-in methods into your application.
+
+The built in UI provides a drop-in auth solution that handles the UI flows for signing in users with email addresses and passwords, and with popular federated identity providers, including Google Sign-In and Facebook Login.
+
+The built in UI implements best practices for authentication on mobile devices and websites, which can maximize sign-in and sign-up conversion for your application.
+~~~
+
+// Initialise Firebase here using the Firebase Init instruction
+// Fill in the parameter values for your Firebase web application, these are created in the Firebase web console
+Firebase Init apiKey$ = "", authDomain$ = "", projectId$ = "", storageBucket$ = "", messagingSenderId$ = "", appId$ = ""
+
+If FirebaseAuth AuthState() = false
+	// User is not signed in
+	Goto SIGN_IN
+End If
+
+MAIN:
+	Print FirebaseAuth UserEmail$()
+	Print FirebaseAuth UserDisplayName$()
+	Do
+		If FirebaseAuth AuthState() = false
+			// User is not signed in or has signed out
+			Goto SIGN_IN
+		End If
+
+		Wait Vbl
+	Loop
+
+SIGN_IN:
+	FirebaseAuth SignInWithBuiltInUI provider$="google,github,email,anonymous,twitter,facebook,microsoft,apple", signInFlow$="popup"
+
+	// Wait here until the user is signed in
+	Do
+		If FirebaseAuth AuthState() = true
+			Goto MAIN
+		End If
+
+		Wait Vbl
+	Loop
+
+~~~
+api*/
+Instruction "FirebaseAuth SignInWithBuiltInUI", signInFlow$, provider$, class$, termsOfServiceUrl$, privacyPolicyUrl$
+{
+	#errors
+	aoz.firebase.signInWithBuiltInUI({ signInFlow: %signInFlow$, provider: %provider$, class: %class$, termsOfServiceUrl: %termsOfServiceUrl$, privacyPolicyUrl: %privacyPolicyUrl$ });
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SignOut
+@description:Sign the authenticated user out of your Firebase web application
+
+@content:
+When signing out, any query and document listeners are removed and all resources are released from memory.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+// Sign out of Firebase
+FirebaseAuth SignOut
+~~~
+api*/
+Instruction "FirebaseAuth SignOut"
+{
+	#errors
+	aoz.firebase.signOut();
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth HideBuiltInUI
+@description:Hide the user interface that is shown with the FirebaseAuth SignInWithBuiltInUI instruction
+
+@content:
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+// Show the built in UI
+FirebaseAuth SignInWithBuiltInUI provider$="google,github,email,anonymous,twitter,facebook,microsoft,apple", signInFlow$="popup"
+
+//...later in your application
+
+// Hide the built in UI
+FirebaseAuth HideBuiltInUI
+~~~
+api*/
+Instruction "FirebaseAuth HideBuiltInUI"
+{
+	#errors
+	aoz.firebase.hideBuiltInUI({ });
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth AuthState
+@description:Get the current authentication state of the Firebase web application
+@return:boolean:Returns true if the application user is signed in
+
+@content:
+To check if you need to ask your application user to sign in you can check the users authentication state
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+~~~
+If FirebaseAuth AuthState() = false
+	// User is not signed in or has signed out
+	Goto SIGN_IN
+Else
+	// User is signed in
+	Goto MAIN
+End If
+~~~
+api*/
+Function "FirebaseAuth AuthState"
+{
+	#errors
+}
+End Function( { aoz.firebase.authState } )
+
+/**api
+@name:FirebaseAuth UserID$
+@description:Get the unique identifier for the user currently signed into your Firebase web application
+@return:string:The users unique identifier
+
+@content:
+When a user account is created in your Firebase web application they are assigned a unique identifier.
+
+You could use this to store user specific data in a Firestore database collection.
+~~~
+Print FirebaseAuth UserID$()
+~~~
+api*/
+Function "FirebaseAuth UserID$"
+{
+	#errors
+}
+End Function( { aoz.firebase.getUserId() } )
+
+/**api
+@name:FirebaseAuth UserDisplayName$
+@description:Get the Display Name for the user currently signed into your Firebase web application
+@return:string:The user display name
+
+@content:
+~~~
+Print FirebaseAuth UserDisplayName$()
+~~~
+api*/
+Function "FirebaseAuth UserDisplayName$"
+{
+	#errors
+}
+End Function( { aoz.firebase.getDisplayName() } )
+
+/**api
+@name:FirebaseAuth UserEmail$
+@description:Get the Email address for the user currently signed into your Firebase web application
+@return:string:The users email address
+
+@content:
+~~~
+Print FirebaseAuth UserEmail$()
+~~~
+api*/
+Function "FirebaseAuth UserEmail$"
+{
+	#errors
+}
+End Function( { aoz.firebase.getEmail() } )
+
+/**api
+@name:FirebaseAuth UserPhotoUrl$
+@description:Get the users photo Url for the user currently signed into your Firebase web application
+@return:string:The users photo Url
+
+@content:
+~~~
+Print FirebaseAuth UserPhotoUrl$()
+~~~
+api*/
+Function "FirebaseAuth UserPhotoUrl$"
+{
+	#errors
+}
+End Function( { aoz.firebase.getPhotoUrl() } )
+
+/**api
+@name:FirebaseAuth UserEmailVerified
+@description:Check if the user currently signed into your Firebase web application has been verified
+@return:boolean:Returns true if the user has been verified
+
+@content:
+When a new user is added to your Firebase web application you can send an email verification email using the FirebaseAuth SendEmailVerification instruction.
+
+You may wish to restrict parts of your application until the user has verified their email address.
+~~~
+If FirebaseAuth UserEmailVerified() = True
+	// show verirfied features
+Else
+	// inform the user they need to verify their email address
+End If
+~~~
+api*/
+Function "FirebaseAuth UserEmailVerified"
+{
+	#errors
+}
+End Function( { aoz.firebase.getEmailVerified() } )
+
+/**api
+@name:FirebaseAuth CreateUser
+@description:Add a new user account to your Firebase web application
+@param:displayName$:string:The users display name
+@param:email$:string:The users email address
+@param:password$:string:The users password
+@param:onCompleted$:string:The name of a procedure to be called once the user has been created
+
+@content:
+Before using the FirebaseAuth instructions, you will need to setup the athentication providers in the Firebase web console.
+
+Please read the AOZFirebaseQuickStartGuide.pdf available in the AOZ Store for further information.
+
+Please see the FirebaseAuthentication demo project in the AOZ Store.
+
+You will need to enable the email/password signin method in the Firebase console before using this instruction.
+~~~
+// Create a new user account
+FirebaseAuth CreateUser displayName$ = "Phil", email$ = "phil@aozwithphil.com", password$ = "########", onCompleted$="ON_CREATE_USER_COMPLETED"
+
+Procedure ON_CREATE_USER_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// The user will now be signed in
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth CreateUser", displayName$, email$, password$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		displayName: %displayName$,
+		email: %email$,
+		password: %password$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"createUserWithEmailAndPassword", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth UpdateDisplayName
+@description:Update the display name for the user currently signed into your Firebase web application
+@param:displayName$:string:The users display name
+@param:onCompleted$:string:The procedure to be called once the display name has been updated
+
+@content:
+~~~
+// Update the users display name
+FirebaseAuth UpdateDisplayName displayName$ = "AOZ With Phil", onCompleted$ = "ON_UPDATE_DISPLAY_NAME_COMPLETED"
+
+Procedure ON_UPDATE_DISPLAY_NAME_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// Display name has been updated
+
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth UpdateDisplayName", displayName$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		displayName: %displayName$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"updateDisplayName", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth UpdatePhotoUrl
+@description:Update the photo Url for the user currently signed into your Firebase web application
+@param:photoUrl$:string:The users photo Url
+@param:onCompleted$:string:The procedure to be called once the photo url has been updated
+
+@content:
+~~~
+// Show the file selector
+Firebase SelectFile onSelected$ = "FILE_SELECTED"
+
+Procedure FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file is an image
+	If Instr(TYPE$, "image") >= 0
+
+		// Check the selected file size is not greater than 10Mb
+		If SIZE >= 10485760
+			UI Popup "ErrorPopup", content$="File too large, must be 10Mb or less", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		Else
+			// Set the Firebase storage path
+			storagePath$ = "ProfileImages/" + FirebaseAuth UserID$() + "_" + NAME$
+
+			// Upload the file to Firebase storage
+			Firebase UploadFile fileRef$ = FILE_REF$, storagePath$ = storagePath$, onCompleted$ = "ON_FILE_UPLOADED"
+		End If
+
+	Else
+		UI Popup "ErrorPopup", content$="Not a valid image file", placement$="top-center", delay=3000, class$="text-white bg-danger"
+	End If
+End Proc
+
+Procedure ON_FILE_UPLOADED[ERROR$, FILE_REF$, DOWNLOAD_URL$, STORAGE_PATH$, SIZE, TYPE$, NAME$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		FirebaseAuth UpdatePhotoUrl photoUrl$ = DOWNLOAD_URL$, onCompleted$ = "ON_UPDATE_PHOTO_COMPLETED"
+	End If
+End Proc
+
+Procedure ON_UPDATE_PHOTO_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		// The photo url has now been updated
+
+	End If
+End Proc
+
+~~~
+api*/
+Instruction "FirebaseAuth UpdatePhotoUrl", photoUrl$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		photoUrl: %photoUrl$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"updatePhotoUrl", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth UpdateEmail
+@description:Update the email addres for the user currently signed into your Firebase web application
+@param:email$:string:The new email address
+@param:onCompleted$:string:The name of a procedure to be called once the email address has been updated
+
+@content:
+~~~
+FirebaseAuth UpdateEmail email$ = "phil@aozwithphil.com", onCompleted$="ON_UPDATE_EMAIL_COMPLETED"
+
+Procedure ON_UPDATE_EMAIL_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Email successfully updated", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth UpdateEmail", email$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		email: %email$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"updateEmail", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth UpdatePassword
+@description:Update the password for the user currently signed into your Firebase web application
+@param:password$:string:The new password
+@param:onCompleted$:string:The name of a procedure to be called once the password has been updated
+
+@content:
+~~~
+FirebaseAuth UpdatePassword password$ = "######", onCompleted$="ON_UPDATE_PASSWORD_COMPLETED"
+
+Procedure ON_UPDATE_PASSWORD_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Password successfully updated", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth UpdatePassword", password$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		password: %password$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"updatePassword", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SendPasswordResetEmail
+@description:Send an email with a link to reset a users password
+@param:email$:string:The email address of the user
+@param:onCompleted$:string:The name of a procedure to be called once the email has been sent
+
+@content:
+~~~
+FirebaseAuth SendPasswordResetEmail email$ = "phil@aozwithphil.com", onCompleted$="ON_SEND_PASSWORD_EMAIL_COMPLETED"
+
+Procedure ON_SEND_PASSWORD_EMAIL_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Password recovery email has been sent", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SendPasswordResetEmail", email$, onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		email: %email$,
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"sendPasswordResetEmail", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth SendEmailVerification
+@description:Send an email with a link to verify the email address for the user currently signed into your Firebase web application
+@param:onCompleted$:string:The name of a procedure to be called once the email has been sent
+
+@content:
+~~~
+FirebaseAuth SendEmailVerification onCompleted$ = "ON_SEND_VERIFICATION_COMPLETED"
+
+Procedure ON_SEND_VERIFICATION_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Verification email has been sent", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth SendEmailVerification", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"sendEmailVerification", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:FirebaseAuth DeleteUser
+@description:Delete the account for the user currently signed into your Firebase web application
+@param:onCompleted$:string:The name of a procedure to be called once the account has been deleted
+
+@content:
+The user will be automatically signed out when the account is deleted
+~~~
+FirebaseAuth DeleteUser onCompleted$="DELETE_USER_COMPLETED"
+
+Procedure DELETE_USER_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	End If
+End Proc
+~~~
+api*/
+Instruction "FirebaseAuth DeleteUser", onCompleted$
+{
+	#errors
+	#waiting
+
+	var args = {
+		onCompleted: %onCompleted$
+	};
+
+	return {type:12,waitThis:this.aoz.firebase,callFunction:"deleteUser", waitFunction:"load_wait", args} ;
+}
+End Instruction
+
+/*
+	Firebase Helper Instructions
+*/
+
+/**api
+@name:Firebase IsBusy
+@description:Check if Firebase is busy communicating with the server
+@return:boolean:Returns true if busy
+
+@content:
+~~~
+
+BUSY_STATE = False
+
+// Main loop
+Do
+	If FirebaseAuth AuthState() = false
+		// User is not signed in or has signed out
+		Goto SIGN_IN
+	End If
+
+	// Show an overlay when Firebase is busy
+	If Firebase IsBusy() = true And BUSY_STATE = false
+		BUSY_STATE = true
+		UI TextBlock "txtBusyBackground", x=0, y=0, width=1920, height=1080, content$="Please wait....", class$= "text-center"
+	End If
+
+	// Hide the overlay
+	If Firebase IsBusy() = false And BUSY_STATE = true
+		BUSY_STATE = false
+		UI Delete "txtBusyBackground"
+	End If
+
+	Wait Vbl
+Loop
+
+~~~
+api*/
+Function "Firebase IsBusy"
+{
+	#errors
+}
+End function( { aoz.firebase.api_pending })
+
+/**api
+@name:Firebase FormatDate$
+@description:Format a date to a desired format
+@param:dateTime$:string:The date to be formatted
+@param:format$:string:A date format string, example "DD-MM-YYYY"
+@return:string:The formated date
+
+@content:
+This instruction uses momentjs (https://momentjs.com) to format dates.
+~~~
+// "25/01/2022"
+Print Firebase FormatDate$("25 Jan 2022", "DD/MM/YYYY")
+
+// "Today is xxx"
+Print Firebase FormatDate$(Firebase DateNow$(), "[Today is] dddd")
+
+// "Sunday, February 14th 2010, 3:25:50 pm"
+Print Firebase FormatDate$("14 Feb 2010 15:25:50", "dddd, MMMM Do YYYY, h:mm:ss a")
+~~~
+api*/
+Function "Firebase FormatDate$", dateTime$, format$
+{
+	#errors
+	var formated = moment(%dateTime$).format(%format$);
+}
+End function( { formated } )
+
+/**api
+@name:Firebase DateNow$
+@description:Get the current date and time of the local device
+@param:format$:string:Optional date format string, example "DD-MM-YYYY"
+@return:string:The current date and time
+
+@content:
+This instruction uses momentjs (https://momentjs.com) to format dates when the format$ parameter is given.
+~~~
+Print Firebase DateNow$()
+
+Print Firebase DateNow$("DD MMM YYYY")
+~~~
+api*/
+Function "Firebase DateNow$", format$
+{
+	#errors
+	var formated = moment().format(%format$);
+}
+End function( { formated } )
+
+/**api
+@name:Firebase DateDiff
+@description:Compare the difference between 2 date time strings
+@param:startDate$:string:The start date string
+@param:endDate$:string:The end date string
+@param:measurement$:string:Optional 'years', 'months', 'weeks', 'days', 'hours', 'minutes', and 'seconds'. Milliseconds is returned by default
+@return:integer:The difference between the two dates in units of the provided measurement$
+@content:
+~~~
+Print Firebase DateDiff(Firebase DateNow$(), "01 Apr 2022", "days")
+Print Firebase DateDiff("01 Apr 2022 09:00:00", "01 Apr 2022 10:00:00", "minutes")
+~~~
+api*/
+Function "Firebase DateDiff", startDate$, endDate$, measurement$
+{
+	#errors
+	var a = moment(%startDate$);
+	var b = moment(%endDate$);
+}
+End function( { b.diff(a, %measurement$) } )
+
+/**api
+@name:Firebase SelectFile
+@description:Open a file selector to allow a single file to be selected
+@param:onSelected$:string:The name of a procedure to be called once the user selects a file
+
+@content:
+~~~
+Firebase SelectFile onSelected$ = "FILE_SELECTED"
+
+Procedure FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file size is not greater than 10Mb
+	If SIZE >= 10485760
+		UI Popup "ErrorPopup", content$="File too large, must be 10Mb or less", placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// You could now use the FILE_REF$ to upload the file to Firebase storage using the Firebase UploadFile instruction
+
+	End If
+End Proc
+
+~~~
+api*/
+Instruction "Firebase SelectFile", onSelected$
+{
+	#errors
+	aoz.firebase.selectFile( { onSelected: %onSelected$ } )
+}
+End Instruction

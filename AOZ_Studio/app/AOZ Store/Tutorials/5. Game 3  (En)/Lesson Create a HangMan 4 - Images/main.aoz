@@ -1,0 +1,127 @@
+#splashScreen:false
+Curs Off
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __                                   
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  ) 
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/  
+//
+// ............................................................................................................
+//
+// Welcome to your AOZ Studio Lesson Create a HangMan 4 - Images for the game - Neil Ives 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// In the traditional Hangman game when the player gets their guesses wrong they see gruesome images of a gallows    //
+// and a man being executed by hanging. Those images may not be suitable for children to see these days.             //
+// Here we have a possible alternative. A stack of pancakes appear at the start of each new word. If the player      // 
+// makes a wrong guess one pancake is removed. When the word gets solved or revealed by the computer the player      // 
+// wins the remaining pancakes. The name Panman might be more suitable for the game.                                 //
+// This tutorial is only about possible graphics. It does not include the hangman game                               //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// In this tutorial we will learn or refresh our knowledge of:
+// For Next loops
+// Do Loops
+// Locate, Centre and Print
+// Bobs
+// Bob images
+// Using Coordinates for Bobs
+// Jiggling coordinates
+// Wait
+// Using a For Next loop to count in reverse
+// Using Coordinates for Printing to screen
+// Rnd()
+// Providing player feedback
+// Cls
+// End
+
+////////////
+// STEP 1 //
+////////////
+
+//////////
+// Bobs //
+//////////
+
+// First we will show how to place a Bob, (a Bitmap Object) on the screen    
+X=500:Y=100 // Define Bob coordinates
+    
+Bob 1,X,Y,1 // This is how a Bob is displayed. The parameters of that instruction are:
+// Bob Number,Horizontal position,Vertical position,Image number,(png format),(stored in: the application resources/images) 
+    
+Locate , 10:Centre "Here is a single Bob using image number 1"
+
+End // Please Rem, (//) or delete 'End' to allow the next part of the code to run.
+
+Cls
+
+////////////
+// STEP 2 //
+////////////
+
+//////////////////////
+// Placing the Bobs //
+//////////////////////
+
+// The following code is a demonstration. The same method can be imported into the final game
+   
+LX=51:LY=12 // Define print location coordinates for player feedback
+
+Do // Do-Loop
+    
+    X=800:Y=300 // Define Bob coordinates to the right of the screen away from the word quiz texts.
+
+    ////////////////////////////////////////////////////////////////////////
+    // Creating the stack of pancakes, Bobs 1 to 10, using only one image //
+    ////////////////////////////////////////////////////////////////////////
+    
+    // Bobs 1 to 10 are created and placed on screen in the For/Next loop.
+    // The first Bob is placed on screen then further Bobs are placed above it by reducing the vertical coordinate.
+    // The vertical position Y, is reduced by 10 each step, minus a jiggle of a random number of 1 to 10 to 
+    // make the stack look more realistic and slightly different each time.
+    // The horizontal position X, is jiggled for the same reason.
+    
+    For n = 1 to 10
+        Y=Y-10-Rnd(10) // Vertical position, Y is reduced by 10, (Y=Y-10), minus a 1 to 10 jiggle
+        Bob n,X+Rnd(20),Y,1 // Horizontal position, X is jiggled by adding 1 to 20
+        Wait 0.1 
+    Next
+    
+    // Please Rem, (//) or delete 'Wait 0.1' above to see the code run at maximum speed.
+    // It will happen too fast for you to see!
+    // Wait uses units of 1 second, so 0.1 equals one tenth of a second.
+    
+    Locate ,15: Centre "Here are Bobs 1 to 10, all using image number 1" // Print in the centre of the screen. 
+    // Notice how Locate sets only the vertical position  
+    
+    End // Please Rem, (//) or delete 'End' to allow the next part of the code to run.
+    
+    Cls
+
+    ////////////
+    // STEP 3 //
+    ////////////
+
+    ///////////////////////////      
+    // Manipulating the Bobs //
+    ///////////////////////////
+    
+    // The next code demonstrates removing pancakes from the top of the stack, (10 to 1)
+    // In the game the pancakes will be removed when the player makes a wrong guess.
+    // Messages are created to give the user feedback
+    
+    Locate LX,LY:Print "10 pancakes  ": Wait 0.5 // Feedback
+    
+    For n = 10 to 1 Step -1 // Notice how to use a For/Next loop with minus steps to count down from 10 to 1.
+        Wait 0.3     
+        Bob off (n) // This removes the numbered Bob from the screen  
+        Locate LX,LY:Print "    ":Locate LX,LY:Print Str$(n-1) + " pancakes  " // Feedback   
+    Next
+
+    Locate LX,LY:Print "    ":Locate LX,LY:Print "No pancakes!" // Feedback
+
+    Wait 1
+Loop

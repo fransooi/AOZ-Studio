@@ -1,0 +1,22 @@
+<i>reserved variable: give value of AMAL register</i>
+register=<b>Amreg</b>(number)
+register=<b>Amreg</b>(channel,number)
+<b>Amreg</b>(number)=expression
+<b>Amreg</b>(channel,number)=expression
+=
+The AMREG function allows you to gain access to the contents of internal and external AMAL registers, from inside your AOZ Studio program. An AMAL register number must be specified, ranging from 0 to 25, with zero representing external register RA, up to 25 representing register RZ.
+=
+An optional channel parameter can be given, where a specified number from 0 to 9 is used to represent the AMAL internal registers from RU to R9.
+=
+The following example demonstrates how the position of an AMAL Sprite can be returned:
+@code
+Load "AMOSPro_Tutorial:Objects/Sprites.abk" : Get Sprite Palette
+Channel 1 To Sprite 8 : Sprite 8,100,100,1
+A$="Loop : Let RX=X+1 Let X=RX ; Pause ; Jump Loop"
+Amal 1,A$ : Amal On : Curs Off
+Do
+Locate 0,0
+Z=Asc("X")-65
+Print Amreg(Asc("X")-65) : Rem Use Asc to get register number
+Loop
+@code

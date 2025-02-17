@@ -1,0 +1,19 @@
+<i>Paint</i>
+<b>Paint</b> xxxxxxx
+=
+The PAINT command allows you to fill any section of your screen with a solid block of colour. You may also fill
+areas with various patterns previously selected with the SET PATTERN command, which is explained later. Decide
+which area is to be filled, and follow the PAINT command by a set of coordinates located anywhere inside the
+section of screen you want to paint with the current ink colour. Try this, which if all goes well should result in the
+Japanese national flag:
+@code
+Palette 0,$F00
+Circle 160,100,50
+Paint 50,50
+@code
+The optional mode setting can be set to either zero or one. A value of 0 ends your PAINT operation at the first pixel
+encountered of the current border colour. A mode of 1 stops the painting operation at any colour which is different
+from the existing ink colour. If there are any gaps in the boundaries of the sections you wish to fill, colour will leak
+out and stain the adjoining area.
+
+

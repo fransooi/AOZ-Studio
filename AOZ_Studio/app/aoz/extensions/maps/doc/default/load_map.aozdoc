@@ -1,0 +1,17 @@
+<i>Load Map</i>
+<b>Load Map</b> xxxxxxx
+=
+This instruction should eb the first one to use if you want to display maps. It loads all the data relative to all the layers of the map, but only the data.
+After this instruction, you may want to load the tileset or not.
+
+If you do, everything will be automatic and the next step should be to open a view on the map.
+
+If you do not, then you can create the tileset yourself with the Create Tilset instruction.
+
+The best way to put the files containing the whole map is in the "resources/filesystem/application" folder, this folder being available as a normal disc-drive within your running application.
+
+Once loaded, the map will be refered to from the name of the file without extension.
+@code
+Load Map "mymap.tmx"
+@code
+

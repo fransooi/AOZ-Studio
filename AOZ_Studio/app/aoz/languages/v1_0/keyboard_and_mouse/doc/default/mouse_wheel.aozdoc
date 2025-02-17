@@ -1,0 +1,16 @@
+<i>Mouse Wheel</i>
+<b>Mouse Wheel</b> xxxxxxx
+=
+This example scrolls a screen by setting it's offset from the rotation of the mouse wheel.
+@code
+Screen Open 0, 1280, 4000, 16		// Open a large screen
+For X = 0 To 1000
+Ink Rnd( 16 ) : Print X;		// Fill the screen with numbers
+Next
+Do
+D = Mouse Wheel * 10			// Multiplies the value to accelerate scrolling
+Screen Offset 0, 0, D			// Scrolls vertically
+Wait Vbl
+Loop
+@code
+

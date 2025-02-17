@@ -1,0 +1,55 @@
+#loadAssetFile: "aozjs/editor-sdk/js/arduino/arduino.js"
+
+Procedure INIT_BOARD[ PORT$, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.initBoard( '" + PORT$ + "', '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure PIN_MODE[ PIN, MODE, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.pinMode( " + Str$( PIN ) + ", " + Str$( MODE ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure ANALOG_WRITE[ PIN, VALUE, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.analogWrite( " + Str$( PIN ) + ", " + Str$( VALUE ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure ANALOG_READ[ PIN, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.analogRead( " + Str$( PIN ) + ", '" + PROCNAME$ + "')"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure DIGITAL_WRITE[ PIN, VALUE, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.digitalWrite( " + Str$( PIN ) + ", " + Str$( VALUE ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure DIGITAL_READ[ PIN, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.digitalRead( " + Str$( PIN ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure SERVO_WRITE[ PIN, ANGLE, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.servoWrite( " + Str$( PIN ) + ", " + Str$( ANGLE ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure BOARD_WAIT[ MILLISECONDS, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.wait( " + Str$( MILLISECONDS ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure BOARD_LOOP[ MILLISECONDS, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.loop( " + Str$( MILLISECONDS ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc

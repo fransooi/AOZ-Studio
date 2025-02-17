@@ -1,0 +1,16 @@
+<i>JS Execute</i>
+<b>JS Execute</b> xxxxxxx
+=
+This instruction uses the Javascript Eval function to run the code contained in the string.
+
+Here is an example of use:
+@code
+Rem Creation of the "helloWorld" JS function
+CODE$ = "function helloWorld(){ this.application.vars.A$ = 'Hello world!'; }"
+
+JS Execute( CODE$ ) // Adds the JS function to the AOZ program
+JS Execute( "helloWorld();" ) // Calls the JS function
+
+Pen 2 : Print A$ // Display of the variable A$ created by the "helloWorld" JS function
+@code
+

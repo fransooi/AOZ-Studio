@@ -1,0 +1,14 @@
+<i>Palette</i>
+<b>Palette</b> xxxxxxx
+=
+This is a much more powerful command than COLOUR, and it can be used to set as few or as many colours in your artist's palette as are needed. Your programs always begin using a list of default colour values,
+and these values may be changed as in the next example.
+
+Remember that only the colours specifically set with this command will be affected, and any others will retain their
+original values.
+@code
+Palette $FFFFFF : Rem set colour 0 to white
+Palette ,,,,$FF0000,$D00000,$AA0000,$770000,$4400000 // colours 4 to 8 graded reds
+Palette $000000,,$000000		// colours 0 and 2 both black
+@code
+

@@ -1,0 +1,360 @@
+#splashScreen:false
+#manifest:"aoz"
+#useAssetsResources: False   //For compatibility with the new AOZ Drive behavior
+Curs Off
+Cls 0
+
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+//
+// Welcome to your AOZ Studio Lesson 6 - Create a HangMan clone - The complete Game
+
+// In this tutorial we have:
+// Loading sound samples assetts
+// Sound samples
+// Paste Bob
+// Use Graphical fonts
+// #center
+// Load a file from disk
+// While Wend loops
+// Bobs (interactive)
+// Bob Off
+// Add a title screen and instructions
+// Screen zones
+// Instr
+// Mid$
+// Box
+// Cls n,x,y to x1,y1 (clear an area of screen with defined colour)
+// Boolean variables
+// Procedures
+// A scoring system
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Many of the instructions and techniques used in this code have been explained in previous tutorials. //
+// Notes have been minimised and some of the code has been tidied up onto single lines.                 //
+// If you have come straight here and are not sure about anything please review the earlier lessons.    //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Dim MYWORD$(20)
+Dim WORDLIST$(1948) // Word list has 1948 items
+
+Global TOTAL_SCORE
+
+// Load sound samples assetts
+// Note If you do an app with audio the sound folder should be in your app ressouces folder like:
+//  Documents/AOZ Studio Applications/My Applications/your app folder name/resources/audio
+
+Load Asset "resources/audio/1.wav", 1  // the sound named 1.wav is loaded and can be used as #1
+Load Asset "resources/audio/2.wav", 2
+Load Asset "resources/audio/3.wav", 3
+Load Asset "resources/audio/4.wav", 4
+Load Asset "resources/audio/5.wav", 5
+Load Asset "resources/audio/6.wav", 6
+
+Paste Bob 340,40,2 // Title screen image
+// Paste places a permanent image on the screen. It is not moveable.
+
+// Now using Graphic fonts which provide a more interesting interface
+// Notice how the text is positioned using graphical coordinates rather than print coordinates
+
+#googleFont:"Source Code Pro"// Select the graphic font to use.
+Set Font "Source Code Pro",100 // Choose a font and size.
+
+/////////////////////////////////////////////////
+// Note: A shadow effect can be easily created //
+// by slightly offsetting two identical texts  //
+/////////////////////////////////////////////////
+Ink 7: Text 310,600,"Pancake Daze!" // Shadow text, in gray.
+Ink 18: Text 314,604,"Pancake Daze!" // Front text, in orange, slightly right and down from the shadow text.
+
+Set Font "Source Code Pro",50 // Change to a smaller font.
+Ink 11 // Change colour.
+
+Text (Screen Width/2),660,"AOZ Studio - 2020","#center" // See notes below
+// Study how the start of the text is centred by dividing the screen width in half, (Screen Width/2)
+// The vertical position is set as normal.
+// The AOZ Tag "#centre" adjusts the reference point, (the 'handle' if you like) to the middle of the text.
+
+Wait 2 // pause the game for 2 seconds
+
+Cls // Clear the image from the title screen
+
+// Show an 'About' screen using different Pen colours
+Pen 4: Locate ,1: Centre "Here is a clone of the old Hangman game."
+Pen 20:Locate ,3: Centre "A random word is displayed as a line of dashes."
+Pen 15:Locate ,5 :Centre "The player enters single letters to try and"
+Pen 15:Locate ,7: Centre "discover what the hidden word is."
+Pen 18:Locate ,9: Centre "When the player guesses correctly their guess"
+Pen 18:Locate ,11: Centre "is inserted into the hidden word."
+Pen 17:Locate ,13: Centre "A stack of fresh pancakes are loaded at the beginning of each round."
+Pen 19:Locate ,15: Centre "A pancake is removed if the player makes a wrong guess."
+Pen 20:Locate ,17: Centre "At the end of each round the player wins any remaining pancakes."
+Pen 17: Locate ,20: Centre "Turn on the sound for your device."
+Pen 1: Locate ,22: Centre "< Click to continue >"
+
+//To enable sound effects the screen must be mouse-clicked (this is mandatory by the browsers)
+While Mouse Click = false : Wend // A While/Wend loop waiting for a mouse click (if clicked value is true)
+
+Play Audio 4 // Play an intro jingle with the sound #4 (4.wav)
+
+Cls // Clear the 'About' page
+
+PLAYAGAIN:// Afer the game is won or lost the code returns to this label using the 'GoTo' instruction so the game can be played again.
+// Note: Labels have to have the full colon, (:) after their name.
+
+Bob Off // Removes all previous images from the screen
+
+// Set or reset the variables ready for the next round
+WRONG_GUESSES$=""
+SHOWMYWORD$=""
+MYGUESS$=""
+WRONG_GUESS_COUNT=0
+PANCAKE_COUNT = 10
+M_CLICK = False
+
+Reset Zone // Screen zone is set up every round.
+
+Reserve Zone 1 // Later you will see a box with a hint letter.
+// To be able to detect a mouse click on the box we have to set up a screen detection zone.
+// The memory for a screen zone is reserved with 'Reserve Zone n'
+
+X=800:Y=300 // Define Pancake Bob coordinates to the right of the screen away from the quiz texts.
+
+// Put 10 pancake images on the screen
+For n = 1 to 10
+    Y=Y-10-Rnd(10) // Vertical position, Y is reduced by 10, (Y=Y-10), minus a 1 to 10 jiggle
+    Bob n,X+Rnd(20),Y,1 // Horizontal position, X is jiggled by adding 0 to 20
+    Wait 0.1 // It seems quite nice to see the stack being made
+Next
+
+Ink 19: Set Font "Source Code Pro",40: Text 700, 400,"10 fresh pancakes!" // Pancake feedback
+
+////////////////////////////// File loading ///////////////////////////////////////
+// In this version we no longer have the embedded word list as Data:             //
+// Words are now loaded from a file named WordList.txt                           //
+// Wordlist.txt is a simple text file of words arranged in a list.               //
+// The word list file is stored in the application:                              //
+// 'resources/filesystem/application' folder                                     //
+///////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////
+// The following code Opens a file on the computer. //
+// The words are Input in sequence to the computer  //
+// and stored in the array named WORDLIST$().       //
+// The file is then Closed.                         //
+// Note: It is important to close any file that     //
+// has been opened for disk access.                 //
+//////////////////////////////////////////////////////
+
+Set input 13,10 //This instruction trims any hidden control characters in the .txt. See below
+// for more information here: (Ctrl+Click to open) https://en.wikipedia.org/wiki/Control_character
+
+Open In 1,"WordList.txt" // Open the file
+
+// Sequential file handling
+For n = 0 to 1947 //Word list has 1948 items
+	Input #1,NEXTWORD$ // Input to program memory each item in sequence from file number 1, (#1)
+	WORDLIST$(n) = NEXTWORD$ //Place in element n of the array, WORDLIST$
+Next
+
+Close 1// Close the word list file
+
+//////////////////////////////////////////////////////////////
+// We now have all the words stored in the array WORDLIST$. //
+// We can use an appropriately sized random number range to //
+// select a word.                                           //
+//////////////////////////////////////////////////////////////
+
+HIDDENWORD$=WORDLIST$(Rnd(1947)+1) // Choose a word randomly from the array WORDLIST$
+
+// Capitalise the word
+HIDDENWORD$=Upper$(HIDDENWORD$)//Convert to upper case.
+
+// Get the length
+LETTERCOUNT=Len(HIDDENWORD$)//LETTERCOUNT is a numeric variable representing the length of the hidden word string.
+
+For n = 1 to LETTERCOUNT
+    MYWORD$(n)="-"
+    SHOWMYWORD$ = SHOWMYWORD$ + MYWORD$(n) // Build a string for display purposes. See note below.
+Next
+
+Ink 1: Set Font "Source Code Pro",60: Text 100,300,SHOWMYWORD$ // This is the display-only string
+
+////////////////////
+// Main game Loop //
+////////////////////
+Do
+
+	//Locate 1, 19: Pen 1: Print HIDDENWORD$ // Used for testing
+
+    Ink 1: Set Font "Source Code Pro",50:Text 80,100,"Guess a letter"
+	JMP1:
+
+	W$=""
+
+    While W$="" //This While-Wend loop is looking for a key pressed on the keyboard.
+        // There is no need to press 'Enter'. Inkey$ collects users selection (with its Keyboard key number or scancode)
+
+		W$=Inkey$
+
+		If W$="Enter" then GoTo JMP1
+
+		If Scancode >64 And Scancode <91 // Limit input to alpha characters.
+            // Scancode operates with Inkey$ to obtain the pressed keycode number.
+            // Note: The keyboard Scancodes for letters A to Z are 65 to 90
+            MYGUESS$=W$ // The input is stored in MYGUESS$
+        End If
+
+        // Deal with giving a clue. See more of this later
+        TRYAGAIN:
+        CLUE$=Mid$(HIDDENWORD$,Rnd(LETTERCOUNT),1) // Get a random letter from HIDDENWORD$ using
+        // the length of HIDDENWORD$ as the random number range.
+
+        If Instr(CORRECT$,CLUE$) then GoTo TRYAGAIN // The clue needs to be a letter that has not been guessed.
+        // If that letter is found, (using Instr) in CORRECT$, go back to the TRYAGAIN label.
+        // Note: Instr(String1$,String2$) looks for an instance of one string within another. Here we are looking for CLUE$ within CORRECT$.
+
+        If Mouse Click // Obvious?
+            If M_CLICK = False // First time of clicking. See below.
+                If Mouse Zone = 1 // Zone 1 is around the hint box. See later
+                    Ink 1: Set Font "Source Code Pro",30:Text 465,660,CLUE$ //Show the hint letter inside the box. See later.
+                    M_CLICK = True // Boolean variable to control hints. Only one click allowed
+                    Reset Zone 1  // Disable the detection zone
+                End if
+            End if
+        End If
+    Wend
+
+    MYGUESS$=Upper$(MYGUESS$) // Upper case
+
+    GUESS_CORRECT=false// Set this boolean variable to false to decide what action to take after each guess. See later.
+
+    For n = 1 to LETTERCOUNT
+        If MYGUESS$=Mid$(HIDDENWORD$,n,1)
+            GUESS_CORRECT=True:
+            MYWORD$(n) = MYGUESS$ // Replace the dash in the array with the correctly guessed character.
+            Play Audio 3 // Suitable sound sample
+        End If
+    Next
+
+    If GUESS_CORRECT = False // The guess was incorrect.
+        //Sam Play 2 // Suitable sound sample
+        Inc WRONG_GUESS_COUNT //Count the incorrect guesses.
+        If WRONG_GUESS_COUNT = 10 then GoTo JMP // The player has lost this round. Jump to the label JMP to show a suitable message.
+        // Create a string of the incorrect guesses with commas appended.
+        WRONG_GUESSES$=WRONG_GUESSES$ + MYGUESS$ +"," // See later.
+        Cls 0,700,350 to 1500,420 // Clear the area around the previous "...pancakes remaining!" text .
+        Ink 19: Set Font "Source Code Pro",30: Text 700, 400, Str$(PANCAKE_COUNT-1) + " pancakes remaining!" // Pancake feedback.
+        Bob off (PANCAKE_COUNT) // This removes from the screen the Bob that has the same number as PANCAKE_COUNT.
+        Dec PANCAKE_COUNT // Remove 1 from the PANCAKE_COUNT variable.
+    End if
+
+    // Show the incorrect guess count and the guesses used
+    If WRONG_GUESS_COUNT > 0 // Only print this message when the incorrect count exceeds zero
+        Cls 0,0,460 to 1300,520 // Clear the screen around the area used by the following text message.
+        Ink 17:Set Font "Source Code Pro",35:Text (Screen Width/2),500, Str$(WRONG_GUESS_COUNT) + " out of 10 incorrect guesses: " + WRONG_GUESSES$,"#center"
+    End if
+
+    // Hint system
+    If WRONG_GUESS_COUNT = 7 and GUESS_CORRECT = False // At 7 incorrect guesses the player can choose to see a correct letter
+        Locate 1,21: Pen 1: Print "Click the box for a letter"
+        Box 450,625 to 500,675 // Draw a box for the clue letter
+        Set Zone 1,450,625 to 500,675 // Create a detection zone for the mouse click
+    Else
+        Cls 0,1,623 to 700,677 //Before and after 7 wrong guesses the clue text and box are cleared from the screen
+    End If
+
+    // Display the current state of play
+    CORRECT$="" // Clear this string before it is created again in the following For/Next loop.
+    For n = 1 to LETTERCOUNT
+        CORRECT$=CORRECT$ + MYWORD$(n) // CORRECT$ is used for display of current success and comparison with HIDDENWORD$
+    Next
+    Cls 0,100,250 to 600, 300 // Clear the screen around the area used by the following text message.
+    Ink 1:Set Font "Source Code Pro",60:Text 100,300, CORRECT$
+
+    // CORRECT$ is used to compare with HIDDENWORD$ to decide if the game has been won
+    If CORRECT$=HIDDENWORD$ //If the word created from the array is equal to the hidden word the player has won!
+        Play Audio 1 // Sound of applause
+        Cls
+        Ink 1:Set Font "Source Code Pro",40:Text (Screen Width/2),100,"Well done! The word was '" + CORRECT$ +"'","#center"
+        PLURAL$="": If PANCAKE_COUNT > 1 then PLURAL$="s" // This is a small detail. Pluralise the message when required.
+        Ink 18:Text 650, 400, Str$(PANCAKE_COUNT) + " more pancake" + PLURAL$ + " for you!" // Pancake feedback
+        SHOWSCORE[PANCAKE_COUNT] // Procedure to deal with session total score. See below
+        Wait 3
+        Cls
+        Goto PLAYAGAIN // Play again
+    End If
+
+
+Loop
+
+// After 10 unsuccessful attempts the code jumps to here
+JMP:
+Play Audio 2
+Cls: Bob Off // clears the screen and the pancake images
+Set Font "Source Code Pro",50
+Ink 18: Text Screen Width/2,250,"The word was","#center"
+Ink 18: Text Screen Width/2,300,"'"+HIDDENWORD$+"'","#center"
+Ink 18: Text Screen Width/2,350,"Try again!","#center"
+
+//. Try again!"
+Wait 3
+Cls
+Goto PLAYAGAIN
+
+////////////////////// Procedure recap ////////////////////////////////
+// In a previous lesson you saw how Procedures can be used as        //
+// modular building blocks, each containing their own computer code. //
+///////////////////////////////////////////////////////////////////////
+
+///////////////////////////////
+////// Scoring Procedure //////
+///////////////////////////////
+
+Procedure SHOWSCORE[CURRENTSCORE]
+    // Show small pancakes arranged in stacks of 10 to represent the current total score.
+
+   Sam Stop // Halts previous sample, (from correct guess)
+   Play Audio 6
+
+    TOTAL_SCORE=TOTAL_SCORE+CURRENTSCORE //Total the score.
+    // (Note: TOTAL_SCORE has to be made Globally available to be remembered when the program returns to this proc)
+
+    STACKS=TOTAL_SCORE/10 //Divide TOTAL_SCORE by ten, (ten pancakes per stack).
+
+    REMAINDER=TOTAL_SCORE-(STACKS*10) // Get remainder after dividing by 10
+
+    Locate 1,18:Print Str$(TOTAL_SCORE) + " Pancakes so far!"// Message
+
+    Cls 0,0,600 to 1000,750 // Remove previous message and images
+
+    // Set initial coords
+    X=50:Y=675
+
+    If STACKS > 0 // This loop will only happen if TOTAL_SCORE is more than 10, hence STACKS is greater than zero
+        For ST = 1 to STACKS
+            For B = 1 to 10 // 10 images
+                Y=Y-5 // Reduce vertical position
+                Paste Bob X,Y,3 //Place images
+            Next
+            Y=675 // Bottom line
+            X=X+50 //Start next pile to the right
+        Next
+    End if
+
+    If REMAINDER > 0 // Only do this if there is a remainder
+        Y=675 // Reset vert pos
+        For RE = 1 to REMAINDER
+            Y=Y-5
+            Paste Bob X,Y,3 //Place bobs
+        Next
+    End if
+
+End proc

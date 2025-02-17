@@ -1,0 +1,22 @@
+<i>Ror.w</i>
+<b>Ror.w</b> xxxxxxx
+=
+The ROL command is invaluable as a rapid method of dividing a positive number by a power of two, like this:
+@code
+B=1
+Ror.l 2,B
+Print B
+@code
+Here is an example routine:
+@code
+Curs Off : Locate 0,20 : Centre "Press a key to ROL the number"
+Locate 0,0 : Print "Binary version"
+Locate 0,4 : Print "Decimal version"
+B=65536 : Rem Set initial value
+Do
+Locate 0,2: Print Bin$(B,32) : Rem Display number in binary
+Locate 0,6: Print B;" "; : Rem Nine spaces
+Wait Key
+Ror.l 1,B : Rem Try ROR.L and ROL.B too
+Loop
+

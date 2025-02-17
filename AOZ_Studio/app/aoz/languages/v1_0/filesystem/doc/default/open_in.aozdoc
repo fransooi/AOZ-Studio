@@ -1,0 +1,11 @@
+<i>Open In</i>
+<b>Open In</b> xxxxxxx
+=
+Use this command to prepare a file so that data may be read from it. If the filename does not already exist, AOZ Studio will report a "File not found" error.
+
+Example:
+@code
+Open In 1,"my_file.txt"
+@code
+
+

@@ -1,0 +1,30 @@
+<i>Dialog Update</i>
+<b>Dialog Update</b> xxxxxxx
+=
+This instruction enables AOZ Studio programs to force the Interface to re-draw a zone on the screen. It is especially useful for selectors, which often need to interact directly with the main program. These can include file selectors that need to read a new search path and update the file list, as well as EDit routines that must load a selection window with a new value entered by the user
+
+The DIALOG UPDATE parameters are given in the following order: first the channel number of an active dialogue
+channel to be updated. This is followed by the number of the zone to be affected. There are also three parameters
+held inside their own set of square brackets, and the effect of these parameters varies, depending on the type of the
+zone. Parameter I affects any of the different zone types, whereas Parameters 2 and 3 affect active lists and sliders
+only. Here is a table of the possibilities
+@code
+Parameter 1
+Button 		Enters a new status position
+Active 		List Sets the number of the first string displayed
+Slider 		Moves the slider
+Digit 		Replaces the existing number zone
+Edit 		Inserts a new string into the edit zone
+@code
+@code
+Parameter 2
+Active List 	Changes the currently selected string
+Slider 		Changes the size of the slider window
+@code
+@code
+Parameter 3
+Active List 	Chooses the last element of the array that can be selected. Normally this parameter is equal to the size of the array, but it can be restricted for certain applications.
+Slider 		Changes the "total" parameter
+@code
+
+

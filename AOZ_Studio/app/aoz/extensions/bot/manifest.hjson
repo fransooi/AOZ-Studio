@@ -1,0 +1,79 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Instructions Module Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"				// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "The Bot Extension"
+		author: "By Francois Lionet"
+		version: "Version 1.00"
+		date: "08/09/2022"
+		copyright: "(c) AOZ Studio 2019-2022"
+		start: "bot.aoz"
+		name: "bot"
+	}
+	fonts:
+	{
+		listFonts: "PC"	
+		amiga:
+		[
+		]
+		google:
+		[
+			"Roboto"
+		]
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+				"illegal_parameter: Illegal parameter (%1)",				
+				"bad_magic: Illegal connection code (%1)",				
+				"connection_not_open: Connection not opened",				
+				"api_already_open: API already open",				
+				"api_not_opened: API not opened",				
+				"api_not_defined: API not defined",				
+				"unknown_command: Unknown command",				
+				"server_crash: Companion server crash",				
+				"cyberpi_not_connected: Bot not connected",				
+				"mbot_not_connected: Bot not connected",				
+				"bot_display_already_exists: Bot display already exists"
+			]
+			fr:
+			[
+				"illegal_parameter: Parametre illegal (%1)",				
+				"bad_magic: Parametre de connection illegal (%1)",				
+				"connection_not_open: Connection non ouverte",				
+				"api_already_open: API deja ouverte",				
+				"api_not_defined: API non definie",				
+				"api_not_opened: L'API n'est pas ouverte (%1)",				
+				"unknown_command: Commande inconnue",				
+				"server_crash: Crash Companion server",				
+				"cyberpi_not_connected: Bot non connecte",				
+				"mbot_not_connected: MBot non connecte",				
+				"bot_display_already_exists: Cet affichage existe deja"
+			]
+		}
+	}
+}
+

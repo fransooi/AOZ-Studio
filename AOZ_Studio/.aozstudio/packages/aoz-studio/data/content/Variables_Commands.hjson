@@ -1,0 +1,51 @@
+{
+    variables_commands:
+    { 
+        name: "Variables"
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "true": //Same txt as False
+            [
+                In all the conditional operations such as IF ... THEN and REPEAT ... UNTIL, the value of -1 is used to represent
+TRUE, and the value of 0 is used to represent FALSE. A value of either -1 (True) or 0 (False) is produced every
+time a test is made to satisfy a condition.
+
+            ]
+            "false": //Same txt as True
+            [
+                In all the conditional operations such as IF ... THEN and REPEAT ... UNTIL, the value of -1 is used to represent
+TRUE, and the value of 0 is used to represent FALSE. A value of either -1 (True) or 0 (False) is produced every
+time a test is made to satisfy a condition.
+            ]
+            "is_defined": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "array":
+            [
+                The ARRAY function returns the address in memory of the first item in the specified list$ array. This string can
+contain any data at all, but if the array is to be accessed from an Interface program, each element in the array must
+be of exactly the same length.
+""
+After it has been returned, the address may now be installed into an Interface program using the VDIALOG
+function, as follows:
+                '''
+                ~~~                
+		   Vdialog(1,0)=Array(V$(0)) : Rem Loads 0 VA (channel 1) with the address of V$(0)
+                ~~~
+                '''
+Once installed like that, the address can be accessed from an Interface program using the ArrayRead function.
+            ]
+           
+        }
+    }
+}

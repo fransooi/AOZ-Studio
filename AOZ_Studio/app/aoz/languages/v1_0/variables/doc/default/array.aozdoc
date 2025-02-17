@@ -1,0 +1,5 @@
+<i>Not implement in AOZ Studio</i>
+<b></b>
+=
+The ARRAY function returns the address in memory of the first item in the specified list$ array. This string can contain any data at all, but if the array is to be accessed from an Interface program, each element in the array must be of exactly the same length.
+

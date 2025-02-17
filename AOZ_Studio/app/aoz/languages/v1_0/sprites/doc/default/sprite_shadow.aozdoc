@@ -1,0 +1,33 @@
+<i>Sprite Shadow</i>
+<b>Sprite Shadow</b> xxxxxxx
+=
+his instruction allows you to add a shadow to any sprite image. With a bit of imagination, shadow can be used to create other effects, such as add a glow to an image. See second example below.
+Note, if the offsetX and offsetY are both zero, no shadow will be displayed.
+
+The next example displays a series of images on the screen and applies a semi transparent shadow to them...
+@code
+Curs Off : Cls 6 									// Set up screen, blue background
+For f=1 to 10
+Sprite f,f*170,450-f*5, "ship.png" 				// Display sprite at a new position
+Sprite Shadow f,10+f*2,40+f*5,10+f*2,$000000aa		// Define shadow with increasing offset and shadow blur.
+Wait 0.3
+Next f
+End
+@code
+This example show how Sprite Shadow can be used to add a 'Glow' to a Sprite, and also how to turn off shadows.
+@code
+Curs Off : Cls 0							// Set up screen, black background
+For f=1 to 10
+Sprite f,f*170,450, "ship.png" 			// Display sprite at a new position
+Sprite Shadow f,0,0.01,f*4,$00ffffff		// Define shadow 'glow' with increasing shadow blur, which increases the 'glow'.
+Wait 0.2
+Next f
+Print "Press Any Key to Turn Off Shadows"	// Display a message
+Wait Key									// Wait for key press
+For f=1 to 10
+Sprite Shadow f,0,0						// Set shadow offsets to zero
+Wait 0.5
+Next f
+End
+@code
+

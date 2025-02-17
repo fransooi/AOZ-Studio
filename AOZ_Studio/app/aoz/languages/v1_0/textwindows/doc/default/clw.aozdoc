@@ -1,0 +1,11 @@
+<i>Clw</i>
+<b>Clw</b> xxxxxxx
+=
+This simple command erases the contents of the current window and replaces it with a block of the current PAPER
+colour. Like this:
+@code
+Cls: Paper 4 : Wind Open 1,1,1,12,5,1
+Window 1: Print "Clear Off" : Wait 75
+Paper 9 : Clw
+@code
+

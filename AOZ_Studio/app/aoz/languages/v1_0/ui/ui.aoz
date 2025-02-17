@@ -1,0 +1,3755 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The UI Instructions
+ * By Phil Bell July 2021
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author PB
+ * @date first pushed on 04/07/2020
+ */
+#noWarning:"instruction_not_implemented"
+#need_css_file:"css/ui/global.css"
+#need_css_file:"bootstrap/bootstrap.min.css"
+#need_javascript_file:"bootstrap/bootstrap.bundle.min.js"
+{
+    this.aoz.ui = this;
+	this.elements = [];
+
+	// Used to add an offset to the position of all components
+	this.windowOffsetX = 0
+	this.windowOffsetY = 0
+
+	var self = this;
+
+	window.addEventListener( 'resize', function(event) {
+		self.resize( event );
+	}, false );
+
+	this.resize = function(event) {
+		if( this.elements != undefined && this.elements.length > 0 ) {
+
+			var elm = document.getElementById( 'AOZCanvas' );
+			var cwidth, cheight
+
+			// Use the AOZCanvas parent client dimensions if parent not document.body
+			if (elm.parentElement === document.body) {
+				cwidth = window.innerWidth;
+				cheight = window.innerHeight;
+			} else {
+				cwidth = elm.parentElement.clientWidth;
+				cheight = elm.parentElement.clientHeight;
+			}
+
+			var wFits = cwidth / this.aoz.manifest.display.width;
+			var hFits = cheight / this.aoz.manifest.display.height;
+			var minFits = wFits > hFits ? hFits : wFits;
+			var width = this.aoz.manifest.display.width * minFits;
+			var height = this.aoz.manifest.display.height * minFits;
+			var x, y, elWidth, elHeight, elPadding, elFontSize, radio, slider;
+			for (var i = 0; i < this.elements.length; i++) {
+
+				elWidth = this.elements[i].getAttribute('data-width');
+				elHeight = this.elements[i].getAttribute('data-height');
+				x = parseInt( this.elements[i].getAttribute('data-x') );
+				y = parseInt( this.elements[i].getAttribute('data-y') );
+				elFontSize = this.elements[i].getAttribute('data-font-size');
+
+				var screen, screenIndex, context;
+				var renderingContext = this.elements[ i ].getAttribute( 'data-renderingContext' );
+				var rectangle = { x: 0, y: 0, width: 100, height: 100 };
+				if ( renderingContext == 'debugger' )
+				{
+					context = this.aoz.ext_debugging.renderingContext;
+					screen  = this.aoz.ext_debugging.screen;
+				}
+				else if ( renderingContext == 'aoz' )
+				{
+					var screenIndex = this.elements[i].getAttribute( 'data-renderingScreen' );
+					if ( screenIndex )
+					{
+						if ( screenIndex.indexOf( '__number__' ) == 0 )
+							screenIndex = parseInt( screenIndex.substring( 10 ) );
+						screen = this.aoz.getScreen( screenIndex, null );
+					}
+					else					
+						screen = this.aoz.currentScreen;
+					if ( this.aoz.ext_debugging && this.aoz.ext_debugging.isDebuggerUI( this.elements[i] ) )
+					{
+						context = this.aoz.ext_debugging.winApplication.renderingContext;
+						rectangle = this.aoz.ext_debugging.getDebuggerUIRectangle( this.elements[i] );
+					}
+					else
+					context = this.aoz.renderingContext;
+				}
+				if ( context )
+				{
+					var info = context.getDocumentCoordPercentages( x, y, screen );
+					this.elements[ i ].style.top = info.y * rectangle.height / 100 + rectangle.y + '%';
+					this.elements[ i ].style.left = info.x * rectangle.width / 100 + rectangle.x + '%';
+					info = context.getDocumentSizePercentages( parseInt( elWidth ), 0, screen );
+					this.elements[ i ].style.width = Math.floor( ( info.width * context.width / 100 ) * rectangle.width / 100 ) + 'px';
+					if ( elHeight )
+					{
+						info = context.getDocumentSizePercentages( 0, parseInt( elHeight ), screen );
+						this.elements[ i ].style.height = ( info.height * context.height / 100 ) * rectangle.height / 100 + 'px';
+					}
+					if ( elFontSize )
+					{
+						elFontSize = parseInt( elFontSize )
+						var info = context.getDocumentSizePercentages( 0, elFontSize, screen );
+						var size = ( info.height * context.height / 100 ) * rectangle.height / 100;
+						this.elements[ i ].style.fontSize = Math.floor( size ) + 'px';
+					}
+					elPadding = this.elements[ i ].getAttribute( 'data-padding' );
+					if ( elPadding ) 
+					{
+						info = context.getDocumentSizePercentages( parseInt( elPadding ), 0, screen );
+						this.elements[i].style.padding = ( info.width * context.width / 100 ) * rectangle.width / 100 + 'px';
+					}
+				}
+				else 
+				{
+					x += (width / this.aoz.manifest.display.width ) + (cwidth - width) / 2;
+					y += (height / this.aoz.manifest.display.height ) + (cheight - height) / 2;
+
+				// Apply offset to position
+				y += this.windowOffsetY;
+				x += this.windowOffsetX;
+					this.elements[i].style.top = y + 'px';
+					this.elements[i].style.left = x + 'px';
+
+					if ( elWidth ) {
+						this.elements[i].style.width = parseInt( elWidth ) * minFits + 'px';
+					}
+					if ( elHeight ) {
+						this.elements[i].style.height = parseInt( elHeight ) * minFits + 'px';
+					}
+					if (elFontSize) {
+						this.elements[i].style.fontSize = parseInt(elFontSize) * minFits + 'px';
+				}
+				elPadding = this.elements[i].getAttribute('data-padding');
+				if (elPadding) {
+					this.elements[i].style.padding = parseInt(elPadding) * minFits + 'px';
+				}
+				}
+
+
+				// Check for radio
+				radio = this.elements[i].getAttribute('data-radio');
+				if (radio) {
+					var opts = this.elements[i].querySelectorAll('.radio__container');
+					if (opts) {
+						for(var o = 0; o < opts.length; o++) {
+							opts[o].style.setProperty("--margin-bottom", 8 * minFits + 'px');
+							opts[o].style.setProperty("--width", parseInt(elFontSize)  * minFits + 'px');
+							opts[o].style.setProperty("--height", parseInt(elFontSize)  * minFits + 'px');
+						}
+					}
+				}
+
+				// Check for slider
+				slider = this.elements[i].getAttribute('data-slider');
+				if (slider) {
+					this.elements[i].style.setProperty("--width", 40  * minFits + 'px');
+					this.elements[i].style.setProperty("--height", 40  * minFits + 'px');
+					this.elements[i].style.setProperty("--margin-top", -13 * minFits + 'px');
+					this.elements[i].style.setProperty("--track-height", 15 * minFits + 'px');
+				}
+			}
+		}
+	}
+
+	this.addElement = function( args ) {
+
+		switch ( args.type )
+		{
+			case 'button':
+				return this.addButton( args );
+			case 'textArea':
+				return this.addTextArea( args );
+			case 'popup':
+				return this.showPopup( args );
+			case 'progress':
+				return this.addProgress( args );
+			case 'radio':
+				return this.addRadio( args );
+			case 'textBlock':
+				return this.addTextBlock( args );
+			case 'colorPicker':
+				return this.addColourPicker( args );
+			case 'slider':
+				return this.addSlider( args );
+			case 'select':
+				return this.addSelect( args );
+			case 'checkBox':
+				return this.addCheckBox( args );
+			case 'textBox':
+				return this.addTextBox( args );
+			case 'iFrame':
+				return this.addIFrame( args );
+			case 'image':
+				return this.addImage( args );
+		}
+		return null;
+	}
+	this.setPosition = function( args )
+	{
+		if ( typeof args.id != 'undefined' ) {
+			var el =  document.getElementById(args.id);
+			if (el) {
+				el.style.top = args.y + 'px';
+				el.style.left = args.x + 'px';
+				el.setAttribute('data-x', parseInt(args.x));
+				el.setAttribute('data-y', parseInt(args.y));
+			}
+		}
+	}
+	this.getProperty = function (id, propertyName) {
+		if (id) {
+			var el =  document.getElementById(id);
+			if (el) {
+				switch (propertyName.toLowerCase()) {
+					case 'x':
+						return parseInt(el.getAttribute('data-x'));
+						break;
+					case 'y':
+						return parseInt(el.getAttribute('data-y'));
+						break;
+					case 'width':
+						if (el.getAttribute('data-width')) {
+							return parseInt(el.getAttribute('data-width'));
+						} else {
+							return 0;
+						}
+						break;
+					case 'height':
+						if (el.getAttribute('data-height')) {
+							return parseInt(el.getAttribute('data-height'));
+						} else {
+							return 0;
+						}
+						break;
+					case 'fontsize':
+						if (el.getAttribute('data-font-size')) {
+							return parseInt(el.getAttribute('data-font-size'));
+						} else {
+							return 0;
+						}
+						break;
+					case 'padding':
+						if (el.getAttribute('data-padding')) {
+							return parseInt(el.getAttribute('data-padding'));
+						} else {
+							return 0;
+						}
+						break;
+					case 'rows':
+						if (el.getAttribute('rows')) {
+							return parseInt(el.getAttribute('rows'));
+						} else {
+							return 0;
+						}
+						break;
+					case 'min':
+						var sl = el.getElementsByTagName('input');
+						if (sl && sl.length > 0) {
+							if (sl[0].getAttribute('min')) {
+								return parseInt(sl[0].getAttribute('min'));
+							}
+						} else {
+							if (el.getAttribute('min')) {
+								return parseInt(el.getAttribute('min'));
+							} else {
+								return 0;
+							}
+						}
+						break;
+					case 'max':
+						var sl = el.getElementsByTagName('input');
+						if (sl && sl.length > 0) {
+							if (sl[0].getAttribute('max')) {
+								return parseInt(sl[0].getAttribute('max'));
+							}
+						} else {
+							if (el.getAttribute('max')) {
+								return parseInt(el.getAttribute('max'));
+							} else {
+								return 100;
+							}
+						}
+						break;
+					case 'step':
+						var sl = el.getElementsByTagName('input');
+						if (sl && sl.length > 0) {
+							if (sl[0].getAttribute('step')) {
+								return parseInt(sl[0].getAttribute('step'));
+							}
+						} else {
+							if (el.getAttribute('step')) {
+								return parseInt(el.getAttribute('step'));
+							} else {
+								return 1;
+							}
+						}
+						break;
+					case 'content':
+						var content = el.getAttribute('content');
+						if (content) {
+							return content;
+						} else {
+							// Check for button with empty content
+							var type = el.getAttribute('type');
+							if (type && type == 'button') {
+								return '';
+							} else {
+								return el.innerHTML;
+							}
+						}
+						break;
+					case 'fontname':
+						// Remove double quotes
+						var s = el.style.fontFamily.replace(/^"(.*)"$/, '$1');
+						return s;
+						break;
+					case 'placeholder':
+						if (el.getAttribute('placeHolder')) {
+							return el.getAttribute('placeHolder');
+						} else {
+							return '';
+						}
+						break;
+					case 'tooltip':
+						if (el.getAttribute('data-tooltip')) {
+							return el.getAttribute('data-tooltip');
+						} else {
+							return '';
+						}
+						break;
+					case 'tooltipplacement':
+						if (el.getAttribute('data-tooltip-placement')) {
+							return el.getAttribute('data-tooltip-placement');
+						} else {
+							return '';
+						}
+						break;
+					case 'iconclass':
+						if (el.getAttribute('data-icon-class')) {
+							return el.getAttribute('data-icon-class');
+						} else {
+							return '';
+						}
+						break;
+					case 'class':
+						if (el.getAttribute('data-class')) {
+							return el.getAttribute('data-class');
+						} else {
+							return '';
+						}
+						break;
+					case 'group':
+						if (el.getAttribute('data-group')) {
+							return el.getAttribute('data-group');
+						} else {
+							return '';
+						}
+						break;
+					case 'type':
+						if (el.getAttribute('type')) {
+							return el.getAttribute('type');
+						} else {
+							return '';
+						}
+						break;
+					case 'onclick':
+						if (el.getAttribute('data-onclick')) {
+							return el.getAttribute('data-onclick');
+						} else {
+							return '';
+						}
+						break;
+					case 'onchange':
+						if (el.getAttribute('data-onchange')) {
+							return el.getAttribute('data-onchange');
+						} else {
+							return '';
+						}
+						break;
+					case 'items':
+						if (el.getAttribute('data-items')) {
+							return el.getAttribute('data-items');
+						} else {
+							return '';
+						}
+						break;
+					case 'value':
+						return this.getValue({ id: id });
+						break;
+					case 'src':
+						var elf = el.getElementsByTagName('iframe');
+						if (elf && elf.length > 0) {
+							if (elf[0].getAttribute('src')) {
+								return elf[0].getAttribute('src');
+							} else {
+								return '';
+							}
+						} else {
+							if( el.hasAttribute( 'data-src' ) && el.hasAttribute( 'src' ) ){
+								return el.getAttribute( 'src' );
+							}
+							return '';
+						}
+				}
+			}
+		}
+	}
+
+	this.updateId = function(id, newId) {
+
+		if (id == newId) {
+			return;
+		}
+
+		// Check if newId already exists
+		var el = document.getElementById(newId);
+		if (el) {
+			throw 'ui_updateId_newId_already_exists';
+			return
+		}
+
+		// Update the component id
+		el = document.getElementById(id);
+		el.id = newId;
+
+		// Update the icon id
+		var icon = el.getElementsByTagName('i');
+		if (icon.length > 0) {
+			icon[0].id = newId + '_icon';
+		}
+
+		// Update radio id
+		if (el.getAttribute('data-radio')) {
+			var children = el.getElementsByTagName('input');
+
+			for(var i = 0; i< children.length;i++)
+			{
+				children[i].id = newId + '_option_' + children[i].value;
+				children[i].setAttribute('name', newId);
+			}
+		}
+	}
+
+	this.makeRandom = function(lengthOfCode) {
+	    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	    let text = '';
+	    for (var i = 0; i < lengthOfCode; i++) {
+	      text += possible.charAt(Math.floor(Math.random() * possible.length));
+	    }
+	    return text;
+  	}
+
+	// Internal function - does not attach event listeners
+	// Used in the UI Designer
+	this.clone = function(id, newId) {
+		if (id) {
+			var el =  document.getElementById(id);
+			if (el) {
+				var copy = el.cloneNode(true);
+
+				copy.id = newId;
+				copy.setAttribute('data-x', parseInt(el.getAttribute('data-x')) + 20);
+				copy.setAttribute('data-y', parseInt(el.getAttribute('data-y')) + 20);
+
+				// Update the icon id
+				var icon = copy.getElementsByTagName('i');
+				if (icon.length > 0) {
+					icon[0].id = newId + '_icon';
+				}
+
+				if (copy.getAttribute('data-bs-toggle')) {
+					var tooltip = new bootstrap.Tooltip(copy);
+				}
+
+				// Update radio id
+				if (copy.getAttribute('data-radio')) {
+					var children = copy.getElementsByTagName('input');
+
+					for(var i = 0; i< children.length;i++)
+					{
+						children[i].id = newId + '_option_' + children[i].value;
+						children[i].setAttribute('name', newId);
+					}
+				}
+
+				if (el.value && el.value != '') {
+					copy.value = el.value;
+				}
+
+				document.body.appendChild(copy);
+				this.elements.push(copy);
+				this.resize();
+			}
+		}
+	}
+
+	this.delete = function(args) {
+
+		var index, self = this;
+
+		// If we have an id param then remove it
+		if (args.id) {
+			this.removeElement(args.id);
+		}
+
+		var ids = [];
+		for (i = 0; i < this.elements.length; i++) {
+			ids.push( { id: this.elements[i].id, group: this.elements[i].getAttribute('data-group') });
+		}
+
+		// Only remove elements for the provided group
+		if (args.group)	{
+			for (i = 0; i < ids.length; i++) {
+				if (ids[i].group == args.group) {
+					this.removeElement(ids[i].id);
+				}
+			}
+		}
+
+		// Remove all elements if 'id' and 'group' not provided
+		if (typeof args.id == 'undefined' && typeof args.group == 'undefined') {
+			for (i = 0; i < ids.length; i++) {
+				this.removeElement(ids[i].id);
+			}
+
+			this.elements = [];
+		}
+	}
+
+	this.setFocus = function( id )
+	{
+		if( typeof id == 'undefined' )
+		{
+			throw 'ui_set_focus_argument_id_missing';
+		}
+
+		var el = document.getElementById(id);
+		if (el) {
+			el.focus();
+		}
+	}
+
+	this.removeElement = function(id) {
+		if (id) {
+			var el =  document.getElementById(id);
+			if (el) {
+				// If a tooltip is visible then remove it
+				var tooltip = el.getAttribute('aria-describedby');
+				if (tooltip) {
+					tooltip = document.getElementById(tooltip);
+					if(tooltip) {
+						tooltip.remove();
+					}
+				}
+
+				// cloneNode removes all event handlers
+				el.parentNode.replaceChild(el.cloneNode(true), el);
+				el = document.getElementById(id);
+				el.parentNode.removeChild(el);
+
+				// Update this.elements array
+				var index = this.elements.findIndex(d => d.id === id);
+
+				if (index >= 0) {
+					this.elements.splice(index, 1);
+				}
+			}
+		}
+	}
+
+	this.getValue = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_get_value_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_get_value_argument_id_missing';
+		}
+
+		if (args.id && args.id != '') {
+			var el =  document.getElementById(args.id);
+
+			var radio = el.getAttribute('data-radio');
+			if (radio) {
+				var opts = el.getElementsByTagName('input');
+				for(var i = 0; i < opts.length; i++) {
+					if (opts[i].checked) {
+						return opts[i].getAttribute('value');
+					}
+				}
+				return '';
+			} else {
+				var slider = el.getAttribute('data-slider');
+
+				if (slider) {
+					var sl = el.getElementsByTagName('input');
+					if (sl && sl.length > 0) {
+						return sl[0].value;
+					} else {
+						return 0;
+					}
+				} else {
+					var progress = el.getAttribute('data-progress');
+
+					if (progress) {
+						return el.getAttribute('data-pr-value');
+					} else {
+						var type = el.getAttribute('type');
+
+						if (type == 'checkbox') {
+							return el.checked.toString();
+						} else {
+
+							var content = el.getAttribute('data-content');
+
+							if (content) {
+								return el.innerHTML;
+							} else {
+								if (el && el.value != undefined) {
+									return el.value;
+								} else {
+									return el.innerHTML;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	this.setAttribute = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+			throw 'ui_set_attribute_arguments_missing';
+		if( typeof args.id == 'undefined' )
+			throw 'ui_set_attribute_arguments_missing';
+		if( typeof args.prop == 'undefined' )
+			throw 'ui_set_attribute_arguments_missing';
+		if( typeof args.value == 'undefined' )
+			throw 'ui_set_attribute_arguments_missing';
+		if (args.id && args.id != '') {
+			var el =  document.getElementById(args.id);
+			el.setAttribute(args.prop, args.value);
+		}
+	};
+
+	this.setVisible = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+			throw 'ui_set_attribute_arguments_missing';
+
+		if (args.id && args.id != '') {
+			var el =  document.getElementById(args.id);
+			if (el) {
+				if (!args.visible) {
+					// If a tooltip is visible then hide it
+					this.hideTooltip(args);
+				}
+
+				el.style.display = args.visible ? 'block' : 'none';
+			}
+		}
+
+		if (args.group) {
+			for (i = 0; i < this.elements.length; i++) {
+				var group = this.elements[i].getAttribute('data-group');
+
+				if (group && group === args.group) {
+					var el =  document.getElementById(this.elements[i].id);
+					if (el) {
+						if (!args.visible) {
+							// If a tooltip is visible then hide it
+							this.hideTooltip({ id: this.elements[i].id });
+						}
+
+						el.style.display = args.visible ? 'block' : 'none';
+					}
+				}
+			}
+		}
+
+		if (!args.id && !args.group) {
+			for (i = 0; i < this.elements.length; i++) {
+				var el =  document.getElementById(this.elements[i].id);
+				if (el) {
+					if (!args.visible) {
+						// If a tooltip is visible then hide it
+						this.hideTooltip({ id: this.elements[i].id });
+					}
+
+					el.style.display = args.visible ? 'block' : 'none';
+				}
+			}
+		}
+	};
+
+	this.setEnable = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+			throw 'ui_set_attribute_arguments_missing';
+		if( typeof args.id == 'undefined' )
+			throw 'ui_set_attribute_id_arguments_missing';
+		if (args.id && args.id != '') {
+			var el =  document.getElementById(args.id);
+
+			if (!args.value) {
+				el.setAttribute( 'disabled', '' );
+				el.style.pointerEvents = 'none';
+			}
+			else
+			{
+				if( el.hasAttribute( 'disabled' ) )
+				{
+					el.removeAttribute( 'disabled' );
+				}
+				el.style.pointerEvents = 'auto';
+			}
+
+		}
+	};
+
+	this.hideTooltip = function (args) {
+
+		if( args == undefined || args == null || args.length == 0)
+			throw 'ui_hidetooltip_arguments_missing';
+		if( typeof args.id == 'undefined' )
+			throw 'ui_hidetooltip_id_arguments_missing';
+
+		if (args.id && args.id != '') {
+			var el =  document.getElementById(args.id);
+			if (el) {
+				var tooltip =  bootstrap.Tooltip.getInstance(el);
+				if (tooltip) {
+					tooltip.hide();
+				}
+			}
+		}
+	}
+
+	this.setValue = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_set_value_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_set_value_argument_id_missing';
+		}
+
+		if (args.id && args.id != '') {
+			var el =  document.getElementById(args.id);
+
+			var radio = el.getAttribute('data-radio');
+			if (radio) {
+				var children = el.getElementsByTagName('input');
+
+				for(var i = 0; i< children.length;i++)
+				{
+					if (children[i].getAttribute('id') == el.id + '_option_' + args.value)
+					{
+						children[i].checked = true;
+					}
+				}
+			} else {
+				var slider = el.getAttribute('data-slider');
+
+				if (slider) {
+					var sl = el.getElementsByTagName('input');
+					if (sl && sl.length > 0) {
+						sl[0].value = parseInt(args.value);
+					}
+				} else {
+					var progress = el.getAttribute('data-progress');
+
+					if (progress) {
+						var pr = el.querySelectorAll('.progress-bar')[0];
+						if (pr) {
+							pr.style = 'width: ' + args.value + '%';
+							el.setAttribute('data-pr-value', args.value);
+						}
+					} else {
+						var type = el.getAttribute('type');
+
+						if (type == 'checkbox') {
+							el.checked = false;
+							if (args.value.toLowerCase() == 'true') {
+								el.checked = true;
+							}
+						} else {
+							if (type == 'number') {
+								el.value = parseInt(args.value);
+							} else {
+
+								var content = el.getAttribute('data-content');
+
+								if (content) {
+									el.innerHTML = args.value;
+								} else {
+									if (el && el.value != undefined) {
+										el.value = args.value
+									} else {
+										el.innerHTML = args.value;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	this.setRenderingContext = function( args, element )
+	{
+		args.renderingContext = typeof args.renderingContext == 'undefined' ? 'aoz' : args.renderingContext;
+		var index = args.renderingScreen; 
+		if ( typeof index == 'undefined' )
+		{
+			index = this.aoz.currentScreen.index;
+			if ( this.aoz.currentScreen.indexIsNumber )
+				index = '__number__' + index;
+		}
+		element.setAttribute( 'data-renderingContext', args.renderingContext );
+		element.setAttribute( 'data-renderingScreen', index );
+	}
+
+	this.addButton = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_button_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_button_argument_id_missing';
+		}
+
+		// Try get existing element
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('button');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-group', '');
+			el.setAttribute('data-font-size', 20);
+			el.setAttribute('data-padding', 5);
+			el.setAttribute('type', 'button');
+			el.setAttribute('content', 'button');
+			el.textContent = 'button';
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.height != 'undefined' && parseInt(el.getAttribute('data-height')) != args.height) {
+			el.setAttribute('data-height', args.height);
+		}
+
+		if (typeof args.fontSize != 'undefined' && parseInt(el.getAttribute('data-font-size')) != args.fontSize) {
+			el.setAttribute('data-font-size', args.fontSize);
+		}
+
+		if (typeof args.padding != 'undefined' && parseInt(el.getAttribute('data-padding')) != args.padding) {
+			el.setAttribute('data-padding', args.padding);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('data-class', args.class);
+			el.setAttribute('class', args.class);
+		}
+
+		if (typeof args.fontName != 'undefined' && el.style.fontFamily != args.fontName) {
+			el.style.fontFamily = args.fontName;
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.content != 'undefined' && el.getAttribute('content') != args.content) {
+			el.innerHTML = ''
+			el.setAttribute('content', args.content);
+			el.textContent = args.content;
+
+			// Re add the icon
+			if (el.getAttribute('data-icon-class')) {
+				var iel = document.createElement('i');
+				iel.id = args.id + '_icon';
+				iel.setAttribute('aria-hidden', 'true');
+				if (el.textContent != '') {
+					iel.setAttribute('style', 'margin-right: 5px');
+				}
+				iel.setAttribute('class', el.getAttribute('data-icon-class'));
+				el.prepend(iel);
+			}
+		}
+
+		if (typeof args.iconClass != 'undefined') {
+			// Check for existing icon element
+			var children = el.getElementsByTagName('i');
+
+			var iel;
+			for(var i = 0; i< children.length;i++)
+			{
+				if (children[i].getAttribute('id') == args.id + '_icon')
+				{
+				 	iel = children[i];
+				}
+			}
+
+			if (!iel) {
+				iel = document.createElement('i');
+				iel.id = args.id + '_icon';
+				iel.setAttribute('aria-hidden', 'true');
+				if (el.textContent != '') {
+					iel.setAttribute('style', 'margin-right: 5px');
+				}
+
+				el.prepend(iel);
+			}
+
+			if (args.iconClass == '') {
+				el.removeAttribute('data-icon-class');
+				iel.remove();
+			} else {
+				iel.setAttribute('class', args.iconClass);
+				el.setAttribute('data-icon-class', args.iconClass);
+			}
+		}
+
+		if (typeof args.tooltip != 'undefined') {
+
+			if (args.tooltip == '') {
+				var tooltip = bootstrap.Tooltip.getInstance(el);
+				if (tooltip) tooltip.dispose();
+				el.removeAttribute('data-tooltip');
+			} else {
+				el.setAttribute('data-bs-toggle', 'tooltip');
+				el.setAttribute('title', args.tooltip);
+				el.setAttribute('data-tooltip', args.tooltip);
+
+				if (!el.getAttribute('data-bs-placement')) {
+					el.setAttribute('data-bs-placement', 'auto');
+					el.setAttribute('data-tooltip-placement', 'auto');
+				}
+				var tooltip = new bootstrap.Tooltip(el);
+			}
+
+		}
+
+		if (typeof args.tooltipPlacement != 'undefined') {
+			el.setAttribute('data-bs-placement', args.tooltipPlacement);
+			el.setAttribute('data-tooltip-placement', args.tooltipPlacement);
+			var tooltip = new bootstrap.Tooltip(el, {placement: args.tooltipPlacement});
+		}
+
+		if (typeof args.onClick != 'undefined' && el.getAttribute('data-onclick') != args.onClick) {
+			// Remove the previous event handler
+			if (el.getAttribute('data-onclick') != null) {
+				el.removeEventListener("click", el.handler, false);
+			}
+
+			el.handler = function (event) {
+				event.preventDefault();
+				aoz.runProcedure( args.onClick,
+					{
+						"ID$": el.id
+					}
+				);
+			}
+
+			el.setAttribute('data-onclick', args.onClick);
+			el.addEventListener( 'click', el.handler, false);
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.addTextBox = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_textbox_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_textbox_argument_id_missing';
+		}
+
+		var handler = function (event) {
+			event.preventDefault();
+
+			if (this.getAttribute('type') && (this.getAttribute('type').toLowerCase() == 'number' || this.getAttribute('type').toLowerCase() == 'range')) {
+				if (this.getAttribute('min')) {
+					var min = parseInt(this.getAttribute('min'));
+					if (parseInt(this.value) < min) {
+						this.value = min;
+					}
+				}
+
+				if (this.getAttribute('max')) {
+					var max = parseInt(this.getAttribute('max'));
+					if (parseInt(this.value) > max) {
+						this.value = max;
+					}
+				}
+			}
+
+			var onChange = this.getAttribute('data-onchange');
+			if (onChange) {
+				aoz.runProcedure( onChange,
+					{
+						"ID$": this.id,
+						"VALUE$": this.value
+					}
+				);
+			}
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			el = document.createElement('input');
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 300);
+			el.setAttribute('data-font-size', 20);
+			el.setAttribute('data-padding', 5);
+			el.setAttribute('data-group', '');
+			el.setAttribute('id', args.id);
+			el.setAttribute('autocomplete', 'none');
+			el.setAttribute('keys-binding', 'yes' );
+			el.addEventListener( 'input', handler, false);
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.height != 'undefined' && parseInt(el.getAttribute('data-height')) != args.height) {
+			el.setAttribute('data-height', args.height);
+		}
+
+		if (typeof args.fontSize != 'undefined' && parseInt(el.getAttribute('data-font-size')) != args.fontSize) {
+			el.setAttribute('data-font-size', args.fontSize);
+		}
+
+		if (typeof args.padding != 'undefined' && parseInt(el.getAttribute('data-padding')) != args.padding) {
+			el.setAttribute('data-padding', args.padding);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.fontName != 'undefined' && el.style.fontFamily != args.fontName) {
+			el.style.fontFamily = args.fontName;
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.min != 'undefined' && parseInt(el.getAttribute('min')) != args.min) {
+			el.setAttribute('min', args.min);
+		}
+
+		if (typeof args.max != 'undefined' && parseInt(el.getAttribute('max')) != args.max) {
+			el.setAttribute('max', args.max);
+		}
+
+		if (typeof args.step != 'undefined' && parseInt(el.getAttribute('step')) != args.max) {
+			el.setAttribute('step', args.step);
+		}
+
+		if (typeof args.type != 'undefined' && el.getAttribute('type') != args.type) {
+			el.setAttribute('type', args.type);
+		}
+
+		if (typeof args.value != 'undefined' && el.value != args.value) {
+			if (el.getAttribute('type') && el.getAttribute('type').toLowerCase() == 'number') {
+				el.value = parseInt(args.value);
+			} else {
+				el.value = args.value;
+			}
+		}
+
+		if (typeof args.placeHolder != 'undefined' && el.getAttribute('placeHolder') != args.placeHolder) {
+			el.setAttribute('placeholder', args.placeHolder)
+		}
+
+		if (typeof args.onChange != 'undefined' && el.getAttribute('data-onchange') != args.onChange) {
+			el.setAttribute('data-onchange', args.onChange);
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.addTextArea = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_textarea_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_textarea_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('textarea');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 300);
+			el.setAttribute('data-font-size', 20);
+			el.setAttribute('data-padding', 5);
+			el.setAttribute('data-group', '');
+			el.setAttribute('rows', 2);
+			el.setAttribute('keys-binding', 'yes' );
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.fontSize != 'undefined' && parseInt(el.getAttribute('data-font-size')) != args.fontSize) {
+			el.setAttribute('data-font-size', args.fontSize);
+		}
+
+		if (typeof args.padding != 'undefined' && parseInt(el.getAttribute('data-padding')) != args.padding) {
+			el.setAttribute('data-padding', args.padding);
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.fontName != 'undefined' && el.style.fontFamily != args.fontName) {
+			el.style.fontFamily = args.fontName;
+		}
+
+		if (typeof args.value != 'undefined' && el.value != args.value) {
+			el.value = args.value;
+		}
+
+		if (typeof args.placeHolder != 'undefined' && el.getAttribute('placeHolder') != args.placeHolder) {
+			el.setAttribute('placeholder', args.placeHolder)
+		}
+
+		if (typeof args.rows != 'undefined' && parseInt(el.getAttribute('rows')) != args.rows) {
+			el.setAttribute('rows', args.rows);
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.addCheckBox = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_checkbox_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_checkbox_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('input');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 30);
+			el.setAttribute('data-height', 30);
+			el.setAttribute('data-group', '');
+			el.setAttribute('type', 'checkbox');
+			el.checked = false;
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.height != 'undefined' && parseInt(el.getAttribute('data-height')) != args.height) {
+			el.setAttribute('data-height', args.height);
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.value != 'undefined') {
+
+			el.checked = false;
+
+			if (args.value.toLowerCase() == 'true') {
+				el.checked = true;
+			}
+		}
+
+		if (typeof args.onChange != 'undefined') {
+			// Remove the previous event handler
+			if (el.getAttribute('data-onchange') != null) {
+				el.removeEventListener("change", el.handler, false);
+			}
+
+			el.handler = function (event) {
+				event.preventDefault();
+				aoz.runProcedure( args.onChange,
+					{
+						"ID$": el.id,
+						"VALUE$": this.checked.toString()
+					}
+				);
+			}
+
+			el.setAttribute('data-onchange', args.onChange);
+			el.addEventListener( 'change', el.handler, false);
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.addSelect = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_select_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_select_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('select');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.style.backgroundSize = 'auto';
+			el.style.backgroundPosition = 'right 2px center';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 300);
+			el.setAttribute('data-font-size', 20);
+			el.setAttribute('data-padding', 5);
+			el.setAttribute('data-group', '');
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.fontSize != 'undefined' && parseInt(el.getAttribute('data-font-size')) != args.fontSize) {
+			el.setAttribute('data-font-size', args.fontSize);
+		}
+
+		if (typeof args.padding != 'undefined' && parseInt(el.getAttribute('data-padding')) != args.padding) {
+			el.setAttribute('data-padding', args.padding);
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.fontName != 'undefined' && el.style.fontFamily != args.fontName) {
+			el.style.fontFamily = args.fontName;
+		}
+
+		if ( typeof args.multiple != 'undefined' )
+			el.multiple = args.multiple;
+
+		if ( typeof args.size != 'undefined' )
+			el.size = args.size;
+
+		if (typeof args.items != 'undefined') {
+
+			if (args.items == '') {
+				el.removeAttribute('data-items');
+				el.innerHTML = '';
+			} else {
+				el.setAttribute('data-items', args.items);
+
+				var items = args.items.split(',');
+				if (items) {
+
+					var v = '';
+					if (typeof args.value != 'undefined') {
+						v = args.value;
+					} else {
+						v = this.getValue(args);
+					}
+
+					while (el.options.length > 0) {
+						el.options.remove(0);
+					}
+
+					for(var i = 0; i < items.length; i++ )
+					{
+						var parts = items[i].split( ":" );
+						var option = document.createElement('option');
+						option.text = parts[1];
+						option.value = parts[0];
+
+						// The third is optional font name
+						if (parts.length > 2) {
+							option.style.fontFamily = parts[2];
+						}
+
+						el.options.add( option );
+					}
+
+					if (v == ''){
+						el.options[0].selected = true;
+					} else {
+						this.setValue({ id: args.id, value: v})
+					}
+				}
+			}
+		}
+
+		if (typeof args.value != 'undefined' && el.options.length > 0) {
+			for(var i = 0; i < el.options.length; i++) {
+				if (el.options[i].value == args.value) {
+					el.options[i].selected = true;
+				} else {
+					el.options[i].selected = false;
+				}
+			}
+		}
+
+		if (typeof args.onChange != 'undefined') {
+			// Remove the previous event handler
+			if (el.getAttribute('data-onchange') != null) {
+				el.removeEventListener("change", el.handler, false);
+			}
+
+			el.handler = function (event) {
+				event.preventDefault();
+				aoz.runProcedure( args.onChange,
+					{
+						"ID$": el.id,
+						"VALUE$": this.value
+					}
+				);
+			}
+
+			el.setAttribute('data-onchange', args.onChange);
+			el.addEventListener( 'change', el.handler, false);
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.addSlider = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_slider_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_slider_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+		var sl;
+		var cls = 'slider__custom';
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('div');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 300);
+			el.setAttribute('data-slider', 1);
+			el.setAttribute('data-group', '');
+			el.setAttribute('class', 'slider__custom');
+
+			sl = document.createElement('input');
+			sl.setAttribute('min', 0);
+			sl.setAttribute('max', 100);
+			sl.setAttribute('step', 1);
+			sl.setAttribute('type', 'range');
+			sl.value = 0;
+
+			el.appendChild(sl);
+			document.body.appendChild(el);
+
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		sl = el.querySelectorAll('input');
+
+		if (typeof args.min != 'undefined' && parseInt(el.getAttribute('min')) != args.min) {
+			sl[0].setAttribute('min', args.min);
+		}
+
+		if (typeof args.max != 'undefined' && parseInt(el.getAttribute('max')) != args.max) {
+			sl[0].setAttribute('max', args.max);
+		}
+
+		if (typeof args.step != 'undefined' && parseInt(el.getAttribute('step')) != args.step) {
+			sl[0].setAttribute('step', args.step);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', cls + ' ' + args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.value != 'undefined' && el.value != args.value) {
+			sl[0].value = parseInt(args.value);
+		}
+
+		if (typeof args.onChange != 'undefined') {
+			// Remove the previous event handler
+			if (el.getAttribute('data-onchange') != null) {
+				sl[0].removeEventListener("input", el.handler, false);
+			}
+
+			el.handler = function (event) {
+				event.preventDefault();
+				aoz.runProcedure( args.onChange,
+					{
+						"ID$": el.id,
+						"VALUE": this.value,
+						"VALUE$": this.value.toString()
+					}
+				);
+			}
+
+			el.setAttribute('data-onchange', args.onChange);
+			sl[0].addEventListener( 'input', el.handler, false);
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.addColourPicker = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_colour_picker_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_colour_picker_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('input');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 40);
+			el.setAttribute('data-height', 40);
+			el.setAttribute('data-group', '');
+			el.setAttribute('type', 'color');
+			el.value = '#ffffff';
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.height != 'undefined' && parseInt(el.getAttribute('data-height')) != args.height) {
+			el.setAttribute('data-height', args.height);
+		}
+
+		if (typeof args.value != 'undefined' && el.value != args.value) {
+			el.value = args.value;
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.onChange != 'undefined') {
+			// Remove the previous event handler
+			if (el.getAttribute('data-onchange') != null) {
+				el.removeEventListener("input", el.handler, false);
+			}
+
+			el.handler = function (event) {
+				event.preventDefault();
+				aoz.runProcedure( args.onChange,
+					{
+						"ID$": el.id,
+						"VALUE$": this.value
+					}
+				);
+			}
+
+			el.setAttribute('data-onchange', args.onChange);
+			el.addEventListener( 'input', el.handler, false);
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.sanitizeHTML = function(text) {
+	  var element = document.createElement('div');
+	  element.innerText = text;
+	  return element.innerHTML;
+	}
+
+	this.addIFrame = function(args) {
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_iframe_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_iframe_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('div');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 400);
+			el.setAttribute('data-height', 400);
+			el.setAttribute('data-group', '');
+
+			var elf = document.createElement('iframe');
+			el.appendChild(elf);
+
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.height != 'undefined' && parseInt(el.getAttribute('data-height')) != args.height) {
+			el.setAttribute('data-height', args.height);
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.src != 'undefined' && el.getAttribute('src') != args.src) {
+			elf = el.getElementsByTagName('iframe');
+			elf[0].setAttribute('class', 'iframe__responsive');
+			elf[0].setAttribute('src', args.src);
+			elf[0].setAttribute('name', Date.now().toString());
+		}
+
+		this.resize();
+	}
+
+	this.addImage = function( args ) {
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_image_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_image_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('img');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 160);
+			el.setAttribute('data-height', 128);
+			el.setAttribute('data-group', '');
+			el.setAttribute('data-src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAIAAABZ+cloAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVJaROwg4pChdrIgKuIoVSyChdJWaNXB5NIvaGJIUlwcBdeCgx+LVQcXZ10dXAVB8APEzc1J0UVK/F9SaBHjwXE/3t173L0DhGaNqWbPOKBqlpFJJsR8YUUMvCKIAYQRRUxipp7KLuTgOb7u4ePrXZxneZ/7c4SVoskAn0g8y3TDIl4nnt60dM77xBFWkRTic+Ixgy5I/Mh12eU3zmWHBZ4ZMXKZOeIIsVjuYrmLWcVQiaeIo4qqUb6Qd1nhvMVZrdVZ+578haGitpzlOs0RJLGIFNIQIaOOKmqwEKdVI8VEhvYTHv5hx58ml0yuKhg55rEBFZLjB/+D392apckJNymUAHpfbPtjFAjsAq2GbX8f23brBPA/A1dax7/RBGY+SW90tOgR0L8NXFx3NHkPuNwBhp50yZAcyU9TKJWA9zP6pgIweAsEV93e2vs4fQBy1NXSDXBwCMTKlL3m8e6+7t7+PdPu7wepk3K9I4Jo0QAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+UKEQ0nD2rqNG0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAACb0lEQVRIx8VWS08TURQ+d1oBUyIJDWLsQly4cMESN0bjwrgyDdHEpb/CH6CufSXVFRijiWKMRBKND2RhKIJ9maG2hVb6fsgwnc7Q18x0Zu51ISW19HFN2nhWc+/Md7+cc75vzkWX7dPT9ksnJ04AAAABQPWHFoEASZLU7m1T8LzwYm7BfP7s1LWrdkoMABTEAiGUHyPd0Bmb7Rj96f8YZGzMykB/A/WbAP4fAepRY8wt9qrbTGKe43MDxy+OnLpQF26PMkBEZ7Yeo2qYqPxu5Hl1O9zjEhG1hGrc/lIR4z0mQIcshLHsLwcs4/SKpMvANEAmrgNzGAANjZ8btk1S+AnWk7kbbz7dXXQWZbV7k8noaTxy26qppsFhGqMkBfHeVy8G4GRlKRC5MjXZXabENGgaOkJzelFWHctuXF8u/IznS5WeGU0z8JMVD6eoDdWCxWCksR+dCPJV5cEqO+sJqrrRsqvv2JCHLzTtfoilOanUnSApFm85fV5h98t2/tWPMGm2C3yPp+fD0ZbS+RgIk3oSTEtVsLmdm6usWNP3ABl+JZ5p5MiIxUcuFrWR5lIqmy1IrQkwoM9biTu+kIZJo8JnAtGosIcpK7WHy64axh3K+96/SQ4SaBi/ZDeebiYPugYDOLwhUVYNQp6teTNVuXP/nTkuxYt/+aCs6TOegE/YbYcRatqsL3hUk9d+5Wk09ta/cWbEYv6jLb4iO1z+eEXpjFkXS2I2TSnib1we5QUzAIoJ0n1PUNJ0qj8OoR0UCMCdypndae418RukT3MfmGgsYRDcp4kPpbIZuB3scqFRKy2K48DQaW46jKyQdPY3y604RoGcD/YAAAAASUVORK5CYII=' );
+			el.setAttribute( 'src', el.getAttribute( 'data-src' ) );
+			el.setAttribute( 'data-image', '' );
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.src != 'undefined' && el.getAttribute('data-src') != args.src) {
+			el.setAttribute('data-src', args.src);
+			el.setAttribute('src', args.src);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.image != 'undefined' && typeof args.image != '' && el.getAttribute('data-image') != args.image) {
+			el.setAttribute('data-image', args.image);
+			var src = this.aoz.banks.getImage( 'images', args.image ).canvas.toDataURL();
+			el.setAttribute('src', src);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.height != 'undefined' && parseInt(el.getAttribute('data-height')) != args.height) {
+			el.setAttribute('data-height', args.height);
+		}
+
+
+		if (typeof args.tooltip != 'undefined') {
+
+			if (args.tooltip == '') {
+				var tooltip = bootstrap.Tooltip.getInstance(el);
+				if (tooltip) tooltip.dispose();
+				el.removeAttribute('data-tooltip');
+			} else {
+				el.setAttribute('data-bs-toggle', 'tooltip');
+				el.setAttribute('title', args.tooltip);
+				el.setAttribute('data-tooltip', args.tooltip);
+
+				if (!el.getAttribute('data-bs-placement')) {
+					el.setAttribute('data-bs-placement', 'auto');
+					el.setAttribute('data-tooltip-placement', 'auto');
+				}
+				var tooltip = new bootstrap.Tooltip(el);
+			}
+
+		}
+
+		if (typeof args.tooltipPlacement != 'undefined') {
+			el.setAttribute('data-bs-placement', args.tooltipPlacement);
+			el.setAttribute('data-tooltip-placement', args.tooltipPlacement);
+			var tooltip = new bootstrap.Tooltip(el, {placement: args.tooltipPlacement});
+		}
+
+		if (typeof args.onClick != 'undefined' && el.getAttribute('data-onclick') != args.onClick) {
+			// Remove the previous event handler
+			if (el.getAttribute('data-onclick') != null) {
+				el.removeEventListener("click", el.handler, false);
+			}
+
+			el.handler = function (event) {
+				event.preventDefault();
+				aoz.runProcedure( args.onClick,
+					{
+						"ID$": this.id
+					}
+				);
+			}
+
+			el.setAttribute('data-onclick', args.onClick);
+			el.addEventListener( 'click', el.handler, false);
+		}
+
+		this.resize();
+		return el;
+	}
+
+	this.addTextBlock = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_text_block_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_text_block_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('div');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 400);
+			el.setAttribute('data-font-size', 20);
+			el.setAttribute('data-padding', 5);
+			el.setAttribute('data-content', 1);
+			el.setAttribute('data-group', '');
+			el.innerHTML = 'TextBlock Content';
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.height != 'undefined' && parseInt(el.getAttribute('data-height')) != args.height) {
+			el.setAttribute('data-height', args.height);
+			el.style.overflowY = 'auto';
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.fontSize != 'undefined' && parseInt(el.getAttribute('data-font-size')) != args.fontSize) {
+			el.setAttribute('data-font-size', args.fontSize);
+		}
+
+		if (typeof args.padding != 'undefined' && parseInt(el.getAttribute('data-padding')) != args.padding) {
+			el.setAttribute('data-padding', args.padding);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.fontName != 'undefined' && el.style.fontFamily != args.fontName) {
+			el.style.fontFamily = args.fontName;
+		}
+
+		if (typeof args.content != 'undefined' && el.innerHTML != args.content) {
+			el.innerHTML = args.content;
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.addRadio = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_radio_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_add_radio_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('div');
+			el.setAttribute('id', args.id);
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-font-size', 20);
+			el.setAttribute('data-padding', 5);
+			el.setAttribute('data-radio', 1);
+			el.setAttribute('data-group', '');
+			el.setAttribute('style', 'position: absolute;');
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.fontSize != 'undefined' && parseInt(el.getAttribute('data-font-size')) != args.fontSize) {
+			el.setAttribute('data-font-size', args.fontSize);
+		}
+
+		if (typeof args.fontName != 'undefined' && el.style.fontFamily != args.fontName) {
+			el.style.fontFamily = args.fontName;
+		}
+
+		if (typeof args.padding != 'undefined' && parseInt(el.getAttribute('data-padding')) != args.padding) {
+			el.setAttribute('data-padding', args.padding);
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			el.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+			var children = el.getElementsByTagName('span');
+			for(var i = 0; i< children.length;i++)
+			{
+				children[i].setAttribute('class', 'radio__checkmark ' + args.class);
+			}
+		}
+
+		if (typeof args.items != 'undefined') {
+
+			if (args.items == '') {
+				el.removeAttribute('data-items');
+				el.innerHTML = '';
+			} else {
+				el.setAttribute('data-items', args.items);
+
+				var v = '';
+				if (typeof args.value != 'undefined') {
+					v = args.value;
+				} else {
+					v = this.getValue(args);
+				}
+
+				var items = args.items.split(',');
+				if (items) {
+					// Clear previous content
+					el.textContent = '';
+					el.setAttribute('content', '');
+
+					for(var i = 0; i < items.length; i++ )
+					{
+						var parts = items[i].split( ":" );
+
+						var label = document.createElement('label');
+						label.setAttribute('class', 'radio__container');
+
+						var radio = document.createElement('input');
+						radio.setAttribute('type', 'radio');
+						radio.setAttribute('name', args.id);
+						radio.setAttribute('value', parts[0]);
+						radio.setAttribute('id', args.id + '_option_' + parts[0]);
+						radio.checked = false;
+
+						if (v == parts[0]) {
+							radio.checked = true;
+						}
+
+						label.appendChild(radio);
+
+						var span = document.createElement('span');
+						var cls = 'radio__checkmark';
+
+						if (typeof args.class != 'undefined') {
+							cls += ' ' + args.class;
+						}
+
+						span.setAttribute('class', cls);
+						span.setAttribute('content', parts[1]);
+						span.textContent = parts[1];
+
+						// The third part is optional font name
+						if (parts.length > 2) {
+							span.style.fontFamily = parts[2];
+						}
+
+						label.appendChild(span);
+
+						el.appendChild(label);
+					}
+
+					if (v != ''){
+						this.setValue({ id: args.id, value: v})
+					}
+				}
+			}
+		}
+
+		if (typeof args.value != 'undefined') {
+
+			var children = el.getElementsByTagName('input');
+
+			for(var i = 0; i< children.length;i++)
+			{
+				if (children[i].getAttribute('id') == args.id + '_option_' + args.value)
+				{
+				 	children[i].checked = true;
+				}
+			}
+		}
+
+		if (typeof args.onChange != 'undefined') {
+			var opts = el.getElementsByTagName('input');
+
+			// Remove the previous event handlers
+			if (el.getAttribute('data-onchange') != null) {
+				for(var i = 0; i < opts.length; i++) {
+					opts[i].removeEventListener("click", opts[i].handler);
+				}
+			}
+
+			el.setAttribute('data-onchange', args.onChange);
+
+			for(var i = 0; i < opts.length; i++) {
+				opts[i].handler = function (event) {
+					aoz.runProcedure( args.onChange,
+						{
+							"ID$": el.id,
+							"VALUE$": this.value
+						}
+					);
+				}
+
+				opts[i].addEventListener( 'click', opts[i].handler);
+			}
+		}
+
+		this.resize()
+		return el;
+	}
+
+	this.showPopup = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_show_popup_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined' )
+		{
+			throw 'ui_show_popup_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			el = document.createElement('div');
+			el.setAttribute('class', 'position-absolute top-0 start-50 translate-middle-x p-3');
+			el.setAttribute('style', 'z-index: 999999');
+			el.setAttribute('id', args.id);
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		el.innerHTML = '';
+
+		if (typeof args.placement != 'undefined') {
+			switch (args.placement.toLowerCase()) {
+				case 'bottom-right':
+					el.setAttribute('class', 'position-fixed bottom-0 end-0 p-3');
+					break;
+				case 'bottom-left':
+					el.setAttribute('class', 'position-fixed bottom-0 start-0 p-3');
+					break;
+				case 'top-left':
+					el.setAttribute('class', 'position-fixed top-0 start-0 p-3');
+					break;
+				case 'top-right':
+					el.setAttribute('class', 'position-fixed top-0 end-0 p-3');
+					break;
+				case 'top-center':
+					el.setAttribute('class', 'position-absolute top-0 start-50 translate-middle-x p-3');
+					break;
+				case 'bottom-center':
+					el.setAttribute('class', 'position-absolute bottom-0 start-50 translate-middle-x p-3');
+					break;
+				case 'center':
+					el.setAttribute('class', 'position-absolute top-50 start-50 translate-middle');
+					break;
+				case 'left-center':
+					el.setAttribute('class', 'position-absolute top-50 start-0 translate-middle-y p-3');
+					break;
+				case 'right-center':
+					el.setAttribute('class', 'position-absolute top-50 end-0 translate-middle-y p-3');
+					break;
+			}
+		}
+
+		var toast = document.createElement('div');
+		var toastClass = 'toast align-items-center border-0';
+
+		if (typeof args.class != 'undefined') {
+			toastClass += ' ' + args.class;
+		}
+
+		toast.setAttribute('class', toastClass);
+		toast.setAttribute('role', 'alert');
+		toast.setAttribute('aria-live', 'assertive');
+		toast.setAttribute('aria-atomic', 'true');
+
+		if (typeof args.delay != 'undefined') {
+			toast.setAttribute('data-bs-delay', args.delay);
+		}
+
+		var header = document.createElement('div');
+		header.setAttribute('class', 'd-flex');
+
+		var button = document.createElement('button');
+		button.setAttribute('type', 'button');
+		button.setAttribute('class', 'btn-close me-2 m-auto');
+		button.setAttribute('data-bs-dismiss', 'toast');
+		button.setAttribute('aria-label', 'Close');
+
+		var body = document.createElement('div');
+		body.setAttribute('class', 'toast-body');
+
+		if (typeof args.content == 'undefined') {
+			body.innerHTML = 'Popup message...';
+		} else {
+			body.innerHTML = args.content;
+		}
+
+		el.appendChild(toast);
+		header.appendChild(body);
+		header.appendChild(button);
+		toast.appendChild(header);
+
+		var t = new bootstrap.Toast(toast);
+		t.show();
+	}
+
+	this.addProgress = function(args) {
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_add_progress_arguments_missing';
+		}
+
+		if( typeof args.id == 'undefined')
+		{
+			throw 'ui_add_progress_argument_id_missing';
+		}
+
+		var el =  document.getElementById(args.id);
+
+		if (!el) {
+			// Set defaults for new element
+			el = document.createElement('div');
+			el.setAttribute('id', args.id);
+			el.style.position = 'absolute';
+			el.setAttribute('data-x', 10);
+			el.setAttribute('data-y', 10);
+			el.setAttribute('data-width', 300);
+			el.setAttribute('data-height', 20);
+			el.setAttribute('data-progress', 1);
+			el.setAttribute('data-pr-value', 0);
+			el.setAttribute('class', 'progress')
+			el.setAttribute('data-class', 'progress');
+			el.setAttribute('data-group', '');
+			document.body.appendChild(el);
+			this.elements.push(el);
+		}
+
+		// Rendering context
+		this.setRenderingContext( args, el );
+
+		if ( typeof args.screenIndex != 'undefined' )
+			el.setAttribute( 'data-screenIndex', args.screenIndex );
+
+		// Update params if supplied and value has changed
+		if (typeof args.x != 'undefined' && parseInt(el.getAttribute('data-x')) != args.x) {
+			el.setAttribute('data-x', args.x);
+		}
+
+		if (typeof args.y != 'undefined' && parseInt(el.getAttribute('data-y')) != args.y) {
+			el.setAttribute('data-y', args.y);
+		}
+
+		if (typeof args.width != 'undefined' && parseInt(el.getAttribute('data-width')) != args.width) {
+			el.setAttribute('data-width', args.width);
+		}
+
+		if (typeof args.height != 'undefined' && parseInt(el.getAttribute('data-height')) != args.height) {
+			el.setAttribute('data-height', args.height);
+		}
+
+		if (typeof args.group != 'undefined' && el.getAttribute('data-group') != args.group) {
+			el.setAttribute('data-group', args.group);
+		}
+
+		var progress = el.querySelectorAll('.progress-bar')[0];
+		if (!progress) {
+			progress = document.createElement('div');
+			progress.setAttribute('class', 'progress-bar');
+			progress.setAttribute('role', 'progressbar');
+			el.appendChild(progress);
+		}
+
+		if (typeof args.class != 'undefined' && el.getAttribute('class') != args.class) {
+			progress.setAttribute('class', args.class);
+			el.setAttribute('data-class', args.class);
+		}
+
+		if (typeof args.value != 'undefined') {
+			progress.style = 'width: ' + args.value + '%';
+			el.setAttribute('data-pr-value', args.value);
+		}
+
+
+		this.resize()
+	}
+
+	this.showModel = function(args) {
+
+		var self = this;
+
+		if( args == undefined || args == null || args.length == 0)
+		{
+			throw 'ui_show_model_arguments_missing';
+		}
+
+		// Remove page container if already exists
+		var page = document.getElementById('aoz-full-page-container');
+		if (page) this.removeElement('aoz-full-page-container');
+
+		// Create a full page container for the dialog
+		page = document.createElement('div');
+		page.setAttribute('id', 'aoz-full-page-container');
+		page.setAttribute('style', 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999998; background: transparent;');
+		document.body.appendChild(page);
+
+		// Create the model elements
+		var model = document.createElement('div');
+		model.setAttribute('id', 'aoz-model-container');
+		model.setAttribute('class', 'modal fade');
+		model.setAttribute('tabindex', '-1');
+		model.setAttribute('aria-hidden', 'true');
+		page.appendChild(model);
+
+		var dialog = document.createElement('div');
+		dialog.setAttribute('class', 'modal-dialog');
+
+		var content = document.createElement('div');
+		content.setAttribute('class', 'modal-content');
+
+		var header = document.createElement('div');
+		header.setAttribute('class', 'modal-header');
+
+		var title = document.createElement('h5');
+		title.setAttribute('class', 'modal-title');
+
+		if (typeof args.title == 'undefined') {
+			title.innerHTML = 'Confirm'
+		} else {
+			title.innerHTML = args.title;
+		}
+
+		var xButton = document.createElement('button');
+		xButton.setAttribute('class', 'btn-close');
+		xButton.setAttribute('data-bs-dismiss', 'modal');
+
+		header.appendChild(title);
+		header.appendChild(xButton);
+
+		var body = document.createElement('div');
+		body.setAttribute('class', 'modal-body');
+
+		if (typeof args.content == 'undefined') {
+			body.innerHTML = "Are you sure?"
+		} else {
+			if (args.content) {
+				body.innerHTML = args.content;
+			}
+		}
+
+		var input = null;
+
+		if (args.inputType) {
+			input = document.createElement('input');
+			input.setAttribute('autocomplete', 'none');
+			input.setAttribute('keys-binding', 'yes' );
+			input.setAttribute('type', args.inputType);
+
+			if (args.inputType == 'text') {
+				if (typeof args.value == 'undefined') {
+					input.value = '';
+				} else {
+					input.value = args.value;
+				}
+			} else {
+				if (args.inputType == 'number') {
+					if (typeof args.value == 'undefined') {
+						input.value = 0;
+					} else {
+						input.value = parseInt(args.value);
+					}
+				}
+			}
+
+			body.appendChild(input);
+		}
+
+		var footer = document.createElement('div');
+		footer.setAttribute('class', 'modal-footer');
+
+		var closeButton = document.createElement('button');
+		closeButton.setAttribute('class', 'btn btn-secondary');
+		closeButton.setAttribute('data-bs-dismiss', 'modal');
+
+		if (typeof args.closeButton != 'undefined') {
+			closeButton.innerHTML = args.closeButton;
+		} else {
+			closeButton.innerHTML = 'Close';
+		}
+
+		var confirmButton = document.createElement('button');
+		confirmButton.setAttribute('class', 'btn btn-success');
+
+		if (typeof args.confirmButton != 'undefined') {
+			confirmButton.innerHTML = args.confirmButton;
+		} else {
+			confirmButton.innerHTML = 'Confirm';
+		}
+
+		footer.appendChild(closeButton);
+		footer.appendChild(confirmButton);
+
+		content.appendChild(header);
+		content.appendChild(body);
+		content.appendChild(footer);
+		dialog.appendChild(content);
+		model.appendChild(dialog);
+
+		var modelInstance = new bootstrap.Modal(model);
+
+		// Add listener for when the model is hidden
+		model.addEventListener('hidden.bs.modal', function (event) {
+			// Remove from the DOM
+  			self.removeElement('aoz-full-page-container');
+		});
+
+		confirmButton.addEventListener('click', function (event) {
+			if (typeof args.onConfirm != 'undefined') {
+				if (input) {
+					if (input.getAttribute('type').toLowerCase() == 'number') {
+						aoz.runProcedure( args.onConfirm,
+							{
+								"VALUE": parseInt(input.value)
+							}
+						);
+					} else {
+						aoz.runProcedure( args.onConfirm,
+							{
+								"VALUE$": input.value
+							}
+						);
+					}
+				} else {
+					aoz.runProcedure( args.onConfirm );
+				}
+			}
+
+			// Hide the model
+			modelInstance.hide();
+		});
+
+		modelInstance.show();
+	}
+
+	this.select = function(id) {
+		if( typeof id == 'undefined' )
+		{
+			throw 'ui_select_argument_id_missing';
+		}
+
+		var el =  document.getElementById(id);
+		if (el) {
+			if (el.select) {
+				el.select();
+			}
+		}
+	}
+}
+
+/**doc
+@name:User Interfaces
+@description:A set of instructions and functions that provide a suite of user interface components.
+@author:Phil Bell
+doc*/
+
+/**api
+@name:UI Confirm
+@description:Display a Confirm user interface component.
+@param:title$:string:The text for the title of the popup box. If not set, the default text is "Confirm"
+@param:content$:string:The text for the content of the popup box., If not set, the default content is "Are you sure?"
+@param:confirmButton$:string:The text to be displayed on the confirm button. If not set, the default text is "Confirm"
+@param:closeButton$:string:The text to be displayed on the close button. If not set the default text is "Close"
+@param:onConfirm$:string:The name of an AOZ Procedure to be called if the confirm button is pressed.
+@content:
+~~~
+// Display a default confirmation popup box
+UI Confirm
+
+// Override the defaults and call a procedure if the user pressed the confirm button
+UI Confirm "Delete Account?", "Are you sure?", closeButton$="No", confirmButton$="Yes", onConfirm$="CONFIRM"
+
+Procedure CONFIRM
+	Print "You pressed the confirm botton"
+End Proc
+~~~
+api*/
+Instruction "UI Confirm", title$, content$, confirmButton$, closeButton$, onConfirm$
+	{
+		#errors
+		aoz.ui.showModel( { title: %title$, content: %content$, confirmButton: %confirmButton$, closeButton: %closeButton$, onConfirm: %onConfirm$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Prompt$
+@description:Display a Prompt user interface component.
+@param:title$:string:The text for the title of the popup box. If not set, the default text is "Confirm"
+@param:value$:string:The text for the input content.
+@param:confirmButton$:string:The text to be displayed on the confirm button. If not set, the default text is "Confirm"
+@param:closeButton$:string:The text to be displayed on the close button. If not set the default text is "Close"
+@param:onConfirm$:string:The name of an AOZ Procedure to be called if the confirm button is pressed.
+@content:
+~~~
+// Display a default prompt popup box
+UI Prompt$
+
+// Override the defaults and call a procedure if the user pressed the confirm button
+UI Prompt$ "Enter new value", value$="test", onConfirm$="CONFIRM_EVENT", closeButton$="Cancel", confirmButton$="OK"
+
+Procedure CONFIRM_EVENT[VALUE$]
+	Print VALUE$
+End Proc
+~~~
+api*/
+Instruction "UI Prompt$", title$, value$, confirmButton$="OK", closeButton$="Cancel", onConfirm$
+	{
+		#errors
+		aoz.ui.showModel( { title: %title$, content: '', value: %value$, inputType: 'text', confirmButton: %confirmButton$, closeButton: %closeButton$, onConfirm: %onConfirm$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Prompt
+@description:Display a Prompt user interface component.
+@param:title$:string:The text for the title of the popup box. If not set, the default text is "Confirm"
+@param:value:string:The text for the input content.
+@param:confirmButton$:string:The text to be displayed on the confirm button. If not set, the default text is "Confirm"
+@param:closeButton$:string:The text to be displayed on the close button. If not set the default text is "Close"
+@param:onConfirm$:string:The name of an AOZ Procedure to be called if the confirm button is pressed.
+@content:
+~~~
+// Display a default prompt popup box
+UI Prompt
+
+// Override the defaults and call a procedure if the user pressed the confirm button
+UI Prompt "Enter new value", value=123, onConfirm$="CONFIRM_EVENT", closeButton$="Cancel", confirmButton$="OK"
+
+Procedure CONFIRM_EVENT[VALUE]
+	Print Str$(VALUE)
+End Proc
+~~~
+api*/
+Instruction "UI Prompt", title$, value, confirmButton$, closeButton$, onConfirm$
+	{
+		#errors
+		aoz.ui.showModel( { title: %title$, content: '', value: %value, inputType: 'number', confirmButton: %confirmButton$, closeButton: %closeButton$, onConfirm: %onConfirm$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Progress
+@description:Display a Progress user interface component,
+@param:id$:string:A unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:value:integer:A value of the progress bar between 0 and 100, If not set, 0 by default.
+@param:width:integer:The width of the component in pixels. If not set, 400 by default.
+@param:height:integer:The height of the component in pixels. If not set, 20 by default.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. A default style is used if not set.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+~~~
+// Display a defaut progress bar filled at 50%
+UI Progress "MyProgressBar", value=50
+
+// Display Bootstrap Styled progress bars
+UI Progress "MyProgressBar1", x=100, y=350, width=500, height=50, class$="progress-bar bg-success", value=10
+UI Progress "MyProgressBar2", x=100, y=450, width=800, height=60, class$="progress-bar bg-info", value=20
+UI Progress "MyProgressBar3", x=100, y=550, width=1000, height=80, class$="progress-bar bg-warning", value=50
+UI Progress "MyProgressBar4", x=100, y=650, width=1500, height=20, class$="progress-bar bg-danger progress-bar-striped", value=75
+
+// You can easily update a progress bar value
+UI Progress "MyProgressBar", value=40
+UI Progress "MyProgressBar", value=60
+UI Progress "MyProgressBar", value=80
+
+// To get the progress bar value you can use the UI Value$ function
+V = Val(UI Value$("MyProgressBar"))
+Print UI Value$("MyProgressBar")
+
+// Working example
+UI Progress "MyProgressBar", x=100, y=750, width=500, class$="progress-bar bg-primary progress-bar-striped"
+V = 0: VS = 10: LAST_TIME# = Timer
+Do
+	If Timer - LAST_TIME# > 0.5
+		LAST_TIME# = Timer
+		V = Val(UI Value$("MyProgressBar"))
+		If V > 100 or V < 0: VS = -VS: End If: Add V, VS
+		UI Progress "MyProgressBar", value = V
+	End If
+	Wait Vbl
+Loop
+~~~
+api*/
+Instruction "UI Progress", id$, x, y, width, height, value, class$, group$
+	{
+		#errors
+		aoz.ui.addProgress( { id: %id$, x: %x, y: %y, value: %value, width: %width, height: %height, class: %class$, group: %group$} );
+	}
+End Instruction
+
+/**api
+@name:UI Radio
+@description:Displays a Radio user interface component
+@param:id$:string:A unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:items$:string:A list of value:item pairs to use for the radio buttons. If not set, no radio buttons will be displayed
+@param:fontSize:integer:The size of the font in pixels. If not set, 20 by default.
+@param:value$:string:The value of the selected radio button. If not set, non are selected.
+@param:onChange$:string:The name of an AOZ procedure to be called when the selected radio is changed.
+@param:fontName$:string:The name of a font to be used for the textual part of the radio buttons.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the items. A default style is used if not set.
+@param:padding:number:The padding in pixels between the content and the component dimensions. If not set, 5 by default.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+The items$ is a comma separated list of value:item pairs
+
+For example:-
+items$ = "aoz:AOZ Studio is the best"
+
+The value part is "aoz" and the item part (the text displayed on the component) is the text after the ":", which is "AOZ Studio is the best"
+
+~~~
+// Display 3 radio buttons with the second button selected
+UI Radio "MyRadio", items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", value$="2"
+
+// To get the selected radio button value you can use the UI Value$ function
+Print UI Value$("MyRadio")
+
+// You can set the selected radio button by setting its value$ parameter
+UI Radio "MyRadio", value$="2"
+
+// You can also use the UI Value command
+UI Value "MyRadio", value$="1"
+
+// Example using the onChange$
+UI Radio "MyRadio", items$="cats:I like cats the best,dogs:I like dogs the best", value$="dog", onChange$="MY_RADIO_CHANGE"
+
+Procedure MY_RADIO_CHANGE[ID$, VALUE$]
+	Print "You like " + VALUE$ + " the best"
+End Proc
+~~~
+api*/
+Instruction "UI Radio", id$, x, y, value$, items$, fontSize, padding, fontName$, class$, onChange$, group$
+	{
+		#errors
+		aoz.ui.addRadio( { id: %id$, x: %x, y: %y, items: %items$, fontSize: %fontSize, value: %value$, onChange: %onChange$, fontName: %fontName$, class: %class$, padding: %padding, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI TextBlock
+@description:Displays a TextBlock user interface component
+@param:id$:string:A unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, 400 by default.
+@param:height:integer:The height of the component in pixels. If not set, the height will expand to fill the content$
+@param:content$:string:The text to be displayed. If not set, "TextBlock Content" by default.
+@param:fontSize:integer:The size of the font in pixels. If not set, 20 by default.
+@param:padding:number:The padding in pixels between the content and the component dimensions. If not set, 5 by default.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. A default style is used if not set.
+@param:fontName$:string:The name of a font to be used for the content$
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+The UI TextBlock is used to display a block of text within a defined area.
+
+If no height is set, the height of the text block will increase to fit all the text in the content$ parameter.
+
+If a height is set and the length of the content$ is split onto multiple lines, a vertical scroll bar will be automatically added to enable the text to be scrolled into view.
+
+Set the class$ parameter to apply a CSS (Cascading Style Sheet) style to the component. See the UI Demo for more examples.
+~~~
+// A default text block
+UI TextBlock "MyTextBlock", content$="My Text Block"
+
+// A text block with auto vertical scroll
+UI TextBlock "MyTextBlock", height=100, content$="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s."
+
+// A Bootstrap styled text block
+UI TextBlock "MyTextBlock", content$="Warning Text Style Dark Background", class$="text-warning bg-dark", width=600
+~~~
+api*/
+Instruction "UI TextBlock", id$, x, y, width, height, content$, fontSize, padding, fontName$, class$, group$
+	{
+		#errors
+		aoz.ui.addTextBlock( { id: %id$, x: %x, y: %y, width: %width, height: %height, content: %content$, fontSize: %fontSize, padding: %padding, class: %class$, fontName: %fontName$, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI IFrame
+@description:Adds an iframe HTML element
+@param:id$:string:A unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, 400 by default.
+@param:height:integer:The height of the component in pixels. If not set, 400 by default.
+@param:src:string:The URL of the page to embed.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+~~~
+// Embed a YouTube Video
+UI IFrame "aozVideo", width = 1344, height = 756, src$="https://www.youtube.com/embed/5H6HGR3eWwo"
+
+// Embed another web page
+UI IFrame "demoVideo", width = 1344, height = 756, src$="https://www.aoz.studio/faq-1"
+~~~
+api*/
+Instruction "UI IFrame", id$, x, y, width, height, src$, class$, group$
+	{
+		#errors
+		aoz.ui.addIFrame( { id: %id$, x: %x, y: %y, width: %width, height: %height, src: %src$, class: %class$, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI ColorPicker
+@description:Displays a ColorPicker user interface component.
+@param:id$:string:A unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, 40 by default.
+@param:height:integer:The height of the component in pixels. If not set, 40 by default.
+@param:value$:string:The hexadecimal color value for the selected color. If not set, #ffffff by default.
+@param:onChange$:string:The name of an AOZ procedure to be called when the selected color is changed.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. A default style is used if not set.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+~~~
+// Display a default color picker
+UI ColorPicker "MyColorPicker"
+
+// To get the selected color value you can use the UI Value$ function
+Print UI Value$("MyColorPicker")
+
+// You can update the selected color by setting its value$ parameter
+UI ColorPicker "MyColorPicker", value$="#C4C4C4"
+
+// You can also use the UI Value command to update the selected color
+UI Value "MyColorPicker", value$="#FFAABB"
+
+// Example using the onChange$ event
+UI ColorPicker "MyColorPicker", x=50, y=50, width=200, height=75, value$="#000000", onChange$="MYCOLORCHANGE"
+Procedure MYCOLORCHANGE[ID$, VALUE$]
+	Print "The selected color is " + VALUE$
+End Proc
+~~~
+api*/
+Instruction "UI ColorPicker", id$, x, y, width, height, value$, class$, onChange$, group$
+	{
+		#errors
+		aoz.ui.addColourPicker( { id: %id$, x: %x, y: %y, width: %width, height: %height, value: %value$, onChange: %onChange$, class: %class$, group: %group$} );
+	}
+End Instruction
+
+/**api
+@name:UI Slider
+@description:Displays a Slider user interface component.
+@param:id$:string:A unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, 300 by default.
+@param:min:integer:The minimum value of the slider. If not set, 0 by default.
+@param:max:integer:The maximum value of the slider. If not set, 100 by default.
+@param:step:integer:The value for each step of the slider. If not set, 1 by default.
+@param:value:integer:The value of the slider. If not set, 0 by default.
+@param:onChange$:string:The name of an AOZ procedure to be called when the slider value changes.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. A default style is used if not set.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+The UI Slider lets the user swiftly slide through possible values spread over a desired range.
+~~~
+// Display a default slider
+UI Slider "MySlider"
+
+// To get the selected slider value you can use the UI Value$ function
+Print UI Value$("MySlider")
+
+// You can update the slider value by setting its value parameter
+UI Slider "MySlider", value=30
+
+// You can also use the UI Value command to update the slider value
+UI Value "MySlider", value$="50"
+
+// Example range between 10 and 40 in 0.5 steps
+UI Slider "MySlider", y=400, onChange$="SLIDERCHANGE", min=10, max=40, step=0.5, width=600
+Procedure SLIDERCHANGE[ID$, VALUE]
+	Print "Slider (min=10 max=40 step=0.5) Value:" + Str$(VALUE)
+End Proc
+~~~
+api*/
+Instruction "UI Slider", id$, x, y, width, value, min, max, step, class$, onChange$, group$
+	{
+		#errors
+		aoz.ui.addSlider( { id: %id$, x: %x, y: %y, width: %width, min: %min, max: %max, step: %step, value: %value, onChange: %onChange$, class: %class$, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Select
+@description:Displays a Select user interface component.
+@param:id$:string:A unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, 300 by default.
+@param:items$:string:A list of value:item pairs to use for list of options in the dropdown list. If not set, no options will be available.
+@param:fontSize:integer:The size of the font in pixels. If not set, 20 by default.
+@param:padding:number:The padding in pixels between the content and the component dimensions. If not set, 5 by default.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. A default style is used if not set.
+@param:value$:string:The value of the selected item. If not set, the first item is selected.
+@param:onChange$:string:The name of an AOZ procedure to be called when the selected item is changed.
+@param:fontName$:string:The name of a font to be used for the text.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+The items$ is a comma separated list of value:item pairs .
+
+For example:-
+items$ = "aoz:AOZ Studio is the best"
+
+The value part is "aoz" and the item part (the displayed text) is the text after the ":", which is "AOZ Studio is the best"
+~~~
+// Display a select component with 3 dropdown list items
+UI Select "MySelect", items$="1:This is item 1,2:This is item 2,3:This is item 3"
+
+// To get the selected item value you can use the UI Value$ function
+Print UI Value$("MySelect")
+
+// You can set the selected item by setting its value$ parameter
+UI Radio "MySelect", value$="2"
+
+// You can also use the UI Value command
+UI Value "MySelect", value$="1"
+
+// Example using the onChange$
+UI Select "MySelect", y=550, items$="red:My favorite color is red,green:My favorite color is green,blue:My favorite color is blue", onChange$="SELECTCHANGE"
+
+Procedure SELECTCHANGE[ID$, VALUE$]
+	Print "Your favorite color is " + VALUE$
+End Proc
+~~~
+api*/
+Instruction "UI Select", id$, x, y, width, size, value$, items$, fontSize, padding, fontName$, class$, onChange$, group$, multiple
+	{
+		#errors
+		aoz.ui.addSelect( { id: %id$, x: %x, y: %y, width: %width, size: %size, items: %items$, fontSize: %fontSize, padding: %padding, class: %class$, value: %value$, onChange: %onChange$, fontName: %fontName$, group: %group$, multiple: %multiple } );
+	}
+End Instruction
+
+/**api
+@name:UI CheckBox
+@description:Displays a CheckBox user interface component.
+@param:id$:string:A unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, 30 by default.
+@param:height:integer:The height of the component in pixels. If not set, 30 by default.
+@param:value$:string:The value of the check box. If not set, false by default.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. No style is used if not set.
+@param:onChange$:string:The name of an AOZ procedure to be called when the selected item is changed.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+~~~
+// Display a default check box
+UI CheckBox "MyCheckBox"
+
+// To get the checkbox value you can use the UI Value$ function
+Print UI Value$("MyCheckBox")
+
+// You can set the checkbox value setting its value$ parameter
+UI CheckBox "MyCheckBox", value$="true"
+
+// You can also use the UI Value command
+UI Value "MyCheckBox", value$="false"
+
+// Example using the onChange$ event with a Boostrap style
+UI CheckBox "MyCheckBox", y=300, class$="form-check-input", width=80, height=80, onChange$="CHECKCHANGE"
+Procedure CHECKCHANGE[ID$, VALUE$]
+	Print "Check Value: " + VALUE$
+End Proc
+~~~
+api*/
+Instruction "UI CheckBox", id$, x, y, width, height, value$, class$, onChange$, group$
+	{
+		#errors
+		aoz.ui.addCheckBox( { id: %id$, x: %x, y: %y, width: %width, height: %height, value: %value$, class: %class$, onChange: %onChange$, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI TextBox
+@description:Displays a TextBox user interface component.
+@param:id$:string:A unique identifier for the component.
+@param:value$:string:The text inside the text box. Empty by default.
+@param:placeHolder$:string:The place holder text. Empty by default.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. No style is used if not set.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, 300 by default.
+@param:fontSize:integer:The size of the font in pixels. If not set, 20 by default.
+@param:padding:number:The padding in pixels between the content and the component dimensions. If not set, 5 by default.
+@param:type$:string:The expected type of text to be entered. If not set, "text" by default.
+@param:fontName$:string:The name of a font to be used for the text.
+@param:min:integer:Sets the minimum value when type$="number" or "range"
+@param:max:integer:Sets the maximum value when type$="number" or "range"
+@param:step:integer:Sets the step value when type$="number" or "range"
+@param:onChange$:string:The name of an AOZ procedure to be called when the selected item is changed.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+The UI TextBox can be used to collect information from a user such as a login form.
+~~~
+// Display a default text box
+UI TextBox "MyTextBox"
+
+// To get the input text you can use the UI Value$ function
+Print UI Value$("MyTextBox")
+
+// You can set the input text value by setting its value$ parameter
+UI TextBox "MyTextBox", value$="TextBox Contents.."
+
+// You can also use the UI Value command
+UI Value "MyTextBox", value$="TextBox Contents.."
+
+// Display a password type TextBox with placeholder text
+UI TextBox "MyTextBox", placeHolder$="Password....", type$="password"
+
+// A date TextBox
+UI TextBox "MyTextBox", type$="date"
+
+// A time TextBox
+UI TextBox "txtUITextBox6", type$="time"
+
+// Text box using a google font
+#googleFont:"baloo"
+UI TextBox "MyTextBox", placeHolder$="Google Font Baloo...", class$="form-control", fontName$="baloo", fontSize=40, width=600
+~~~
+api*/
+Instruction "UI TextBox", id$, x, y, width, value$, fontSize, padding, type$, placeHolder$, fontName$, class$, onChange$, min, max, step, group$
+	{
+		#errors
+		aoz.ui.addTextBox( { id: %id$, value: %value$, class: %class$, x: %x, y: %y, width: %width, fontSize: %fontSize, padding: %padding, placeHolder: %placeHolder$, type: %type$, fontName: %fontName$, min: %min, max: %max, step: %step, onChange: %onChange$, group: %group$} );
+	}
+End Instruction
+
+/**api
+@name:UI Button
+@description:Displays a Button user interface component.
+@param:id$:string:A unique identifier for the component.
+@param:content$:string:The text to display on the button. If not set, "button" by default.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. No style is used if not set.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, the width will auto grow to fit the content.
+@param:height:integer:The height of the component in pixels. If not set, the height will auto grow to fit the content.
+@param:fontSize:integer:The size of the font in pixels. If not set, 20 by default.
+@param:padding:number:The padding in pixels between the content and the component dimensions. If not set, 5 by default.
+@param:onClick$:string:The name of an AOZ procedure to be called when the button is pressed.
+@param:iconClass$:string:The name of a CSS (Cascading Style Sheet) class used to add an icon to the button.
+@param:fontName$:string:The name of a font to be used for the content$ text.
+@param:tooltip$:string:The text to display as a tooltip popup.
+@param:tooltipPlacement$:string:The position of the tooltip popup. If not set, "auto" by default.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+Please see the UI Demo for more button examples.
+~~~
+// Display a default button
+UI Button "ByButton"
+
+// A default button with an icon
+// Boostrap Icons classes for the button iconClass$ param can be found here: https://icons.getbootstrap.com/
+Load CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+UI Button "ByButton", content$="Icon Button", iconClass$="bi bi-emoji-heart-eyes-fill", width=150
+
+// An icon only button
+Load CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+UI Button "ByButton", content$="", class$="btn btn-outline-info", fontSize=50, iconClass$="bi bi-hand-thumbs-up-fill", width=80
+
+// A bootstrap styled button with onClick% event
+UI Button "ByButton", y=350, content$="Button Event Handler", width=300, class$="btn btn-success", onClick$="BUTTON_EVENT"
+Procedure BUTTON_EVENT[ID$]
+	Print="You Clicked The Button"
+End Proc
+
+// Buttons with tooltips
+UI Button "ByButton1", x=100, y=350, content$="Tooltip Top", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Top", tooltipPlacement$="top"
+UI Button "ByButton2", x=100, y=400, content$="Tooltip Right", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Right", tooltipPlacement$="right"
+UI Button "ByButton3", x=100, y=450, content$="Tooltip Left", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Left",tooltipPlacement$="left"
+UI Button "ByButton4", x=100, y=500, content$="Tooltip Bottom", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Bottom", tooltipPlacement$="bottom"
+~~~
+api*/
+Instruction "UI Button", id$, x, y, width, height, content$, fontSize, padding, iconClass$, tooltip$, tooltipPlacement$, fontName$, class$, onClick$, group$
+	{
+		#errors
+		aoz.ui.addButton( { id: %id$, content: %content$, class: %class$, x: %x, y: %y, width: %width, height: %height, fontSize: %fontSize, padding: %padding, onClick: %onClick$, iconClass: %iconClass$, fontName: %fontName$, tooltip: %tooltip$, tooltipPlacement: %tooltipPlacement$, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI TextArea
+@description:Displays a Button user interface component.
+@param:id$:string:A unique identifier for the component.
+@param:value$:string:The text to display in the component. Empty by default.
+@param:placeHolder$:string:The place holder text. Empty by default.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. No style is used if not set.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, 300 by default.
+@param:rows:integer:The number of rows for the component. If not set, 2 by default.
+@param:fontSize:integer:The size of the font in pixels. If not set, 20 by default.
+@param:padding:number:The padding in pixels between the content and the component dimensions. If not set, 5 by default.
+@param:fontName$:string:The name of a font to be used for the content$ text.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+~~~
+// Display a default TextArea
+UI TextArea "MyTextArea"
+
+// To get the input text you can use the UI Value$ function
+Print UI Value$("MyTextArea")
+
+// You can set the input text value by setting its value$ parameter
+UI TextArea "MyTextArea", value$="TextArea Contents.."
+
+// You can also use the UI Value command
+UI Value "MyTextArea", value$="TextArea Contents.."
+
+// Bootstrap style with 5 rows of text
+UI TextArea "MyTextArea" class$="form-control", value$="Bootstrap Style with 5 rows of text", rows=5
+
+// Bootstrap style with google font
+#googleFont:"baloo"
+UI TextArea "MyTextArea", value$="Styled using bootstrap !!!!", rows=10, width=500, fontName$="baloo", class$="text-info bg-dark"
+~~~
+api*/
+Instruction "UI TextArea", id$, x, y, width, rows, value$, fontSize, padding, placeHolder$, fontName$, class$, group$
+	{
+		#errors
+		aoz.ui.addTextArea( { id: %id$, value: %value$, class: %class$, x: %x, y: %y, width: %width, fontSize: %fontSize, padding: %padding, placeHolder: %placeHolder$, rows: %rows, fontName: %fontName$, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Image
+@description:Displays an Image user interface component.
+@param:id$:string:An unique identifier for the component.
+@param:x:integer:The horizontal position on the screen. If not set, 10 by default.
+@param:y:integer:The vertical position on the screen. If not set, 10 by default.
+@param:width:integer:The width of the component in pixels. If not set, source width by default.
+@param:height:integer:The height of the component in pixels. If not set, source height by default.
+@param:src$:string:URL of the image source. This URL can to be formatted as a http/https link, or generated by the Image DataURL$ instruction to use an image from the bank image. If not set, default image is used.
+@param:onClick$:string:The name of an AOZ procedure to be called when the image is pressed.
+@param:tooltip$:string:The text to display as a tooltip popup.
+@param:tooltipPlacement$:string:The position of the tooltip popup. If not set, "auto" by default.
+@param:*image$:string:Number or name of the image.
+@param:group$:string:A user defined name used to group the components. Multiple components with the same group name can be deleted using UI Cls group$
+@content:
+Please see the UI Demo for more button examples.
+~~~
+// Display a default image
+UI Image "MyImage"
+
+// Display an image from a web link
+UI Image "MyImage", src$="https://www.vintageisthenewold.com/wp-content/uploads/2018/10/AMOS.png"
+
+// Display an image from the Image Bank
+UI Image "MyImage", src$=Image DataURL$( "lucie.png" )
+UI Image "MyImage", image$="lucie.png"
+UI Image "MyImage", image$="lucie"
+UI Image "MyImage", image=10
+
+// An Image with onClick% event
+UI Image "MyImage", y=350, width=300, onClick$="IMAGE_EVENT"
+Procedure IMAGE_EVENT[ID$]
+	Print "You Clicked The Image"
+End Proc
+
+// Images with tooltips
+UI Image "MyImage1", x=100, y=350, onClick$="IMAGE_EVENT", tooltip$="Tooltip Top", tooltipPlacement$="top"
+UI Image "MyImage2", x=100, y=400, onClick$="IMAGE_EVENT", tooltip$="Tooltip Right", tooltipPlacement$="right"
+UI Button "MyImage3", x=100, y=450, onClick$="IMAGE_EVENT", tooltip$="Tooltip Left",tooltipPlacement$="left"
+UI Button "MyImage4", x=100, y=500, onClick$="IMAGE_EVENT", tooltip$="Tooltip Bottom", tooltipPlacement$="bottom"
+~~~
+api*/
+Instruction "UI Image", id$, x, y, width, height, src$, tooltip$, tooltipPlacement$, onClick$, image = (index), group$, class$
+	{
+		#errors
+		aoz.ui.addImage( { id: %id$, x: %x, y: %y, width: %width, height: %height, src: %src$, onClick: %onClick$, tooltip: %tooltip$, tooltipPlacement: %tooltipPlacement$, image: aoz.checkIndex(%image), group: %group$, class: %class$  } );
+	}
+End Instruction
+
+/**api
+@name:UI Popup
+@description:Displays a UI Popup component.
+@param:id$:string:A unique identifier for the component.
+@param:content$:string:The text to be displayed in the popup. Empty by default.
+@param:placement$:string:The screen location for the popup. If not set, "top-center" by default.
+@param:delay:integer:The number of milliseconds before the popup is hidden from the screen. If not set, 5 by default.
+@param:class$:string:The CSS (Cascading Style Sheet) class to be used to style the component. If not set, a default style is used.
+@content:
+The UI Popup can be used to display pop up notifications, also known as "Toasts"
+~~~
+// Show a default popup
+UI Popup "MyPopup", content$="The is default popup message with a delay of 5 seconds"
+
+// Some more examples
+UI Popup "MyPopup1", content$="Popup position top-left with a delay of 5 seconds", placement$="top-left"
+UI Popup "MyPopup2", content$="Popup position top-center with a delay of 6 seconds", placement$="top-center", delay=6000, class$="text-white bg-success"
+UI Popup "MyPopup3", content$="Popup position top-right with a delay of 7 seconds", placement$="top-right", delay=7000, class$="text-white bg-dark"
+UI Popup "MyPopup4", content$="Popup position bottom-left with a delay of 8 seconds",placement$="bottom-left", delay=8000, class$="bg-warning"
+UI Popup "MyPopup5", content$="Popup position bottom-center with a delay of 9 seconds", placement$="bottom-center", delay=9000, class$="text-white bg-danger"
+UI Popup "MyPopup6", content$="Popup position bottom-right with a delay of 10 seconds", placement$="bottom-right", delay=10000, class$="text-white bg-primary"
+UI Popup "MyPopup7", content$="Popup position center with a delay of 11 seconds", placement$="center",delay=11000, class$="bg-info"
+UI Popup "MyPopup8", content$="Popup position left-center with a delay of 12 seconds", placement$="left-center", delay=12000, class$="bg-secondary"
+UI Popup "MyPopup9", content$="Popup position left-center with a delay of 13 seconds", placement$="right-center", delay=13000, class$="bg-secondary"
+~~~
+api*/
+Instruction "UI Popup", id$, content$, placement$, delay, class$
+	{
+		#errors
+		aoz.ui.showPopup( { id: %id$, content: %content$, placement: %placement$, delay: %delay, class: %class$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Delete
+@description:Delete a UI Component from the display.
+@param:id$:string:The unique identifier for the component you want to delete
+@content:
+The UI Delete is used to remove a UI element from the display. You can also use UI Cls to delete all UI components.
+
+The UI components are overlayed on top of the AOZ canvas and are not part of an AOZ screen
+
+They use the manifest screen dimensions for sizing and positioning and are not affected by the Cls or Screen commands.
+~~~
+// Add a text box that we will delete
+UI TextBox "MyTextBlock"
+
+// Remove the existing text box
+UI Delete "MyTextBlock"
+~~~
+api*/
+Instruction "UI Delete", id$
+	{
+		#errors
+		aoz.ui.delete( { id: %id$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Cls
+@description:Delete UI Components from the display.
+@param:group$:string:Optional group name. Only components that have the specified group defined will be deleted.
+@content:
+The UI Cls is used to delete UI components from the display. You can also use the UI Delete to delete individual components.
+
+The UI components are overlayed on top of the AOZ canvas and are not part of an AOZ screen
+
+They use the manifest screen dimensions for sizing and positioning and are not affected by the Cls or Screen commands.
+~~~
+UI TextBox "MyTextBox1"
+UI TextBox "MyTextBox2"
+UI TextBox "MyTextBox3"
+UI TextBox "MyTextBox4", group$ = "MyGroup"
+UI TextBox "MyTextBox5", group$ = "MyGroup"
+
+// Delete all
+UI Cls
+
+// Delete only "MyGroup"
+UI Cls group$ = "MyGroup"
+~~~
+api*/
+Instruction "UI Cls", group$
+	{
+		#errors
+		aoz.ui.delete( { group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Show
+@description:Show UI elements that have been hidden using the UI Hide instruction
+@param:id$:string:Optional unique identifier for the component you want to show
+@param:group$:string:Optional group name. Only components that have the specified group defined will be displayed.
+@content:
+The UI Show instruction is used to show UI elements when that have previously been hidden.
+~~~
+// Add a text box that we will hide
+UI TextBox "MyTextBlock"
+UI Hide "MyTextBlock"
+Wait Key
+UI Show "MyTextBlock"
+
+// Show all UI components
+UI Show
+
+// Show only UI components that have a specified group$ assigned
+UI TextBox "MyTextBlock1", group$="showme"
+UI TextBox "MyTextBlock2"
+UI Hide
+UI Show group$="showme"
+~~~
+api*/
+Instruction UI Show, id$, group$
+	{
+		#errors
+		aoz.ui.setVisible( { id: %id$, visible: true, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Hide
+@description:Hide UI elements from the display
+@param:id$:string:The unique identifier for the component you want to hide
+@param:group$:string:Optional group name. Only components that have the specified group defined will be hidden.
+@content:
+The UI Hide instruction is used to hide UI elements. You can make the element appear on the screen again by using the UI Show instruction.
+~~~
+// Add a text box that we will hide
+UI TextBox "MyTextBlock"
+Wait Key
+UI Hide "MyTextBlock"
+
+// Hide all UI components
+UI Hide
+
+// Hide only components with a specified group$ assigned
+UI TextBox "MyTextBlock1", group$="hideme"
+UI TextBox "MyTextBlock2"
+
+UI Hide group$="hideme"
+
+~~~
+api*/
+Instruction UI Hide, id$, group$
+	{
+		#errors
+		aoz.ui.setVisible( { id: %id$, visible: false, group: %group$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Enable
+@description:Enable all the user actions on a UI element.
+@content:
+The UI Enable instruction is used to enable all the user actions on a UI element. You can to disable an element by using the UI Disable instruction.
+~~~
+// Add a disactivated Button linked on the BTN_CLICK procedure
+UI Button "MyButton", OnClick$="BTN_CLICK"
+UI Disable "MyButton" // We can't to click
+Wait Key
+UI Enable "MyButton" // Click enabled
+
+Procedure BTN_CLICK[ ID$ ]
+	Print "Click!"
+End Proc
+
+~~~
+api*/
+Instruction UI Enable, id$
+	{
+		#errors
+		aoz.ui.setEnable( { id: %id$, value: true } );
+	}
+End Instruction
+
+/**api
+@name:UI Disable
+@description:Disable all the user actions on a UI element.
+@content:
+The UI Disable instruction is used to disable all the user actions on a UI element. You can to enable an element by using the UI Enable instruction.
+~~~
+// Add a Button linked on the BTN_CLICK procedure
+UI Button "MyButton", OnClick$="BTN_CLICK"
+Wait Key
+UI Disable "MyButton" // We can't to click
+
+Procedure BTN_CLICK[ ID$ ]
+	Print "Click!"
+End Proc
+
+~~~
+api*/
+Instruction UI Disable, id$
+	{
+		#errors
+		aoz.ui.setEnable( { id: %id$, value: false } );
+	}
+End Instruction
+
+/**api
+@name:UI Value
+@description:Updates ths value of a UI Component.
+@param:id$:string:The unique identifier for the component you want to set its value.
+@param:value$:string:The value used to update the component.
+@content:
+UI Value can be used to update an existing components value.
+~~~
+// TextBox example
+UI TextBox "MyTextBox"
+UI Value "MyTextBox", value$="Updated Value..."
+
+// Select example
+UI Select "MySelect", items$="1:This is item 1,2:This is item 2,3:This is item 3"
+UI Value "MySelect", value$="2"
+
+UI CheckBox "MyCheckBox"
+UI Value "MyCheckBox", value$="true"
+~~~
+api*/
+Instruction "UI Value", id$, value$
+	{
+		#errors
+		aoz.ui.setValue( { id: %id$, value: %value$ } );
+	}
+End Instruction
+
+/**api
+@name:UI HideTooltip
+@description:Hides a button tooltip if it is visible
+@param:id$:string:The unique identifier for the component
+@content:
+In some scenarios you may find that a button tooltip stays visible when the component loses focus, you can programmatically hide the tooltip with this instruction.
+~~~
+UI HideTooltip "MyButton"
+~~~
+api*/
+Instruction "UI HideTooltip", id$
+	{
+		#errors
+		aoz.ui.hideTooltip( { id: %id$ } );
+	}
+End Instruction
+
+/**api
+@name:UI Value$
+@description:Returns the value of a UI component
+@param:id$:string:The unique identifier for the component you want to return its value.
+@return:string:The value of the UI component.
+@content:
+Used to return the value of a UI component. Not all components have a value parameter. For example, attempting to return the value for a UI Popup components will return an empty value.
+~~~
+// UI TextBox example
+UI TextBox "MyTextBox", value="The TextBox Value.."
+Print UI Value$("MyTextBox")
+
+// UI Radio
+UI Radio "MyRadio", items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", value$="2"
+Print UI Value$("MyRadio")
+
+// Slider example
+UI Slider "MySlider"
+Print UI Value$("MySlider")
+~~~
+api*/
+Function "UI Value$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getValue({ id: %id$ }) } )
+
+/**api
+@name:UI Property$
+@description:Returns the value of a UI component property.
+@param:id$:string:The unique identifier of an existing UI component
+@param:propertyName$:string:The name of a UI Component property
+@content:
+api*/
+Function "UI Property$", id$, propertyName$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, %propertyName$ ) } )
+
+/**api
+@name:UI Property
+@description:Returns the value of a UI component property.
+@param:id$:string:The unique identifier of an existing UI component
+@param:propertyName$:string:The name of a UI Component property
+@content:
+api*/
+Function "UI Property", id$, propertyName$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, %propertyName$ ) } )
+
+/**api
+@name:UI X
+@description:Returns the current 'x' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI X", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "x" ) } )
+
+/**api
+@name:UI Y
+@description:Returns the current 'y' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Y", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "y" ) } )
+
+/**api
+@name:UI Width
+@description:Returns the current 'width' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Width", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "width" ) } )
+
+/**api
+@name:UI Height
+@description:Returns the current 'height' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Height", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "height" ) } )
+
+/**api
+@name:UI FontSize
+@description:Returns the current 'fontSize' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI FontSize", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "fontsize" ) } )
+
+/**api
+@name:UI FontName$
+@description:Returns the current 'fontName$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI FontName$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "fontname" ) } )
+
+/**api
+@name:UI Group$
+@description:Returns the current 'group$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Group$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "group" ) } )
+
+/**api
+@name:UI Padding
+@description:Returns the current 'padding' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Padding", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "padding" ) } )
+
+/**api
+@name:UI Content$
+@description:Returns the current 'content$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Content$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "content" ) } )
+
+/**api
+@name:UI Min
+@description:Returns the current 'min' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Min", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "min" ) } )
+
+/**api
+@name:UI Max
+@description:Returns the current 'max' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Max", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "max" ) } )
+
+/**api
+@name:UI Step
+@description:Returns the current 'step' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Step", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "step" ) } )
+
+/**api
+@name:UI Rows
+@description:Returns the current 'rows' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Rows", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "rows" ) } )
+
+/**api
+@name:UI Placeholder$
+@description:Returns the current 'placeHolder' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Placeholder$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "placeholder" ) } )
+
+/**api
+@name:UI Tooltip$
+@description:Returns the current 'tooltip$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Tooltip$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "tooltip" ) } )
+
+/**api
+@name:UI TooltipPlacement$
+@description:Returns the current 'TooltipPlacement$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI TooltipPlacement$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "tooltipplacement" ) } )
+
+/**api
+@name:UI IconClass$
+@description:Returns the current 'iconClass$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI IconClass$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "iconclass" ) } )
+
+/**api
+@name:UI Class$
+@description:Returns the current 'iconClass$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Class$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "class" ) } )
+
+/**api
+@name:UI Type$
+@description:Returns the current 'type$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Type$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "type" ) } )
+
+/**api
+@name:UI OnChange$
+@description:Returns the current 'onChange$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI OnChange$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "onchange" ) } )
+
+/**api
+@name:UI OnClick$
+@description:Returns the current 'onClick$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI OnClick$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "onclick" ) } )
+
+/**api
+@name:UI Items$
+@description:Returns the current 'items$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Items$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "items" ) } )
+
+/**api
+@name:UI Src$
+@description:Returns the current 'src$' value of a UI component
+@param:id$:string:The unique identifier of an existing UI component
+@content:
+api*/
+Function "UI Src$", id$
+{
+	#errors
+}
+End Function( { aoz.ui.getProperty( %id$, "src" ) } )
+
+/**api
+@name:UI Focus
+@description:Sets focus to a component
+@param:id$:string:The unique identifier for the component
+api*/
+Instruction "UI Focus", id$
+	{
+		#errors
+		aoz.ui.setFocus( %id$ );
+	}
+End Instruction
+
+/**api
+@name:UI SelectText
+@description:Selects all the text in a TextBox component
+@param:id$:string:The unique identifier for TextBox component
+api*/
+Instruction "UI SelectText", id$
+	{
+		#errors
+		aoz.ui.select( %id$ );
+	}
+End Instruction

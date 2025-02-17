@@ -1,0 +1,24 @@
+<i>Exit</i>
+<b>Exit</b> xxxxxxx
+=
+EXIT forces the program to leave a loop immediately, and it can be used to escape from all the types of loop
+employed in AOZ, such as FOR ... NEXT, REPEAT ... UNTIL, WHILE ... WEND and DO ... LOOP.
+
+Any number of loops may be nested inside of one another, and when used on its own, EXIT will short-circuit the
+innermost loop only. By including an optional number after EXIT, that number of nested loops will be taken into
+account before the EXIT is made, and the program will jump directly to the instruction immediately after the
+relevant loop.
+
+For example:
+@code
+Do
+Do
+Input "Type in a number";X
+Print "I am the inner loop"
+If X=1 Then Exit
+If X=2 Then Exit 2
+Loop
+Print "I am the outer loop"
+Loop
+Print "And I am outside both loops!"
+

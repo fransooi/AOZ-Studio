@@ -1,0 +1,5 @@
+<i>Sprite Hide</i>
+<b>Sprite Hide</b> xxxxxxx
+=
+All sprites will be made invisible if you ommit to specify the index of the sprite to show.
+

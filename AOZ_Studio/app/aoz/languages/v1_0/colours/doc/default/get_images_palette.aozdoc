@@ -1,0 +1,5 @@
+<i>Get Images Palette</i>
+<b>Get Images Palette</b> xxxxxxx
+=
+This instruction only has an effect if the screen has been opened in paletted mode, and will invoke a remapping process of all the pixels of the screen that might induce a delay.
+

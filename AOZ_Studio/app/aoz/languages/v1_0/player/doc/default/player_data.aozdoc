@@ -1,0 +1,18 @@
+<i>Player Data</i>
+<b>Player Data</b> xxxxxxx
+=
+This command is used for storing simple data items, for example, a players progress in your game, inventory items or game settings and preferences.
+
+Use the Player Data$() function to retrieve the stored data.
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+
+// Save items
+Player Data itemName$="maxUnlockedLevel", itemValue$="3"
+Player Data itemName$="gameMusicVolumn", itemValue$="0"
+
+// Retrieve items
+Print Player Data$(itemName$="maxUnlockedLevel")
+Print Player Data$(itemName$="gameMusicVolumn")
+@code
+

@@ -1,0 +1,9 @@
+<i>Menu Active</i>
+<b>Menu Active</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+MENU ACTIVE reverses the effect of a previous MENU INACTIVE command. An entire level or single item
+specified by its parameters can be re-activated and the original appearance of their title strings will be re-displayed.
+
+

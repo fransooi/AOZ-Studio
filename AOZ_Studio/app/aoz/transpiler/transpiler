@@ -1,0 +1,6 @@
+if [[ $OSTYPE == 'darwin'* ]]
+then
+	./transpiler-mac $@
+else
+	./transpiler-linux $@
+fi

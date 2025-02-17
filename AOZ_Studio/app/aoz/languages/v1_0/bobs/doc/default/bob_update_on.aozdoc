@@ -1,0 +1,14 @@
+<i>Bob Update On</i>
+<b>Bob Update On</b> xxxxxxx
+=
+The BOB UPDATE family of commands provide total control of Sprite movements. Normally, when a Sprite is
+moved its position is updated automatically during the next vertical blank period. Please see WAIT VBL if this
+needs explaining. However, when many bobs are moved with the BOB command, updates will happen before
+all of the Sprites have been successfully repositioned, which can result in jerky patterns of movement. In these
+circumstances, the automatic updating system can be turned off with a BOB UPDATE OFF command.
+
+When the Sprites have been moved successfully, a call to BOB UPDATE will reposition any Sprites that have
+been moved since the last update. Alternatively, BOB UPDATE ON returns to the default status of automatic
+updating.
+
+

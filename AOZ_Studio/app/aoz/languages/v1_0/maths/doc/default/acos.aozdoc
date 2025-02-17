@@ -1,0 +1,10 @@
+<i>ACos</i>
+<b>ACos</b> xxxxxxx
+=
+The ACOS function takes a number between -1 and +1, and calculates the angle which would be needed to generate this value with COS. For example:
+@code
+A#=Cos(45)
+Print Acos(A#)
+@code
+
+

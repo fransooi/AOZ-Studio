@@ -1,0 +1,9 @@
+<i>instruction: call an AMAL program</i>
+<b>Amal</b> channel number,"instruction string"
+<b>Amal</b> channel number,program number
+<b>Amal</b> channel number,memory bank address
+<b>Amal</b> channel number,"instruction string" <b>To</b> address
+=
+The AMAL command is used to assign an AMAL program to an animation channel. This program can be taken from an instruction string, or it may be taken directly from the AMAL memory bank. In either case, the AMAL instruction is followed by the index of the channel to be assigned.
+=
+Each channel can be independently assigned to a Sprite, or a Bob, or a screen.

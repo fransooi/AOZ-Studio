@@ -1,0 +1,9 @@
+<i>CDown$</i>
+<b>CDown$</b> xxxxxxx
+=
+Return the control character (31) to move cursor up one line.
+
+@code
+Print "AO" + CDown$ + "Z"
+@code
+

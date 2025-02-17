@@ -1,0 +1,12 @@
+<i>Hide On</i>
+<b>Hide On</b> xxxxxxx
+=
+This instruction hides the mouse pointer by making it invisible. Although it cannot be seen, it is still active and
+sending back reports, and the position of the mouse pointer co-ordinates can still be read. AOZ Studio will
+automatically count the number of times that the HIDE instruction is used, and employ this number to SHOW the
+mouse pointer once again at your command. If you prefer to keep the mouse pointer invisible all the time and ignore
+the counting system, use the special ON version of the instruction, like this:
+@code
+Hide On
+@code
+

@@ -1,0 +1,21 @@
+<i>List Bank</i>
+<b>List Bank</b> xxxxxxx
+=
+The LIST BANK instruction is used to provide a complete list of all the banks that are available from the current program. Information about the banks is listed in the following order:
+
+- The bank number or index
+- A single letter indicating the type of bank
+- The name of the bank, held in a string of eight characters. Please note that Object banks are identified with the
+letters "Sprite", even though the same images can be used equally well for Sprites or Bobs.
+- The address of the start of the bank in memory, using hexadecimal notation.
+- The length of the bank in normal decimal format. In the case of "Sprite" or "Icon" banks, the number of
+images in the bank will be given instead.
+
+LIST BANK will result in the following sort of report appearing on the screen:
+@code
+1- Sprites S:C61298 	L:0000005
+3- Music   S:C60E80 	L:0001000
+6- Work    S:100000 	L:0010000
+@code
+
+

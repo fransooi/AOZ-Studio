@@ -1,0 +1,22 @@
+html, body
+{
+	margin: 0px;
+	padding: 0px;
+	background-color: #222222
+}
+
+#AOZCanvas
+{
+	display: none;
+}
+
+#aoz_html_content, #aoz_home
+{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	padding: 4px;
+	background-color: #222222;
+}

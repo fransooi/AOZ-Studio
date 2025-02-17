@@ -1,0 +1,51 @@
+Load Asset "libs/editor-sdk/js/dialogs.js", "sdk-dialogs"
+
+DLG_TITLE$ = "" : DLG_MESSAGE$ = "" : DLG_BUTTON_LABEL$ = "" : DLG_FILENAME$ = ""
+DLG_DEFAULT_PATH$ = "" : DLG_MULTISELECTION = False : DLG_SHOW_HIDDEN_FILES = False
+DLG_CREATE_DIRECTORY = False : DLG_PROMPT_CREATE = True : DLG_FILTER$ = ""
+
+Global DLG_TITLE$, DLG_MESSAGE$, DLG_BUTTON_LABEL$
+Global DLG_DEFAULT_PATH$, DLG_MULTISELECTION, DLG_SHOW_HIDDEN_FILES
+Global DLG_CREATE_DIRECTORY, DLG_PROMPT_CREATE, DLG_FILTER$, DLG_FILENAME$
+
+/**
+Opens the File Open Dialog Box and store the selection
+in the DLG_SELECT_COUNT and DLG_FILENAME$ AOZ Variable
+*/
+Procedure OPEN_DIALOG[ PROCNAME$ ]
+	JS Execute "application.editorSDK.dialogs.openFileDialog();"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Opens the File Save Dialog Box and store the selection
+in the DLG_SELECT_COUNT and DLG_FILENAME$ AOZ Variable
+*/
+Procedure SAVE_DIALOG[ PROCNAME$ ]
+	JS Execute "application.editorSDK.dialogs.saveFileDialog();"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Opens the Directory Open Dialog Box and store the selection
+in the DLG_SELECT_COUNT and DLG_FILENAME$ AOZ Variable
+*/
+Procedure DIRECTORY_DIALOG[ PROCNAME$ ]
+	JS Execute "application.editorSDK.dialogs.openDirectoryDialog();"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Gets the path of the selected file given by INDEX and store it
+in the DLG_FILENAME$ AOZ Variable
+INDEX is an integer ( 1 to ... )
+*/
+Procedure GET_SELECTED_FILENAME$[ INDEX ]
+	DLG_FILENAME$ = ""
+	JS Execute "application.editorSDK.dialogs.getSelectedFilename( " + Str$( INDEX - 1 ) + " );"
+	While SDK_BUSY
+	Wend
+End Proc[ DLG_FILENAME$ ]

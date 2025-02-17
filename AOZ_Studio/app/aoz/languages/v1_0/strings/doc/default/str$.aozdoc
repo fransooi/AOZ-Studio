@@ -1,0 +1,12 @@
+<i>Str$</i>
+<b>Str$</b> xxxxxxx
+=
+Str$ converts a real number variable into a string. This can be used to overcome limitations posed by functions like
+CENTRE, which does not accept numbers as parameters, but will work happily with parameters in the form of
+strings.
+
+Here is an example:
+@code
+Centre "Remaining memory is"+Str$(Chip Free)+" Bytes"
+@code
+

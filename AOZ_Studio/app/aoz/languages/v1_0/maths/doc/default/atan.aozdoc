@@ -1,0 +1,14 @@
+<i>ATan</i>
+<b>ATan</b> xxxxxxx
+=
+ATAN returns the arctan of a given number, like this:
+@code
+Degree : Print Tan(2)
+Degree : Print Atan(0.03492082)
+@code
+A hyperbola is a conical section, formed by a plane that cuts both bases of a cone. In other words, an asymmetrical
+curve. Wave forms and trajectories are much more likely to follow this sort of eccentric curve, than perfect arcs of
+circles. The hyperbolic functions express the relationship between various distances of a point on the hyperbolic
+curve and the coordinate axes.
+
+

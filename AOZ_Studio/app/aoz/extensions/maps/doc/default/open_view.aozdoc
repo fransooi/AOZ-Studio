@@ -1,0 +1,16 @@
+<i>Open View</i>
+<b>Open View</b> xxxxxxx
+=
+This instruction allow you to display the content of a map files. The last parameter defines the number of the layer in the map file...
+
+After it has been used, you need to define the visible area of the view with the "Display View" instruction. Then you are ready to display it with a simple call to "Redraw View".
+
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"						// Display it
+@code
+

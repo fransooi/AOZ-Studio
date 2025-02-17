@@ -1,0 +1,106 @@
+{
+    display_and_renderer_commands:
+    { 
+        name: "" //TODO
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "freeze":
+            [
+                Use these commands in your AOZ programs to perform a simple freezing of moving displays.
+
+            ]
+            "unfreeze":
+            [
+                Use these commands in your AOZ programs to perform a simple unfreezing of moving
+displays.
+
+            ]
+            "view":
+            [
+                When the AUTO VIEW OFF instruction is engaged, VIEW can be used to display any changes that have been made to the current screen settings, and they will be displayed at the next vertical blank period following the VIEW command.
+
+            ]
+            "auto_view_on": // TODO same txt as view_off
+            [
+                When SCREEN OPEN is used to create a new screen, the screen is usually displayed at once. This may be
+inconvenient during the initialisation stages of a program, in which case the AUTO VIEW OFF command can be
+used to disable this automatic display system. Screens can then be updated at a convenient point, using the VIEW
+instruction. To re-activate the automatic screen updating system, use the AUTO VIEW ON command.
+
+            ]
+            "auto_view_off": // TODO same txt as view_on
+            [
+                When SCREEN OPEN is used to create a new screen, the screen is usually displayed at once. This may be
+inconvenient during the initialisation stages of a program, in which case the AUTO VIEW OFF command can be
+used to disable this automatic display system. Screens can then be updated at a convenient point, using the VIEW
+instruction. To re-activate the automatic screen updating system, use the AUTO VIEW ON command.
+
+            ]
+            "update_on":
+            [
+                UPDATE ON returns the updating system back to the original automatic setting.
+
+            ]
+            "update_off":
+            [
+                UPDATE OFF turns off the automatic re-drawing system, so that any Bob or Sprite commands will appear to be completely ignored. In actual fact, they are still going on invisibly, in the background.
+            ]
+            "update":
+            [
+                The UPDATE commands are a combination of the BOB UPDATE and SPRITE UPDATE families, and they are
+used to re-draw all objects on the screen in a single operation.
+""
+UPDATE displays any objects which have moved since the last update. You are recommended to add a WAIT VBL
+instruction to ensure a smooth effect.
+
+            ]
+            "update_every":
+            [
+                The UPDATE EVERY command slows down the updating process, so that even the largest Object can be re-drawn during a single screen update. The animation system is regulated by this process, once again providing smooth movement. After the UPDATE EVERY command, simply specify the number of vertical blank periods between
+each screen update, in 50ths of a second. Begin your timing changes with a value of two, and increase the value by
+one unit at a time until the animation becomes smooth.
+""
+One useful effect of using UPDATE EVERY is to reserve more time for AOZ to execute the main
+program. In fact, with careful use of this instruction, it is possible to speed up programs by as much as one third,
+and still maintain excellent animation.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "display_width":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "display_height":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "ntsc":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            
+        }
+    }
+}

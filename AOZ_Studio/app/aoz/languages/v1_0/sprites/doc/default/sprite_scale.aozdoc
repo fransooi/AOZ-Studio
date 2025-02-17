@@ -1,0 +1,20 @@
+<i>Sprite Scale</i>
+<b>Sprite Scale</b> xxxxxxx
+=
+This instruction allows you to zoom any sprite instantly and adapt the size of it's image to your game.
+The scale also affects collision detection, and the collisions will only be generated on the new surface.
+
+Sprite Scale also works with negative value... in case of a negative scale value, the bob will be mirrored in this direction. Hot Spot are also affected by this instruction.
+
+The next example displays a bob on the screen and zooms it until it is bigger than the screen...
+@code
+Load "AMOSPro_Tutorial:Objects/Sprites.abk" 	// Load images from disc
+Cls 0 											// Set up screen
+Sprite 1, 100, 100, 2 							// Display Sprite at position
+
+For S# = 1 To 100
+Sprite Scale 1, S#, S#
+Wait Vbl
+Next
+@code
+

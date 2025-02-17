@@ -1,0 +1,1590 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Database Instruction Set
+ * By Francois Lionet
+ *
+ * @author Baptiste Pillot
+ * @date first pushed on 05/31/2022
+ */
+
+// MODULE IMPLEMENTATION
+
+#need_module: "account"
+{
+
+	const DEBUG = false
+
+	this.answers         = {}
+	this.aoz.moduleDB    = this
+	this.context_number  = 1
+	this.contexts        = {}
+	this.databases       = { author: {}, application: {}, user_author: {}, user_application: {} }
+	this.message_counter = 0
+	this.queue           = []
+	this.socket_counter  = 0
+
+	const asynchronousChain = function(...funcs)
+	{
+		while (funcs.length && funcs[0]()) funcs.shift()
+		if (funcs.length) setTimeout(() => asynchronousChain(...funcs), 100)
+	}
+
+	// @returns array [string real_var_name, bool is_global]
+	const getVariable = (variable, vars) =>
+	{
+		variable = variable.toLowerCase().replace('#', '_f')
+		const global_var = Object.keys(this.aoz.variablesContext.list).find(
+			key => key.toLowerCase() === ('application:' + variable)
+		)
+		const var_name = global_var
+			? global_var.substring(12)
+			: Object.keys(vars).find(key => key.toLowerCase() === variable)
+		return [var_name ? var_name : variable, !!global_var]
+	}
+
+	if (DEBUG) {
+		WebSocket.prototype.sendWebSocket = WebSocket.prototype.send
+		WebSocket.prototype.send = function(data) {
+			if (DEBUG) console.log('send', data)
+			this.sendWebSocket(data)
+		}
+	}
+
+	this.db = function(args)
+	{
+		if (DEBUG) console.log('db', args)
+		if (args.context !== undefined) {
+			this.dbContext(args.context)
+		}
+		if (args.database_name !== undefined) {
+			this.dbDatabase(args.database_name, args.share ? args.share : 'user-application')
+		}
+		if (args.table !== undefined) {
+			this.dbTable(args.table)
+		}
+		if (args.new || args.write_new) {
+			this.dbNew()
+		}
+		if (args.point_on !== undefined) {
+			this.dbPointOn(args.point_on)
+		}
+		if (args.read) this.queue.push({
+			call: 'dbRead', wait: 'dbRead_wait', args: [args.read, args.vars, args.root_vars]
+		})
+		if (args.search) this.queue.push({
+			call: 'dbSearch', wait: 'dbSearch_wait', args: args.search
+		})
+		if (args.search_all) this.queue.push({
+			call: 'dbSearch', wait: 'dbSearch_wait', args: ''
+		})
+		if (args.search_sql) this.queue.push({
+			call: 'dbSearchSql', wait: 'dbSearch_wait', args: args.search_sql
+		})
+		if (args.sql) this.queue.push({
+			call: 'dbSql', wait: 'dbSearch_wait', args: args.sql
+		})
+		if (args.write || args.write_new) this.queue.push({
+			call: 'dbWrite', wait: 'dbWrite_wait',
+			args: [ args.write ? args.write : args.write_new, args.vars, args.root_vars ]
+		})
+
+		const first = this.queue[0]
+		if (first) this[first.call](first.args)
+		if (DEBUG) console.log('queue:first', this.queue, 'first =', first)
+	}
+
+	this.db_wait = function()
+	{
+		const current = this.queue[0]
+		if (DEBUG) console.log('queue:current', this.queue, 'current =', current)
+		if (!current) return true
+		if (this[current.wait]()) {
+			this.queue.shift()
+			const next = this.queue[0]
+			if (DEBUG) console.log('queue:next', this.queue, 'next =', next)
+			if (!next) return true
+			this[next.call](next.args)
+		}
+		return false
+	}
+
+	this.db_waiting = function(wait, callback)
+	{
+		if (typeof wait !== 'string') wait = 'db_waiting'
+		if (DEBUG) console.log(wait, this.message_counter, callback ? 'callback' : '-')
+		const answer = this.answers[this.message_counter]
+		if (!answer) return false
+		let result = callback ? callback.call(this, answer) : true
+		if (DEBUG) console.log(wait + '.result =', result, '(' + (typeof result) + ')')
+		result = (typeof result === 'boolean') ? result : true
+		if (result) delete this.answers[this.message_counter]
+		if (DEBUG && !callback) console.log(wait, 'database =', this.database)
+		return result
+	}
+
+	this.dbConnect = function(callback)
+	{
+		if (DEBUG) console.log('dbConnect', callback)
+		const database = this.database
+		if (database.web_socket && (database.web_socket.readyState === WebSocket.OPEN)) {
+			console.warn('websocket already active', database, callback)
+			if (callback) callback.call(database.web_socket)
+			return
+		}
+
+		const mx                    = ++this.message_counter
+		const need_user_certificate = database.share.startsWith('user')
+		const on_open_callback      = () => {
+			if (!database.certificate) {
+				const certificates = []
+				for (const share_part of database.share.split('_')) {
+					switch (share_part) {
+						case 'application':
+							certificates.push(pc)
+							break
+						case 'author':
+							certificates.push(tc)
+							break
+						case 'user':
+							certificates.push(this.aoz.moduleAccount.certificate)
+							break
+					}
+				}
+				database.certificate = certificates.join('-')
+			}
+			database.web_socket.send(JSON.stringify({
+				mx:          mx,
+				instruction: 'dbOpen',
+				application: this.aoz.manifest.infos.applicationName,
+				author:      this.aoz.manifest.infos.author,
+				certificate: database.certificate,
+				database:    database.name,
+				share:       database.share,
+				user:        this.aoz.moduleAccount.user
+			}))
+			return true
+		}
+		let web_socket_opened = false
+		if (need_user_certificate) {
+			let certificating = false
+			asynchronousChain(
+				() => {
+					if (!this.aoz.moduleAccount.authenticated && !this.aoz.moduleAccount.authenticating)
+						this.aoz.moduleAccount.accountAuthenticate({ mandatory: true })
+					return this.aoz.moduleAccount.authenticated
+				},
+				() => {
+					if (!this.aoz.moduleAccount.certificate && !certificating) {
+						certificating = true
+						this.aoz.moduleAccount.accountCertificate()
+					}
+					return this.aoz.moduleAccount.certificate
+				},
+				() => web_socket_opened,
+				on_open_callback
+			)
+		}
+		//database.web_socket = new WebSocket('wss://db.aoz.li:54443')
+		database.web_socket = new WebSocket('wss://db.aoz.li:4443')
+		database.web_socket.sock_number = ++this.socket_counter
+		database.web_socket.db          = this
+		database.web_socket.aoz         = this.aoz
+		database.web_socket.database    = database
+		database.web_socket.onopen      = need_user_certificate
+			? () => { web_socket_opened = true }
+			: on_open_callback
+		database.web_socket.onmessage = function(event) {
+			const answer = JSON.parse(event.data)
+			if (DEBUG) console.log('onmessage', 'socket', this.sock_number, answer, callback ? 'callback' : '')
+			if (!answer.mx) return
+			if (callback && (answer.mx === mx) && (answer.result === 'opened')) {
+				callback.call(this)
+				callback = undefined
+			}
+			else {
+				this.db.answers[answer.mx] = answer
+				if (DEBUG) console.log('set answer', answer.mx, 'to', answer)
+			}
+		}
+		if (DEBUG) console.log('new WebSocket', database.web_socket.sock_number)
+	}
+
+	this.dbContext = function(context_number)
+	{
+		if (context_number === this.context_number) return
+		this.dbContextSave(this.context_number)
+		this.dbContextLoad(context_number)
+	}
+
+	this.dbContextLoad = function(context_number)
+	{
+		if (context = this.contexts[context_number]) {
+			this.database    = context.database
+			const database   = this.database
+			database.id      = context.id
+			database.records = context.records
+			database.table   = context.table
+		}
+		this.context_number = context_number
+		if (DEBUG) console.log('dbContextLoad', this.context_number, context)
+	}
+
+	this.dbContextSave = function(context_number)
+	{
+		const database = this.database
+		const context  = {
+			database: database,
+			id:       database.id,
+			records:  { ... database.records },
+			table:    database.table
+		}
+		this.contexts[this.context_number] = context
+		if (DEBUG) console.log('dbContextSave', this.context_number, context)
+	}
+
+	this.dbDatabase = function(database_name = 'default', share = 'user-application')
+	{
+		database_name = database_name.toLowerCase()
+		share         = share.replace('-', '_')
+		if (DEBUG) console.log('dbDatabase', database_name, share)
+		let database = this.databases[share][database_name]
+		if (!database) this.databases[share][database_name] = database = {
+			certificate: undefined,
+			id:          1,
+			name:        database_name,
+			records:     {},
+			share:       share,
+			table:       'default'
+		}
+		if (database.web_socket) {
+			database.web_socket.database = database
+		}
+		this.database = database
+		if (DEBUG) console.log('dbDatabase database =', database)
+	}
+
+	this.dbDeleteColumn = function(columns)
+	{
+		if (DEBUG) console.log('dbDeleteColumn', columns)
+		const database   = this.database
+		database.records = {}
+		this.dbConnect(function() {
+			columns = columns.replace(/\s/g, '').split(',')
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbDeleteColumns',
+				database:    database.name,
+				table:       database.table,
+				columns:     columns
+			}))
+		})
+	}
+
+	this.dbDeleteDatabase = function(args)
+	{
+		let database_name = args[0] ? args[0].toLowerCase() : ''
+		let share         = args[1] ? args[1].toLowerCase() : 'user-application'
+		if (DEBUG) console.log('dbDeleteDatabase', database_name, share)
+		share = share.replace('-', '_')
+		if (!database_name.length) {
+			database_name = this.database.name
+			share         = this.database.share
+		}
+		let current_database
+		if ((database_name !== this.database.name) || (share !== this.database.share)) {
+			current_database = this.database
+			this.dbDatabase(database_name, share)
+		}
+		const self = this
+		this.database.records = {}
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbDeleteDatabase',
+				database:    database_name,
+				share:       share
+			}))
+			if (current_database)
+				self.dbDatabase(current_database.name, current_database.share)
+			else
+				self.dbDatabase()
+		})
+	}
+
+	this.dbDeleteRecord = function()
+	{
+		if (DEBUG) console.log('dbDeleteRecord')
+		const database = this.database
+		if (!database.id) {
+			return
+		}
+		if (database.records[database.id]) database.records[database.id] = null
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbDeleteRecord',
+				database:    database.name,
+				table:       database.table,
+				id:          database.id
+			}))
+		})
+	}
+
+	this.dbDeleteTable = function(table = '')
+	{
+		const database = this.database
+		if (!table) {
+			table = database.table
+		}
+		table = table.toLowerCase()
+		if (table === database.table) database.records = {}
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbDeleteTable',
+				database:    database.name,
+				table:       table
+			}))
+		})
+	}
+
+	this.dbFirst = function()
+	{
+		this.dbFlushEmptyRecords()
+		const database = this.database
+		const keys     = Object.keys(database.records)
+		database.id    = keys.length ? keys[0] : 0
+		if (DEBUG) console.log('dbFirst database =', database)
+	}
+
+	this.dbFlushEmptyRecords = function()
+	{
+		const database = this.database
+		for (const id in database.records) if (database.records.hasOwnProperty(id)) {
+			if (!database.records[id]) {
+				delete database.records[id]
+			}
+		}
+	}
+
+	this.dbLast = function()
+	{
+		this.dbFlushEmptyRecords()
+		const database = this.database
+		const keys     = Object.keys(database.records)
+		database.id    = keys.length ? keys[keys.length - 1] : 0
+		if (DEBUG) console.log('dbLast database =', database)
+	}
+
+	this.dbNew = function()
+	{
+		this.database.id = 0
+		if (DEBUG) console.log('dbNew database =', this.database)
+	}
+
+	this.dbNext = function()
+	{
+		const database    = this.database
+		let   get_next_id = false
+		for (const id in database.records) if (database.records.hasOwnProperty(id)) {
+			if (get_next_id) {
+				if (database.records[id]) {
+					if (DEBUG) console.log('dbNext.id = ', id)
+					this.database.id = id
+					return
+				}
+				delete database.records[id]
+			}
+			if (id === database.id) {
+				get_next_id = true
+			}
+		}
+		database.id = 0
+		if (DEBUG) console.log('dbNext database =', database)
+	}
+
+	this.dbPointer = function()
+	{
+		if (DEBUG) console.log('dbPointer', this.database.id)
+		return this.database.id
+	}
+
+	this.dbPrevious = function()
+	{
+		const database = this.database
+		let previous_id = 0
+		for (const id in database.records) if (database.records.hasOwnProperty(id)) {
+			if (id === database.id) {
+				if (DEBUG) console.log('dbPrevious.id =', previous_id)
+				database.id = previous_id
+				return
+			}
+			if (database.records[id])
+				previous_id = id
+			else
+				delete database.records[id]
+		}
+		database.id = 0
+		if (DEBUG) console.log('dbPrevious database =', database)
+	}
+
+	this.dbRead = function(args)
+	{
+		const columns   = args[0]
+		const vars      = args[1]
+		const root_vars = args[2]
+		if (DEBUG) console.log('dbRead', columns, vars, root_vars)
+		const database        = this.database
+		this.caller_root_vars = root_vars
+		this.caller_vars      = vars
+		this.columns          = columns.replace(/\s/g, '').split(',')
+		this.dbConnect(function() {
+			const mx = ++this.db.message_counter
+			if (!database.id)
+				this.db.answers[mx] = { result: {} }
+			else if (database.records[database.id])
+				this.db.answers[mx] = { result: database.records[database.id] }
+			else
+				this.send(JSON.stringify({
+					mx:          mx,
+					instruction: 'dbRead',
+					database:    database.name,
+					table:       database.table,
+					id:          database.id,
+					columns:     columns
+				}))
+		})
+	}
+
+	this.dbRead_wait = function()
+	{
+		return this.db_waiting('dbRead_wait', (answer) => {
+			const result    = answer.result
+			const root_vars = this.caller_root_vars
+			const vars      = this.caller_vars
+			if (this.database.id) {
+				this.database.records[this.database.id] = result
+			}
+			for (let column of this.columns) {
+				if (DEBUG) console.log('- read column', column)
+				column = column.toLowerCase()
+				const [var_name, is_global] = getVariable(column, vars)
+				const in_vars = is_global ? root_vars : vars
+				if (result[column] === undefined) {
+					for (let column_name in result) if (result.hasOwnProperty(column_name)) {
+						const lower_column_name = column_name.toLowerCase()
+						if (
+							(column === lower_column_name)
+							|| (column.endsWith('$') && (column === (lower_column_name + '$')))
+						) {
+							result[column] = result[column_name]
+							delete result[column_name]
+							break
+						}
+					}
+				}
+				if (result[column] === undefined) {
+					if      (column.endsWith('#')) in_vars[var_name] = .0
+					else if (column.endsWith('$')) in_vars[var_name] = ''
+					else                           in_vars[var_name] = 0
+				}
+				else {
+					if      (column.endsWith('#')) in_vars[var_name] = parseFloat(result[column])
+					else if (column.endsWith('$')) in_vars[var_name] = result[column].toString()
+					else                           in_vars[var_name] = parseInt(result[column])
+				}
+			}
+			if (DEBUG) console.log('dbRead database =', this.database)
+		})
+	}
+
+	this.dbRenameColumn = function(args)
+	{
+		const column   = args[0]
+		const new_name = args[1]
+		if (DEBUG) console.log('dbRenameColumn', column, new_name)
+		const database   = this.database
+		database.records = {}
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbRenameColumn',
+				database:    database.name,
+				table:       database.table,
+				column:      column,
+				new_name:    new_name
+			}))
+		})
+	}
+
+	let new_renamed_database_name
+	this.dbRenameDatabase = function(new_name)
+	{
+		if (DEBUG) console.log('dbRenameDatabase', new_name)
+		const database   = this.database
+		database.records = {}
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbRenameDatabase',
+				database:    database.name,
+				new_name:    new_name
+			}))
+			new_renamed_database_name = new_name
+		})
+	}
+
+	this.dbRenameDatabase_wait = function()
+	{
+		return this.db_waiting('dbRenameDatabase_wait', () => {
+			this.dbDatabase(new_renamed_database_name, this.database.share)
+			new_renamed_database_name = undefined
+			if (DEBUG) console.log('dbRenameDatabase database =', this.database)
+		})
+	}
+
+	this.dbRenameTable = function(new_name)
+	{
+		if (DEBUG) console.log('dbRenameTable', new_name)
+		const database = this.database
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbRenameTable',
+				database:    database.name,
+				table:       database.table,
+				new_name:    new_name
+			}))
+			this.database.table = new_name
+		})
+	}
+
+	this.dbSearch = function(search)
+	{
+		if (DEBUG) console.log('dbSearch', search)
+		const database   = this.database
+		database.records = {}
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbSearch',
+				database:    database.name,
+				table:       database.table,
+				search:      search
+			}))
+		})
+	}
+
+	this.dbSearch_wait = function()
+	{
+		const database = this.database
+		return this.db_waiting('dbSearch_wait', (answer) => {
+			if (Array.isArray(answer.results)) for (const record of answer.results) {
+				database.records[record.id ? record.id : Object.values(record).join('~')] = record
+			}
+			const columns = Object.keys(database.records)
+			database.id   = columns.length ? columns[0] : 0
+			if (DEBUG) console.log('dbSearch database =', database)
+		})
+	}
+
+	this.dbSearchSql = function(search)
+	{
+		if (DEBUG) console.log('dbSearchSql', search)
+		const database   = this.database
+		database.records = {}
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbSearchSql',
+				database:    database.name,
+				table:       database.table,
+				search:      search.replace(/(''|“|”|ʺ)/g, '"')
+			}))
+		})
+	}
+
+	this.dbSql = function(query)
+	{
+		if (DEBUG) console.log('dbSql', query)
+		const database   = this.database
+		database.records = {}
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbSql',
+				database:    database.name,
+				table:       database.table,
+				query:       query
+			}))
+		})
+	}
+
+	this.dbPointOn = function(id)
+	{
+		if (DEBUG) console.log('dbPointOn', id)
+		this.database.id = id
+		if (DEBUG) console.log('dbPointOn database =', this.database)
+	}
+
+	this.dbTable = function(table)
+	{
+		if (DEBUG) console.log('dbTable', table)
+		const database   = this.database
+		database.id      = 1
+		database.records = {}
+		database.table   = table.toLowerCase()
+		if (DEBUG) console.log('dbTable database =', database)
+	}
+
+	this.dbWrite = function(args)
+	{
+		const columns   = args[0]
+		const vars      = args[1]
+		const root_vars = args[2]
+		if (DEBUG) console.log('dbWrite', columns, vars, root_vars)
+		const database = this.database
+		const values   = {}
+		for (const column of columns.replace(/\s/g, '').split(',')) {
+			const [var_name, is_global] = getVariable(column, vars)
+			const in_vars = is_global ? root_vars : vars
+			values[column.toLowerCase()] = in_vars[var_name]
+			if (DEBUG) console.log('- will write', column, '=', values[column.toLowerCase()])
+		}
+		if (database.id && database.records[database.id]) {
+			for (column in values) if (values.hasOwnProperty(column)) {
+				database.records[database.id][column] = values[column]
+			}
+		}
+		this.dbConnect(function() {
+			this.send(JSON.stringify({
+				mx:          ++this.db.message_counter,
+				instruction: 'dbWrite',
+				database:    database.name,
+				table:       database.table,
+				id:          database.id,
+				values:      values
+			}))
+		})
+	}
+
+	this.dbWrite_wait = function()
+	{
+		return this.db_waiting('dbWrite_wait', (answer) => {
+			if (answer.id) this.database.id = answer.id
+			if (DEBUG) console.log('dbWrite database =', this.database)
+		})
+	}
+
+}
+
+// END MODULE IMPLEMENTATION
+
+// MODULE API
+/**doc
+@name:Databases
+@description:
+@keywords:
+doc*/
+
+/**api
+@name:DB
+@description:Switches to DB context. You can immediately execute some DB actions too.
+@param:Context:integer:The context number to switch to
+@param:DB$:string:The name of the database to be selected
+@param:Share$:string:The database sharing mode: "author", "application", "user-author" or "user-application" (default)
+@param:Table$:string:The name of the table to be selected
+@param:New:boolean:Point on a new record
+@param:PointOn:integer:Selects the record to which apply next DB Read, DB Write or DB Delete instructions
+@param:Read$:string:The list of the column=variable names which values to read, separated by commas like this: "Column1$, Columne2#, Column3"
+@param:Search$:string:Search records matching the expression, most of times a couple of "Column1$=Value, Column2=101" filters
+@param:SearchAll:boolean:Search all records of the current table, without any filter
+@param:SearchSql$:string:Search records matching the matching expression, using a pure SQL syntax
+@param:Sql$:string:Executes the SQL statement, using a pure SQL syntax
+@param:Write$:string:The list of the column=variable names which values to write into the current record, separated by commas like this: "Column1$, Column2#, Column3"
+@param:WriteNew$:string:The list of the column=variable names which values to write into a new record, separated by commas like this: "Column1$, Column2#, Column3"
+@content:
+If context is set, DB switches to the given context:
+- First, the current context is saved so you will be able to switch back later
+- Then, the wished context date is loaded and selected
+
+The information saved as context are:
+- The selected database
+- The selected table
+- The selected record
+- The list of records resulting the last search
+
+The other parameters allow you to immediately execute DB operations.
+They are an equivalent to call the matching DB instructions.
+- DB$ and optional Share$: Selects the the database. See DB Database.
+- Table$: Selects the table. See DB Table.
+- New: Selects a new record. See DB New.
+- PointOn: Selects a record. See DB Point On.
+- Read$: Reads data from the database current record. See DB Read.
+- Search$: Search records matching the expression. See DB Search.
+- SearchAll: Search all records of the table. See DB Search All.
+- SearchSql$: Search records matching the SQL expression in SQL syntax. See DB Search Sql.
+- Sql$: Executes a native SQL statement. See ***DB Sql***.
+- Write$: Write data to the database current record. See DB Write.
+- WriteNew$: Write data to a new record. See DB Write New.
+
+Example:
+
+This example shows how you can use contexts to read data from two tables in the same loop:
+~~~
+DB Database "test"
+DB 1, Table$ = "address"
+DB 2, Table$ = "city"
+
+Name$ = "Paris"  : DB Write New "Name$"
+Name$ = "Rennes" : DB Write New "Name$"
+Name$ = "Lyon"   : DB Write New "Name$"
+Name$ = "Malta"  : DB Write New "Name$"
+
+DB 2, Search$ = "Name$=Paris" : City_Id = DB Pointer()
+Name$ = "Baptiste" : DB 1, WriteNew$ = "Name$, City_Id"
+
+DB 2, Search$ ="Name$=Rennes" : City_Id = DB Pointer()
+Name$ = "Baptiste" : DB 1, WriteNew$ = "Name$, City_Id"
+
+DB 2, Search$ = "Name$=Paris" : City_Id = DB Pointer()
+Name$ = "Laurant" : DB 1, WriteNew$ = "Name$, City_Id"
+
+DB 2, Search$ = "Name$=Malta" : City_Id = DB Pointer()
+Name$ = "Francois" : DB 1, WriteNew$ = "Name$, City_Id"
+
+DB 1, Search$ = "Name$=Baptiste"
+While DB Pointer()
+	DB Read "City_Id" : City_Id = DB Pointer()
+	DB 2, PointOn = City_Id, Read$ = "Name$"
+	Print "> There is one Baptiste living in "; Name$
+	DB 1
+	DB Next
+Wend
+~~~
+This will get the city for each address and display:
+
+> There is one Baptiste living in Paris
+> There is one Baptiste living in Rennes
+api*/
+Instruction DB, Context, DB$, Share$, Table$, New, PointOn, Read$, Search$, SearchAll, SearchSql$, Sql$, Write$, WriteNew$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'db', waitFunction: 'db_wait', args: {
+		context:    %Context,
+		database:   %DB$,
+		share:      %Share$,
+		table:      %Table$,
+		'new':      %New,
+		point_on:   %PointOn,
+		read:       %Read$,
+		root_vars:  this.root.vars,
+		search:     %Search$,
+		search_all: %SearchAll,
+		search_sql: %SearchSql$,
+		sql:        %Sql$,
+		vars:       vars,
+		write:      %Write$,
+		write_new:  %WriteNew$
+	} }
+}
+End Instruction
+
+/**api
+@name:DB Database
+@description:Selects the database that will the current one for the next DB calls
+@param:DB$:string:The name of the database will be unique into each sharing mode
+@param:Share$:string:The database sharing mode: "author", "application", "user-author" or "user-application" (default)
+@content:
+This instruction allows you to work with multiple databases.
+You can also work with shared databases, common for a user, for all users of an application, etc.
+Each database is identified by its name and a sharing mode. They are stored on the cloud, but will be always accessible to an author applications only, and shared between your users and applications following strict restrictions you set choosing the right sharing mode.
+
+If you do not use DB Database calls, a default database named "default" which will only be usable by the final user, and only into this application, will be used when you call DB instructions.
+
+To enable database sharing, or to work on access multiple databases into your application, call DB Database!
+
+The available sharing modes are:
+- author: this database is common to all applications developed by the software author, and common to all users. You may store here general information you want to be updated once for all your apps, like news about the author, hall of fame of the best players of all your games, or a common country codes table for all your management softwares, that you will manage at one place, etc.
+- application: this database is common to all users that will use the application. You may use this sharing mode to store eg a best scores panel for a game
+- user-author: this private database is common to all applications developed by the software author, but will be different for each user of your softwares
+- user-application: this database is private for the user, and limited to the current application. This is the most private storage, and the sharing mode used by default when you don't precise another one
+
+Examples:
+~~~
+// Read the player personal record for this game (private and will not be visible by any other player ever):
+DB Database "scores"
+DB Read "Best_Score"
+Print "Your best score:", Best_Score
+
+// Read the best score and player name for this game from the common hall of fame:
+DB Database "scores", "application"
+DB Read "Best_Score, Best_Player_Name$"
+Print "The best score ever:", Best_Score, "owned by", Best_Player_Name$
+~~~
+api*/
+Instruction DB Database, DB$ = "default", Share$ = "user-application"
+{
+	#errors
+	// share can be: 'author', 'application', 'user-author', 'user-application'
+	aoz.moduleDB.dbDatabase(%DB$, %Share$)
+}
+End Instruction
+
+/**api
+@name:DB Delete Column
+@description:Deletes a column and all the associated data from the current table
+@param:Columns$:string:The name of the column to be deleted. Multiple columns can be deleted by separating their names with a comma like this: "Column1$, Column2#, Column3"
+@content:
+This instruction should be used for maintenance purpose only, to clean-up some tests you've done and purge columns you will not use anymore.
+The column will be definitively deleted, and all matching data will be loss, so you should be very careful when you use this!
+Please make sure you have selected the right database and table before calling this!
+
+Examples:
+~~~
+DB Database "my_test_database", "author"
+DB Table "my_test_table"
+DB Delete Column "My_Test_Column$"
+DB Delete Column "Another_Column$,A_Float_Column#,A_Number_Column"
+~~~
+api*/
+Instruction DB Delete Column, Columns$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbDeleteColumn', waitFunction: 'db_waiting', args: %Columns$ }
+}
+End Instruction
+
+/**api
+@name:DB Delete Database
+@description:Deletes a database
+@param:DB$:string:The name of the database to delete (will be unique into each sharing mode). If empty or absent, the currently selected database will be deleted
+@param:Share$:string:The database sharing mode: "author", "application", "user-author" or "user-application"
+@content:
+This instruction should be used for maintenance purpose only, to clean-up some tests you've done and purge databases you will not use anymore.
+The database is identified by its name and the sharing mode.
+It will be definitively deleted, and all data will be loss, so you should be very careful when you use this!
+
+Examples:
+~~~
+// Definitively deletes the current database, and all its associated data:
+DB Delete Database
+
+// Definitively deletes another database, which sharing mode is private for the user and application, and all its associated data:
+DB Delete Database "my-database"
+
+// Definitively deletes another database, shared with all users of the current application, and all its associated data:
+DB Delete Database "application-database", "application"
+~~~
+api*/
+Instruction DB Delete Database, DB$ = "", Share$ = "user-application"
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbDeleteDatabase', waitFunction: 'db_waiting', args: [ %DB$, %Share$ ] }
+}
+End Instruction
+
+/**api
+@name:DB Delete Record
+@description:Deletes the currently selected record and all the associated data from the current table
+@content:
+Please make sure you have selected the right record before calling this, using DB search and navigation instructions.
+
+Examples:
+~~~
+// Nothing selected? This deletes the default record of the "default" table into the "default" database, private for the user and application:
+DB Delete Record
+
+// Purge database and create test data:
+DB Delete Database "my_address_book"
+DB Database "my_address_book"
+DB Table "addresses"
+DB New : Name$="One" : City$="Booh City" : DB Write "City$,Name$"
+DB New : Name$="Two" : City$="Test City" : DB Write "City$,Name$"
+DB New : Name$="Tre" : City$="Test City" : DB Write "City$,Name$"
+
+// Select and search all addresses associated to a test city, then delete all found results:
+DB Database "my_address_book"
+DB Table "addresses"
+DB Search "City$=Test City"
+While DB Pointer()
+	DB Delete Record
+	DB Next
+Wend
+
+// Display the only one record left after deletion, ie "Name One City Booh City":
+DB Database "my_address_book"
+DB Table "addresses"
+DB Search All
+While DB Pointer()
+	DB Read "Name$, City$"
+	Print "Name", Name$, "City", City$
+	DB Next
+Wend
+
+~~~
+api*/
+Instruction DB Delete Record
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbDeleteRecord', waitFunction: 'db_waiting' }
+}
+End Instruction
+
+/**api
+@name:DB Delete Table
+@description:Deletes a table from the current database
+@param:Table$:string:The name of the table to be deleted. If empty or absent, the currently selected table will be deleted
+@content:
+This instruction should be used for maintenance purpose only, to clean-up some tests you've done and purge tables you will not use anymore.
+The table will be definitively deleted, and all data will be loss, so you should be very careful when you use this!
+Please make sure you have selected the right database before calling this!
+
+Examples:
+~~~
+// Without calling DB Database or DB Table, deletes the default table from the default database:
+DB Delete Table
+
+// If DB Database and/or DB Table is called before, deletes the currently selected table:
+DB Database "my_database"
+DB Table "my_table"
+DB Delete Table
+
+// You can delete another table than the currently selected table, but only if into the same currently selected database:
+DB Delete Table "another_table"
+~~~
+api*/
+Instruction DB Delete Table, Table$ = ""
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbDeleteTable', waitFunction: 'db_waiting', args: %Table$ }
+}
+End Instruction
+
+/**api
+@name:DB First
+@description:Selects the first record among those found thanks to the last call to DB Search and its variants
+@content:
+DB Search instructions sometimes return multiple results. You can navigate through these results using DB First, DB Next, DB Last, DB Previous, and DB Pointer().
+
+Examples:
+~~~
+// Write some data:
+DB New
+Name$ = "Francois"
+DB Write "Name$"
+DB New
+Name$ = "Laurant"
+DB Write "Name$"
+// Read all data:
+DB Search All
+// You do not need to call DB First immediately after a DB Search: the selected record is always the first result:
+While DB Pointer()
+	DB Read "Name$"
+	Print Name$
+	DB Next
+Wend
+// Want to display the results twice: you will need DB First to start from the first record again:
+DB First
+While DB Pointer()
+	DB Read "Name$"
+	Print Name$
+	DB Next
+Wend
+~~~
+api*/
+Instruction DB First
+{
+	#errors
+	aoz.moduleDB.dbFirst()
+}
+End Instruction
+
+/**api
+@name:DB Last
+@description:Selects the last record among those found thanks to the last call to DB Search
+@content:
+DB Search instructions sometimes return multiple results. You can navigate through these results using DB First, DB Next, DB Last, DB Previous, and DB Pointer().
+
+Example:
+~~~
+// Write some data:
+DB New
+Name$ = "Francois"
+DB Write "Name$"
+DB New
+Name$ = "Laurant"
+DB Write "Name$"
+// Read all data, and display records starting from the last result:
+DB Search All
+DB Last
+While DB Pointer()
+	DB Read "Name$"
+	Print Name$
+	DB Previous
+Wend
+~~~
+api*/
+Instruction DB Last
+{
+	#errors
+	aoz.moduleDB.dbLast()
+}
+End Instruction
+
+/**api
+@name:DB New
+@description:Selects a new record
+@content:
+You have to use this to store multiple records into your table: this selects a new record, without pointer, ready to write new data.
+
+Example:
+
+Two records will be written into your database, one for "Francois", the other one for "Laurant":
+~~~
+DB New
+Name$ = "Francois"
+DB Write "Name$"
+DB New
+Name$ = "Laurant"
+DB Write "Name$"
+~~~
+api*/
+Instruction DB New
+{
+	#errors
+	aoz.moduleDB.dbNew()
+}
+End Instruction
+
+/**api
+@name:DB Next
+@description:Selects the next record among those found thanks to the last call to DB Search
+@content:
+DB Search instructions sometimes return multiple results. You can navigate through these results using DB First, DB Next, DB Last, DB Previous, and DB Pointer().
+
+Example:
+~~~
+// Write some data:
+DB New
+Name$ = "Francois"
+DB Write "Name$"
+DB New
+Name$ = "Laurant"
+DB Write "Name$"
+// Read all data, and display stored name:
+DB Search All
+While DB Pointer()
+	DB Read "Name$"
+	Print Name$
+	DB Next
+Wend
+~~~
+api*/
+Instruction DB Next
+{
+	#errors
+	aoz.moduleDB.dbNext()
+}
+End Instruction
+
+/**api
+@name:DB Point On
+@param:Id:integer:The record identifier to point on
+@description:Selects a record to which apply DB Read, DB Write or DB Delete instructions
+@content:
+You can use this to point on a record for which you know the identifier, got using DB Pointer().
+
+Example:
+~~~
+// Three records will be written into your database: keep their pointer:
+DB New : Name$ = "Francois" : DB Write "Name$" : ID1 = DB Pointer()
+DB New : Name$ = "Laurant"  : DB Write "Name$" : ID2 = DB Pointer()
+DB New : Name$ = "Baptiste" : DB Write "Name$" : ID3 = DB Pointer()
+
+// Point on Laurant's record to write its phone number:
+Phone_Number$ = "+33555123"
+DB Point On ID2
+DB Write "Phone_Number$"
+
+// Check that we have the phone number written at the right place: with Laurant. Others are empty:
+DB Search All
+While DB Pointer()
+	DB Read "Name$, Phone_Number$"
+	Print Name$, Phone_Number$
+	DB Next
+Wend
+~~~
+api*/
+Instruction DB Point On, Id
+{
+	#errors
+	aoz.moduleDB.dbPointOn(%Id)
+}
+End Instruction
+
+/**api
+@name:DB Pointer
+@description:Returns the identifier representing the pointer to the currently selected record
+@return:integer:The identifier representing the pointer to the currently selected record. 0 / empty means the currently selected record is a new record
+@content:
+DB Search instructions sometimes return multiple results. You can navigate through these results using DB First, DB Next, DB Last, DB Previous, and DB Pointer().
+DB Pointer() used as a boolean result allow you to know if there are still next or previous records.
+
+Example:
+~~~
+// Write some data:
+DB New
+Name$ = "Francois"
+DB Write "Name$"
+DB New
+Name$ = "Laurant"
+DB Write "Name$"
+// Read all data, and display stored name. Stops when there is no more records into search results:
+DB Search All
+While DB Pointer()
+	DB Read "Name$"
+	Print Name$
+	DB Next
+Wend
+~~~
+api*/
+Function DB Pointer
+{
+	#errors
+}
+End Function({ aoz.moduleDB.dbPointer() })
+
+/**api
+@name:DB Previous
+@description:Selects the previous record among those found thanks to the last call to DB Search
+@content:
+DB Search instructions sometimes return multiple results. You can navigate through these results using DB First, DB Next, DB Last, DB Previous, and DB Pointer().
+
+Example:
+~~~
+// Write some data:
+DB New
+Name$ = "Francois"
+DB Write "Name$"
+DB New
+Name$ = "Laurant"
+DB Write "Name$"
+// Read all data, and display records starting from the last result:
+DB Search All
+DB Last
+While DB Pointer()
+	DB Read "Name$"
+	Print Name$
+	DB Previous
+Wend
+~~~
+api*/
+Instruction DB Previous
+{
+	#errors
+	aoz.moduleDB.dbPrevious()
+}
+End Instruction
+
+/**api
+@name:DB Read
+@description:Reads some column values from the currently selected record and store them into matching variables
+@param:Columns$:string:The list of the column=variable names which values to read, separated by commas like this: "Column1$, Column2#, Column3"
+@content:
+This is how you extract data from your database to use it into your program: copy column values to your variables and work with them!
+
+Examples:
+
+This first piece of code writes the best score and player name into your database, if reached:
+~~~
+My_Player_Name$ = "Baptiste"
+Score = 1000
+DB Database "hall_of_fame", "application"
+DB Read "Best_Score"
+If Score > Best_Score
+	Best_Player$ = My_Player_Name$
+	Best_Score = Score
+	DB Write "Best_Score,Best_Player$"
+End If
+~~~
+
+This other piece of code (must be into the same application!) can get the best score and player name back, and show it:
+~~~
+DB Database "hall_of_fame", "application"
+DB Read "Best_Score, Best_Player$"
+Print "Best score, owned by", Best_Player$, ":", Best_Score
+~~~
+api*/
+Instruction DB Read, Columns$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbRead', waitFunction: 'dbRead_wait', args: [ %Columns$, vars, this.root.vars ] }
+}
+End Instruction
+
+/**api
+@name:DB Rename Column
+@description:Give a new name to a column into the current table
+@param:Column$:string:The name of the column to be renamed
+@param:NewName$:string:The new name for the column
+@content:
+You may need to rename a column. All the stored data is kept.
+Be cautionous, as the renaming process can take quite a long time if your table contains a lot of data.
+
+Example:
+Let store a name, rename the storage column to first name, then read and print it:
+~~~
+Name$ = "Josua"
+DB Write "Name$"
+DB Rename Column "Name$", "First_name$"
+DB Read "First_name$"
+Print "His first name is", First_name$
+~~~
+api*/
+Instruction DB Rename Column, Column$, NewName$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbRenameColumn', waitFunction: 'db_waiting', args: [ %Column$, %NewName$ ] }
+}
+End Instruction
+
+/**api
+@name:DB Rename Database
+@description:Give a new name to the current database
+@param:NewName$:string:The new name for the database
+@content:
+You may need to rename your database. All the stored data is kept.
+Be cautionous, as the renaming process can take quite a long time if your database contains a lot of data.
+The target name should not match an already existing database, or the renaming process may crash.
+
+Example:
+First delete these testing databases if they exist, to reset data before testing.
+Let store data into a database, then rename it and read data from the renamed database:
+~~~
+DB Delete Database "test-base"
+DB Delete Database "names-base"
+DB Database "test-base"
+Name$ = "Josua" : DB Write "Name$"
+DB Rename Database "names-base"
+DB Read "Name$" : Print "His name is", Name$
+~~~
+api*/
+Instruction DB Rename Database, NewName$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbRenameDatabase', waitFunction: 'dbRenameDatabase_wait', args: %NewName$ }
+}
+End Instruction
+
+/**api
+@name:DB Rename Table
+@description:Give a new name to the current table
+@param:NewName$:string:The new name for the table
+@content:
+You may need to rename your table. All the stored data is kept.
+Be cautionous, as the renaming process can take quite a long time if your table contains a lot of data.
+The target name should not match an already existing table, or the renaming process may crash.
+
+Example:
+First delete this testing database if it exists, to reset data before testing.
+Let store data into the default table, then rename it and read data from the renamed table:
+~~~
+DB Delete Database "test-base"
+DB Database "test-base"
+Name$ = "Josua" : DB Write "Name$"
+DB Rename Table "names-table"
+DB Read "Name$" : Print "His name is", Name$
+~~~
+api*/
+Instruction DB Rename Table, NewName$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbRenameTable', waitFunction: 'db_waiting', args: %NewName$ }
+}
+End Instruction
+
+/**api
+@name:DB Search
+@description:Search records into the current table that match the simplified search expression
+@param:Search$:string:The search expression, most of times a couple of "Column1$=Value, Column2=101" filters
+@content:
+When you store multiple records in a table, this allows you to search some of them.
+
+Example:
+You have an address book application filled with data (see DB Write): let's find someone's coordinates, knowing its name and city:
+~~~
+DB Search "Name$=Baptiste, City$=Rennes"
+DB Read "Name$, Phone_Number$, Email_Address$"
+Print "Name:", Name$
+Print "Phone number:", Phone_Number$
+Print "Email address:", Email_Address$
+~~~
+api*/
+Instruction DB Search, Search$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbSearch', waitFunction: 'dbSearch_wait', args: %Search$ }
+}
+End Instruction
+
+/**api
+@name:DB Search All
+@description:Search all records of the current table, without any filter
+@content:
+When you store multiple records in a table, this allows you to get all of them.
+It is strongly discouraged to use DB Search All with a table which may store a lot of data: getting them all may be slow and you may override your computer memory capacity.
+
+Example:
+You have an address book application filled with data (see DB Write): let's display them all:
+~~~
+DB Search All
+While DB Pointer()
+	DB Read "Name$, Phone_Number$, Email_Address$"
+	Print "Name:", Name$
+	Print "Phone number:", Phone_Number$
+	Print "Email address:", Email_Address$
+	DB Next
+Wend
+~~~
+api*/
+Instruction DB Search All
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbSearch', waitFunction: 'dbSearch_wait', args: '' }
+}
+End Instruction
+
+/**api
+@name:DB Search Sql
+@description:Search records into the current table that match the SQL search expression
+@param:Search$:string:The search expression, using a pure SQL syntax
+@content:
+When you store multiple records in a table, this allows you to search some of them.
+This is similar to DB Search, but allow you to make more uses of the SQL syntax: any clause that is allowed after the WHERE keyword of an SQL query is allowed.
+
+Example:
+You have an address book application filled with data (see DB Write): let's find someone's coordinates, knowing its name and two possible cities:
+~~~
+Q = Chr$(34)
+DB Search Sql "Name$=" + Q + "Baptiste" + Q + " AND (City$=" + Q + "Rennes" + Q + " OR City$=" + Q + "Paris" + Q + ")"
+DB Read "Name$, Phone_Number$, Email_Address$"
+Print "Name:", Name$
+Print "Phone number:", Phone_Number$
+Print "Email address:", Email_Address$
+~~~
+api*/
+Instruction DB Search Sql, Search$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbSearchSql', waitFunction: 'dbSearch_wait', args: %Search$ }
+}
+End Instruction
+
+/**api
+@name:DB Sql
+@description:Executes a SQL query
+@param:Query$:string:The SQL query string
+@content:
+Executes any SQL query accepted by the AOZ SQL engine.
+Default SQL engine is MySQL 8.
+If the query returns results (e.g. SELECT, SHOW), you will be allowed to navigate through them using DB First, DB Next, DB Last, DB Previous, and DB Pointer().
+
+Examples:
+
+~~~
+// Reset test data:
+DB Delete Table
+
+// Save two records of data:
+Name$ = "Baptiste" : Score = 1000 : Data# = 5.28
+DB Write New "Name$, Score, Data#'
+Name$ = "George" : Score = 500 : Data# = 7.31
+DB Write New "Name$, Score, Data#
+
+// Search all data using pure-SQL (eq. DB Search All):
+DB Query "SELECT Name$, Score, `Data#` FROM `default`"
+While DB Pointer()
+	DB Read "Name$, Score, Data#"
+	Print Name$; " - "; Score; " - "; Data#
+	DB Next
+Wend
+~~~
+
+You may call any valuable SQL query:
+~~~
+DB Query "SHOW DATABASES"
+While DB Pointer()
+    DB Read "Database$"
+    Print "-"; Database$
+    DB Next
+Wend
+~~~
+
+api*/
+Instruction DB Sql, Query$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbSql', waitFunction: 'dbSearch_wait', args: %Query$ }
+}
+End Instruction
+
+/**api
+@name:DB Table
+@description:Selects the table from current database that will the current one for the next DB calls
+@param:Table$:string:The name of the table to be selected
+@content:
+This instruction allows you to work with multiple tables into a given database.
+Each table is identified by its name.
+
+If you do not use DB Table calls, a default table named "default" will be used when you call DB instructions.
+
+Examples:
+~~~
+// A table stores a list of players:
+Table "players"
+Name$ = "Player one" : DB Write New "Name$"
+Name$ = "Player two" : DB Write New "Name$"
+DB Search All
+While DB Pointer()
+	DB Read "Name$"
+	Print "Player", Name$
+	DB Next
+Wend
+
+// Another table stores a list of cities:
+Table "cities"
+City$ = "Paris"  : Zipcode$ = "75000" : DB Write New "City$, Zipcode$"
+City$ = "Rennes" : Zipcode$ = "35000" : DB Write New "City$, Zipcode$"
+DB Search All
+While DB Pointer()
+	DB Read "City$, Zipcode$"
+	Print "City", City$, Zipcode$
+	DB Next
+Wend
+~~~
+api*/
+Instruction DB Table, Table$
+{
+	#errors
+	aoz.moduleDB.dbTable(%Table$)
+}
+End Instruction
+
+/**api
+@name:DB Write
+@description:Writes the values of the listed columns from the program variables to the currently selected record of the current table
+@param:Columns$:string:The list of the column=variable names which values to write, separated by commas like this: "Column1$, Column2#, Column3"
+@content:
+This is how you write data into your database, to be able to get them back or to share it with other users. Copy your variable values into your records and write them!
+
+Examples:
+
+This first piece of code writes the best score and player name into your database, if reached:
+~~~
+My_Player_Name$ = "Baptiste"
+Score = 1000
+DB Database "hall_of_fame", "application"
+DB Read "Best_Score"
+If Score > Best_Score
+	Best_Player$ = My_Player_Name$
+	Best_Score = Score
+	DB Write "Best_Score, Best_Player$"
+End If
+~~~
+
+This other piece of code (must be into the same application!) can get the best score and player name back, and show it:
+~~~
+DB Database "hall_of_fame", "application"
+DB Read "Best_Score,Best_Player$"
+Print "Best score, owned by", Best_Player$, ":", Best_Score
+~~~
+
+This example fills in an address book that you will be able to read thanks to the examples for the DB Search instructions:
+~~~
+DB New
+Name$ = "Baptiste"
+Phone_Number$ = "+33555789"
+Email_Address$ = "baptiste@email.aoz"
+City$ = "Rennes"
+DB Write "Name$, Phone_Number$, Email_Address$, City$"
+DB New
+Name$ = "Laurant"
+Phone_Number$ = "+33555123"
+Email_Address$ = "laurant@email.aoz"
+City$ = "Paris"
+DB Write "Name$, Phone_Number$, Email_Address$, City$"
+~~~
+api*/
+Instruction DB Write, Columns$
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbWrite', waitFunction: 'dbWrite_wait', args: [ %Columns$, vars, this.root.vars ] }
+}
+End Instruction
+
+/**api
+@name:DB Write New
+@description:DB Write New is a shortcut for DB New : DB Write
+@param:Columns$:string:The list of the column=variable names which values to write, separated by commas like this: "Column1$, Column2#, Column3"
+@content:
+Selects a new record, then write the values of the listed columns from the program variables to the currently selected record of the current table.
+See documentation of DB New and DB Write for more information.
+
+Examples:
+
+Those two examples behave exactly the same way:
+~~~
+// example 1:
+DB Write New "Name$, Score"
+
+// example 2:
+DB New
+DB Write "Name$, Score"
+~~~
+api*/
+Instruction DB Write New, Columns$
+{
+	#errors
+	#waiting
+	aoz.moduleDB.dbNew()
+	return { type: 12, waitThis: aoz.moduleDB, callFunction: 'dbWrite', waitFunction: 'dbWrite_wait', args: [ %Columns$, vars, this.root.vars ] }
+}
+End Instruction
+
+// END MODULE API
+
+// MODULE INIT
+DB Database
+// END MODULE INIT

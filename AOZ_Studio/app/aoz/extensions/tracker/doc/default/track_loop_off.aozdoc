@@ -1,0 +1,11 @@
+<i>Track Loop Off</i>
+<b>Track Loop Off</b> xxxxxxx
+=
+Use these commands to make BassoonTracker modules loop over and over again, or to stop a particular loop after it has
+commenced. Try this example:
+@code
+Track Load "AMOSPro_Examples:Music/Mod.BassoonTracker"
+Track Play
+Track Loop Off
+@code
+

@@ -1,0 +1,30 @@
+<i>UI Button</i>
+<b>UI Button</b> xxxxxxx
+=
+Please see the UI Demo for more button examples.
+@code
+// Display a default button
+UI Button "ByButton"
+
+// A default button with an icon
+// Boostrap Icons classes for the button iconClass$ param can be found here: https://icons.getbootstrap.com/
+Load CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+UI Button "ByButton", content$="Icon Button", iconClass$="bi bi-emoji-heart-eyes-fill", width=150
+
+// An icon only button
+Load CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+UI Button "ByButton", content$="", class$="btn btn-outline-info", fontSize=50, iconClass$="bi bi-hand-thumbs-up-fill", width=80
+
+// A bootstrap styled button with onClick% event
+UI Button "ByButton", y=350, content$="Button Event Handler", width=300, class$="btn btn-success", onClick$="BUTTON_EVENT"
+Procedure BUTTON_EVENT[ID$]
+Print="You Clicked The Button"
+End Proc
+
+// Buttons with tooltips
+UI Button "ByButton1", x=100, y=350, content$="Tooltip Top", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Top", tooltipPlacement$="top"
+UI Button "ByButton2", x=100, y=400, content$="Tooltip Right", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Right", tooltipPlacement$="right"
+UI Button "ByButton3", x=100, y=450, content$="Tooltip Left", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Left",tooltipPlacement$="left"
+UI Button "ByButton4", x=100, y=500, content$="Tooltip Bottom", class$="btn btn-secondary", onClick$="BUTTON_EVENT", tooltip$="Tooltip Bottom", tooltipPlacement$="bottom"
+@code
+

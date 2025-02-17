@@ -1,0 +1,11 @@
+<i>Inverse On</i>
+<b>Inverse On</b> xxxxxxx
+=
+The INVERSE instruction swaps over the text and background colours already selected by the PEN and PAPER
+commands, and so sets up an inverse mode for printing. For example:
+@code
+Pen 2 : Paper 4: Print "I appear normal"
+Inverse On : Print "Poetry inverse"
+Inverse Off : Print "Don't be so negative"
+@code
+

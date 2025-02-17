@@ -1,0 +1,19 @@
+<i>Load</i>
+<b>Load</b> xxxxxxx
+=
+Remember it has been suggested that memory bank filenames should have the following extensions, acting as reminders for human eyes, and identification flags for computer searches:
+- "filename.Abk" to indicate a single AOZ Studio memory bank
+- "filename.Abs" for a file containing a group of several memory banks.
+These identifiers can be very useful when employed with certain instructions, as follows:
+@code
+Rem Load an Object bank from current disc
+Load Fsel$("*.Abk"," ","Load an Object bank")
+List Bank : Rem List bank details on screen
+@code
+As can be seen, the LOAD command will load the selected memory bank directly from the appropriate disc file. An
+optional destination bank number can be added after the filename to be loaded, but if it is omitted, or given the
+number zero, data will be re-loaded into the same bank numbers from which it was originally saved. Any current
+information in these existing banks will be completely lost!"
+Object and Icon files are treated slightly differently. If the bank number is greater than zero, any additional images will be added to the end of the existing bank of images.
+
+

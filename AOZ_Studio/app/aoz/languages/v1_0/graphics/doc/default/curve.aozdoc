@@ -1,0 +1,27 @@
+<i>Curve</i>
+<b>Curve</b> xxxxxxx
+=
+Each type can use a 'From' syntax, where start coordinates are specified, or 'To' syntax, where the curve will be draw from the current graphic cursor position.
+See Below for the full list of syntax options.
+
+@code
+//  Arc To Line cx1,cy1,cx2,cy2 (the arc will join the line in the direction it is drawn)
+Curve To cx1, cy1, cx2, cy2, radius
+
+//  Quadratic Curve To x,y with control point cx,cy
+Curve To x, y, cx, cy
+
+// Bezier Curve To x,y through control points
+Curve To x, y, cx1, cy1, cx2, cy2
+
+// Arc from x, y to line cx1,cy1, cx2, cy2
+Curve x, y, cx1, cy1, cx2, cy2, radius
+
+// Quadratic Curve from x1,y1 to x2,y2 via control point cx,cy
+Curve x1, y1, cx, cy, x2, y2
+
+// Bezier Curve from x1,y1 to x2,y2 via control points cx1,cy1 and cx2,cy2
+Curve x1, y1, cx1, cy1, cx2, cy2, x2, y2
+@code
+
+

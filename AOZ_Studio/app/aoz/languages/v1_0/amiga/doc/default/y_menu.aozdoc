@@ -1,0 +1,8 @@
+<i>Y Menu</i>
+<b>Y Menu</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+Y MENU returns the y-coordinate of a menu option, measured relatively to the previous item on screen. Please refer to the demonstration program above.
+
+

@@ -1,0 +1,76 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Clipboard Extension
+ *
+ * @author FL+DB
+ * @date first pushed on 09/01/2022
+ */
+#noWarning:"instruction_not_implemented"
+{	
+	this.copy = function( args )
+	{
+		if ( typeof args.data == 'string' )
+		{
+			//textCopied = ClipboardJS.copy( args.data );
+            if (window.clipboardData && window.clipboardData.setData) 
+			{
+            	return window.clipboardData.setData( "Text", args.data );
+        	}
+        	else if ( document.queryCommandSupported && document.queryCommandSupported( "copy" ) )
+			{
+				var textarea = document.createElement( "textarea" );
+				textarea.textContent = args.data;
+				textarea.style.position = "fixed";
+				document.body.appendChild(textarea);
+				textarea.select();
+				try 
+				{
+					return document.execCommand( "copy" );
+				}
+				catch (ex) 
+				{
+					return false;
+				}
+				finally 
+				{
+					document.body.removeChild( textarea );
+				}
+        	}
+    	}
+	}
+}
+
+
+/**doc
+@name:Aoz Clipboard extension
+@description:The Clipboard extension allows you to have access to the clipboard of the machine
+@description:and copy or paste text or images from your Aoz application. With it, you can export data 
+@description:to other applications running on the same machine the easy way!
+@keywords:clipbord,cut,paste
+@author:Francois Lionet + Dave Baldwin
+@since:Beta 11
+@last:0.9.5.1
+doc*/
+Instruction Clipboard Copy, text$
+{
+	aoz.extensionClipboard.copy({data:%text$});
+}
+End Instruction
+

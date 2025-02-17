@@ -1,0 +1,23 @@
+<i>Wait Vbl</i>
+<b>Wait Vbl</b> xxxxxxx
+=
+This instruction is fundamental to stabilize the speed of your application and syncheronize it perfectly with the display rate: it forces AOZ to "give back the hand" to the system, and wait for the next refresh of the display.
+
+Not only this "giving back the hand to the system" is a mandatory thing to do to ensure that the computer where your application is running does not freeze, it also ensures the speed of your application
+
+The rule is: *ALWAYS* use a Wait Vbl instruction in long loops, or in the main loop of your applicaiton.
+
+This example display the refresh rate of your monitor, usually 60...
+@code
+Timer = 0
+Count = 0
+Print "Press a key when you are ready!"
+Do
+K$ = Inkey$
+If K$ <> "" Then Exit
+Inc Count
+Wait Vbl 		// Synchronize the number of loops to the speed of the display
+Loop
+Print "Your monitor refresh rate is: "; Count / Timer
+@code
+

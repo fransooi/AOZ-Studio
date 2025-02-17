@@ -1,0 +1,165 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Extensions Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"				// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "The Debugging Extension"
+		author: "By Francois Lionet"
+		version: "Version 1"
+		date: "30/12/2020"
+		copyright: "(c) AOZ Studio 2020 - Open Source"
+		start: "debugging.aoz"
+		name: "debugging"
+	}
+
+	// Fonts
+	fonts:
+	{
+		listFonts: "PC"	
+		amiga:
+		[
+		]
+		google:
+		[
+			"IBM Plex Mono",
+			"Roboto"
+		]
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+				"end_app: End application",
+				"restart_app: Restart the application",
+				"pause_app: Enter debugger step-by-step mode",
+				"step_app: Perform one loop of application",
+				"slow_app: Play application in slow-motion",
+				"play_app: Play application at full speed",
+				"step_into: Step into (F9)",
+				"step_over: Step over (F10)",
+				"quit_mask: Quit mask edition",
+				"db_application: Application",
+				"db_watch: Watch",
+				"db_console: Console",
+				"db_source: Source Code",
+				"db_variables: Variables",
+				"db_stack: Stack",
+				"db_settings: Settings",
+				"db_entervalue: Change the value of ",
+				"db_valuebetween: Enter a value between 0 and %1",
+				"db_procedure: Procedure ",
+				"db_instruction: Instruction ",
+				"db_function: Function ",
+				"db_method: Method ",
+				"db_object: Object ",
+				"db_unknown: Unknown ",
+				"db_enternumber: Enter a number:  ",
+				"db_entertext: Enter a string:  ",
+				"db_preferences: AOZ Debugger Preferences",
+				"db_interfacetype: Application window:",
+				"db_wdefpos: Window default position:",
+				"db_close: OK",
+				"db_cancel: Cancel",
+				"db_resetWindows: Reset windows",
+				"db_restoreWindows: Restore windows at startup:",
+				"db_titleviewer: AOZ Viewer",
+				"db_titledebugger: Aoz Debugger",
+				"db_titlepause: Application paused",
+				"db_titlestepslow: Stepping slow",
+				"db_titleslow: Running slow-motion",
+				"db_titleplay: Application running",
+				"db_titleeditingmask: Editing collision mask",
+				"db_displayMasks: Display collision masks:",
+				"db_displayLabels: Display object information:",
+				"db_displayRuler: Display ruler:",
+				"db_displayGrid: Display grid:",
+				"db_gridWidth: Grid width:",
+				"db_gridHeight: Grid height:"
+				"db_displayCrosshair: Display crosshair:",
+				"db_settingsleftright: 1:Left,2:Right",
+				"db_applicationsmallbig: 1:Small,2:Large",
+				"db_fontWidth: Font height",
+				"db_resetMask: Reset mask",
+				"db_help: AOZ Debugger Help",
+				"db_displayDoc: Open main documentation",
+			]
+			fr:
+			[
+				"end_app: Quitter l'application",
+				"restart_app: Relancer l'application",
+				"pause_app: Entrer dans le mode pas-a-pas",
+				"step_app: Executer une boucle de l'application",
+				"slow_app: Lancer l'application au ralenti",
+				"play_app: Relancer l'application a plein vitesse",
+				"step_into: Pas entrant (F8)",
+				"step_over: Pas par au dessus (F9)",
+				"quit_mask: Quitter l'edition de masque",
+				"db_application: Application",
+				"db_watch: Watch",
+				"db_console: Console",
+				"db_source: Source Code",
+				"db_variables: Variables",
+				"db_stack: Pile",
+				"db_settings: Preferences",
+				"db_entervalue: Changer la valeur de ",
+				"db_valuebetween: Entrez une valeur comprise entre 0 et %1",
+				"db_procedure: Procedure ",
+				"db_instruction: Instruction ",
+				"db_function: Function ",
+				"db_method: Methode ",
+				"db_object: Objet ",
+				"db_unknown: Inconnu ",
+				"db_enternumber: Entrez un chiffre:  ",
+				"db_entertext: Entrez une lettre:  ",
+				"db_preferences: Preferences Aoz Debugger",
+				"db_interfacetype: Fenetre Application:",
+				"db_settingsleftright: 1:Gauche,2:Droite"
+				"db_wdefpos: Position par defaut des fenetres:",
+				"db_resetWindows: Re-initialiser les fenetres",
+				"db_restoreWindows: Restorer les fenetres au lancement:",
+				"db_close: OK",
+				"db_cancel: Annuler",
+				"db_titleviewer: AOZ Viewer",
+				"db_titledebugger: AOZ Viewer - Deboggeur Actif",
+				"db_titlepause: Application en pause",
+				"db_titlestepslow: Pas a pas lent",
+				"db_titleslow: Application au ralenti",
+				"db_titleplay: Application en fonctionnement",
+				"db_titleeditingmask: Edition du masque de collision",
+				"db_displayMasks: Afficher masques de collision:",
+				"db_displayLabels: Afficher information objets:",
+				"db_displayRuler: Afficher la regle:",
+				"db_displayGrid: Afficher la grille:",
+				"db_gridWidth: Largeur grille:",
+				"db_gridHeight: Hauteur grille:",
+				"db_displayCrosshair: Afficher le viseur:",
+				"db_fontWidth: Hauteur de la police",
+				"db_applicationsmallbig: 1:Petite,2:Grande",
+				"db_resetMask: R.A.Z. mask",
+				"db_help: Aide AOZ Debugger",
+				"db_displayDoc: Afficher la documentation",
+			]
+		}
+	}
+}

@@ -1,0 +1,18 @@
+<i>Wind Open</i>
+<b>Wind Open</b> xxxxxxx
+=
+The window opened by this instruction will be displayed on screen and used for all subsequent text operation until
+you command otherwise. WIND OPEN must be qualified by a window number (don't forget that zero has already
+been allocated to the current screen), followed by the x,y graphic coordinates setting the top left-hand corner of the
+new window, followed by the width and height of the new window in the number of characters needed. You may
+also specify an optional border style, with values ranging from 1 to 16.
+
+Try this example:
+@code
+For W=1 To 3
+Wind Open W,(W-1)*96,50,10,15,W
+Paper W+3 : Pen W+6 : Clw
+Print "Window";W
+Next W
+@code
+

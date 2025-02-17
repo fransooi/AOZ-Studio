@@ -1,0 +1,32 @@
+<i>Print</i>
+<b>Print</b> xxxxxxx
+=
+Items are printed on the screen, starting from the current cursor position, and they may include the characters in any
+group of variables or constants, up to the maximum line length of 255 characters. The PRINT command is also used
+to display graphics and information on screen, as is demonstrated throughout this User Guide. This Chapter will deal
+with printing text only.
+
+Print statements can occupy their own lines, but if more than one element to be printed is written as a single line of
+your program, each element must be separated from the next by either a semi-colon character or a comma. An
+element to be printed can be a string, a variable or a constant, and is placed inside a pair of quotation marks.
+
+A semi-colon is used to print elements immediately after one another, like this:
+@code
+Print "Follow";"on"
+@code
+A comma moves the cursor to the next "Tab" position on the screen, as follows:
+@code
+Print "Next","Tab"
+@code
+A Tab is an automatic marker that sets up a location for printing, and is often used to lay out columns of figures, or
+to make indentations in text, and setting Tab positions is explained later.
+
+Normally, the cursor is advanced downwards by one line after every PRINT command, but by using the semi-colon
+or comma, the rule can be changed. Here is an example:
+@code
+Print "AOZ"
+Print "Studio"
+Print "is";
+Print "COOL!",
+@code
+

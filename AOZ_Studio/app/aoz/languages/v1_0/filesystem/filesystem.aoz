@@ -1,0 +1,3115 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ FileSystem Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#include_javascript:"ilbm.js-master/iff.js"
+#include_javascript:"ilbm.js-master/jdataview.js"
+#include_javascript:"petitoJPEG-master/pttjpeg.js"
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Files
+@description:Functions and instructions to handle file access
+@intro: TODO
+@conclusion:
+@author:Francois Lionet
+doc*/
+{
+    // Base initilizations
+	this.aoz.moduleFilesystem = this;
+	this.utilities = aoz.utilities;
+	this.filterOut = '';
+	this.filenameWidth = 30;
+	this.data = [];
+	this.openFiles = [];
+	this.load_done = false;
+	this.load_count = 0;
+	this.error = null;
+	this.errorParameter = '';
+	this.nextLine = String.fromCharCode( 10 );
+
+	// Generic loading
+	this.load = function( args )
+	{
+		var path = args[ 0 ];
+		var number = args[ 1 ];
+		var extension = this.aoz.utilities.getFilenameExtension( path );
+		if ( extension.toLowerCase() == 'abk' )
+			return this.loadABK( args );
+		if ( extension.toLowerCase() == 'abs' )
+			throw 'instruction_not_implemented';
+
+		var descriptor = this.aoz.filesystem.getFile( args[ 0 ], { mustExist: true } );
+		var self = this;
+		this.load_done = false;
+		this.aoz.filesystem.loadFile( descriptor, { responseType: 'binary' }, function( response, arrayBuffer, extra )
+		{
+			if ( response )
+			{
+			}
+			self.load_done = true;
+		} );
+	};
+
+	// Variable saving
+	// TODOFL:L will crash! Changes in varptr in raoz.
+	this.saveVariables = function( args )
+	{
+		var self = this;
+		this.load_done = false;
+
+		var path = args[ 0 ];
+		var saveObject = [];
+		for ( var v = 1; v < args.length; v++ )
+		{
+			var variable = args[ v ];
+			var varObj;
+			if ( !variable.dimensions || ( variable.dimensions && variable.dimensions.length > 0 ) )
+			{
+				varObj =
+				{
+					variable: variable,
+					value: this.aoz.getVariable( variable )
+				};
+			}
+			else
+			{
+				var varptr = this.aoz.getVarptr( variable );
+				varObj =
+				{
+					variable: variable,
+					dimensions: varptr[ variable.name ].dimensions,
+					array: varptr[ variable.name ].array
+				}
+			}
+			saveObject.push( varObj );
+		}
+		var text = 'AOZVars:' + JSON.stringify( saveObject );
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: true } );
+		this.aoz.filesystem.saveFile( descriptor, text, { encoding: 'utf8' }, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = 'cannot_save_file';
+				self.errorParameter = path;
+			}
+			self.load_done = true;
+		} );
+	};
+	this.loadVariables = function( args )
+	{
+		var self = this;
+		this.load_done = false;
+
+		var path = args[ 0 ];
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: true } );
+		this.aoz.filesystem.loadFile( descriptor, { responseType: 'utf-8' }, function( response, data, extra )
+		{
+			self.load_done = true;
+			if ( response )
+			{
+				if ( data.substring( 0, 8 ) == 'AOZVars:' )
+				{
+					var saveObject;
+					try
+					{
+						saveObject = JSON.parse( data.substring( 8 ) );
+					}
+					catch( e )
+					{}
+					if ( saveObject )
+					{
+						for ( var v = 0; v < saveObject.length; v++ )
+						{
+							var variable = saveObject[ v ].variable;
+							if ( !variable.dimensions || ( variable.dimensions && variable.dimensions.length > 0 ) )
+							{
+								self.aoz.setVariable( variable, saveObject[ v ].value )
+							}
+							else
+							{
+								var varptr = self.aoz.getVarptr( variable );
+								varptr[ variable.name ].dimensions = saveObject[ v ].dimensions;
+								varptr[ variable.name ].array = saveObject[ v ].array;
+							}
+						}
+						return;
+					}
+				}
+			}
+			self.error = 'cannot_load_file';
+			self.errorParameter = path;
+		} );
+	}
+
+	// Text loading
+	this.loadTextIntoVariable = function( args )
+	{
+		var self = this;
+		this.load_done = false;
+		var path = args[ 0 ];
+		var variable = args[ 1 ];
+		var varptr = this.aoz.getVarptr( variable )[ variable.name ];
+		var tags = args[ 3 ];
+
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: true } );
+		this.aoz.filesystem.loadFile( descriptor, { responseType: 'utf-8' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				self.aoz.setVariable( variable, data );
+			}
+			else
+			{
+				self.error = 'cannot_load_file';
+				self.errorParameter = path;
+			}
+			self.load_done = true;
+		} );
+	};
+	this.loadText = function( args )
+	{
+		var self = this;
+		this.load_done = false;
+		var path = args[ 0 ];
+		var tags = args[ 1 ];
+
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: true } );
+		this.aoz.filesystem.loadFile( descriptor, { responseType: 'utf-8' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				self.result = data;
+			}
+			else
+			{
+				self.error = 'cannot_load_file';
+				self.errorParameter = path;
+			}
+			self.load_done = true;
+		} );
+	};
+	this.saveText = function( args )
+	{
+		var self = this;
+		var path = args[ 0 ];
+		var text = args[ 1 ];
+		var options = [];
+		this.load_done = false;
+		this.aoz.filesystem.saveFile( path, text, options, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = 'cannot_save_file';
+				self.errorParameter = path;
+			}
+			self.load_done = true;
+		} );
+	};
+
+	// Image loading
+	this.loadImage = function( args )
+	{
+		var self = this;
+		this.load_done = false;
+		var path = args[ 0 ];
+		var number = args[ 1 ];
+		var tags = args[ 2 ];
+		var isIff = args[ 3 ];
+
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: true } );
+		var extension = this.aoz.utilities.getFilenameExtension( args[ 0 ] );
+		if ( extension.toLowerCase() == 'iff' )
+			isIff = true;
+		if ( isIff )
+		{
+			this.aoz.filesystem.loadFile( descriptor, { responseType: 'binary' }, function( response, data, extra )
+			{
+				if ( response )
+				{
+					var iffCanvas = document.createElement( 'canvas' );
+					iffCanvas.width = 16;
+					iffCanvas.height = 16;
+
+					try
+					{
+						var iff = new IffContainer( '', iffCanvas );
+						iff.arrayBuffer = data;
+						parseIffChunk( iff, 0, iff.arrayBuffer.byteLength );
+						drawIffImage( iff );
+						var screen = self.aoz.getScreenOrCreateOne( { index: number, width: iffCanvas.width, height: iffCanvas.height, numberOfColors: 32, pixelMode: 0 } );
+						screen.pasteCanvas( iffCanvas, { x: 0, y: 0, width: typeof number == 'undefined' ? iffCanvas.width : undefined, height: typeof number == 'undefined' ? iffCanvas.height : undefined } );
+					}
+					catch ( e )
+					{
+						self.error = 'bad_iff_format';
+						self.errorParameter = path;
+					}
+				}
+				else
+				{
+					self.error = 'cannot_load_file';
+					self.errorParameter = path;
+				}
+				self.load_done = true;
+			}, number );
+		}
+		else
+		{
+			this.aoz.filesystem.loadFile( descriptor, { responseType: 'image' }, function( response, image, extra )
+			{
+				if ( response )
+				{
+					var screen = self.aoz.getScreenOrCreateOne( { index: number, width: image.width, height: image.height, numberOfColors: 32, pixelMode: 0 } );
+					var horizontal = 'center';
+					var vertical = 'middle';
+					var resize = 'fit';
+					if ( tags )
+					{
+						var temp;
+						if ( ( temp = self.aoz.utilities.getTag( tags, [ 'left', 'center', 'right' ] ) ) != '' )
+							horizontal = temp;
+						if ( ( temp = self.aoz.utilities.getTag( tags, [ 'top', 'middle', 'bottom' ] ) ) != '' )
+							vertical = temp;
+						if ( ( temp = self.aoz.utilities.getTag( tags, [ 'fit', 'paste' ] ) ) != '' )
+							resize = temp;
+					}
+					var ratio = 1;
+					if ( resize == 'fit' )
+					{
+						var hRatio = screen.dimension.width / image.width;
+						var vRatio = screen.dimension.height / image.height;
+						ratio = Math.min ( hRatio, vRatio );
+					}
+					var x, y, width, height;
+					switch ( horizontal )
+					{
+						case 'center':
+							x = screen.dimension.width / 2 - image.width / 2 * ratio;
+							break;
+						case 'right':
+							x = screen.dimension.width - image.width * ratio;
+							break;
+						default:
+						case 'left':
+							x = 0;
+							break;
+					}
+					switch ( vertical )
+					{
+						case 'middle':
+							y = screen.dimension.height / 2 - image.height / 2 * ratio;
+							break;
+						case 'bottom':
+							y = screen.dimension.height - image.height * ratio;
+							break;
+						default:
+						case 'top':
+							y = 0;
+							break;
+					}
+					screen.pasteCanvas( image, { x: x, y: y, width: image.width * ratio, height: image.height * ratio } );
+				}
+				else
+				{
+					self.error = 'cannot_load_file';
+					self.errorParameter = path;
+				}
+				self.load_done = true;
+			}, number );
+		}
+	};
+
+
+	// Image saving
+	this.saveImage = function( args )
+	{
+		var self = this;
+		this.load_done = false;
+
+		var path = args[ 0 ];
+		var index = args[ 1 ];
+		var parameter = args[ 2 ];
+		parameter = typeof parameter == 'undefined' ? 0.8 : parameter;
+		if ( parameter < 0 || parameter > 1 )
+			throw { error: 'illegal_function_call', parameter: parameter };
+
+		var descriptor = this.aoz.filesystem.getFile( path, { } );
+
+		var extension = this.aoz.utilities.getFilenameExtension( args[ 0 ] );
+		var type;
+		var screen = this.aoz.currentScreen;
+		if ( typeof index != 'undefined' )
+			screen = this.aoz.getScreen( index );
+		var arrayBuffer;
+		switch ( extension )
+		{
+			case 'png':
+				type = 'image/png';
+				var data = screen.canvas.toDataURL( type, parameter );
+				data = data.substring( 22 );
+				arrayBuffer = this.aoz.utilities.convertStringToArrayBuffer( data );
+				break;
+			case 'jpg':
+			case 'jpeg':
+				var encoder = new pttJPEG();
+				var bw = new encoder.ByteWriter();
+				var data = screen.context.getImageData( 0, 0, screen.canvas.width, screen.canvas.height );
+				var inImage = new encoder.pttImage( data );
+				encoder.encode( parameter * 100, inImage, bw );
+				arrayBuffer = bw.getBuffer();
+				break;
+			case 'gif':
+			default:
+				throw 'image_format_not_supported';
+		}
+		this.aoz.filesystem.saveFile( descriptor, arrayBuffer, { encoding: null }, function( response, data, extra )
+		{
+			if ( !response )
+				self.error = data;
+			self.load_done = true;
+		} );
+	};
+
+	this.load_wait = function()
+	{
+		if ( this.load_count == 0 )
+		{
+			if ( this.load_done == true )
+			{
+				if ( this.error )
+					throw { error: this.error, parameter: this.errorParameter };
+				return true;
+			}
+		}
+		return false;
+	};
+
+	// Loading functions
+	this.loadABK = function( args )
+	{
+		var path = args[ 0 ];
+		var bankNumber = args[ 1 ];
+		var tags = args[ 2 ];
+
+		var self = this;
+		this.loadIt( path, function( response, block, extra )
+		{
+			if ( response )
+			{
+				var convertedBank = self.convert_bank( 'bank', block , { convert: true });
+				if ( convertedBank )
+				{
+					bankNumber = typeof bankNumber != 'undefined' ? bankNumber : convertedBank.number;
+					self.aoz.banks.erase( bankNumber, true );
+					switch ( convertedBank.type )
+					{
+						case 'images':
+							bank = self.aoz.banks.reserve( bankNumber, convertedBank.type, 0, self.aoz.currentContextName );
+							for ( var i = 0; i < convertedBank.data.images.length; i++ )
+							{
+								self.aoz.banks.insertImage( convertedBank.type, i + 1, undefined, undefined, tags, bankNumber, convertedBank.data.images[ i ], convertedBank.data.hotSpots[ i ] );
+								bank.setHotSpot( i + 1, { x:convertedBank.data.hotSpots[ i ].x, y:convertedBank.data.hotSpots[ i ].y } );
+							}
+							bank.setPalette( convertedBank.data.palette );
+							self.aoz.banks.updateBank( bank, bank.index, self.aoz.currentContextName );
+							break;
+						case 'samples':
+							self.load_done = false;
+							bank = self.aoz.banks.reserve( bankNumber, 'samples', convertedBank.data.length, self.aoz.currentContextName );
+							var count = convertedBank.data.length;
+							for ( var i = 0; i < convertedBank.data.length; i++ )
+							{
+								bank.addSound( i, 'sample_' + i, convertedBank.data[ i ].buffer, tags, function( response, data, extra )
+								{
+									count--;
+									if ( count == 0 )
+									{
+										self.load_done = true;
+									}
+								} );
+							}
+							self.aoz.banks.updateBank( bank, bank.index, self.aoz.currentContextName );
+							break;
+						case 'tracker':
+						case 'data':
+						case 'work':
+						default:
+							bank = self.aoz.banks.reserve( bankNumber, convertedBank.type, convertedBank.data.length, self.aoz.currentContextName );
+							bank.getElement( 1 ).copyFrom( 0, convertedBank.data, 0, convertedBank.data.length );
+							self.aoz.banks.updateBank( bank, bank.index, self.aoz.currentContextName );
+							break;
+					}
+				}
+			}
+		} );
+	}
+	this.loadIt = function( path, callback, extra )
+	{
+		var descriptor = this.aoz.filesystem.getFile( path );
+
+		var self = this;
+		this.load_done = false;
+		this.aoz.filesystem.loadFile( descriptor, { responseType: 'binary' }, function( response, arrayBuffer, extra )
+		{
+			var block;
+			if ( response )
+				block = new MemoryBlock( self.aoz, arrayBuffer, 'big' );
+			else
+			{
+				self.error ='cannot_load_file';
+				self.errorParameter = path;
+			}
+			callback( response, block, extra );
+			self.load_done = true;
+		}, extra );
+	};
+	this.save = function( args )
+	{
+		throw 'not_implemented';
+	};
+	this.saveBank = function( args )
+	{
+		throw 'not_implemented';
+	};
+	this.bLoad = function( args )
+	{
+		var path = args[ 0 ];
+		var start = args[ 1 ];
+		var self = this;
+		this.load_done = false;
+		this.aoz.filesystem.loadBinary( path, start, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = data;
+				self.errorParameter = path;
+			}
+			self.load_done = true;
+		} );
+	};
+	this.bSave = function( args )
+	{
+		var startBlock = this.aoz.getMemoryBlockFromAddress( args[ 1 ] );
+		var endBlock = this.aoz.getMemoryBlockFromAddress( args[ 2 ] );
+		if ( startBlock != endBlock )
+			throw { error: 'illegal_function_call', parameters: [ startBlock, endBlock ] };
+		var self = this;
+		this.load_done = false;
+		var options = { start: args[ 1 ], end: args[ 2 ] };
+		this.aoz.filesystem.saveBinary( args[ 0 ], options, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = data;
+				self.errorParameter = args[ 0 ];
+			}
+			self.load_done = true;
+		} );
+	};
+	this.bSaveLength = function( args )
+	{
+		if ( args[2] == 'full' )
+		{
+			var bank = args[1];
+			args[2] = aoz.banks.getLength(bank);
+			args[1] = aoz.banks.getStart(bank);
+		}
+		var self = this;
+		this.load_done = false;
+		var options = { start: args[ 1 ], length: args[ 2 ] };
+		this.aoz.filesystem.saveBinary( args[ 0 ], options, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = data;
+				self.errorParameter = args[ 0 ];
+			}
+			self.load_done = true;
+		} );
+	};
+	this.rename = function( args )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.rename( args[ 0 ], args[ 1 ], {}, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = data;
+				self.errorParameter = args[ 0 ];
+			}
+			self.load_done = true;
+		} );
+	};
+	this.kill = function( args )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.kill( args[ 0 ], {}, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = data;
+				self.errorParameter = args[ 0 ];
+			}
+			self.load_done = true;
+		} );
+	};
+	this.mkDir = function( args )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.mkDir( args[ 0 ], {}, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = data;
+				self.errorParameter = args[ 0 ];
+			}
+			self.load_done = true;
+		} );
+	};
+	this.exist = function( args )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.exist( args[ 0 ], {}, function( response, data, extra )
+		{
+			self.result = response;
+			self.load_done = true;
+		} );
+	};
+	this.dFree = function( args )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.dFree( args[ 0 ], {}, function( response, data, extra )
+		{
+			if ( response )
+				self.result = data;
+			else
+				self.error = data;
+			self.load_done = true;
+		} );
+	};
+	this.setInput = function( char1, char2 )
+	{
+		this.nextLine = String.fromCharCode( char1 );
+		if ( typeof char2 != 'undefined' && char2 >= 0 )
+			this.nextLine += String.fromCharCode( char2 );
+	};
+	this.openOut = function( args )
+	{
+		var port = args[ 0 ];
+		var path = args[ 1 ];
+
+		// Check path, generates errors
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: false, askForReplace: false } );
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( this.openFiles[ port ] )
+			throw 'file_already_opened';
+		this.openFiles[ port ] =
+		{
+			path: descriptor.path,
+			file: '',
+			in: false,
+			out: true,
+			random: false,
+			pof: 0,
+			modified: true
+		};
+		this.load_done = true;
+	};
+	this.openIn = function( args )
+	{
+		var port = args[ 0 ];
+		var path = args[ 1 ];
+
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: true, noErrors: true } );
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( this.openFiles[ port ] )
+			throw 'file_already_opened';
+		var self = this;
+		this.load_done = false;
+		this.aoz.filesystem.loadFile( descriptor, { responseType: 'text' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				self.openFiles[ port ] =
+				{
+					path: descriptor.path,
+					file: data,
+					in: true,
+					out: false,
+					random: false,
+					pof: 0,
+					modified: false
+				};
+			}
+			else
+			{
+				self.error = data;
+				self.errorParameter = '';
+			}
+			self.load_done = true;
+		} );
+	};
+	this.append = function( args )
+	{
+		var port = args[ 0 ];
+		var path = args[ 1 ];
+
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: false, noErrors:true } );
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( this.openFiles[ port ] )
+			throw 'file_already_opened';
+
+		var self = this;
+		this.load_done = false;
+		this.aoz.filesystem.exist( descriptor.path, {}, function( response, data, extra )
+		{
+			if ( response )
+			{
+				self.aoz.filesystem.loadFile( descriptor, { responseType: 'text' }, function( response, data, extra )
+				{
+					if ( response )
+					{
+						self.openFiles[ port ] =
+						{
+							path: descriptor.path,
+							file: data,
+							in: false,
+							out: true,
+							random: false,
+							pof: data.length,
+							modified: false
+						}
+					}
+					else
+					{
+						self.error = error;
+						self.errorParameter = '';
+					}
+					self.load_done = true;
+				} );
+			}
+			else
+			{
+				self.openFiles[ port ] =
+				{
+					path: descriptor.path,
+					file: '',
+					in: false,
+					out: true,
+					random: false,
+					pof: 0,
+					modified: true
+				};
+				self.load_done = true;
+			}
+		} );
+	};
+	this.print = function( port, text, newLine )
+	{
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		var file = this.openFiles[ port ];
+		if ( !file.out )
+			throw 'file_type_mismatch';
+		if ( newLine )
+			text += this.nextLine;
+		file.file = file.file.substring( 0, file.pof ) + text + file.file.substring( file.pof + text.length );
+		file.pof += text.length;
+		file.modified = true;
+		this.load_done = true;
+	};
+	this.input = function( port, variables, commas )
+	{
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		var file = this.openFiles[ port ];
+		if ( !file.in )
+			throw 'file_type_mismatch';
+		for ( var v = 0; v < variables.length; v++ )
+		{
+			var variable = variables[ v ];
+
+			if ( file.pof >= file.file.length )
+				throw 'end_of_file';
+
+			var posComma = -1;
+			if ( commas )
+				posComma = file.file.indexOf( ',', file.pof );
+			posComma = posComma >= 0 ? posComma : file.file.length;
+			var posNewLine = file.file.indexOf( this.nextLine, file.pof );
+			posNewLine = posNewLine >= 0 ? posNewLine :  file.file.length;
+
+			var delta = 0;
+			if ( posComma < file.file.length )
+				delta = 1;
+			if ( posNewLine < file.file.length )
+				delta = this.nextLine.length;
+
+			var pos = posComma < posNewLine ? posComma : posNewLine;
+			var text = file.file.substring( file.pof, pos );
+			file.pof += text.length + delta;
+			var value;
+			if ( variable.type == 0 )
+				value = parseInt( text );
+			else if ( variable.type == 1 )
+				value = parseFloat( text );
+			else
+				value = text;
+			if ( variable.type != 2 && isNaN( value ) )
+				value = 0;
+			this.aoz.setVariable( variable, value );
+		}
+		this.load_done = true;
+	};
+	this.eof = function( port )
+	{
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		var result = this.openFiles[ port ].pof >= this.openFiles[ port ].file.length;
+		return result;
+	};
+	this.lof = function( port )
+	{
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		var file = this.openFiles[ port ];
+		if ( file.random )
+			throw 'file_type_mismatch';
+		var result = file.file.length;
+		return result;
+	};
+	this.setPof = function( port, position )
+	{
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		var file = this.openFiles[ port ];
+		if ( file.random )
+			throw 'file_type_mismatch';
+		if ( position < 0 || position > file.file.length )
+			throw { error: 'illegal_function_call', parameter: position };
+		file.pof = position;
+	};
+	this.getPof = function( port )
+	{
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		if ( file.random )
+			throw 'file_type_mismatch';
+		return this.openFiles[ port ].pof;
+	};
+	this.close = function( args )
+	{
+		var port = args[ 0 ];
+
+		var self = this;
+		if ( typeof port != 'undefined' )
+		{
+			this.load_done = false;
+			this.error = false;
+			this.errorParameter = '';
+			if ( port < 1 )
+				throw { error: 'illegal_function_call', parameter: port };
+			if ( !this.openFiles[ port ] )
+				throw 'file_not_opened';
+			var file = this.openFiles[ port ];
+			if ( file.modified )
+			{
+				var descriptor = self.aoz.filesystem.getFile( file.path, { noErrors:true } );
+				if ( descriptor.error )
+					callback( false, descriptor.error, extra );
+				this.aoz.filesystem.saveFile( descriptor, file.file, { encoding: 'utf8' }, function( response, data, extra )
+				{
+					if ( response )
+						self.openFiles[ port ] = null;
+					self.load_done = true;
+				} );
+			}
+			else
+			{
+				this.openFiles[ port ] = null;
+				this.load_done = true;
+			}
+		}
+		else
+		{
+			var errors;
+			this.load_done = true;
+			this.load_count = this.openFiles.length;
+			for ( var f = 0; f < this.openFiles.length; f++ )
+			{
+				var file = this.openFiles[ f ];
+				if ( file && file.modified )
+				{
+					var descriptor = this.aoz.filesystem.getFile( file.path, { noErrors: true } );
+					if ( descriptor.error )
+					{
+						this.error = descriptor.error;
+						this.load_count--;
+						continue;
+					}
+					this.aoz.filesystem.saveFile( descriptor, file.file, { encoding: 'utf8' }, function( response, data, extra )
+					{
+						self.openFiles[ extra ] = null;
+						if ( !response )
+							self.error = data;
+						self.load_count--;
+					}, f );
+				}
+				else
+				{
+					this.openFiles[ f ] = null;
+					this.load_count--;
+				}
+			}
+		}
+	};
+	this.openRandom = function( args )
+	{
+		var port = args[ 0 ];
+		var path = args[ 1 ];
+
+		var descriptor = this.aoz.filesystem.getFile( path, { mustExist: false, noErrors:true } );
+		if ( descriptor.error )
+			throw descriptor.error;
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( this.openFiles[ port ] )
+			throw 'file_already_opened';
+		var self = this;
+		this.load_done = false;
+		this.aoz.filesystem.exist( descriptor.path, {}, function( response, data, extra )
+		{
+			if ( response )
+			{
+				self.aoz.filesystem.loadFile( descriptor, { responseType: 'text' }, function( response, data, extra )
+				{
+					if ( response )
+					{
+						self.openFiles[ port ] =
+						{
+							path: descriptor.path,
+							file: data,
+							in: false,
+							out: false,
+							random: true,
+							pof: data.length,
+							fields: [],
+							variables: [],
+							modified: false
+						};
+					}
+					else
+					{
+						self.error = error;
+						self.errorParameter = path;
+					}
+					self.load_done = true;
+				} );
+			}
+			else
+			{
+				self.openFiles[ port ] =
+				{
+					path: descriptor.path,
+					file: '',
+					in: false,
+					out: false,
+					random: true,
+					pof: 0,
+					fields: [],
+					variables: [],
+					modified: true
+				};
+				self.load_done = true;
+			}
+		} );
+	};
+	this.field = function( port, variables, fields )
+	{
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		var file = this.openFiles[ port ];
+		if ( !file.random )
+			throw 'file_type_mismatch';
+		file.variables = variables;
+		file.fields = fields;
+		file.fieldsLength = 0;
+		for ( var f = 0; f < fields.length; f++ )
+			file.fieldsLength += fields[ f ];
+		this.load_done = true;
+	};
+	this.put = function( args )
+	{
+		var port = args[ 0 ];
+		var field = args[ 1 ];
+
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		var file = this.openFiles[ port ];
+		if ( !file.random )
+			throw 'file_type_mismatch';
+		if ( typeof file.fieldsLength == 'undefined' )
+			throw { error: 'illegal_function_call', parameter: '(fields not defined)' };
+		if ( typeof field == 'undefined' )
+			throw { error: 'illegal_function_call', parameter: '(fields not defined)' };
+		field--;
+		if ( field < 0 )
+			throw { error: 'illegal_function_call', parameter: field };
+
+		var fileNumberOfFields = file.file.length / file.fieldsLength;
+		if ( Math.floor( file.file.length / file.fieldsLength ) != fileNumberOfFields )
+			throw 'corrupted_file';
+
+		var field$ = '';
+		for ( var f = 0; f < file.fieldsLength; f++ )
+			field$ += ' ';
+		if ( fileNumberOfFields < field )
+		{
+			for ( var f = fileNumberOfFields; f < field; f++ )
+				file.file += field$;
+		}
+
+		var pos = 0;
+		for ( var v = 0; v < file.variables.length; v++ )
+		{
+			var text = this.aoz.getVariable( file.variables[ v ] ).substring( 0, file.fields[ v ] );
+			field$ = field$.substring( 0, pos ) + text + field$.substring( pos + text.length );
+			pos += file.fields[ v ];
+		}
+		file.file = file.file.substring( 0, field * file.fieldsLength ) + field$ + file.file.substring( ( field + 1 ) * file.fieldsLength );
+		file.modified = true;
+
+		this.load_done = true;
+	};
+	this.get = function( args )
+	{
+		var port = args[ 0 ];
+		var field = args[ 1 ];
+
+		if ( port < 1 )
+			throw { error: 'illegal_function_call', parameter: port };
+		if ( !this.openFiles[ port ] )
+			throw 'file_not_opened';
+		var file = this.openFiles[ port ];
+		if ( !file.random )
+			throw 'file_type_mismatch';
+		if ( typeof file.fieldsLength == 'undefined' )
+			throw { error: 'illegal_function_call', parameter: '(fields not defined)' };
+		if ( typeof field == 'undefined' )
+			throw { error: 'illegal_function_call', parameter: '(fields not defined)' };
+		field--;
+		if ( field < 0 )
+			throw { error: 'illegal_function_call', parameter: field };
+
+		var fileNumberOfFields = file.file.length / file.fieldsLength;
+		if ( Math.floor( file.file.length / file.fieldsLength ) != fileNumberOfFields )
+			throw 'corrupted_file';
+		if ( field >= fileNumberOfFields )
+			throw 'end_of_file';
+
+		var pos = field * file.fieldsLength;
+		for ( var v = 0; v < file.variables.length; v++ )
+		{
+			var text = file.file.substr( pos, file.fields[ v ] );
+			this.aoz.setVariable( file.variables[ v ], text );
+			pos += file.fields[ v ];
+		}
+		this.load_done = true;
+	};
+	this.fileLength = function( args )
+	{
+		var path = args[ 0 ];
+		this.load_done = false;
+		this.result = 0;
+		var self = this;
+
+		var descriptor = this.aoz.filesystem.getFile( path );
+		this.aoz.filesystem.stat( path, {}, function( response, data, extra )
+		{
+			if ( response )
+			{
+				if ( !data.isFile )
+					self.error = 'cannot_read_directory';
+				self.result = data.size;
+			}
+			self.load_done = true;
+		} );
+	};
+	this.dir = function( args )
+	{
+		var path = args[ 0 ];
+		this.load_done = false;
+
+		var self = this;
+		this.aoz.filesystem.dir( path, {}, function( response, list, extra )
+		{
+			if ( response )
+			{
+				var message = self.aoz.errors.getError( 'directory_of' ).message;
+				message = self.utilities.replaceStringInText( message, '%X', extra.path );
+				self.aoz.currentScreen.currentTextWindow.print( message, true );
+				for ( var l = 0; l < list.length; l++ )
+				{
+					var stat = list[ l ];
+					var line = self.getFileDescription( stat, true );
+					self.aoz.currentScreen.currentTextWindow.print( line, true );
+							}
+								self.load_done = true;
+			}
+			else
+			{
+				self.error = data;
+				self.errorParameter = '';
+				self.load_done = true;
+			}
+		} );
+	};
+	this.getFileDescription = function( stat, format )
+	{
+		var line = typeof stat.name != 'undefined' ? stat.name : '';
+		if ( format )
+		{
+			var filename = line.substring( 0, Math.min( this.filenameWidth, line.length ) );
+			while( filename.length < this.filenameWidth )
+				filename += ' ';
+			if ( stat.isFile )
+				line = '  ' + filename + stat.size;
+			else
+				line = '* ' + filename;
+		}
+		else
+		{
+			if ( !stat.isFile )
+				line = '* ' + line;
+		}
+		return line;
+	};
+	this.filter = function( name, filter )
+	{
+		if ( filter == '' )
+			return true;
+
+		name = this.noCase ? name : name.toLowerCase();
+		filter = this.noCase ? filter : filter.toLowerCase();
+
+		// Before the dot
+		var f = 0;
+		for ( var n = 0; n < name.length; n++ )
+		{
+			var char = name.charAt( n );
+			if ( char == '.' )
+				break;
+			var charFilter = filter.charAt( f );
+			if ( charFilter == '*' )
+			{
+				n = name.indexOf( '.' ) >= 0 ? name.indexOf( '.' ) : name.length;
+				break;
+			}
+			if ( charFilter != '?' )
+			{
+				if ( char != charFilter )
+					return false;
+			}
+			f++;
+		}
+		if ( n == name.length )
+			return true;
+		f = filter.indexOf( '.' );
+		if ( f < 0 )
+			return false;
+		for ( ++n, ++f; n < name.length; n++ )
+		{
+			var char = name.charAt( n );
+			var charFilter = filter.charAt( f );
+			if ( charFilter == '*' )
+				return true;
+			if ( charFilter != '?' )
+			{
+				if ( char != charFilter )
+					return false;
+			}
+			f++;
+		}
+		return true;
+	};
+	this.dirFirst = function( args )
+	{
+		var path = args[ 0 ];
+
+		var self = this;
+		this.result = '';
+		var descriptor = this.aoz.filesystem.getFile( path );
+		this.aoz.filesystem.dirFirst( descriptor, {}, function( response, data, extra )
+		{
+			if ( response )
+			{
+				if ( data )
+					self.result = self.getFileDescription( data );
+			}
+			else
+			{
+				self.error = data;
+				self.errorParameter = '';
+			}
+			self.load_done = true;
+		} );
+	};
+	this.dirNext = function( args )
+	{
+		var self = this;
+		this.result = '';
+		this.aoz.filesystem.dirNext( {}, function( response, data, extra )
+		{
+			if ( response )
+			{
+				if ( data )
+					self.result = self.getFileDescription( data );
+			}
+			else
+			{
+				self.error = data;
+				self.errorParameter = '';
+			}
+			self.load_done = true;
+		} );
+	};
+	this.driveFirst = function( args )
+	{
+		var self = this;
+		self.errorParameter = '';
+		this.result = '';
+		this.aoz.filesystem.driveFirst( {}, function( response, data, extra )
+		{
+			if ( response )
+				self.result = ( !data ? '' : data );
+			else
+				self.error = data;
+			self.load_done = true;
+		} );
+	};
+	this.driveNext = function( args )
+	{
+		var self = this;
+		self.errorParameter = '';
+		this.result = '';
+		this.aoz.filesystem.driveNext( {}, function( response, data, extra )
+		{
+			if ( response )
+				self.result = ( !data ? '' : data );
+			else
+				self.error = data;
+			self.load_done = true;
+		} );
+	};
+	this.setDir = function( width, filterOut )
+	{
+		width = typeof width == 'undefined' ? 30 : width;
+		if ( width <= 0 )
+			throw { error: 'illegal_function_call', parameter: width };
+
+		this.filenameWidth = width;
+		if ( typeof filterOut != 'undefined' )
+			this.filterOut = filterOut;
+	};
+	this.discInfo = function( args )
+	{
+		var self = this;
+		self.errorParameter = '';
+		this.aoz.filesystem.discInfo( args[ 0 ], {}, function( response, data, extra )
+		{
+			if ( response )
+			{
+				self.result = data;
+			}
+			else
+			{
+				self.error = data;
+			}
+			self.load_done = true;
+		} );
+	};
+	this.fSel = function( args )
+	{
+		var path = args.path;
+		var defaultFile = typeof args.default != 'undefined' ? args.default : '';
+		var options = {};
+		var descriptor = undefined;
+		if ( path )
+		{
+			descriptor = this.aoz.filesystem.getFile( path );
+			if ( descriptor.extension )
+			{
+				options.filters =
+				[
+					[ '*.' + descriptor.extension, descriptor.extension ]
+				];
+				descriptor.path = descriptor.path.substring( 0, descriptor.path.length - ( descriptor.extension.length + descriptor.filename.length ) );
+				descriptor.filename = '';
+				descriptor.extension = '';
+			}
+		}
+		if ( !options.filters )
+		{
+			options.filters =
+			[
+				[ 'All Files', '*.*' ]
+			];
+		}
+
+		if ( typeof args.type != 'undefined' )
+		{ 
+			options.type = args.type.toLowerCase();
+			if ( options.type != 'load' && options.type != 'save' )
+			{
+				throw { error: 'illegal_function_call', parameter: options.type };
+			}
+		}
+		else
+			options.type = 'load';
+
+		options.title = '';
+		if ( args.title1 )
+			options.title = args.title1;
+		if ( args.title2 )
+			options.title += ' ' + args.title2;
+
+		var self = this;
+		this.load_done = false;
+		this.aoz.filesystem.openFileRequester( descriptor, options, function( response, data, extra )
+		{
+			if ( response )
+				self.result = data;
+			else
+				self.result = defaultFile;
+			self.load_done = true;
+		} );
+	};
+
+
+
+
+	///////////////////////////////////////////////////////////////////////////////////
+	//
+	// Importation routines
+	//
+	///////////////////////////////////////////////////////////////////////////////////
+	var ID_AMOS = 0x414D4F53;
+	var ID_AmBs = 0x416D4273;
+	var ID_AmBk = 0x416D426B;
+	var ID_AmSp = 0x416D5370;
+	var ID_AmIc = 0x416D4963;
+
+	var IFF_ILBM_HEADER_LEN = 0xb0;
+	var iff_ilbm_header =
+	[
+		'F', 'O', 'R', 'M',    	/* 00 FORM                        */
+		0,   0,   0,   0,     	/* 04   form length               */
+		'I', 'L', 'B', 'M',    	/* 08   ILBM                      */
+		'B', 'M', 'H', 'D',    	/* 0c   BMHD                      */
+		0,   0,   0,   20,    	/* 10     bmhd chunk length (20)  */
+		0,   0,               	/* 14     width                   */
+		0,   0,               	/* 16     height                  */
+		0,   0,               	/* 18     x offset (0)            */
+		0,   0,              	/* 1a     y offset (0)            */
+		0,                    	/* 1c     number of bitplanes     */
+		0,                    	/* 1d     masking (0)             */
+		0,                    	/* 1e     compression (0)         */
+		0,                    	/* 1e     reserved1 (0)           */
+		0,   0,               	/* 20     transparent colour (0)  */
+		1,                    	/* 22     x aspect (1)            */
+		1,                    	/* 23     x aspect (1)            */
+		0,   0,               	/* 24     page width              */
+		0,   0,               	/* 26     page height             */
+		'C', 'A', 'M', 'G',    	/* 28   CAMG                      */
+		0,   0,   0,   4,     	/* 2c     camg chunk length (4)   */
+		0,   0,   0,   0,     	/* 30     viewmode                */
+		'G', 'R', 'A', 'B',    	/* 34   GRAB                      */
+		0,   0,   0,   4,     	/* 38     grab chunk length (4)   */
+		0,   0,               	/* 3C     x hotspot               */
+		0,   0,               	/* 3E     y hotspot               */
+		'C', 'M', 'A', 'P',    	/* 40   CMAP                      */
+		0,   0,   0,   96    	/* 44     cmap chunk length (96)  */
+								/* 48     {UBYTE r,g,b}[32]       */
+								/* a8   BODY                      */
+								/* ac     body chunk length       */
+								/* b0     unpacked raw bitplanes  */
+	];
+
+	var IFF_8SVX_HEADER_LEN = 0x30;
+	var iff_8svx_header =
+	[
+		'F', 'O', 'R', 'M',    	/* 00 FORM                        */
+		0,   0,   0,   0,     	/* 04   form length               */
+		'8', 'S', 'V', 'X',    	/* 08   8SVX                      */
+		'V', 'H', 'D', 'R',    	/* 0c   VHDR                      */
+		0,   0,   0,   20,    	/* 10     vhdr chunk length (20)  */
+		0,   0,   0,   0,     	/* 14     one-shot length         */
+		0,   0,   0,   0,     	/* 18     repeat length (0)       */
+		0,   0,   0,   0,     	/* 1c     average rate (0)        */
+		0,   0,               	/* 20     frequency in hz         */
+		1,                    	/* 22     number of octaves (1)   */
+		0,                   	/* 23     compression mode (0)    */
+		0,   1,   0,   0,     	/* 24     volume (0x10000)        */
+		'B', 'O', 'D', 'Y',    	/* 28   BODY                      */
+		0,   0,   0,   0      	/* 2c     body length             */
+								/* 30     raw sample data         */
+	];
+
+	this.convert_amos = function( name, block, options )
+	{
+		options = typeof options == 'undefined' ? { convert: true } : options;
+
+		var result;
+		if ( block.length < 4 )
+		{
+			throw 'unknown_bank_format';
+		}
+		else
+		{
+			switch ( block.leek( 0 ) )
+			{
+			case ID_AMOS:
+				result = this.convert_source( name, block, options );
+				break;
+
+			case ID_AmBs:
+				result = this.convert_banks( name, block, options );
+				break;
+
+			case ID_AmBk:
+			case ID_AmSp:
+			case ID_AmIc:
+				result = this.convert_bank( name, block, options );
+				break;
+
+			default:
+				throw 'unknown_bank_format';
+			}
+		}
+		return result;
+	};
+
+	this.convert_source = function( name, block, options )
+	{
+		var result;
+		options = typeof options == 'undefined' ? { convert: true } : options;
+		if ( block.length < 30 )
+		{
+			throw 'unknown_bank_format';
+		}
+		else 1
+		{
+			var src_len = block.leek( 16 ) + 20;
+			var header = block.peek$( 0, 16 );
+
+			if ( src_len < block.length )
+			{
+				var block_bank = new MemoryBlock( this.aoz, 2, 'big' );
+				block_bank.setFromMemoryBlock( block, src_len );
+				result = this.convert_banks( name, block_bank, options );
+			}
+		}
+		return result;
+	}
+
+	function convert_banks( name, block, options )
+	{
+		options = typeof options == 'undefined' ? { convert: true } : options;
+		if ( block.length < 6)
+		{
+			throw 'unknown_bank_format';
+		}
+		else
+		{
+			var count = 0;
+			var result = {};
+			var num_banks = block.deek( 4 );
+			var bank_pos = 6;
+			while ( num_banks-- )
+			{
+				var bank_len = this.get_bank_length( block, bank_pos );
+				var bank_num = this.get_bank_number( block, bank_pos );
+				var bank_type = this.get_bank_type( block, bank_pos );
+				var block_bank = new MemoryBlock( this.aoz, 2, 'big' );
+				block_bank.setFromMemoryBlock( block, bank_pos, bank_pos + bank_len );
+				if ( bank_num > 0)
+				{
+					var outname = "bank" + bank_num + ".abk";
+					var bankResult = this.convert_bank( outname, block_bank, options );
+					if ( bankResult )
+						result[ count++ ] = bankResult;
+				}
+				bank_pos += bank_len;
+			}
+		}
+		return result;
+	}
+
+	this.convert_bank = function( name, block, options )
+	{
+		options = typeof options == 'undefined' ? { convert: true } : options;
+		var bank_length = this.get_bank_length( block );
+		if ( !bank_length )
+			return;
+		var bank_num = this.get_bank_number( block );
+		var id = block.leek( 0 );
+
+		var result, type;
+		switch ( id )
+		{
+			case ID_AmSp:
+				type = 'images';
+				result = this.convert_sprites( name, block, options );
+				break;
+			case ID_AmIc:
+				type = 'icons';
+				result = this.convert_sprites( name, block, options );
+				break;
+			case ID_AmBk:
+				{
+					var id2 = block.peek$( 12, 8 );
+					if ( id2 == "img" )
+					{
+						type = 'pacpic';
+						result = this.convert_pacpic( name, block, options );
+					}
+					else if ( id2 == "Samples " )
+					{
+						type = 'samples';
+						result = this.convert_samples( name, block, options );
+					}
+					else if ( id2 == "Tracker " )
+					{
+						type = 'tracker';
+						result = this.convert_tracker( name, block, options );
+					}
+					else
+					{
+						type = 'data';
+						result = this.convert_data( name, block, options );
+					}
+				}
+				break;
+			default:
+				throw 'unknown_bank_format';
+		}
+		return { type: type, number: bank_num, data: result };
+	};
+
+	this.convert_sprites = function( name, block, options )
+	{
+		options = typeof options == 'undefined' ? { convert: true } : options;
+		var sprites = { images: [], palette: [], hotSpots: [] };
+		var num_sprites = block.deek( 4 );
+		var sp = 6;
+		var pal = block.length - 64;
+
+		/* create an IFF ILBM file for each sprite/icon */
+		for ( var i = 0; i < num_sprites; i++ )
+		{
+			var w, h, d, sp_len, ilbm_len, line, plane;
+			var body;
+
+			w = block.deek( sp + 0 ) * 2;
+			h = block.deek( sp + 2 );
+			d = block.deek( sp + 4 );
+
+			sp_len = w * h * d;
+			ilbm_len = IFF_ILBM_HEADER_LEN + sp_len;
+			var ilbmBlock = new MemoryBlock( this.aoz, ilbm_len, 'big' );
+
+			ilbmBlock.copyArray( 0, iff_ilbm_header, 'byte' );
+			ilbmBlock.loke( 0x04, ilbm_len - 8 );
+			ilbmBlock.doke( 0x14, w * 8 );  				/* width */
+			ilbmBlock.doke( 0x16, h );      				/* height */
+			ilbmBlock.poke( 0x1c, d & 0xFF );          		/* number of bitplanes */
+			ilbmBlock.doke( 0x24, w * 8 );  				/* page width */
+			ilbmBlock.doke( 0x26, h );      				/* page height */
+			ilbmBlock.copyFrom( 0x3C, block, sp + 6, 4 ); 	/* x/y hotspot */
+			ilbmBlock.poke$( 0xA8, "BODY" );
+			ilbmBlock.loke( 0xAC, sp_len ); 				/* body length */
+			sprites.hotSpots[ i ] = { x: block.deek( sp + 6, true ), y: block.deek( sp + 8, true ) };
+
+			/* convert palette from 0x0RGB to 0xRR 0xGG 0xBB */
+			var color0;
+			for ( var j = 0; j < 32; j++ )
+			{
+				var c = block.deek( pal + j * 2 );
+				var r = ( (c >> 8) & 0xF ) * 0x11;
+				var g = ( (c >> 4) & 0xF ) * 0x11;
+				var b = ( (c     ) & 0xF ) * 0x11;
+				ilbmBlock.poke( 0x48 + ( j * 3 ) + 0, r );
+				ilbmBlock.poke( 0x48 + ( j * 3 ) + 1, g );
+				ilbmBlock.poke( 0x48 + ( j * 3 ) + 2, b );
+				sprites.palette[ j ] = this.aoz.utilities.getRGBAString( r, g, b, 255 );
+				if ( j == 0 )
+					color0 = { r: r, g: g, b: b };
+			}
+
+			/* interleave the sprite data (all lines of plane 0, plane 1, ...)
+				into ILBM format (line 0 plane 0, line 0 plane 1, ...) */
+			var body = IFF_ILBM_HEADER_LEN;
+			for ( var line = 0; line < h; line++ )
+			{
+				for ( var plane = 0; plane < d; plane++ )
+				{
+					ilbmBlock.copyFrom( body, block, sp + 10 + line * w + plane * w * h, w );
+					body += w;
+				}
+			}
+
+			// Convert to PNG
+			if ( options.convert )
+			{
+				var iffCanvas = document.createElement( 'canvas' );
+				iffCanvas.width = 8; 	//( w <= 0 ? 8 : w );
+				iffCanvas.height = 8;	//( h <= 0 ? 8 : h );
+				var iff = new IffContainer( '', iffCanvas );
+				iff.arrayBuffer = ilbmBlock.buffer;
+				parseIffChunk( iff, 0, ilbmBlock.buffer.byteLength );
+				drawIffImage( iff );
+				var context = iffCanvas.getContext( '2d' );
+				this.aoz.utilities.remapBlock( context, [ color0 ], [ { r: 0, g: 0, b: 0, a: 0 } ], { x: 0, y: 0, width: iffCanvas.width, height: iffCanvas.height } );
+				sprites.images[ i ] = iffCanvas;
+			}
+			else
+			{
+				sprites.images[ i ] = ilbmBlock;
+			}
+			sp += 10 + sp_len;
+		}
+		return sprites;
+	}
+
+	this.convert_pacpic = function( name, block, options )
+	{
+		options = typeof options == 'undefined' ? { convert: true } : options;
+		var end = block.length;
+		var s, pal, picdata, rledata, points, ilbm;
+		var i, j, k, l, bplcon0, width, ilbm_width, lumps,
+			lump_height, ilbm_height, bitplanes, ilbm_len, ilbm_line,
+			rledata_offset, points_offset;
+
+		/* check if screen header present */
+		if ( block.length < 24)
+			return;
+		i = block.leek( 20 );
+		if ( block.length > 134 && (i == 0x12031990 || i == 0x00031990 || i == 0x12030090) )
+		{
+			bplcon0 = block.deek( 20 + 20 ); 		/* screen mode */
+			pal = 20 + 26; 							/* palette */
+			s = 110; 								/* picture header */
+		}
+		else if (block.length > 44 && (i == 0x06071963 || i == 0x06070063))
+		{
+			bplcon0 = block.deek( 20 + 14 ) << 12 | 0x200; 	/* guess BPLCON0 */
+			pal = -1; 										/* no palette */
+			s = 20; 										/* picture header */
+		}
+		else
+		{
+			throw 'unknown_picpac_header';
+		}
+
+		width 				= block.deek( s + 8 );
+		lumps            	= block.deek( s + 10 );
+		lump_height      	= block.deek( s + 12 );
+		bitplanes        	= block.deek( s + 14 );
+		rledata_offset   	= block.leek( s + 16 );
+		points_offset    	= block.leek( s + 20 );
+
+		if (rledata_offset > ( block.length - s) || points_offset > (block.length - s))
+		{
+			return;
+		}
+
+		/* IFF ILBM requires an even width */
+		ilbm_width = width;
+		if (ilbm_width & 1)
+			ilbm_width++;
+
+		/* number of bytes jump to get to the next line in IFF */
+		ilbm_line = ilbm_width * bitplanes;
+		ilbm_height = lumps * lump_height;
+
+		ilbm_len = IFF_ILBM_HEADER_LEN + ilbm_line * ilbm_height;
+		var ilbmBlock = new MemoryBlock( this.aoz, ilbm_len, 'big' );
+
+		var plane, rbit, rrbit, picbyte, rlebyte;
+
+		ilbmBlock.copyArray( 0, iff_ilbm_header, 'byte' );
+		ilbmBlock.loke( 0x04, ilbm_len - 8 );
+		ilbmBlock.doke( 0x14, ilbm_width * 8 );  				/* width */
+		ilbmBlock.doke( 0x16, ilbm_height );     				/* height */
+		ilbmBlock.poke( 0x1c, bitplanes & 0xFF );          		 /* number of bitplanes */
+		ilbmBlock.doke( 0x24, ilbm_width * 8 );		  			/* page width */
+		ilbmBlock.doke( 0x26, ilbm_height );     				/* page height */
+		ilbmBlock.loke( 0x30, bplcon0 );         				/* viewmode */
+		ilbmBlock.poke$( 0xA8, "BODY" );
+		ilbmBlock.loke( 0xAC, ilbm_len - IFF_ILBM_HEADER_LEN); 	/* body length */
+
+		/* convert palette from 0x0RGB to 0xRR 0xGG 0xBB */
+		var palette = [];
+		for ( var i = 0; i < 32; i++)
+		{
+			var c = ( pal >= 0 ) ? block.deek( pal + i*2 ) : (i & 0x0F) * 0x111;
+			var r = ((c >> 8) & 0xF) * 0x11;
+			var g = ((c >> 4) & 0xF) * 0x11;
+			var b = ((c     ) & 0xF) * 0x11;
+			ilbmBlock.poke( 0x48 + (i * 3) + 0, r );
+			ilbmBlock.poke( 0x48 + (i * 3) + 1, g );
+			ilbmBlock.poke( 0x48 + (i * 3) + 2, b );
+			palette[ i ] = this.aoz.utilities.getRGBAString( r, g, b );
+		}
+
+        /* decrunch RLE streams */
+        rbit = 7;
+        rrbit = 6;
+        picdata = block.peek( s + 24 );
+        rledata = block.peek( s + rledata_offset );
+        points  = block.peek( s + points_offset );
+        picbyte = block.peek( picdata++ );
+        rlebyte = block.peek( rledata++ );
+        if ( block.peek( points ) & 0x80 )
+			rlebyte = block.peek( rledata++ );
+        plane = IFF_ILBM_HEADER_LEN;
+        for (i = 0; i < bitplanes; i++)
+		{
+            var lump_start = plane;
+            for (j = 0; j < lumps; j++)
+			{
+                var lump_offset = lump_start;
+                for (k = 0; k < width; k++)
+				{
+                    var d = lump_offset;
+                    for (l = 0; l < lump_height; l++)
+					{
+                        /* if the current RLE bit is set to 1, read in a new picture byte */
+                        if (rlebyte & (1 << rbit--))
+						{
+                            picbyte = block.peek( picdata++ );
+                            if (picdata > end)
+							{
+								return;
+							}
+                        }
+
+                        /* write picture byte and move down by one line in the picture */
+                        ilbmBlock.poke( d, picbyte );
+						d += ilbm_line;
+
+                        /* if weve run out of RLE bits, check the POINTS bits to see if
+                         * a new RLE byte is needed */
+                        if (rbit > 7)
+						{
+                            rbit = 7;
+                            if (block.peek( points ) & (1 << rrbit--))
+							{
+                                rlebyte = block.peek( rledata++ );
+                                if (rledata > end)
+								{
+									return;
+								}
+                            }
+                            if (rrbit > 7)
+							{
+                                rrbit = 7, points++;
+                                if (points > end)
+								{
+									return;
+								}
+                            }
+                        }
+                    }
+                    lump_offset++;
+                }
+                lump_start += ilbm_line * lump_height;
+            }
+            plane += ilbm_width; 		/* ILBM interleaved bitplanes */
+		}
+		if ( options.convert )
+		{
+			var iff = new IffContainer();
+			iff.arrayBuffer = arrayBuffer;
+			parseIffChunk( iff, 0, ilbmBlock.buffer.byteLength );
+			drawIffImage( iff );
+			return { palette: palette, image: null /*loadIffBuffer( undefined, iff.canvas )*/ };
+		}
+		return ilbmBlock;
+	};
+
+	this.convert_samples = function( name, block, options )
+	{
+		options = typeof options == 'undefined' ? {} : options;
+		var samples = [];
+		var num_samples;
+
+		if (block.length < 22)
+			return;
+		num_samples = block.deek( 20 );
+		if (block.length < 22 + (num_samples * 4))
+			return;
+
+		/* create an IFF 8SVX file for each sample */
+		for ( var i = 0; i < num_samples; i++)
+		{
+			var offset = block.leek( 22 + i*4 ) + 22;
+			var freq, sam_len, svx_len;
+
+			if (offset > block.length)
+				return;
+
+			/* copy sample name, change non-alnum to "_" */
+			name = block.peek$( offset, 6 );
+
+			freq    = block.deek( offset + 8 );
+			sam_len = block.leek( offset + 10 );
+
+			//if ((offset + 14 + sam_len) > block.length)
+			{
+				sam_len = (block.length - (offset + 14));
+			}
+
+			svx_len = IFF_8SVX_HEADER_LEN + sam_len;
+			var svxBlock = new MemoryBlock( this.aoz, svx_len, 'big');
+
+			svxBlock.copyArray(0, iff_8svx_header, 'byte');
+			svxBlock.loke( 0x04, svx_len - 8);
+			svxBlock.doke( 0x20, freq);
+			svxBlock.loke( 0x2C, sam_len);
+			svxBlock.copyFrom( 0x30, block, offset + 14, sam_len );
+
+			if ( options.convert )
+			{
+				samples[ i ] = svxBlock;
+			}
+			else
+			{
+				samples[ i ] = svxBlock;
+			}
+		}
+		return samples;
+	};
+
+	this.convert_tracker = function( name, block, options )
+	{
+		options = typeof options == 'undefined' ? { convert: true } : options;
+		var mod_len = block.length - 20;
+		var bank_block = new MemoryBlock( this.aoz, mod_len, 'big' );
+		bank_block.copyFrom( 0, block, 20, mod_len );
+		return bank_block;
+	}
+
+	this.convert_data = function( name, block, options )
+	{
+		options = typeof options == 'undefined' ? { convert: true } : options;
+		var bank_len = block.length - 20;
+		var bank_block = new MemoryBlock( this.aoz, bank_len, 'big' );
+		bank_block.copyFrom( 0, block, 20, bank_len );
+		return bank_block;
+	}
+
+	this.get_bank_length = function( block, offset )
+	{
+		offset = typeof offset == 'undefined' ? 0 : offset;
+		if ( block.length  >= 6 && ( block.leek( offset + 0 ) == ID_AmSp || block.leek(offset + 0 ) == ID_AmIc ) )
+		{
+			var num_sprites = block.deek( offset + 4 );
+			var pos = 6, w, h, d;
+			while ( num_sprites-- )
+			{
+				if ( pos + 10 > block.length )
+					return 0;
+				w = block.deek( offset + pos ) * 2;
+				h = block.deek( offset + pos + 2 );
+				d = block.deek(	offset + pos + 4 );
+				pos += 10 +  w * h * d;
+			}
+			pos += 64; /* include palette */
+			return pos > block.length ? 0 : pos;
+		}
+		else if ( block.length >= 20 && block.leek( offset + 0 ) == ID_AmBk )
+		{
+			var bank_len = ( block.leek( offset + 8 ) & 0x0FFFFFFF ) + 20 - 8;
+			return bank_len > block.length ? 0 : bank_len;
+		}
+		return 0;
+	};
+
+	this.get_bank_number = function( block, offset )
+	{
+		offset = typeof offset == 'undefined' ? 0 : offset;
+		if ( block.length >= 6 && block.leek( offset + 0 ) == ID_AmSp )
+		{
+			return 1; /* Sprites always bank 1 */
+		}
+		if ( block.length >= 6 && block.leek( offset + 0 ) == ID_AmIc )
+		{
+			return 2; /* Icons always bank 2 */
+		}
+		if ( block.length >= 20 && block.leek( offset + 0 ) == ID_AmBk)
+		{
+			return block.deek( 4 );
+		}
+		return 0;
+	};
+
+	this.get_bank_type = function( block, offset )
+	{
+		offset = typeof offset == 'undefined' ? 0 : offset;
+		if ( block.length >= 6 && block.leek( offset + 0 ) == ID_AmSp )
+		{
+			return "Sprites";
+		}
+		if ( block.length >= 6 && block.leek( offset + 0 ) == ID_AmIc )
+		{
+			return "Icons";
+		}
+		if ( block.length >= 20 && block.leek( offset + 0 ) == ID_AmBk )
+		{
+			var type = block.extractString( offset + 12, 8 );
+			return utilities.trimString( type, { right: true } );
+		}
+		return null;
+	};
+}
+
+/**api
+@name:Load Text
+@description:Load an ascii file into a string
+@param:path$:string:Path to the text to load
+@param:string$:string:The string in which to load
+@compatible: aoz
+@content:
+This instruction loads a text into a string. The format of the text should be UTF-8. This instruction loads the text in one block, without affecting cariage return.
+~~~
+// A very simple text viewer
+file$ = Dir First$( "*.png" )
+text$ = ""
+While file$ <> ""
+	Load Text file$, text$
+	Print text$
+	Wait Key
+	file$ = Dir Next$
+	Cls
+Wend
+~~~
+api*/
+Instruction Load Text, path$, string$=(varptr), tags$=""
+{
+	#errors
+	#waiting
+	#addToFilesystem:"file:%path$"
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"loadTextIntoVariable",waitFunction:"load_wait",args:[%path$,%string$,%tags$]};
+}
+End Instruction
+
+Function Load Text$, path$, tags$=""
+{
+	#errors
+	#waiting
+	#addToFilesystem:"file:%path$"
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"loadText",waitFunction:"load_wait",args:[%path$,%tags$]};
+}
+End Function({aoz.moduleFilesystem.result})
+
+/**api
+@name:Save Text
+@description:Save the content of a string as an ASCII file
+@param:path$:string:Path to the image to save
+@param:string$:string:the string containing the text to save
+@compatible: aoz
+@content:
+This instruction saves the content of the string in UTF-8, all in one block. It does not interfere with cariage returns.
+api*/
+Instruction Save Text, path$, string$, tags$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"saveText",waitFunction:"load_wait",args:[%path$,%string$,%tags$]};
+}
+End Instruction
+/**api
+@name:Load Image
+@description:Load an image into a screen
+@param:path$:string:Path to the image to load
+@param:index:index:Index of the screen to create. If ommited the image will be loaded in the current screen
+@param:tags$:string:List of tags indicating how to load the image.
+@examples:instructions:i_35
+@compatible: aoz
+@content:
+This instruction loads an image into a screen.
+
+If you do not specify the index of a screen, then the image is loaded in the current screen.
+
+If you specify it, AOZ weill first check if the screen exists, if yes it will load the image into it, if not it will create the new screen at the dimensions of the image.
+
+You can use tags to specify how to load the image:
+
+- Horizontal alignment tags: #left #center #right
+- Vertical alignment tags: #top:, #middle, #bottom
+- Resize the image to fit the screen dimensions:  #fit
+- Does not resize the image (default behavior): #paste
+
+This example demonstrates the powert of the Load Image instruction...
+~~~
+// A very simple image viewer
+Screen Open 0, 1920, 1080
+file$ = Dir First$( "*.png" )
+While file$ <> ""
+	Load Image file$, 0, "#fit"
+	Wait Key
+	file$ = Dir Next$
+Wend
+~~~
+
+api*/
+Instruction Load Image, path$, index=(index), tags$
+{
+	#errors
+	#waiting
+	#addToFilesystem:"file:%path$"
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"loadImage",waitFunction:"load_wait",args:[%path$,%index,%tags$, false]};
+}
+End Instruction
+/**api
+@name:Save Image
+@description:Save an image out of a screen
+@param:path$:string:Path to the image to save
+@param:index:index:Index of the screen to save. If ommited the image will be saved from the current screen
+@param:*compression#:float:Compression of the image if the type of image authorises it (jpg)
+@examples:instructions:i_35
+@compatible: aoz
+@content:
+The SAVE IMAGE command saves the current screen as a picture file with the selected filename onto disc.
+
+This version AOZ Studio supports PNG and JPG, this type being determined by the extension of the filename (for JPP you can also save as ".jpeg").
+
+You can indicate the compression ratio, from 0 to 1 with the optional parameter, the default value being 0.8...
+~~~
+
+// Converts all the PNG images of a directory to JPG
+file$ = Dir First$( "*.png" )
+While file$ <> ""
+	Screen Close 0
+	Load Image file$, 0
+	file$ = Left$( file, 0, Len( file$ - 3 ) ) + "jpg"
+	Save Image file$, 0
+	file$ = Dir Next$
+Wend
+~~~
+api*/
+Instruction Save Image, path$, index=(index), compression#=0.8
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"saveImage",waitFunction:"load_wait",args:[%path$,%index,%compression#]};
+}
+End Instruction
+
+
+/**api
+@name:Load
+@description:Load a previously saved memory bank, or a set of banks
+@param:path$:string:Path to the bank(s) to load
+@param:index:index:Index of the bank to load into. If not specified, the bank will be loaded at the same number it was saved
+@compatible: aoz, stos, amos
+@examples:instructions:i_78
+@content:
+Remember it has been suggested that memory bank filenames should have the following extensions, acting as reminders for human eyes, and identification flags for computer searches:
+- "filename.Abk" to indicate a single AOZ Studio memory bank
+- "filename.Abs" for a file containing a group of several memory banks.
+These identifiers can be very useful when employed with certain instructions, as follows:
+~~~
+Rem Load an Object bank from current disc
+Load Fsel$("*.Abk"," ","Load an Object bank")
+List Bank : Rem List bank details on screen
+~~~
+As can be seen, the LOAD command will load the selected memory bank directly from the appropriate disc file. An
+optional destination bank number can be added after the filename to be loaded, but if it is omitted, or given the
+number zero, data will be re-loaded into the same bank numbers from which it was originally saved. Any current
+information in these existing banks will be completely lost!"
+Object and Icon files are treated slightly differently. If the bank number is greater than zero, any additional images will be added to the end of the existing bank of images.
+
+api*/
+Instruction Load, path$, index=(index), tags$
+{
+	#errors
+	#waiting
+	#addToFilesystem:"%path$"
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:'load',waitFunction:"load_wait",args:[%path$,%index,%tags$]};
+}
+End Instruction
+
+/**api
+@name:BLoad
+@description:Load a binary file into a bank
+@param:path$:string:Path to the binary file to load
+@param:address:integer:Bank number (if below 100000) or memory address of the data to save. Use the Start() function to obtain the address.
+@examples:instructions:i_78
+@content:
+The BLOAD instruction loads a file of binary data into memory. It does not alter the data in any way.
+To load this data into a memory bank, the bank must first be reserved, otherwise an error will be generated. Also note that files to be loaded must not be any larger than the reserved bank, or other areas of memory will be corrupted.
+api*/
+Instruction BLoad, path$, address, tags$
+{
+	#errors
+	#waiting
+	#addToFilesystem:"%path$"
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"bLoad",waitFunction:"load_wait",args:[%path$,%address,%tags$]};
+}
+End Instruction
+
+/**api
+@name:BSave
+@description:BSave, short for Binary Save, saves the binary content of a block of memory. This instruction is normally used for saving the content of memory banks.
+@param:path$:string:Path to the binary file to create
+@param:start:integer:Memory address of the data to save. Use the Start() function to obtain the address
+@param:end:integer:End of the memory zone to save. Use the Start() function to obtain the address and add the desired length
+@examples:instructions:i_78
+@compatible: aoz, stos, amos
+@content:
+There a 3 different syntaxes for BSave. These are shown is the following example.
+~~~
+Reserve as Data 5, 100  // Define memory bank number 5, 100 bytes long.
+Length=80
+Bsave "Test", 5    		// Save all of memory bank 5 to file "Test"
+Bsave "Test", Start (5) to Start(5) + 39 // Save the first 40 bytes of bank 5.
+Bsave "Test", Start (5), Length   // Save the first 80 (Length) bytes of memory bank 5
+~~~
+At present, BSave saves the data locally to the browser cache. The difference between this
+file and a file saved as a normal memory bank is that while SAVE causes a special bank header to be written,
+containing information about the bank, this header is not written for a file when BSAVE is used. This means that
+LOAD cannot be used for this type of file. It is also not suitable for Object banks.
+api*/
+Instruction BSave, path$, bank
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"bSaveLength",waitFunction:"load_wait",args:[%path$,%bank,'full']};
+}
+End Instruction
+Instruction BSave, path$, start To end
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"bSave",waitFunction:"load_wait",args:[%path$,%start,%end]};
+}
+End Instruction
+Instruction BSave, path$, start, length
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"bSaveLength",waitFunction:"load_wait",args:[%path$,%start,%length]};
+}
+End Instruction
+
+/**api
+@name:Save
+@description:Saves anything to a file, using the most appropriate format, based on the file extension
+@param:path$:string:Path to the file to create
+@param:index:index:Index of the thing to save, AOZ will guess from the file extension what to save.
+@compatible: aoz, amos
+@examples:instructions:i_78
+@seealso:load
+@content:
+If a bank has been created using RESERVE, or some screen Objects have been defined with a command such as GET BOB, the new data can be saved onto a suitable disc in one of two ways.
+
+When the SAVE command is followed by a string containing a filename, all current memory banks will be saved
+into a single large file, bearing that name. The filename can be anything at all, but it is common practice to add the ".Abk" extension at the end, to remind yourself that this is an AOZ Studio memory bank. Similarly, an
+.Abs extension is used to indicate a file containing a group of several memory banks.
+
+By adding an optional bank number after the filename, only that selected bank will be stored in the named file onto disc.
+
+Here is an example of an instant image-bank generator:
+~~~
+N=1 : Rem Set number of first new image to create
+S=1 : Rem Set size of image*16
+Rem Create images in bank one
+For G=0 To 4
+	Rem Draw the images
+	Ink G+1 : Circle S*7,S*7,S*7 : Paint S*8,S*8
+	Ink 0: Ellipse S*4,S*5,S*1,5*2 : Paint S*4,S*5
+	Ellipse S*1 0,S*5,S,S*2 : Paint S*10,S*5
+	Ellipse S*7,S*10,S*5,S*3 : Ellipse S*7,S*9,S*4,S : Paint S*1 1,S*1
+	Ink G+1 : Bar S*3,S*7 To S*13,S*9
+	Rem Now grab them as Objects
+	Get Bob G+N,0,0 To S*16-1 ,S*16-1
+	Rem Clear them from the screen
+	Cls 0,0,0 To S*16,S*16
+Next G
+F$=Fsel$("*.Abk"," ","Save your images")
+Rem Save Objects in bank 1
+If F$<>0
+	Save F$,1
+End If
+~~~
+api*/
+Instruction Save, path$, index=(index)
+{
+	#errors
+	#waiting
+	return{type:11,waitThis:aoz.moduleFilesystem,callFunction:"save",waitFunction:"load_wait",args:[%path$,%index,tags$]};
+}
+End Instruction
+
+
+/**api
+@name:Save Bank
+@description:Save a memory bank to a file. This file can later be loaded with "Load Bank"
+@param:path$:string:Path to the file to create
+@param:index:index:Index of the first bank to save
+@compatible:aoz, stos, amos
+@content:
+If a bank has been created using RESERVE, or some screen Objects have been defined with a command such as GET BOB, the new data can be saved onto a suitable disc in one of two ways.
+
+When the SAVE command is followed by a string containing a filename, all current memory banks will be saved
+into a single large file, bearing that name. The filename can be anything at all, but it is common practice to add the ".Abk" extension at the end, to remind yourself that this is an AOZ Studio memory bank. Similarly, an
+.Abs extension is used to indicate a file containing a group of several memory banks.
+
+By adding an optional bank number after the filename, only that selected bank will be stored in the named file onto disc.
+
+Here is an example of an instant image-bank generator:
+~~~
+N=1 : Rem Set number of first new image to create
+S=1 : Rem Set size of image*16
+Rem Create images in bank one
+For G=0 To 4
+	Rem Draw the images
+	Ink G+1 : Circle S*7,S*7,S*7 : Paint S*8,S*8
+	Ink 0: Ellipse S*4,S*5,S*1,5*2 : Paint S*4,S*5
+	Ellipse S*1 0,S*5,S,S*2 : Paint S*10,S*5
+	Ellipse S*7,S*10,S*5,S*3 : Ellipse S*7,S*9,S*4,S : Paint S*1 1,S*1
+	Ink G+1 : Bar S*3,S*7 To S*13,S*9
+	Rem Now grab them as Objects
+	Get Bob G+N,0,0 To S*16-1 ,S*16-1
+	Rem Clear them from the screen
+	Cls 0,0,0 To S*16,S*16
+Next G
+F$=Fsel$("*.Abk"," ","Save your images")
+Rem Save Objects in bank 1
+If F$<>0
+	Save Bank F$,1
+End If
+~~~
+
+api*/
+Instruction Save Bank, path$, index=(index), tags$
+{
+	#errors
+	#waiting
+	return{type:11,waitThis:aoz.moduleFilesystem,callFunction:"saveBank",waitFunction:"load_wait",args:[%path$,%index,tags$]}
+}
+End Instruction
+
+/**api
+@name:DFree
+@description:Returns the amount of free space of the disc pointed to by the current path
+@return:integer:The amount of free space
+@examples:instructions:i_45
+@compatible: aoz, amos
+@content:
+This simple function returns the amount of free space remaining on the current disc (pointed by the current directory), measured in bytes.
+api*/
+Function DFree
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"dFree",waitFunction:"load_wait",args:[]};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+/**api
+@name:MkDir
+@description:Creates a new directory
+@param:path$:integer:Path to the new directory to create
+@examples:instructions:i_45
+@compatible: aoz, stos, amos
+@content:
+This makes a new folder on the current disc, and gives it the filename of your choice. For example:
+~~~
+Mkdir "D:/Images/Marathonman"
+Dir "D:/Images/Marathonman"
+~~~
+
+api*/
+Instruction MkDir, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"mkDir",waitFunction:"load_wait",args:[%path$]};
+}
+End Instruction
+
+/**api
+@name:Open Random
+@description:Open a random access file
+@param:channel:integer:Number of the channel
+@param:path$:string:Path to the file to open
+@compatible: aoz, stos, amos
+@seeAlso: Open Random, Field, Get, Put
+@examples:instructions:i_71
+@content:
+Random access files are extremely useful simple text files containing fornmatted data in a similar fashion to CSV files.
+
+They allow the programmer to access data stored on a disc in any random order. A random
+access file is made up of units of data called "records", and each record has its own identification number. Every
+record can be split up into as many smaller sections as required, with every section becoming a "field". Each field is
+used to hold a single item of data.
+
+The main difference between sequential files and random access files is that you must tell AOZ Studio the maximum size of a field in advance, before you can make use of it.
+
+A field can hold many forms of data, like a password, an invoice number or even a literary quotation. Supposing
+you want to create an electronic phone book. You could choose the following fields, with the following maximum
+number of characters in each:
+~~~
+Field 		Max length
+SURNAME$ 	20
+F1RSTNAME$ 	15
+TEL$ 		10
+~~~
+Once the fields have been planned, the structure for your electronic database can be set up using the following commands:
+Open Random, Filed, Get and Put...
+
+~~~
+Open Random 1,"mydata.rnd"
+~~~
+
+api*/
+Instruction Open Random, channel, path$
+{
+	#errors
+	#waiting
+	#addToFilesystem:"%path$"
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"openRandom", waitFunction:"load_wait",args:[%channel,%path$]};
+}
+End Instruction
+
+/**api
+@name:Open In
+@description:Open a file for input only
+@param:channel:integer:Number of the input channel
+@param:path$:string:Path to the file to open
+@compatible: aoz, amos, stos
+@examples:instructions:i_69
+@content:
+Use this command to prepare a file so that data may be read from it. If the filename does not already exist, AOZ Studio will report a "File not found" error.
+
+Example:
+~~~
+Open In 1,"my_file.txt"
+~~~
+
+api*/
+Instruction Open In, channel, path$
+{
+	#errors
+	#waiting
+	#addToFilesystem:"%path$"
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"openIn",waitFunction:"load_wait",args:[%channel,%path$]};
+}
+End Instruction
+
+/**api
+@name:Open Out
+@description:Open a file for ouput only. The file is replaced by the new one.
+@param:channel:integer:Number of the output channel
+@param:path$:string:Path to the file to save
+@compatible: aoz, stos, amos
+@content:
+Use this command to open a sequential file, ready for data to be added to its end. Give the channel number and filename, as explained above. If the file already exists, it will be erased.
+api*/
+Instruction Open Out, channel, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"openOut",waitFunction:"load_wait",args:[%channel,%path$]};
+}
+End Instruction
+
+/**api
+@name:Append
+@description:Open a file for output, and add content at the end of it
+@param:channel:integer:Number of the channel
+@param:path$:string:Path to the file to open
+@compatible: aoz, stos, amos
+@examples:instructions:i_69
+@content:
+This works like OPEN OUT, but it allows you to add to your files at any time after they have been defined.
+If the filename already exists, your new data will be appended to it, in other words it will be added to the end of that file.
+
+api*/
+Instruction Append, channel, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"append",waitFunction:"load_wait",args:[%channel,%path$]};
+}
+End Instruction
+
+
+/**api
+@name:Assign
+@description:Assign a name to a file or device
+@param:name$:string:The name to assign
+@param:path$:string:The path or drive name to assign it to
+@examples:instructions:i_45
+@compatible: aoz, amos
+@content:
+As the AOZ filesystem complies with the Linux notion of Drives, you can create simulated drives in your application taht will in fact point to a folder on yoru machine.
+~~~
+// This code
+Load Image "C:\Graphics\aoz.png", 0
+Wait Key
+
+// Has the same result as this one...
+Assign "TheGraphics: To "C:\Graphics"
+Load Image "TheGraphics:aoz.png", 0
+~~~
+api*/
+Instruction Assign, name$ To path$
+{
+	#errors
+	aoz.filesystem.assign(%name$,$path$);
+}
+End Instruction
+
+/**api
+@name:Field$
+@description:Define a record structure for a random access file
+@param:channel:integer:The index of the channel
+@param:length:integer:The length of the first field
+@param:field$:variable:The string variable to asign it to
+@compatible: aoz, stos, amos
+@examples:instructions:i_71
+@content:
+FIELD$ should be used immediately after OPEN RANDOM to define a record that will be used for a random access
+file. After selecting the channel number, give the maximum number of
+characters you will cater for in a field, followed by its name, then repeat the process as necessary.
+
+For example:
+~~~
+Field 1,20 As SURNAME$,15 As FIRSTNAME$,10 As TEL$
+~~~
+You can now place some records in the strings that have been set up by the FIELD command, like this:
+~~~
+SURNAME$="Professional"
+FIRSTNAME$="AMOS"
+TEL$="0625859333"
+~~~
+api*/
+
+/**api
+@name:Put
+@description:Output a record to a random access file
+@param:channel:integer:The index of the channel with the open file
+@param:recordNumber:integer:The number of the record to output
+@examples:instructions:i_71
+@content:
+Once a record has been placed in a string, it can be moved from the computer's memory into a record number of your random access file.
+If you were still using channel 1, your first record would be put into the random access file like this:
+~~~
+Put 1,1
+~~~
+The next record will become number 2, and so on until you fill up your telephone book. Here is a simple working example. When you have created enough records, type in "exit" when prompted to enter another name.
+~~~
+Open Random 1,"ADDRESSES.rnd"
+Field 1,25 As NAME$,12 As TEL$
+INDEX=1
+Do
+	Input "Enter a name:;NAME$
+	If NAME$="exit" Then Exit
+	Input "Enter the phone number:;TEL$
+	Put 1,INDEX
+	Inc INDEX
+Loop
+Close 1
+~~~
+api*/
+Instruction Put, channel, recordNumber
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"put",waitFunction:"load_wait",args:[%channel,%recordNumber]};
+}
+End Instruction
+
+/**api
+@name:Get
+@description:Read a record from a random access file
+@param:channel:integer:The index of the channel with the open file
+@param:recordNumber:integer:The number of the record to read
+@compatible: aoz, stos, amos
+@examples:instructions:i_71
+@content:
+This instruction reads a record stored in a random access file, after being told which channel to use and the number of the record to read. To read the first record you would use this:
+~~~
+Get 1,1
+~~~
+GET then loads this record into your field strings, and these strings may be manipulated as you like. Obviously you can only GET record numbers that have been PUT onto the disc.
+
+Now try this example:
+~~~
+Open Random 1,"ADDRESSES.rnd"
+Field 1,25 As NAME$,12 As TEL$
+Do
+	Input "Enter Record Number: ";INDEX
+	If INDEX=0 Then Exit
+	Get 1,INDEX
+	Print NAME$ : Print TEL$
+Loop
+Close 1
+~~~
+api*/
+Instruction Get, channel, recordNumber
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"get",waitFunction:"load_wait",args:[%channel,%recordNumber]};
+}
+End Instruction
+
+
+/**api
+@name:LOF
+@description:Return the length of a "Out", "In" or "Random access" channel
+@param:channel:integer:Index of the channel
+@compatible: aoz, stos, amos
+@examples:instructions:i_69
+@content:
+LOF returns the length of an open file.
+
+api*/
+Function LOF, channel
+{
+	#errors
+}
+End Function( {aoz.moduleFilesystem.lof(%channel)} )
+
+/**api
+@name:EOF
+@description:Indicates if the file pointer of a channel is located at the end of the file
+@param:channel:integer:Index of the channel
+@return:boolean:True if the file pointer has reached the end, False if not
+@compatible: aoz, stos, amos
+@examples:instructions:i_69
+@content:
+This tests to see if the end of a file has been reached at the current reading position, returning true for yes and false if this has not happened.
+
+api*/
+Function EOF, channel
+{
+	#errors
+}
+End Function( {aoz.moduleFilesystem.eof(%channel)} )
+
+/**api
+@name:POF
+@description:Set the position of the file pointer in an open channel (type must be "Out" ort "Append")
+@param:channel:integer:Index of the channel
+@param:position:integer:New position of the file pointer
+@compatible: aoz, stos, amos
+@examples:instructions:i_69
+@content:
+This changes the current reading or writing position of an open file. For example, the following line sets the read/write position to 1,000 characters past the start of the file:
+~~~
+Pof(1)=1000
+~~~
+Because disc drives are inherently random, this may be used to provide a crude form of random access with
+sequential files.
+
+api*/
+Instruction POF, channel, position
+{
+	#errors
+	this.moduleFilesystem.setPof(%number,%position);
+}
+End Instruction
+
+/**api
+@name:POF
+@description:Return the position of the file pointer in an open channel
+@param:channel:integer:Index of the channel
+@compatible: aoz, stos, amos
+@examples:instructions:i_69
+@return:integer:the current position of the file pointer
+@content:
+api*/
+Function POF, channel
+{
+	#errors
+}
+End Function( {aoz.moduleFilesystem.getPof(%channel)} )
+
+/**api
+@name:Close
+@description:Close one or all opened files, and in case of output, save the buffered data into it
+@param:channel:integer:Number of the channel (optional)
+@compatible: aoz, stos, amos
+@examples:instructions:i_69
+@content:
+You must remember to always CLOSE a file after you have finished with it. If you forget to do this, any changes that have been made to the file will be lost.
+
+api*/
+Instruction Close, channel
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"close",waitFunction:"load_wait",args:[%channel]};
+}
+End Instruction
+
+/**api
+@name:Parent
+@description:Change the current directory to the parent directory
+@compatible: aoz, stos, amos
+@examples:instructions:i_44
+@content:
+The effect of the PARENT command is to load the current directory with the parent of the present folder you are
+using. By using this command repeatedly, you are able to get back to the original root directory simply and quickly.
+For example:
+~~~
+Dir$="AMOSPro_Examples:Objects/"
+Dir
+Parent
+Dir
+~~~
+api*/
+Instruction Parent
+{
+	#errors
+	aoz.filesystem.parent();
+}
+End Instruction
+
+/**api
+@name:Rename
+@description:Rename a file
+@param:path$:string:Path to the file to rename
+@param:newName$:string:New name of the file
+@examples:instructions:i_45
+@compatible: aoz, stos, amos
+@content:
+This command is used to change the name of an existing file. If your choice of new filename is already in use by another file, the appropriate error message will be given.
+~~~
+Rename "Ancient" To "Modern"
+~~~
+
+api*/
+Instruction Rename, path$ To newName$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"rename",waitFunction:"load_wait",args:[%path$,%newName$]};
+}
+End Instruction
+
+/**api
+@name:Kill
+@description:Delete a file
+@param:path$:string:Path to the file to delete
+@examples:instructions:i_45
+@content:
+Be extremely careful with this command. It obliterates the named file from the current disc, once and for all. The file that is erased with this command cannot be retrieved.
+api*/
+Instruction Kill, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"kill",waitFunction:"load_wait",args:[%path$]};
+}
+End Instruction
+
+/**api
+@name:Load Variables
+@description:Read the content of variables from a file
+@param:path$:string:Path of the file to load
+@compatible: aoz
+@content:
+This function will load a file previously saved with the Save Variables command, read all the
+values of the variables and arrays contained in it, and assign them to the variables in your application.
+
+Warning: the previous content of variables with the same name as the ones saved in the file will be erased.
+
+If a variable which value is contained in the file does not exists in the current application, it will be created.
+api*/
+Instruction Load Variables, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"loadVariables",waitFunction:"load_wait",args:[%path$]};
+}
+End Instruction
+
+/**api
+@name:Save Variables
+@description:save the content of variables or arrays into a file
+@param:path$:string:Path of the file to save
+@param:any:variable:A list of variables to be saved, saparated by commas
+@compatible: aoz
+@content:
+This function saves the values and the names of a list of variables into an encoded ASCII file on disk.
+
+You can recover the variables later with the "Load Variables" instructions.
+
+You can save the content of an array by ommiting the dimensions when you save it:
+~~~
+Dim A$( 10 ), B( 10, 10 )
+For X = 0 To 10
+	A$( X ) = Str$( X )
+	For Y = 0 To 10
+		B( X, Y ) = X * 10 + Y
+	Next
+Next
+
+// The next line only saves two values, "5" and 12
+Save Variables "C:\Temp\myVariables_values.txt", A$( 5 ), B( 1, 2 )
+
+// The next line saves the whole arrays
+Save Variables "C:\Temp\myVariables_arrays.txt", A$(), B()
+~~~
+api*/
+
+
+/**api
+@name:Drive First$
+@description:Return the name of the first available drive on the machine.
+@param:*filter$:string:Optional string with wildcard to filter the names.
+@return:string:The name of the first drive
+@compatible: aoz
+This function returns the name of the drive as extracted from the machine.
+- on Windows, it will return letters, like C, D etc.
+- on macOS, it will return "Macintosh HD" and eventual other drives connected to the machine
+- on Linux it will return the real name of the drives
+
+Please note taht drives created with assign are not reported.
+api*/
+Function Drive First$, filter$
+{
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"driveFirst",waitFunction:"load_wait",args:[%filter$]};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+/**api
+@name:Drive Next$
+@description:Return the name of the next available drive on the machine.
+@return:string:The name of the drive, or "" if AOZ has reached the end of the list
+@compatible: aoz
+This function returns the name of the drive as extracted from the machine.
+- on Windows, it will return letters, like C, D etc.
+- on macOS, it will return "Macintosh HD" and eventual other drives connected to the machine
+- on Linux it will return the real name of the drives
+
+Please note that drives created with assign are not reported.
+
+~~~
+// List the drives connected to the machine
+D$ = Drive First$
+While D$ <> ""
+	Print D$
+	D$ = Drive Next$
+Wend
+~~~
+api*/
+Function Drive Next$
+{
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"driveNext",waitFunction:"load_wait",args:[]};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+
+
+/**api
+@name:FSel$
+@description:Open a file selector and return the name of the selected file
+@param:path$:string:Path to the directory to display at start
+@param:*default$:string:Name of the default file to display as selected
+@param:*title1$:string:String to display as title of the selector
+@param:*title2$:string:String to display as secondary title of the selector
+@param:*type$:string:If "load", will display a LOAD file selector, if "Save" will display a SAVE file selector
+@return:integer:Value reported by the port
+@examples:instructions:i_45
+@compatible: aoz, stos, amos
+@content:
+This file selection function allows you to choose the files you need directly from a disc, using the standard AOZ Studio file selector. In its simplest form, it operates like this:
+~~~
+Print Fsel$("*.PNG")
+~~~
+The string held within the brackets is a path that sets the searching pattern, in that case a PNG file.
+
+The following optional parameters may also be included:
+
+The optional default string is used to choose a filename that will be automatically selected if you press [Return] and abort the process.
+
+Title$ and title2$ are optional text strings that set up a title to be displayed at the top of your file selector. For example:
+~~~
+F$=Fsel$("AMOSPro_Examples:Objects/*.Abk")
+If F$= Then Edit : Rem Return to editor if no file selected
+Load F$: Rem Load file and display first Bob
+Flash Off : Bob 1,100,100,1 : Get Bob Palette : Wait Vbl
+~~~
+
+api*/
+Function FSel$, path$, default$, title1$, title2$, type$ = "load"
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"fSel",waitFunction:"load_wait",args:{path:%path$,default:%default$,title1:%title1$,title2:%title2$,type:%type$}};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+/**api
+@name:Dir First$
+@description:List the indicated path internally and return the first file in the list
+@param:path$:string:Path to the directory to scan, can include * and ? wildcards
+@return:string:The name of the first file found
+@compatible: aoz, stos, amos
+@examples:instructions:i_44
+@content:
+This function returns a string containing the name and the length of the first file on the current disc that matches up
+with your chosen search path. For example, the next routine reports the first file or folder in the current directory,
+followed by the first IFF file in the directory. Obviously, this could be the same file.
+
+~~~
+Print Dir First$("*.*")
+Print Dir First$("*.PNG")
+~~~
+
+When DIR FIRST$ is used, the whole directory listing is loaded into memory, so you can continue to discover the
+name of the next file in the current directory with the following function.
+api*/
+Function Dir First$, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"dirFirst",waitFunction:"load_wait",args:[%path$]};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+/**api
+@name:Dir Next$
+@description:Return the next file in the list generated by Dir First$
+@return:string:The name of the next file found
+@compatible: aoz, stos, amos
+@examples:instructions:i_44
+@content:
+Use this to return the filename that comes after the file or folder found by the previous DIR FIRST$ search. If there
+are no more files to come, an empty string will be returned, "". Once the last filename has been found, AMOS
+Professional will automatically grab back the memory used by the directory array, and release it for the rest of your
+program to use. The next example prints every file in the current directory.
+~~~
+F$=Dir First$("*.*")
+While F$<>""
+	Print F$ : Wait 50
+	F$=Dir Next$
+Wend
+~~~
+api*/
+Function Dir Next$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"dirNext",waitFunction:"load_wait",args:[]};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+/**api
+@name:Exist
+@description:Indicates if a file or directory exists on the disc
+@param:path$:string:Path to the file or directory to check
+@return:boolean:True if the file or directory exist, False if not
+@examples:instructions:i_44
+@compatible: aoz, stos, amos
+@content:
+EXIST looks through the current directory of filenames and checks it against the filename in your given string. If the names match, then the file does exist and True will be reported, otherwise False will be returned.
+
+As well as checking for individual filenames, even if an idiotic name is given, EXIST will search for discs and devices as well. For example:
+~~~
+Print Exist("An idiotic name")
+Print Exist("C:) 	// Rem Is a drive named DEMO available
+Print Exist("Df1:) 	// Is the second floppy drive connected when in Amiga simulation?
+~~~
+It is advisable to test for empty strings () separately, like this:
+~~~
+F$=Fsel$("*.PNG"," ","Load a PNG file")
+If F$= Then Edit // Return to editor if no file chosen
+If Exist(F$) Then Load Image F$,0
+~~~
+
+api*/
+Function Exist, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"exist",waitFunction:"load_wait",args:[%path$]};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+/**api
+@name:File Name$
+@description:Returns the name of a file, without extension
+@param:path$:string:Path to the file
+@return:string:The name of the file
+@compatible: aoz
+@content:
+This function is useful when you have a path to a file but only want to know the name of the file.
+~~~
+F$ = FSel$( "*.PNG", " ", "Please choose a file not named hello.png" )
+If F$ <> ""
+	If Lower$( File Name$( F$ ) ) = "hello.png"
+		Print "Sorry not this one... :)"
+		End
+	End If
+	Load Image F$
+End If
+
+api*/
+Function File Name, path$
+{
+}
+End Function( {this.utilities.getFilenameAndExtension(%path$)} )
+
+/**api
+@name:File Extension$
+@description:Returns the extension of a path to a file, without the dot
+@param:path$:string:Path to the file
+@return:string:The extension of the path to a file
+@compatible: aoz
+@content:
+Use this function to trigger procedures from the extension...
+~~~
+F$ = FSel$( "*.*", " ", "Please choose an image file..." )
+If F$ <> ""
+	E$ = Lower$( File Extension$( F$ ) )
+	If E$ = "png" Or E$ = "jpg" Or E$ = "jpeg" Or E$ = "iff"
+		Load Image F$
+	Else
+		Print "File not supported."
+	End If
+End If
+api*/
+Function File Extension$, path$
+{
+}
+End Function( {this.utilities.getFileExtension(%path$)} )
+
+/**api
+@name:File Length
+@description:Return the length in bytes of a file
+@param:path$:string:Path to the file to check
+@return:integer:The length of the file
+@compatible: aoz
+@content:
+This example will load the file in a memory bank, and display it's content in hexadecimal...
+~~~
+F$ = FSel$( "*.*", " ", "Please choose a file..." )
+If F$ <> ""
+	L = File Length( F$ )			// Get the length of the file
+	Reserve As Data 10, L			// Reserve the space in memory bank number 10
+	Bload F4, 10					// Load the file into the bank.
+
+	For P = 0 To Length( 10 )
+		Print Hex$( Peek( Start( 10 ) + P ), 2 );" ";
+	Next
+End If
+
+~~~
+api*/
+Function File Length, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"fileLength",waitFunction:"load_wait",args:[%path$]};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+/**api
+@name:Dir
+@description:List a directory in the current screen
+@param:path$:string:Path to the directory to list, can include wildcards * and ?
+@compatible: aoz, stos, amos
+@examples:instructions:i_44
+@content:
+The DIR command is used to examine the directory of the current disc and list all of its files on screen, like this:
+~~~
+Dir
+~~~
+Any folders in the listing will be distinguished by a leading asterisk character "*"
+api*/
+Instruction Dir, path$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"dir",waitFunction:"load_wait",args:[%path$]};
+}
+End Instruction
+
+/**api
+@name:Disc Info$
+@description:Return information about a drive
+@param:*name$:string:Name to the drive (optional)
+@compatible: aoz, amos
+@examples:instructions:i_44
+@content:
+This function is used to return the amount of free space in the specified device. The string that is returned contains
+the name of the disc, followed by the amount of free space. Here is an example which splits the string:
+
+~~~
+A$=Disc Info$( "Macintosh HD:" )
+C=Instr(A$,":")
+N$=Left$(A$,C)
+A$=A$-N$
+D=Val(A$)
+Print "Name of the disc=";N$
+Print "Free space=";D
+~~~
+api*/
+Function Disc Info$, name$
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"discInfo",waitFunction:"load_wait",args:[%name$]};
+}
+End Function( {aoz.moduleFilesystem.result} )
+
+/**api
+@name:LDir
+@description:TODO: Output the content of a directory to the printer
+@param:path$:string:Path to the drive or a directory on the drive (optional)
+@compatible: notimplemented
+@content:
+This command is used in exactly the same way as DIR, it lists the directory of the current disc to the printer.
+api*/
+Instruction LDir, path$
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Command Line$
+@description:Returns the parameters of the command that has been used to launch the application.
+@param:command$:string:The text to use as parameters, separated with commansss inside of the string
+@compatible: notimplemented
+@content:
+For applications running in your browser, it will return the section of the URL after a question mark...
+api*/
+Function Command Line, command$
+{
+	#notimplemented
+}
+End Function ({aoz.getCommandLine(%command$)})
+
+/**api
+@name:Set Input
+@description:Set the end of line characters detected when you input from a random access file
+@param:char1:integer:Ascii value of the first character to detect as new line
+@param:*char2:integer:Ascii value of the first character to detect as new line
+@compatible:aoz, stos, amos
+@examples:instructions:i_69
+@content:
+SET INPUT is used to set which characters you want to input to end a line of data. Many computers need both a [Return] and [line feed] character at the end of each line, but the Amiga only needs a [line feed]. This means that if you wanted to import files from an ST via the serial cable, for example, unwanted [Return] characters would litter your input.
+
+SET INPUT solves this problem by allowing you to select two Ascii values as your end-of-line characters. If you prefer to use a single character only, make the second value a negative number. For example:
+~~~
+Set Input 10,-1 		// macOS, Linux
+Set Input 13,10			// Windows
+~~~
+
+api*/
+Instruction Set Input, char1, char2
+{
+	#errors
+	aoz.moduleFilesystem.setInput(%char1,%char2);
+}
+End Instruction
+
+
+/**api
+@name:Set Dir
+@description:Changes the width of the Dir function results
+@param:width:New width in characters
+@param:filter$:Filter string
+@examples:instructions:i_44
+@compatible: stos, amos, aoz
+@content:
+The DIR command is used to examine the directory of the current disc and list all of its files on screen, like this:
+~~~
+Dir
+~~~
+Any folders in the listing will be distinguished by a leading asterisk character *.
+
+The listing can be stopped at any time by pressing the [Space-bar] and then started again in the same way.
+
+api*/
+Instruction Set Dir, width, filter$
+{
+	#errors
+	aoz.moduleFilesystem.setDir(%width,%filter$)
+}
+End Instruction
+
+/**api
+@name:Dir$
+@description:Reserved variable. Change current directory
+@return:string:The current directory
+@examples:instructions:i_44
+@content:
+DIR$ can hold the directory name that is to be used as the starting point for further disc operations, like this:
+~~~
+Dir$="AOZ Resources:Sounds/"
+Print Dir$
+~~~
+
+api*/

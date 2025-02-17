@@ -1,0 +1,13 @@
+<i>Menu Called</i>
+<b>Menu Called</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+MENU CALLED engages the automatic re-drawing process. This command is normally used with a menu
+procedure to generate animated menu items, often with spectacular moving graphic effects.
+
+To use this facility, a menu procedure should first be defined, as explained above. Next, add a call to this procedure in the required title strings, using an embedded PRoc command. Finally, activate the updating process with MENU CALLED. When the user selects the chosen item, your procedure is repeatedly accessed by the menu system.
+Because menu items are not double buffered, bobs may flicker a little, but the use of computed sprites will present
+no such problems.
+
+

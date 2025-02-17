@@ -1,0 +1,9 @@
+<i>Asc</i>
+<b>Asc</b> xxxxxxx
+=
+To get the internal ASCII code of the first character in a string, use the ASC function like this:
+@code
+Print Asc("B")
+Print Asc("AMOS Professional")
+@code
+

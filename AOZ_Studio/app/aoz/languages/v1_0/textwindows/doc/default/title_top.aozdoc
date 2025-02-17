@@ -1,0 +1,10 @@
+<i>Title Top</i>
+<b>Title Top</b> xxxxxxx
+=
+Use this command to set a border title at the top of the current window to your chosen title string. This facility will
+only operate with bordered windows, as follows:
+@code
+Cls: Wind Open 4,1,1,20,10,1
+Title Top "Top of the morning"
+@code
+

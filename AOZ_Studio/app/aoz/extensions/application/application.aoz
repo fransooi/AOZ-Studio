@@ -1,0 +1,270 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Application Extension and Object
+ * By Francois Lionet
+ *
+ * @author FF
+ * @date 21/11/2020
+ *
+ */
+
+//
+// Initialization
+//
+{
+	this.atom = undefined;
+	if( window.parent && window.parent.atom )
+	{
+		this.atom = window.parent.atom;
+	};
+
+	this.setWindowPosition = function( x, y )
+	{
+		if( window.parent && window.parent.atom )
+		{
+			window.parent.atom.setWindowPosition( x, y );
+		}
+	};
+
+	this.getWindowPosition = function()
+	{
+		var value = undefined;
+		if( window.parent && window.parent.atom )
+		{
+			value = window.parent.atom.getWindowPosition();
+		}
+		return value;
+	};
+
+	this.getWindowSize = function()
+	{
+		var value = undefined;
+		if( window.parent && window.parent.atom )
+		{
+			value = window.parent.atom.getWindowSize();
+		}
+		return value;
+	};
+
+}
+
+Class Application
+	{
+		#class:"Application"
+
+		this.connected = false;
+		try
+		{
+			this.connected =  window.parent != null && window.parent.atom != null;
+		}
+		catch( err )
+		{
+		}
+	}
+
+	Method Is Connected
+	End Method( {connected} )
+
+	Method Set Title, title$
+	{
+		#errors
+		if( window.parent && window.parent.atom )
+		{
+			window.parent.atom.aozAPI.setWindowTitle( vars.title$ );
+		}
+	}
+	End Method
+
+	Method Resize Window, width, height
+	{
+		#errors
+		if( window.parent && window.parent.atom )
+		{
+			window.parent.atom.aozAPI.setWindowSize( vars.width, vars.height );
+		}
+	}
+	End Method
+
+	Method Window Width
+	{
+		#errors
+		var result = 0;
+		if( window.parent && window.parent.atom )
+			result = window.parent.atom.aozAPI.getWindowSize().width;
+	}
+	End Method({result})
+
+	Method Window Height
+	{
+		#errors
+		var result = 0;
+		if( window.parent && window.parent.atom )
+			result = window.parent.atom.aozAPI.getWindowSize().height;
+	}
+	End Method({result})
+
+	Method Position Window, x, y
+	{
+		#errors
+		if( window.parent && window.parent.atom )
+			window.parent.atom.aozAPI.setWindowPosition( vars.x, vars.y );
+	}
+	End Method
+
+	Method Window X
+	{
+		#errors
+		var result = 0;
+		if( window.parent && window.parent.atom )
+			result = window.parent.atom.aozAPI.getWindowPosition().x;
+	}
+	End Method({result})
+
+	Method Window Y
+	{
+		#errors
+		var result = 0;
+		if( window.parent && window.parent.atom )
+			result = window.parent.atom.aozAPI.getWindowPosition().y;
+	}
+	End Method({result})
+
+	Method Close Window, confirm = False
+	{
+		#errors
+		if( window.parent && window.parent.atom )
+			window.parent.atom.aozAPI.closeWindow( vars.confirm );
+	}
+	End Method
+
+End Class
+
+/**api
+@name:FPS
+@description:Returns the number of frame per seconds at which the application is currently running.
+@return:integer:The number of frame per seconds at which the application is running.
+@compatible: aoz
+api*/
+Function FPS
+{	
+}
+End Function( {(Math.floor(MainLoop.getFPS()+0.5))} )
+
+/**api
+@name:Timestep
+@description:Returns the number of milliseconds between every refresh of the application.
+@return:integer:The number of milliseconds between every refresh of the application.
+@compatible: aoz
+api*/
+Function Timestep
+{
+}
+End Function( {MainLoop.getSimulationTimestep()} )
+
+/**api
+@name:MaxFPS
+@description:Returns the maximum number of frame per seconds allowed for the application
+@return:integer:The maximum possible number of frame per seconds of the application, a negative number indicating no limit.
+@compatible: aoz
+api*/
+Function MaxFPS
+{
+}
+End Function( {isFinite(MainLoop.getMaxAllowedFPS())?MainLoop.getMaxAllowedFPS():-1} )
+
+/**api
+@name:Set Frame Rate
+@description:Changes the application animation speed and display refresh
+@param:timestep:float:Delay in milliseconds between every call of the main application 
+@param:maxFPS:integer:The maximum possible number of frame per seconds of the application, a negative number indicating no limit.
+@compatible: aoz
+@content:  
+timestep: The perceived frames per second (FPS) is effectively capped at the
+multiplicative inverse of the simulation timestep. That is, if the
+timestep is 1000 / 60 (which is the default), then the maximum perceived
+FPS is effectively 60. Decreasing the timestep increases the maximum
+perceived FPS at the cost of running more times per frame at lower frame rates. 
+Since running the application more times takes more time to process, this can actually slow down the frame rate.
+
+If you are considering decreasing the simulation timestep in order to
+raise the maximum perceived FPS, keep in mind that most monitors can't
+display more than 60 FPS. Whether humans can tell the difference among
+high frame rates depends on the application, but for reference, film is
+usually displayed at 24 FPS, other videos at 30 FPS, most games are
+acceptable above 30 FPS, and virtual reality might require 75 FPS to
+feel natural. Some gaming monitors go up to 144 FPS. Setting the
+timestep below 1000 / 144 is discouraged and below 1000 / 240 is
+strongly discouraged. The default of 1000 / 60 is good in most cases.
+
+The simulation timestep should typically only be changed at
+deterministic times (e.g. before the main loop starts for the first
+time, and not in response to user input or slow frame rates) to avoid
+introducing non-deterministic behavior. The update timestep should be
+the same for all players/users in multiplayer/multi-user applications.
+
+maxFPS: contains the maximum number of frames per second to execute. If negative or not
+passed, there will be no FPS cap. 
+
+api*/
+Instruction Set Frame Rate, timestep#=16.666, maxFPS=-1
+{
+	#errors
+	MainLoop.setSimulationTimestep(%timestep#);
+	MainLoop.setMaxAllowedFPS(%maxFPS<0?Infinity:%maxFPS);
+}
+End Instruction
+
+/**api
+@name:Reset Frame Delta
+@description:Reset the amount of time that has not yet been simulated to zero.
+@param:time:float:Delay in milliseconds between every call of the main application 
+@param:maxFPS:integer:The maximum possible number of frame per seconds of the application, a negative number indicating no limit.
+@compatible: aoz
+@content: 
+This introduces non-deterministic behavior if called after the
+application has started running (unless it is being reset, in which case
+it doesn't matter). However, this can be useful in cases where the
+amount of time that has not yet been simulated has grown very large
+(for example, when the application's tab gets put in the background and
+the browser throttles the timers as a result). 
+
+In applications with lockstep the player would get dropped, but in other networked
+applications it may be necessary to snap or ease the player/user to the
+authoritative state and discard pending updates in the process. In
+non-networked applications it may also be acceptable to simply resume
+the application where it last left off and ignore the accumulated
+unsimulated time.
+api*/
+Instruction Reset Frame Delta, time# = 0
+{
+	#errors
+	MainLoop.resetFrameDelta(%time#);
+}
+End Instruction
+
+/**api
+	Exit the application and close the current window
+api*/
+Instruction Exit App
+{
+	#errors
+	window.close();
+}
+End Instruction

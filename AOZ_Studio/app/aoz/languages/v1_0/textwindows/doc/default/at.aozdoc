@@ -1,0 +1,28 @@
+<i>At</i>
+<b>At</b> xxxxxxx
+=
+You may also change the position of the text cursor directly from inside a character string. This is ideal for
+positioning text once and for all on screen, no matter what happens in the program, because the text cursor can be set
+during the program's initialisation phase. The string that is returned takes the following format:
+@code
+Chr$(27)+"MX" + x + "\r" + Chr$(27) + "MY" + y + "\r"
+@code
+So whenever this string is printed, the text cursor will be moved to the text coordinates held by X and Y. For
+example:
+@code
+A$="A"+At(10,10)+"Of"+At(2,4)+"String"+At(20,20)+"Pearls"
+Print A$
+@code
+Imagine a Hi-Score table positioned like this:
+@code
+SCORE=999
+Locate 12,10: Print "Hi Score ";SCORE
+@code
+By using the AT function, the same table can be moved by editing a single string, no matter how many times it is
+used in the program, like this:
+@code
+HI_SCORES=At(12,10)+"Hi Score"
+SCORE=999
+Print HI_SCORE$;SCORE
+@code
+

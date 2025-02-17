@@ -1,0 +1,26 @@
+<i>Left$</i>
+<b>Left$</b> xxxxxxx
+=
+LEFT$ reads the specified number of characters in a source string, starting from the left-hand side, and copies them
+into a destination string. The first type of usage of this function creates a new destination string from the chosen
+number of characters of the source string.
+
+For example:
+@code
+Do
+Input "Type in a string:";S$
+Print "Display how many characters from"
+Input "the left?";N
+Print Left$(S$,N)
+Loop
+@code
+The second type of usage replaces the leftmost number of characters in the destination string with the equivalent
+number of characters from the source string. For example:
+@code
+A$="**** Basic"
+Left$(A$,4)="AMOS"
+Print A$
+@code
+Exactly the same processes can be performed with characters from the right-hand side of a string, by using the
+equivalent RIGHT$ function.
+

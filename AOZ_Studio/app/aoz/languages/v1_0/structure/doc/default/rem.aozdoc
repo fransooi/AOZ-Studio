@@ -1,0 +1,21 @@
+<i>Rem</i>
+<b>Rem</b> xxxxxxx
+=
+The beginning of a Rem statement is marked by REM or by the double slash characters, which is simply a short-cut
+recognised by AOZ as a REM. The message or comment is then typed in from the keyboard, beginning with a capital letter.
+
+Here are some examples:
+@code
+' An apostrophe can be used instead of the characters Rem, but only at the start of a line...
+
+Rem The next line will print a greeting
+Print "a greeting"
+
+// This line is a comment that does nothing at all
+Wait 75: // Wait one and a half seconds
+
+/  *
+This entiere portion of code will be totally ignored by AOZ...
+Rem Return to the Edit Screen
+Edit
+

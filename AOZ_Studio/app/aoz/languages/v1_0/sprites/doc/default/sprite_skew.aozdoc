@@ -1,0 +1,17 @@
+<i>Sprite Skew</i>
+<b>Sprite Skew</b> xxxxxxx
+=
+This instruction allows you to generate interesting distortion effects.
+
+The next example displays a sprite on the screen and demonstrates the effect with random values...
+@code
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load Bob images from disc
+Cls 0 										// Set up screen
+Sprite 1, 100, 100, 2 						// Display Sprite at position
+
+Do
+Sprite Skew 1, Rnd() * 2, Rnd() * 2
+Wait Vbl
+Next
+@code
+

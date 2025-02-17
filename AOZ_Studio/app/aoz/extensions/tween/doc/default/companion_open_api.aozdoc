@@ -1,0 +1,5 @@
+<i>Companion Open API</i>
+<b>Companion Open API</b> xxxxxxx
+=
+The format or even presence of the authorization string depends on the chose API. For example, some APIs might ask for SSH credentials, in this case the authorization might a Javascript object converted to JSON.
+

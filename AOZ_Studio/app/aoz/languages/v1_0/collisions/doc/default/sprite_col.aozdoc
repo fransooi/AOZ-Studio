@@ -1,0 +1,10 @@
+<i>Sprite Col</i>
+<b>Sprite Col</b> xxxxxxx
+=
+SPRITE COL provides an easy method of checking to see if two or more Sprites have collided on display.
+If the test is successful, SPRITE COL returns a value of True, and if not False is returned instead.
+As you would expect, the brackets contain the number of any active Sprite on display.
+
+If you want to check for a selected group of Sprites, include the optional first to last parameters to set the range of the Sprite numbers you are interested in..
+
+

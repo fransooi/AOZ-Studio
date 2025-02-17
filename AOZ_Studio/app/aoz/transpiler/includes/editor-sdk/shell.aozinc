@@ -1,0 +1,7 @@
+#loadAssetFile: "aozjs/editor-sdk/js/shell.js"
+
+Procedure SHELL_EXECUTE[ CMD$, PROCNAME$ ]
+    JS Execute "application.editorSDK.shell.shellExecute( '" + CMD$ + "', '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend
+End proc

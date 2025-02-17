@@ -1,0 +1,471 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Companion Extension
+ * By Francois Lionet
+ *
+ * Interface between Aoz Command and Aoz Companion server
+ *
+ * @author FL
+ * @date first pushed on 11/10/2021
+ */
+#noWarning:"instruction_not_implemented"
+#need_extension:"websocket"
+#need_javascript_file:"aozjs/debugger/debug-events.js"
+
+{
+    this.error = undefined;
+    this.status = 'disconnected';
+	this.magic = '...';
+	this.waiting = false;
+	this.messageIds = 0;
+	this.onErrorProc = null;
+	this.onResponseProc = null;
+	this.openAPIs = {};
+	this.callbacks = {};
+	this.callbackCounter = 0;
+	this.url = "ws://localhost:8765";
+
+	this.debugEvents = this.aoz.getDebugEvents( this );
+
+	var self = this;
+    this.connect = function( args, extra )
+    {
+        if ( this.status == 'connected' )
+            throw { error: 'companion_already_connected' }
+		extra = ( typeof extra == 'undefined' ? {} : extra );
+
+		this.onResponseProc = args.onResponse;
+		this.onErrorProc = args.onError;
+		var self = this;
+		this.launchServer( args, function( response, data, extra )
+		{
+			if ( !response )
+			{
+				self.error = { error: 'companion_server_not_running' };
+				if ( self.errorCallback )
+				{
+					var callback = self.callbacks[ self.errorCallback ];
+					if ( callback )
+					{
+						self.errorCallback = null;
+						self.callbacks[ self.errorCallback ] = null;
+						callback( false, 'companion_server_not_running', '' );
+					}
+				}
+			}
+			else
+			{
+				self.connectExtra = extra;
+				self.webSocket = new aoz.ext_websocket.WebSocket( self.aoz, self.url );
+				self.webSocket.addCallback( 'onopen', self, self.onOpen );
+				self.webSocket.addCallback( 'onmessage', self, self.onMessage );
+				self.webSocket.addCallback( 'onerror', self, self.onError );
+				self.webSocket.addCallback( 'onclose', self, self.onClose );
+			}
+		}, extra );
+    };
+	this.launchServer = function( args, callback, extra )
+	{
+		var self = this;
+		var handle = setInterval( function()
+		{
+			if ( self.debugEvents.isConnected() )
+		{
+				clearInterval( handle );
+				var message = 
+			{
+					module: 'companion',
+					method: 'launchCompanionServer',
+					options: { lang: 'python' }
+				};
+				self.debugEvents.sendMessage( message, function( response, data )
+				{
+					if ( response )
+						self.serverRunning = true;
+						callback( response, data, extra );
+				} );
+			}
+		} );
+    };
+    this.wait = function()
+        { 
+        if ( error = this.error )
+            {
+			this.waiting = false;
+            this.error = null;
+            throw error;
+            }
+        return !this.waiting;
+    }
+	this.sendMessage = function( message, extra )
+            {
+		message.id = this.messageIds++;
+		message.extra = typeof extra == 'undefined' ? '{}' : extra;
+		message.handle = this.handle;
+		this.error = undefined;
+		this.waiting = true;
+		console.log( 'Sending message: ', message );
+		console.log( message.parameters );
+		console.log( message.extra );
+		this.webSocket.sendMessage( JSON.stringify( message ) );
+	}
+	this.registerCallback = function( name, callback )
+	{
+		var id = name + '_' + this.callbackCounter++;
+		this.callbacks[ id ] = callback; 
+		return id;
+	}
+	this.callProc = function( name, response, parameter )
+	{
+		if ( parameter && parameter.callback )
+		{
+			var callback = this.callbacks[ parameter.callback ];
+			if ( callback )
+        { 
+				this.callbacks[ parameter.callback ] = null;
+				callback( true, parameter.result, parameter );
+			}
+		}
+		else if ( name && name != '' )
+		{
+			if ( parameter )
+				parameter = parameter.result;
+			parameter = typeof parameter == 'undefined' ? '' : parameter;
+			this.aoz.runProcedure( name, { response$: response, parameter$: parameter } );
+		}
+	}
+	this.onOpen = function()
+	{
+		var message = { command: 'connect', parameters: { name: 'aoz', magic: self.magic } };
+		this.sendMessage( message, this.connectExtra );
+	};
+    this.onMessage = function( timeStamp, event )
+        {  
+		var message;
+		try
+    {
+			message = JSON.parse( event.data );
+		}
+		catch ( e )
+        {
+        }
+		if ( message )
+		{
+			if ( !message.response )
+			{
+				if ( this.onErrorProc && this.onErrorProc != '' )
+					this.aoz.runProcedure( this.onErrorProc, { error$: message.error, parameter$: message.parameter } );
+				if ( message.extra.callback )
+				{
+					var callback = this.callbacks[ message.extra.callback ];
+					if ( callback )
+				{
+						this.callbacks[ message.extra.callback ] = null;
+						callback( false, { error: message.error, parameter: message.parameter }, message.extra );
+					}
+				}
+    }
+				else
+    {
+				switch ( message.responseTo )
+				{
+					case 'connect':
+						this.handle = message.handle;
+						this.sendMessage( { command: 'security', parameters: { key: message.key } } , message.extra );
+						//this.callProc( this.onResponseProc, "connecting", message.extra );
+						break;
+					case 'security':
+						this.status = 'connected';
+						this.callProc( this.onResponseProc, "connected", message.extra );
+						this.waiting = false;
+						break;
+					case 'disconnect':
+						this.status = 'disconnected';
+						this.callProc( this.onResponseProc, "disconnected", { } );
+						this.waiting = false;
+                break;
+            case 'openAPI':
+						this.openAPIs[ message.extra.api ].open = true;
+					this.callProc( this.onResponseProc, 'api_opened', message.extra );
+						this.waiting = false;
+                break;
+            case 'closeAPI':
+						this.openAPIs[ message.extra.api ].open = false;
+				this.callProc( this.onResponseProc, 'api_closed', message.extra );
+						this.waiting = false;
+                break;
+            case 'callAPI':
+					this.result = message.result;
+						message.extra.result = message.result;
+						this.callProc( this.onResponseProc, 'api_call', message.extra );
+                this.waiting = false;
+                break;
+        }
+    }
+		}
+    }
+    this.onError = function( response, data, extra )
+    {
+		debugger;
+		this.waiting = false;
+		if ( this.onErrorProc )
+			this.aoz.runProcedure( this.onErrorProc, { error$: response, parameter$: data } );
+		else
+			this.error = 'companion_server_not_running';
+		if ( this.errorCallback )
+		{
+			var callback = this.callbacks[ this.errorCallback ];
+			if ( callback )
+			{
+				this.errorCallback = null;
+				this.callbacks[ this.errorCallback ] = null;
+				callback( false, data, '' );
+			}
+		}
+	}
+	this.onClose = function()
+	{
+		debugger;
+	};
+    this.disconnect = function( index )
+    {
+		if ( this.status == 'connected' )
+		{
+			this.sendMessage( { command: 'disconnect' }, { } );
+		}
+    };
+
+    this.openAPI = function( args )
+    {
+		args.name = args.name.toLowerCase();
+        if ( this.status != 'connected' )
+            throw { error: 'companion_not_connected' }
+        var api = this.openAPIs[ args.name ];
+        if ( api )
+            throw { error: 'companion_API_already_open' }        
+        this.openAPIs[ args.name ] =
+        {
+            name: args.name,
+            open: false
+        };
+        this.sendMessage( { command: 'openAPI', parameters: { name: args.name } }, { api: args.name } );
+    };
+    this.closeAPI = function( args )
+    {
+		args.name = args.name.toLowerCase();
+        if ( this.status != 'connected' )
+            throw { error: 'companion_not_connected' };
+        if ( !this.openAPIs[ args.name ] )
+            throw { error: 'companion_API_not_open', parameter: args.name };
+        this.sendMessage( { command: 'closeAPI', parameters: { name: args.name } }, { api: args.name } );
+    };
+    this.callAPI = function( args )
+    {
+		args.name = args.name.toLowerCase();
+        if ( this.status != 'connected' )
+            throw { error: 'companion_not_connected' };
+        if ( !this.openAPIs[ args.name ] )
+            throw { error: 'companion_API_not_open', parameter: args.index };
+        this.sendMessage( { command: 'callAPI', parameters: { name: args.name, command: args.command } }, { api: args.name } );
+    };
+    this.directConnect = function( name, callback, extra )
+    {
+		extra = typeof extra == 'undefined' ? {} : extra;
+		extra.callback = this.registerCallback( name, callback );
+		extra.api = name;
+		this.errorCallback = extra.callback;
+		this.errorParameter = name;
+        if ( this.status != 'connected' )
+		{
+			this.connect( { onResponse: this.onResponseProc, onError: this.onErrorProc }, extra );
+		}
+		else
+		{
+			callback( true, {}, extra );
+		}
+    };
+    this.directOpenAPI = function( apiName, callback, extra )
+    {
+        if ( this.status != 'connected' )
+            throw { error: 'companion_not_connected' };
+
+		extra = typeof extra == 'undefined' ? {} : extra;
+		extra.callback = this.registerCallback( apiName, callback );
+		extra.api = apiName;
+        if ( !this.openAPIs[ apiName ] )
+		{
+			this.openAPIs[ apiName ] =
+			{
+				name: apiName,
+				open: false
+			};
+			this.sendMessage( { command: 'openAPI', parameters: { name: apiName } }, extra );			
+		}
+		else
+		{
+			callback( true, {}, extra );
+		}
+    };
+    this.directCloseAPI = function( name, callback, extra )
+    {
+        if ( this.status == 'connected' )
+		{
+			if ( this.openAPIs[ name ] )
+			{
+				extra = typeof extra == 'undefined' ? {} : extra;
+				extra.callback = this.registerCallback( name, callback );
+				extra.api = name;
+				this.sendMessage( { command: 'closeAPI', parameters: { name: name } }, extra );
+			}
+		}
+    };
+
+    this.directCallAPI = function( apiName, command, callback, extra )
+    {
+        if ( this.status != 'connected' )
+            throw { error: 'companion_not_connected' };
+        if ( !this.openAPIs[ apiName ] )
+            throw { error: 'companion_API_not_open', parameter: apiName };
+
+		extra = typeof extra == 'undefined' ? {} : extra;
+		extra.callback = this.registerCallback( apiName, callback );
+		extra.api = apiName;
+        this.sendMessage( { command: 'callAPI', parameters: { name: apiName, command: command } }, extra );
+    };
+
+	// Ensure the server is closed when application ends
+	this.closeAtEnd = function()
+	{
+        if ( this.status == 'connected' )
+			this.sendMessage( { command: 'disconnect' } );
+	}
+	this.aoz.callAtEndOfApplication( this, this.closeAtEnd );
+}
+
+/**doc
+@name:Aoz Companion extension
+@description:The Aoz Companion extension establishes the connection with an eventual Aoz Companion Server running on the local machine.
+@description:The Companion application enables you to connect to various APIs , in Python at first, and in other languages when the Companion has been implemented in other languages.
+@description:The Companion server opens a WebSocket server on port ### and starts listening for messages originating ferom the SAME, LOCAL machine (it will refuse any connection from outside), and after handshake is effective, allows you to connect to the APIs that have been implemented in the server.
+@keywords:robot,websocket,hardware,python
+@author:Francois Lionet
+@since:Beta 10
+@last:0.9.5.1
+doc*/
+
+
+/**api
+@name:Companion Connect
+@description:Establishes the connection with a local server, if it is running.
+@param:onMessage$:string:The name of a procedure to call when a message is received from the companion server
+@param:onError$:string:The name of a procedure to call when an error occurs.
+@compatible: aoz
+@content:
+api*/
+Instruction Companion Connect, url$="", onResponse$="", onError$=""
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.extensionCompanion,callFunction:"connect",waitFunction:"wait", args:{url:%url$,onResponse:%onResponse$,onError:%onError$}};
+}
+End Instruction
+
+/**api
+@name:Companion Disconnect
+@description:Close a running connection to the companion server.
+@compatible: aoz
+@content:
+api*/
+Instruction Companion Disconnect
+{
+    #errors
+    aoz.extensionCompanion.disconnect();
+}
+End Instruction
+
+/**api
+@name:Companion Open API
+@description:Open an API implemented in the Companion Server
+@param:index:index:The index of the channel with the API
+@param:name$:string:The name of the API (example 'cozmo')
+@param:authorization$:string:An eventual authorization string
+@compatible: aoz
+@content:
+The format or even presence of the authorization string depends on the chose API. For example, some APIs might ask for SSH credentials, in this case the authorization might a Javascript object converted to JSON.
+api*/
+Instruction Companion Open API, name$, key$ = ""
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.extensionCompanion,callFunction:"openAPI", waitFunction:"wait", args:{name:%name$,key:%key$}};
+}
+End Instruction
+
+/**api
+@name:Companion Close API
+@description:Close an API that was previously open
+@param:index:index:The index of the channel with the API to close
+@compatible: aoz
+@content:
+api*/
+Instruction Companion Close API, name$
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.extensionCompanion,callFunction:"closeAPI", waitFunction:"wait", args:{name:%name$}};
+}
+End Instruction
+
+/**api
+@name:Companion Call API
+@description:Send a command to the channel of the Companion server's API. This function does not wait for the end of the execution of the command.
+@param:index:index:The index of the channel with the API to close
+@param:command$:string:The name of the command to execute.
+@param:param:any:An parameter to be send with the command
+@param:extra:any:An eventual extra parameter that will be return UNCHANGED in the server's response.
+@compatible: aoz
+@content:
+api*/
+Instruction Companion Call API, name$, command$
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.extensionCompanion,callFunction:"callAPI",waitFunction:"wait",args:{name:%name$,command:%command$}};
+}
+End Instruction
+
+/**api
+@name:Companion Execute Command$
+@description:Send a command to the channel of the Companion server's API, wait for the response and return the response as it was sent by the server.
+@param:index:index:The index of the channel with the API to close
+@param:command$:string:The name of the command to execute.
+@param:param:any:An parameter to be send with the command
+@param:extra:any:An eventual extra parameter that will be return UNCHANGED in the server's response.
+@compatible: aoz
+@content:
+api*/
+Function Companion Execute Command$, name$, command$
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.extensionCompanion,callFunction:"callAPI",waitFunction:"wait",args:{name:%name$,command:%command$}};
+}
+End Function( {aoz.extensionCompanion.result} )
+

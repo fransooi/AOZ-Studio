@@ -1,0 +1,13 @@
+<i>Noise To</i>
+<b>Noise To</b> xxxxxxx
+=
+This command has the same effect as assigning the white noise wave form number zero to the selected voices, and it
+is used to form the foundations for a whole range of special effects, such as explosions and percussion drumming.
+The bit-pattern used to set one or more voices has already been explained above. Here is an example:
+@code
+Noise To 15 Rem All four voices
+Play 60,50
+Play 30,0
+@code
+
+

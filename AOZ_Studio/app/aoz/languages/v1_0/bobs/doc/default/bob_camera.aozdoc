@@ -1,0 +1,13 @@
+<i>Bob Camera</i>
+<b>Bob Camera</b> xxxxxxx
+=
+This instruction simulates a "camera" that offsets the position of the bob in the screen.
+
+Before it is used, the Bob will be displayed at it's exact position. Using it adds an offset to both horizontal and vertical coordinates of the bob on screen.
+@code
+Bob "mybob", 200, 200, 1
+Print "Please press a key"
+Print "and watch the bob move 20 pixels to the right and 20 pixels to the top"
+Wait Key
+Bob Camera "mybob", 180, 220
+

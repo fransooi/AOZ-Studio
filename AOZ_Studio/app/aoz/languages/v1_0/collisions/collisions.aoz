@@ -1,0 +1,854 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Collisions Instruction Set
+ * By Francois Lionet
+ *
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 30/01/2020
+ */
+#noWarning:"instruction_not_implemented"
+#need_javascript_file:"graham_scan_js-master/graham_scan.min.js"
+#need_javascript_file:"sat-js-master/SAT.js"
+
+/**doc
+@name:Collisions
+@description:Functions to test collisions between graphical moveable objects, bobs and sprites
+@intro:
+@conclusion:
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+	this.aoz.collisions = this;					// TODO: remove
+	this.aoz.moduleCollisions = this;
+	this.collisionList = {};
+	this.response = new SAT.Response();
+
+	this.setCollide = function( type, index, list )
+	{
+		var channel = index;
+		if ( !this.aoz.utilities.isObject( index ) )
+			channel = this.aoz.getObjectFromType( type, index, "_not_defined" );
+		channel.collisionCategories = list;
+	};
+	this.setCollideWith = function( type, index, list )
+	{
+		var channel = index;
+		if ( !this.aoz.utilities.isObject( index ) )
+			channel = this.aoz.getObjectFromType( type, index, "_not_defined" );
+		channel.collisionWith = {};
+		for ( var c = 0; c < list.length; c++ )
+			channel.collisionWith[ list[ c ] ] = true;
+	};
+	this.isToCollide = function( channel1, channel2 )
+	{
+		if ( channel1.collisionCategories )
+		{
+			if ( channel2.collisionWith )
+			{
+				for ( var c = 0; c < channel1.collisionCategories.length; c++ )
+				{
+					if ( channel2.collisionWith[ channel1.collisionCategories[ c ] ] )
+						return true;
+				}
+			}
+			return false;
+		}
+		return true;
+	};
+
+	this.spriteCol = function( index, from, to )
+	{
+		var sprite = this.aoz.sprites.get( index, this.aoz.currentContextName );
+		if ( sprite )
+		{
+			sprite.updateCollisionData( true );								// IDEA: a callback
+
+			from = typeof from == 'undefined' ? 0 : from;
+			to = typeof to == 'undefined' ? this.aoz.sprites.getHighestIndex() : to;
+			if ( from < 0 || to < 0 || from > to )
+				throw { error: 'illegal_function_call', parameters: [ from, to ] };
+
+			this.collisionList = {};
+			var collision = false;
+			for ( var s = from; s <= to; s++ )
+			{
+				var testSprite = this.aoz.sprites.get( s );
+				if ( testSprite && testSprite != sprite && this.isToCollide( sprite, testSprite ) )
+				{
+					testSprite.updateCollisionData( true );			// IDEA: transmit the other so it can go faster
+					if ( this.isColliding( sprite, testSprite ) )
+					{
+						this.collisionList[ s ] = true;
+						collision = true;
+					}
+				}
+			}
+			return collision;
+		}
+		return false;
+	};
+	this.spriteBobCol = function( spriteIndex, screen, from, to )
+	{
+		var sprite = this.aoz.sprites.get( spriteIndex, this.aoz.currentContextName );
+		if ( sprite )
+		{
+			sprite.updateCollisionData( true );
+
+			from = typeof from == 'undefined' ? 0 : from;
+			to = typeof to == 'undefined' ? screen.getHighestBobIndex() : to;
+			if ( from < 0 || to < 0 || from > to )
+				throw { error: 'illegal_function_call', parameters: [ from, to ] };
+
+			this.collisionList = {};
+			var collision = false;
+			for ( var b = from; b <= to; b++ )
+			{
+				var bob = screen.getBob( b );
+				if ( bob && this.isToCollide( sprite, bob ) )
+				{
+					bob.updateCollisionData( true );
+					if ( this.isColliding( sprite, bob ) )
+					{
+						this.collisionList[ b ] = true;
+						collision = true;
+					}
+				}
+			}
+			return collision;
+		}
+		return false;
+	};
+	this.bobSpriteCol = function( bobIndex, screen, from, to )
+	{
+		var bob = screen.getBob( bobIndex );
+		if ( bob )
+		{
+			bob.updateCollisionData( true );
+
+			from = typeof from == 'undefined' ? 0 : from;
+			to = typeof to == 'undefined' ? this.aoz.sprites.getHighestIndex() : to;
+			if ( from < 0 || to < 0 || from > to )
+				throw { error: 'illegal_function_call', parameters: [ from, to ] };
+
+			this.collisionList = {};
+			var collision = false;
+			for ( var s = from; s <= to; s++ )
+			{
+				var sprite = this.aoz.sprites.get( s );
+				if ( sprite && this.isToCollide( bob, sprite ))
+				{
+					sprite.updateCollisionData( true );
+					if ( this.isColliding( bob, sprite ) )
+					{
+						this.collisionList[ s ] = true;
+						collision = true;
+					}
+				}
+			}
+			return collision;
+		}
+		return false;
+	};
+
+	this.bobCol = function( bobIndex, screen, from, to )
+	{
+		var bob = screen.getBob( bobIndex );
+		if ( bob )
+		{
+			bob.updateCollisionData( true );
+				this.collisionList = {};
+			var collision = false;
+			if ( typeof from != 'undefined' && typeof to != 'undefined' )
+			{
+				if ( from < 0 || to < 0 || from > to )
+					throw { error: 'illegal_function_call', parameters: [ from, to ] };
+
+				for ( var b = from; b <= to; b++ )
+				{
+					var testBob = screen.getBob( b );
+					if ( testBob && testBob != bob && this.isToCollide( bob, testBob ) )
+					{
+						testBob.updateCollisionData( true );
+						if ( this.isColliding( bob, testBob ) )
+						{
+							this.collisionList[ b ] = true;
+							collision = true;
+						}
+					}
+				}
+				return collision;
+			}
+			else
+			{
+				var self = this;
+				screen.bobsContext.parseAll( 'application', function( testBob )
+				{
+					if ( testBob != bob && self.isToCollide( bob, testBob ) )
+					{
+						testBob.updateCollisionData( true );
+						if ( self.isColliding( bob, testBob ) )
+						{
+							self.collisionList[ testBob.index ] = true;
+							collision = true;
+						}
+					}
+				} );
+				return collision;
+			}
+		}
+		return false;
+	};
+	this.col = function( number )
+	{
+		if ( number < 0 )
+		{
+			for ( var c in this.collisionList )
+				return c;
+			return 0;
+		}
+		return this.collisionList[ number ] == true;
+	};
+	this.pointInBob = function( screen, index, point )
+	{
+		return this.pointInObject( point, screen.getBob( index ) );
+	};
+	this.pointInSprite = function( index, point )
+	{
+		return this.pointInObject( point, this.aoz.getSprite( index ) );
+	};
+	this.pointInObject = function( point, obj )
+	{
+		if ( obj.imageObject )
+		{
+			obj.updateCollisionData( true );
+			var collisions = obj.collisions;
+			var mask = obj.imageObject.getCollisionMask();
+			var polygons = this.getPolygons( mask, obj.index, collisions.method, collisions.scaleX, collisions.scaleY );
+
+			// Get collision
+			this.response.clear();
+			for ( var p = 0; p < polygons.length; p++ )
+			{
+				var polygon = polygons[ p ];
+				polygon.pos.x = collisions.x;
+				polygon.pos.y = collisions.y;
+				if ( collisions.method == 'fine' || collisions.method == 'box' )
+				{
+					polygon.setAngle( collisions.angle );
+					if ( SAT.pointInPolygon( point, polygon ) )
+						return true;
+				}
+				else
+				{
+					if ( SAT.pointInCircle( point, polygon ) )
+						return true;
+				}
+			}
+		}
+		return false;
+	};
+	this.isColliding = function( object1, object2 )
+	{
+		var self = this;
+
+		var collisions1 = object1.collisions;
+		var collisions2 = object2.collisions;
+		var colliding = ( collisions1.rectangle.x2 > collisions2.rectangle.x1 && collisions1.rectangle.x1 <= collisions2.rectangle.x2
+					   && collisions1.rectangle.y2 > collisions2.rectangle.y1 && collisions1.rectangle.y1 <= collisions2.rectangle.y2 );
+
+		if ( collisions1.method && collisions2.method )
+		{
+			var mask1 = object1.imageObject.getCollisionMask();
+			var mask2 = object2.imageObject.getCollisionMask();
+			var polygons1 = this.getPolygons( mask1, object1.index, collisions1.method, collisions1.scaleX, collisions1.scaleY );
+			var polygons2 = this.getPolygons( mask2, object2.index, collisions2.method, collisions2.scaleX, collisions2.scaleY );
+
+			// Get collision
+			this.response.clear();
+			var colliding = false;
+			for ( var m1 = 0; m1 < polygons1.length && !colliding; m1++ )
+			{
+				var polygon1 = polygons1[ m1 ];
+				for ( var m2 = 0; m2 < polygons2.length && !colliding; m2++ )
+				{
+					var polygon2 = polygons2[ m2 ];
+					if ( collisions1.method == 'fine' || collisions1.method == 'box' )
+					{
+						polygon1.pos.x = collisions1.x;
+						polygon1.pos.y = collisions1.y;
+						polygon1.setAngle( collisions1.angle );
+						if ( collisions2.method == 'fine' || collisions2.method == 'box' )
+						{
+							polygon2.pos.x = collisions2.x;
+							polygon2.pos.y = collisions2.y;
+							polygon2.setAngle( collisions2.angle );
+							colliding = SAT.testPolygonPolygon( polygon1, polygon2, this.response );
+						}
+						else
+						{
+							polygon2.pos.x = collisions2.xCoord;
+							polygon2.pos.y = collisions2.yCoord;
+							colliding = SAT.testPolygonCircle( polygon1, polygon2, this.response );
+						}
+					}
+					else
+					{
+						polygon1.pos.x = collisions1.xCoord;
+						polygon1.pos.y = collisions1.yCoord;
+						if ( collisions2.method == 'fine' || collisions2.method == 'box' )
+						{
+							polygon2.pos.x = collisions2.x;
+							polygon2.pos.y = collisions2.y;
+							polygon2.setAngle( -collisions2.angle );
+							colliding = SAT.testCirclePolygon( polygon1, polygon2, this.response );
+						}
+						else
+						{
+							polygon2.pos.x = collisions2.xCoord;
+							polygon2.pos.y = collisions2.yCoord;
+							colliding = SAT.testCircleCircle( polygon1, polygon2, this.response );
+						}
+					}
+				}
+			}
+			//this.drawMask( collisions1, mask1 );
+			//this.drawMask( collisions2, mask2 );
+		}
+		return colliding;
+	};
+	this.setHullFromPolygon = function( msk, polygon, number, scaleX, scaleY )
+	{
+		for ( var p in msk.allPolygons )
+		{
+			var polygons = msk.allPolygons[ p ];
+			for ( var pp = 0; pp < polygons.length; pp++ )
+			{
+				if ( polygon === polygons[ pp ] )
+				{
+					msk.hulls[ pp ].points[ number ].x = polygon.points[ number ].x / scaleX;
+					msk.hulls[ pp ].points[ number ].y = polygon.points[ number ].y / scaleY;
+					return;
+				}
+			}		
+		}
+	};
+	this.getPolygons = function( msk, index, method, scaleX, scaleY )
+	{
+		if ( !msk.allPolygons )
+			msk.allPolygons = {};
+		var id = method + '-' + index + '-'+ scaleX + '-' + scaleY;
+		if ( msk.allPolygons[ id ] )
+			return msk.allPolygons[ id ];
+
+		var polygons = [];
+		msk.allPolygons[ id ] = polygons;
+		switch ( method )
+		{
+			case 'fine':
+			case 'hull':
+				for ( var h = 0; h < msk.hulls.length; h++ )
+				{
+					var hull = msk.hulls[ h ];
+					if ( hull.points )
+					{
+						var vectors = [];
+						for ( var v = 0; v < hull.points.length; v++ )
+							vectors.push( new SAT.Vector( hull.points[ v ].x * scaleX, hull.points[ v ].y * scaleY ) );
+						var polygon = new SAT.Polygon( new SAT.Vector( msk.imageObject.hotSpotX, msk.imageObject.hotSpotY ), [ ] );
+						polygon.setPoints( vectors );
+						polygons.push( polygon );
+					}
+				}
+				break;
+			case 'circle':
+				var diameter = ( msk.imageObject.width + msk.imageObject.height ) / 2;
+				var scale = ( scaleX + scaleY ) / 2;
+				msk.hulls =
+				[
+					{
+						x: 0,
+						y: 0,
+						width: msk.imageObject.width * scale,
+						height: msk.imageObject.height * scale,
+					}
+				];
+				polygons.push( new SAT.Circle( new SAT.Vector(), diameter / 2 * scale ) );
+				break;
+			case 'box':
+				msk.hulls =
+				[
+					{
+						x: 0,
+						y: 0,
+						width: msk.imageObject.width,
+						height: msk.imageObject.height,
+					}
+				]
+				polygons.push( new SAT.Box( new SAT.Vector( msk.imageObject.hotSpotX, msk.imageOBject.hotSpotY ), msk.imageObject.width, msk.imageObject.height ).toPolygon() );
+				break;
+			default:
+				return;
+		}
+		msk.method = method;
+		return polygons;
+	};
+	this.drawMask = function( screen, bob, msk, position, scale, options )
+	{
+		screen.setInk( options.ink );
+		screen.setLineWidth( options.lineWidth );
+		scale = ( typeof scale == 'undefined' ? { x: 1, y: 1 } : scale );
+		var col = bob.collisions;
+		if ( col )
+		{
+			var screen = this.aoz.getScreen( screen, null );
+			var polygons = this.getPolygons( msk, bob.index, col.method, col.scaleX, col.scaleY );
+			if ( col.method == 'fine' || col.method == 'box' || col.method == 'hull' )
+			{
+				position = ( typeof position == 'undefined' ? { x: col.x , y: col.y  } : position );
+				for ( var h = 0; h < polygons.length; h++ )
+				{
+					var polygon = polygons[ h ];
+					polygon.setAngle( col.angle );
+					polygon.pos.x = position.x;
+					polygon.pos.y = position.y;
+					for ( var p = 0; p < polygon.calcPoints.length - 1; p++ )
+					{
+						var point1 = polygon.calcPoints[ p ];
+						var point2 = polygon.calcPoints[ p + 1 ];
+						screen.draw( { x1: polygon.pos.x + point1.x * scale.x, y1: polygon.pos.y + point1.y * scale.y, x2: polygon.pos.x + point2.x * scale.x, y2: polygon.pos.y + point2.y * scale.y } );
+
+						if ( options.getHandleInk )
+						{
+							var rectangle = { x: polygon.pos.x + point1.x * scale.x - 6, y: polygon.pos.y + point1.y * scale.y - 6, width: 12, height: 12 };
+							inkHandle = options.getHandleInk( polygon, p, rectangle );
+							screen.setInk( inkHandle );
+							screen.bar( rectangle )
+							screen.setInk( options.ink );
+						}
+					}
+					screen.draw( { x1: polygon.pos.x + point2.x * scale.x, y1: polygon.pos.y + point2.y * scale.y, x2: polygon.pos.x + polygon.calcPoints[ 0 ].x * scale.x, y2: polygon.pos.y + polygon.calcPoints[ 0 ].y * scale.y } );
+				}
+			}
+			else
+			{
+				position = ( typeof position == 'undefined' ? { x: col.xCoord * scale.x, y: col.yCoord * scale.y } : position );
+				var polygon = polygons[ 0 ];
+				var ray = ( col.width + col.height ) / 2;
+				polygon.pos.x = position.x;
+				polygon.pos.y = position.y;
+				screen.circle( { x: polygon.pos.x * scale.x, y: polygon.pos.y * scale.y, width: ( ray / 2 ) * scale.x, height: ray / 2 * scale.y } );
+			}
+		}
+	};
+	this.newImage = function( imageObject )
+	{
+		var canvas = imageObject.getCanvas();
+		var context = canvas.getContext( '2d' );
+		var hulls = [];
+		var pixels = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
+		var precision = 100; 		//( typeof imageObject.collisionMaskPrecision == 'undefined' ? 50 : imageObject.collisionMaskPrecision );
+		var pixelStepX = 1;			//Math.max( 1, Math.floor( canvas.width / precision ) );
+		var pixelStepY = 1;			//Math.max( 1, Math.floor( canvas.height / precision ) );
+		var convexHull, offsetRectangle;
+		function testPoint( x, y )
+		{
+			return ( pixels[ ( offsetRectangle + y * canvas.width + x ) * 4 + 3 ] >= imageObject.collisionMaskAlphaThreshold );
+		};
+		function scanRectangle( x, y )
+		{
+			var xStepRectangles = Math.floor( canvas.width / xScanRectangles );
+			var yStepRectangles = Math.floor( canvas.height / yScanRectangles );
+			if ( !convexHull )
+				convexHull = new ConvexHullGrahamScan();
+
+			var notEmpty = false;
+			offsetRectangle = ( y * yStepRectangles * canvas.width + x * xStepRectangles ) * 4;
+/*
+			if ( testPoint( 0, 0 ) && testPoint( 0, yStepRectangles - 1 ) && testPoint( xStepRectangles, 0 ) && testPoint( xStepRectangles - 1, yStepRectangles - 1 ) )
+			{
+				convexHull.addPoint( x * xStepRectangles, y * yStepRectangles );
+				convexHull.addPoint( ( x + 1 ) * xStepRectangles, y * yStepRectangles );
+				convexHull.addPoint( x * xStepRectangles, ( y + 1 ) * yStepRectangles );
+				convexHull.addPoint( ( x + 1 ) * xStepRectangles, ( y + 1 ) * yStepRectangles );
+				notEmpty = true;
+			}
+			else
+*/			
+			{
+				for ( var yy = 0; yy < yStepRectangles; yy += pixelStepY )
+				{
+					var offsetView = offsetRectangle + yy * canvas.width * 4;
+					var previousXX = -1;
+					for ( var xx = 0; xx < xStepRectangles; xx += pixelStepX )
+					{
+						if ( pixels[ offsetView + xx * 4 + 3 ] >= imageObject.collisionMaskAlphaThreshold )
+						{
+							if ( previousXX < 0 )
+								convexHull.addPoint( x * xStepRectangles + xx, y * yStepRectangles + yy );
+							previousXX = xx;
+							notEmpty = true;
+						}
+						else
+						{
+							if ( previousXX >= 0 )
+								convexHull.addPoint( x * xStepRectangles + previousXX, y * yStepRectangles + yy );
+							previousXX = -1;
+						}
+					}
+					if ( previousXX >= 0 )
+						convexHull.addPoint( x * xStepRectangles + previousXX, y * yStepRectangles + yy );
+				}
+			}
+			if ( notEmpty )
+			{
+				var points = convexHull.getHull();
+				if ( points )
+				{
+					if ( points.length == 2 )
+					{
+						convexHull.addPoint( x * xStepRectangles + previousXX, y * yStepRectangles + yy );
+					}
+					if ( points.length >= 3 )
+				{
+					hulls.push(
+					{
+						x: x * xStepRectangles,
+						y: y * yStepRectangles,
+						width: xStepRectangles,
+						height: yStepRectangles,
+						points: points
+					} );
+					}
+					convexHull = null;
+				}
+			}
+		}
+
+		// If small image && fine-> "hull"
+		if ( imageObject.collisionMaskMethod == 'fine' && ( imageObject.width < 8 && imageObject.height < 8 ) )
+			imageObject.collisionMaskMethod = 'hull';
+
+		// Calculates the hull
+		if ( imageObject.collisionMaskMethod == 'fine' )
+		{
+			xScanRectangles = Math.max( 1, Math.floor( imageObject.width / imageObject.collisionMaskPrecision ) );
+			yScanRectangles = Math.max( 1, Math.floor( imageObject.height / imageObject.collisionMaskPrecision ) );
+			for ( var y = 0; y < yScanRectangles; y++ )
+			{
+				for ( var x = 0; x < xScanRectangles; x++ )
+				{
+					scanRectangle( x, y );
+				}
+			}
+			return hulls;
+		}
+		else if ( imageObject.collisionMaskMethod == 'hull' )
+		{
+			xScanRectangles = 1;
+			yScanRectangles = 1;
+			scanRectangle( 0, 0 );
+			return hulls;
+		}
+		return null;
+	}
+}
+
+/**api
+@name:Bob Col
+@description:Test if two bobs are in collision
+@param:index:index:Index of the bob to test
+@param:index:index:Index of the bob to test the collision with
+@return:boolean:True if the two bobs are colliding, False if not
+@content:
+The BOB COL function checks the screen for collisions between Blitter Objects. It is invaluable in the type of arcade games that rely on hitting or avoiding moving objects.
+To test for a collision with BOB COL, simply specify the number of the Bob you are interested in (in brackets) and a value of -1 (true) will be returned if a collision occurs. Otherwise zero (false) is generated
+
+Note that the AOZ collision system uses "masks", and so it is sensitive to the physical shape of your
+objects. This means that when different objects have extremely varied appearances, the collision will only be
+detected when the objects happen to overlap on screen.
+
+Normally, BOB COL will check for collisions between the specified Bob and any other Bitmap Object, but you can
+also monitor the movements of a particular range of Bobs using this As optional parameters, after the specified Bob
+number, you may set the range of Bobs to be checked for collision from the first to the last in your Bob list
+
+api*/
+
+/**api
+@name:Bob Col
+@description:Test if one bob is colliding with a set of bobs
+@param:index:index:Index of the bob to test
+@param:start:integer:Index of the first bob to test with
+@param:end:integer:Index of the last bob to test with
+@return:boolean:True if the first bob is colliding with one of the other bobs, False if not
+@content:
+The BOB COL function checks the screen for collisions between Blitter Objects. It is invaluable in the type of arcade games that rely on hitting or avoiding moving objects. To test for a collision with BOB COL, simply specify the number of the Bob you are interested in (in brackets) and a value of -1 (true) will be returned if a collision occurs. Otherwise zero (false) is generated
+
+Note that the AOZ collision system uses "masks", and so it is sensitive to the physical shape of your
+objects. This means that when different objects have extremely varied appearances, the collision will only be
+detected when the objects happen to overlap on screen.'
+
+Normally, BOB COL will check for collisions between the specified Bob and any other Bitmap Object, but you can
+also monitor the movements of a particular range of Bobs using this As optional parameters, after the specified Bob
+number, you may set the range of Bobs to be checked for collision from the first to the last in your Bob list
+
+api*/
+Function Bob Col, index = (index), start To end
+{
+	#errors
+}
+End Function( {aoz.collisions.bobCol(%index,aoz.currentScreen,%start,%end)} )
+
+/**api
+@name:BobSprite Col
+@description:Test if a bob is colliding with a sprite
+@param:index:index:Index of the bob to test
+@param:index:index:Index of the sprite to test the collision with
+@return:boolean:True if the bob and sprite are colliding, False if not
+@content:
+This function checks for a collision between the single Bob whose number you specify, and all active Sprites on screen.
+The result will be True is a collision is detected, or False if the object remains untouched.
+To narrow the range of Sprites to be monitored, simply include the first to the last number in that range. As with SPRITEBOB COL, this function should only be used in low resolution
+
+api*/
+/**api
+@name:BobSprite Col
+@description:Test if one bob is colliding with a set of sprites
+@param:index:index:Index of the bob to test
+@param:start:integer:Index of the first sprite to test with
+@param:end:integer:Index of the last sprite to test with
+@return:boolean:True if bob is colliding with one of the sprites, False if not
+@content:
+This function checks for a collision between the single Bob whose number you specify, and all active Sprites on screen.
+The result will be True if a collision is detected, or False if the object remains untouched.
+To narrow the range of Sprites to be monitored, simply include the first to the last number in that range. As with SPRITEBOB COL, this function should only be used in low resolution
+
+api*/
+Function BobSprite Col, index=(index), start To end
+{
+	#errors
+}
+End Function( {aoz.collisions.bobSpriteCol(%index,aoz.currentScreen,%start,%end)} )
+
+/**api
+@name:Sprite Col
+@description:Test if two sprites are in collision
+@param:index:index:Index of the sprite to test
+@param:start:integer:Index of the first sprite to test with
+@param:end:integer:Index of the last sprite to test with
+@return:boolean:True if the two sprites are colliding, False if not
+@content:
+SPRITE COL provides an easy method of checking to see if two or more Sprites have collided on display.
+If the test is successful, SPRITE COL returns a value of True, and if not False is returned instead.
+As you would expect, the brackets contain the number of any active Sprite on display.
+
+If you want to check for a selected group of Sprites, include the optional first to last parameters to set the range of the Sprite numbers you are interested in..
+
+api*/
+Function Sprite Col, index = (index), start To end
+{
+	#errors
+}
+End Function( {aoz.collisions.spriteCol(%index,%start,%end)} )
+
+/**api
+@name:SpriteBob Col
+@description:Test if a bob is colliding with a sprite
+@param:index:index:Index of the bob to test
+@param:start:integer:Index of the first bob to test with
+@param:end:integer:Index of the last bob to test with
+@return:boolean:True if the sprite and bob are colliding, False if not
+@content:
+As its name suggests, this function checks for a collision between the Sprite whose number you specify, and one or more Bitmap Objects.
+If the Sprite collides with a Bob, a value of True is returned, otherwise False is given
+
+This function will test for collisions with all Bobs on screen, but the checking process can be restricted with the
+optional setting of the range of Bobs to be monitored, from the first Bob number to the last in the range.
+If you need to test for collisions between several Sprites and Bobs, the command should be enclosed in a loop, like this
+~~~
+For FIRSTSPRITE=1 To LASTSPRITE
+	If Spritebob Col(FIRSTSPRITE,FIRSTBOB To LASTBOB) Then Boom
+Next FIRSTSPRITE
+~~~
+Remember that all specified Sprites must be assigned to a masked image, before collision detection can work. You
+are also warned that this function will only work with low resolution screens, and attempts to use it in high
+resolution will lead to unpredictable results. This is because your Sprites and Bobs are likely to have different sized screen points
+
+api*/
+Function SpriteBob Col, index = (index), start To end
+{
+	#errors
+}
+End Function( {aoz.collisions.spriteBobCol(%index,aoz.currentScreen,%start,%end)} )
+
+/**api
+@name:Col
+@description:Test the status of an object after collision detection
+@param:index:index:Index of the object (sprite or bob) to test.
+@return:boolean:True if the object is colliding with one of the other objects, False if not
+@return:integer:The index of the object colliding (bob or sprite) if you used -1 as parameter
+@content:
+One obvious problem with all of the previous detection functions is that they only report on whether an individual object has been hit.
+To discover information about any other objects involved in a collision, the COL function is used. This means that each object can be tested on its own, to see if it has collided with the source object ""
+Give the index of the object you wish to test, either a Bob or a Sprite, depending on the circumstances, and its status will be reported with a value of True if it has collided, or False if it remains untouched
+
+Note that this function has been extended in AOZ, if you use -1 for this parameter, it will return the INDEX of the object in collision, to avoid having to perform a loop
+api*/
+Function Col, index = (index)
+{
+	#errors
+}
+End Function( {aoz.collisions.col(%index)} )
+Function Col$, index = (index)
+{
+	#errors
+}
+End Function( {("" + aoz.collisions.col(%index))} )
+
+
+/**api
+@name:Bob Collide With
+@description:Indicate the category of bobs or sprites a bob collides with
+@param:index:index:Index of the bob
+@param:list:list of strings:A list of strings indicating the names of the categories this bob collides with
+@seeAlso:Bob Collide, Bob Col
+@content:
+This instruction, allied with the "Bob Collide" instruction allows you accelerate the collision detection process.
+
+Bob Collide With set a list of the categories of bob with which this bob will collide. If no categories are defined the the bob will generate collission with all the other objects.
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+
+Bob "hero", 100, 100, 1
+Bob Collide "hero", "good"
+
+Bob "side-kick", 100, 100, 2
+Bob Collide "side-kick", "good"
+
+Bob "ennemy", 100, 100, 3
+Bob Collide "ennemy", "bad"
+
+Bob "box", 100, 100, 4
+
+Bob Collide With "hero", "bad", "box"
+Bob Collide With "ennemy", "good"
+
+Print Bob Col( "hero" )			// Will print true, bobs colliding: "box"
+Print Bob Col( "ennemy" )		// Will print true, bobs colliding: "hero", "side-kick"
+Print Bob Col( "box" )			// Will print false: "box" has no category whereas other have...
+~~~
+api*/
+Instruction Bob Collide With, index = (index), with = ( category$ )
+{
+	aoz.moduleCollisions.setCollideWith( 'bob', %index, %with );
+}
+End Instruction
+
+/**api
+@name:Bob Collide
+@description:Sets the collision categories of a bob
+@param:index:index:Index of the bob
+@param:with:list of strings:Various categories the bob is going to collide with
+@seeAlso:Bob Collide With, Bob Col
+@content:
+This instruction, allied with the "Bob Collide With" instruction allows you accelerate the collision detection process.
+
+Bob Collide With set a list of the categories of bob with which this bob will collide. If no categories are defined the the bob will generate collission with all the other objects.
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+
+Bob "hero", 100, 100, 1
+Bob Collide "hero", "good"
+
+Bob "side-kick", 100, 100, 2
+Bob Collide "side-kick", "good"
+
+Bob "ennemy", 100, 100, 3
+Bob Collide "ennemy", "bad"
+
+Bob "box", 100, 100, 4
+
+Bob Collide With "hero", "bad", "box"
+Bob Collide With "ennemy", "good"
+
+Print Bob Col( "hero" )			// Will print true, bobs colliding: "box"
+Print Bob Col( "ennemy" )		// Will print true, bobs colliding: "hero", "side-kick"
+Print Bob Col( "box" )			// Will print false: "box" has no category whereas other have...
+api*/
+Instruction Bob Collide, index = (index), with = ( category$ )
+{
+	aoz.moduleCollisions.setCollide( 'bob', %index, %with );
+}
+End Instruction
+
+/**api
+@name:Bob Point
+@description:Test if a point lays inside of a bob
+@param:index:index:Index of the bob to test
+@param:x:integer:Horizontal coordinate of the point to test
+@param:y:integer:Vertical coordinate of the point to test
+@return:boolean:True if the point lays over the bob
+@content:
+This function checks for a point object the given bob. It will return True if the point
+is within the collision mask of the bob, and false if not.
+~~~
+Bob 1, 100, 100, 1
+Repeat
+	If Bob Point( 1, X Mouse, Y Mouse )
+		Print "The mouse pointer is over the bob!"
+	End IF
+Until Inkey$ != ""
+~~~
+api*/
+Function Bob Point, index = (index), x = 0, y = 0
+{
+	#errors
+}
+End Function( {aoz.collisions.pointInBob(aoz.currentScreen,%index,{x:%x,y:%y})} )
+
+/**api
+@name:Sprite Point
+@description:Test if a point lays over a sprite
+@param:index:index:Index of the sprite to test
+@param:x:integer:Horizontal coordinate of the point to test
+@param:y:integer:Vertical coordinate of the point to test
+@return:boolean:True if the point lays over the sprite
+@content:
+This function checks for a point object the given sprite. It will return True if the point
+is within the collision mask of the sprite, and false if not.
+~~~
+Sprite 1, 100, 100, 1
+Repeat
+	If Sprite Point( 1, X Mouse, Y Mouse )
+		Print "The mouse pointer is over the sprite!"
+	End IF
+Until Inkey$ != ""
+~~~
+api*/
+Function Sprite Point, index = (index), x = 0, y = 0
+{
+	#errors
+}
+End Function( {aoz.collisions.pointInSprite(%index,{x:%x,y:%y})} )

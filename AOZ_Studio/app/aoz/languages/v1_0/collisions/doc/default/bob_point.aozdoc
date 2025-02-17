@@ -1,0 +1,14 @@
+<i>Bob Point</i>
+<b>Bob Point</b> xxxxxxx
+=
+This function checks for a point object the given bob. It will return True if the point
+is within the collision mask of the bob, and false if not.
+@code
+Bob 1, 100, 100, 1
+Repeat
+If Bob Point( 1, X Mouse, Y Mouse )
+Print "The mouse pointer is over the bob!"
+End IF
+Until Inkey$ != ""
+@code
+

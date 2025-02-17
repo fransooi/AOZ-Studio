@@ -1,0 +1,14 @@
+<i>ScIn</i>
+<b>ScIn</b> xxxxxxx
+=
+The SCIN function (short for SCreen In) is normally used with X MOUSE and Y MOUSE to check whether the
+mouse cursor has entered a particular screen. It returns the number of the screen which is underneath the selected coordinates. If there is no screen there, a negative number will be returned.
+
+The return value varies if you specify or not the index of the screen to scan:
+
+### The index of a screenis specified
+The function will return TRUE iof the coordiantes lay above the screen and FALSE if they do not
+
+### The index of a screen is *not* specified
+The function will return the index of the top screen at the coordinates or -1 if no screen is found.
+

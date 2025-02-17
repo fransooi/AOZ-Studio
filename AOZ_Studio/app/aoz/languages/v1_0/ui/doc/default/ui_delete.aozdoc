@@ -1,0 +1,16 @@
+<i>UI Delete</i>
+<b>UI Delete</b> xxxxxxx
+=
+The UI Delete is used to remove a UI element from the display. You can also use UI Cls to delete all UI components.
+
+The UI components are overlayed on top of the AOZ canvas and are not part of an AOZ screen
+
+They use the manifest screen dimensions for sizing and positioning and are not affected by the Cls or Screen commands.
+@code
+// Add a text box that we will delete
+UI TextBox "MyTextBlock"
+
+// Remove the existing text box
+UI Delete "MyTextBlock"
+@code
+

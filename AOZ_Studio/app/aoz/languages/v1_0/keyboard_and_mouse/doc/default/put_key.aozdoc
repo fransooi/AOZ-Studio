@@ -1,0 +1,15 @@
+<i>Put Key</i>
+<b>Put Key</b> xxxxxxx
+=
+This command loads a string of characters directly into the keyboard buffer, and it is most commonly used to set up
+defaults for your INPUT routines. Note that end of line returns can be included using a CHR$(13) character. In the
+next example, "NO" is assigned to the default INPUT string.
+@code
+Do
+Put Key "NO"
+Input "Do you love me, Yes or No: ";A$
+B$=Upper$(A$)
+If B$="NO" Then Boom : Wait 50: Exit
+Loop
+@code
+

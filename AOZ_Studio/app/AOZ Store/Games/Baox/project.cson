@@ -1,0 +1,13 @@
+[
+  {
+    title: 'Project Manager'
+    group: 'Atom'
+    paths: [
+      'D:\mes_projets\aoz_installers\aoz_test_merge\Applications\Games\Baox'
+    ]
+    devMode: true
+    settings:
+      'editor.tabLength': 4
+      'editor.showInvisibles': true
+  }
+]

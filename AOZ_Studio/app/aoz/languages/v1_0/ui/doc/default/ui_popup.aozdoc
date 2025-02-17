@@ -1,0 +1,20 @@
+<i>UI Popup</i>
+<b>UI Popup</b> xxxxxxx
+=
+The UI Popup can be used to display pop up notifications, also known as "Toasts"
+@code
+// Show a default popup
+UI Popup "MyPopup", content$="The is default popup message with a delay of 5 seconds"
+
+// Some more examples
+UI Popup "MyPopup1", content$="Popup position top-left with a delay of 5 seconds", placement$="top-left"
+UI Popup "MyPopup2", content$="Popup position top-center with a delay of 6 seconds", placement$="top-center", delay=6000, class$="text-white bg-success"
+UI Popup "MyPopup3", content$="Popup position top-right with a delay of 7 seconds", placement$="top-right", delay=7000, class$="text-white bg-dark"
+UI Popup "MyPopup4", content$="Popup position bottom-left with a delay of 8 seconds",lacement$="bottom-left", delay=8000, class$="bg-warning"
+UI Popup "MyPopup5", content$="Popup position bottom-center with a delay of 9 seconds", placement$="bottom-center", delay=9000, class$="text-white bg-danger"
+UI Popup "MyPopup6", content$="Popup position bottom-right with a delay of 10 seconds", placement$="bottom-right", delay=10000, class$="text-white bg-primary"
+UI Popup "MyPopup7", content$="Popup position center with a delay of 11 seconds", placement$="center",delay=11000, class$="bg-info"
+UI Popup "MyPopup8", content$="Popup position left-center with a delay of 12 seconds", placement$="left-center", delay=12000, class$="bg-secondary"
+UI Popup "MyPopup9", content$="Popup position left-center with a delay of 13 seconds", placement$="right-center", delay=13000, class$="bg-secondary"
+@code
+

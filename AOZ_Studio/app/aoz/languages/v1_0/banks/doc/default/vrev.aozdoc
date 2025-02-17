@@ -1,0 +1,17 @@
+<i>VRev</i>
+<b>VRev</b> xxxxxxx
+=
+VREV is identical to HREV, except that it takes the specified image and turns it upside down before displaying it on the screen. This is best used for animated objects that move vertically, although comic effects can be achieved with cartoon characters.
+As with HREV, there is an equivalent hexadecimal version of the VREV function, which can be used with AMAL
+animation strings. The format is:
+@code
+$4000+n
+@code
+WWhere $4000 acts as the reversal flag, and n is the image number. Here are two typical AMAL string of reversed
+animation:
+@code
+"Anim 0,($4000+1,2)($4000+2,2)($4000+3,2)($4000+4,2)"
+"Anim 0,($4001,2)($4002,2)($4003,2)($4004,2)"
+@code
+
+

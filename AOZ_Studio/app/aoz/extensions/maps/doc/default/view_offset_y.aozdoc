@@ -1,0 +1,20 @@
+<i>View Offset Y</i>
+<b>View Offset Y</b> xxxxxxx
+=
+This function allows you to retreive the current vertical offset of the view..
+@code
+// Scrolling the map in diagonal
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+Do
+Offset View "MapView", View Offset X( "MapView" ) + 1, View Offset Y( "MapView" ) + 1
+Cls 0, 0, 0 To 1280, 704				// Make sure the display is clean
+Redraw View "MapView"
+Wait Vbl
+Next
+@code
+

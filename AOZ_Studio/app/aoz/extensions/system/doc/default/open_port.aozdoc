@@ -1,0 +1,17 @@
+<i>Open Port</i>
+<b>Open Port</b> xxxxxxx
+=
+The three versions of the OPEN PORT command are shown above, and they are used to open a channel to the
+Parallel Interface, or the RS232 Port, or the printer chosen in your preferences settings. All standard sequential file
+commands can be performed as usual, except for commands that are specific to disc operations, such as LOF and
+POF.
+
+This example would print out ten lines via the device connected to the Amiga's RS232 port:
+@code
+Open Port 1,"SER:
+For X=0 To 10
+Print #1 ,"Greetings from AOZ Studio!"
+Next X
+Close 1
+@code
+

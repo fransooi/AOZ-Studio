@@ -1,0 +1,140 @@
+[
+	{
+		"type": "button",
+		"callback": "aoz-studio:new-file",
+		"icon": "file-medical",
+		"iconset": "fa",
+		"tooltip": "aoz-studio:new-file"
+	},
+	{
+		"type": "button",
+		"icon": "folder-open",
+		"iconset": "fa",
+		"callback": "aoz-studio:load-file",
+		"tooltip": "aoz-studio:load-file"
+	},
+	{
+		"type": "button",
+		"callback": "",
+		"icon": "save",
+		"iconset": "fa",
+		"tooltip": "aoz-studio:save",
+		"group":
+		[
+			{
+			  "type": "button",
+			  "callbackType": "js",
+			  "callback": "atom.aozStudioView.save_file();",
+			  "icon": "file-export",
+			  "iconset": "fa",
+			  "tooltip": "aoz-studio:save-as"		  
+			},
+			{
+			  "type": "button",
+			  "callbackType": "js",
+			  "callback": "atom.aozStudioView.save_aozip();",
+			  "icon": "box",
+			  "iconset": "fa",
+			  "tooltip": "aoz-studio:aozip-package"		  
+			}		  
+		]
+	},
+	{ "type": "spacer" },
+	{                                           
+		"type": "button",
+		"callback": "aoz-studio:direct-mode",
+		"icon": "hat-wizard",
+		"iconset": "fa",
+		"tooltip": "aoz-studio:direct-mode"
+	},	
+	{
+	  "type": "button",
+	  "callback": "aoz-studio:run-browser",
+	  "icon": "play",
+	  "iconset": "fa",
+	  "tooltip": "aoz-studio:browser"
+	},
+	{
+	  "type": "button",
+	  "callback": "aoz-studio:run-atom",
+	  "icon": "play-circle",
+	  "iconset": "fa",
+	  "tooltip": "aoz-studio:aozviewer"
+	},
+	{ "type": "spacer", "visible": false },
+	{
+	  "type": "button",
+	  "callback": "",
+	  "icon": "share-alt",
+	  "iconset": "fa",
+	  "tooltip": "aoz-studio:share",
+	  "group":
+	  [
+		  {
+			"type": "button",
+			"callbackType": "js",
+			"callback": "atom.aozStudioView.runAOZLink( 'run' );",
+			"icon": "link",
+			"iconset": "fa",
+			"tooltip": "aoz-studio:aoz-link"		  
+		  },
+		  {
+			"type": "button",
+			"callback": "aoz-studio:publish",
+			"icon": "upload",
+			"iconset": "fa",
+			"tooltip": "aoz-studio:publish"		  
+		  }		  
+	  ]
+	},
+	{ "type": "spacer" },
+	{
+		"type": "button",
+		"callback": "aoz-studio:aoz-designer",
+		"icon": "drafting-compass",
+		"iconset": "fa",                                                            
+		"tooltip": "aoz-studio:aoz-designer"
+	},
+	{
+		"type": "button",
+		"callback": "aoz-studio:aoz-3d-editor",
+		"icon": "cube",
+		"iconset": "fa",                                                            
+		"tooltip": "aoz-studio:aoz-3d-editor"
+	},	
+	{
+		"type": "button",
+		"callback": "aoz-studio:aoz-store",
+		"icon": "store",
+		"iconset": "fa",                                                            
+		"tooltip": "aoz-studio:aoz-store"
+	},
+	{
+		"type": "button",
+		"callback": "aoz-studio:accessories",
+		"icon": "th",
+		"iconset": "fa",                                                            
+		"tooltip": "aoz-studio:aoz-accessories"	
+	},	
+	{
+	  "type": "button",
+	  "callback": "aoz-studio:console",
+	  "icon": "comment-dots",
+	  "iconset": "fa",
+	  "tooltip": "aoz-studio:aoz-console"
+	},
+	{
+	  "type": "button",
+	  "callback": "aoz-studio:settings",
+	  "icon": "user-circle",
+	  "iconset": "fa",
+	  "tooltip": "aoz-studio:account"
+	},
+	{
+	  "type": "button",
+	  "callback": "aoz-studio:aoz-documentation",
+	  "icon": "question-circle",
+	  "iconset": "fa",
+	  "tooltip": "aoz-studio:documentation"
+	}
+]

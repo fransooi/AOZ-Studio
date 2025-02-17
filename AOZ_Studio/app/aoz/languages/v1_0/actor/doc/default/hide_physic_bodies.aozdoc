@@ -1,0 +1,12 @@
+<i>instruction: hide the borders of all the physic bodies</i>
+value=<b>Hide Physic Bodies</b>(number)
+=
+@code
+Cls 0
+Show Physic Bodies // Displays the borders of the physical bodies
+Actor 1, Image$ = "ground.png", X = 0, Y = 500, Physic$ = "platform"
+Actor 2, Image$="magicfly.png", X = 100, Y = 0, Physic$="ball"
+Wait Key
+Hide Physic Bodies // Hide the borders of the physic bodies
+@code
+

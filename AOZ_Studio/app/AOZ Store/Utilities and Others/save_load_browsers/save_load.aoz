@@ -1,0 +1,170 @@
+//-------------------------------------------------------------
+// We are planning to release a very powerful
+// Database set of instructions, connnected to the UI Designer.
+// In the mean time we have different solutions to load/Save a file or data
+//
+//   **** Example 1 demonstrates how to
+//   Search, Load, Edit and Save a file on the hard disk
+//
+//   **** Example 2 demonstrates how to
+//   Save and Load text files on the cache memory with a basic TodoList example
+//
+//   **** Example 3 demonstrates how to
+//   Save and Load values as a memory block on the cache memory
+//
+// Note: cache memory (local storage) is a temporary storage of your browser,
+// all data will be lost if you clear the cache of the browser.
+//------------------------------------------------------------
+
+#splashscreen: False
+Curs Off
+goto exemple2 // choose 1, 2 or 3
+
+
+exemple1:
+// ---------------------------------------------------------------------
+// **** Example 1
+
+// Simple load of a text file and display in editable text area,
+// you can then edit and download the text into a file (by Phil Bell)
+
+FILE_CONTENT$ = "" : FILE_PICKED = 0 : FILE_NAME$ = ""
+Global FILE_CONTENT$, FILE_PICKED, FILE_NAME$
+
+
+UI TextBox  "Open_file", x=200, y=180, onChange$="OPENFILE", type$="file"
+UI TextArea "Edit_file", x=200, y=320, width=1000, rows=9
+UI Button   "Save_file", x=200, y=720, width=200, height=50, content$="Save the file", onClick$="DOWNLOAD_CLICK"
+
+MAIN_LOOP:
+
+do
+    If FILE_PICKED = 1: Goto LOAD_FILE: End If
+    Wait Vbl
+loop
+
+
+LOAD_FILE:
+    FILE_PICKED = 0
+    UI Value "Edit_file", value$=FILE_CONTENT$
+    Goto MAIN_LOOP
+
+Procedure OPENFILE[ID$, VALUE$]
+    {
+        let f = document.getElementById("Open_file").files[0];
+        var reader = new FileReader();
+        var self = this;
+        reader.onload = function(){
+          self.root.vars.FILE_CONTENT$ = reader.result;
+          self.root.vars.FILE_PICKED = 1
+          self.root.vars.FILE_NAME$ = f.name;
+        };
+        reader.readAsText(f);
+    }
+End Proc
+
+Procedure DOWNLOAD_CLICK[ID$]
+    TEXT_TO_WRITE$ = UI Value$("Edit_file")
+{
+    const a = document.createElement('a');
+     const file = new Blob([vars.TEXT_TO_WRITE$], {type: 'text/plain'});
+
+    a.href= URL.createObjectURL(file);
+    a.download = this.root.vars.FILE_NAME$;
+    a.click();
+
+    URL.revokeObjectURL(a.href);
+}
+End Proc
+
+End
+
+
+exemple2:
+// ---------------------------------------------------------------------
+// **** Example 2
+
+// Initialisation
+Filename$ ="todo.txt" : Global Filename$ 	// name of the file we are going to use
+Open Out 1, Filename$ : Close 1  			// create the file so the first read will not return an error
+
+// Variables. For this example we create a table of 2 fields * 100 records
+Dim Subject$(100) 	: Global Subject$()
+Dim TodoDate$(100) 	: Global TodoDate$()
+Dim RD$(100) 		: Global RD$()			// will be used to read the data
+
+STARTP:	// Interface Main loop
+	Print
+	Input "r(ead)  or  w(rite) ? ";C$
+	If C$="r" Then FREAD		// go to the READ procedure
+	If C$="w" Then FWRITE	// go to the WRITE procedure
+Goto STARTP
+
+Procedure FREAD 	// READ the data from the Filename$ text file in the browser memory
+I=1    			// field counter to read
+Print " > READ  "; Filename$;":";
+If Exist(Filename$) = False  // test if the file already exist
+ 	Print "  ";Filename$; " does not yet exist!"
+Else
+	Open In 1, Filename$  // Open the channel 1 to read the file Filename$
+	While EOF(1) = False  // (EOF for End of File) We continue to read until the end of the file
+   	Input #1, Rd$(I)  // read the data from the file
+	Print "   " ; Rd$(I);
+	I=I+1		// increase the field counter until we reach the end of the file
+	Wend
+	Close 1
+End If
+
+End Proc
+
+Procedure FWRITE
+I=1 // in this example we write only one record made of 2 fields Subject and Todo Date
+Input "Subject ? "; Subject$(I)
+Input "Todo Date ? "; TodoDate$(I)
+
+Print " > WRITE "; Filename$;":   "; Subject$(I); "   " ; TodoDate$(I)
+Open Out 1, Filename$	 	// Open the channel 1 to write in the file Filename$
+	Print #1, Subject$(I)	// Save Subject in the file
+	Print #1, TodoDate$(I)	// Save Tododate$ in the file
+Close 1						// do not forget to close the file once the save is done
+End Proc
+
+End
+
+
+exemple3:
+// ---------------------------------------------------------------------
+// **** Example 3
+
+// BSave (short for Binary Save) saves the binary content of a block of memory.
+// BSAVE has two syntaxes: BSAVE "name", Start To End, and BSAVE "name", Start, Length
+// This is an example using it:
+
+' Reserving 10 bytes.
+Reserve As Work 15,10  ' reserve a memory block'
+addrStart = Start(15)
+addrEnd = addrStart+9  ' Total of 10 bytes
+' Poke in the numbers 1 - 10 in those 10 bytes.
+For i=0 To 9
+	Poke addrStart+i,i+1
+	Next i
+' Verify the contents
+Print "-------SAVE"
+For i=0 To 9
+	Print Right$(Str$(Peek(addrStart+i)),2);" ";
+Next i
+Print
+
+' BSave the file.
+Bsave "TestBsave.dat",addrStart To addrEnd
+Print "file length:" ; File Length("TestBsave.dat")
+Reserve as Work 14,10
+addrStart = Start(14)
+Bload "TestBsave.dat",addrStart
+' Verify the contents
+Print: Print "-------LOAD"
+For i=0 To 9
+	Print Right$(Str$(Peek(addrStart+i)),2);" ";
+Next i
+
+End

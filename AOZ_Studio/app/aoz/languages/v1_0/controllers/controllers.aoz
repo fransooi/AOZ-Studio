@@ -1,0 +1,552 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Game Controllers Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Game Controllers
+@description:Instructions and functions to get input from game controllers
+@author:Francois Lionet and Brian flanagan
+@intro:
+TOBF: Please enter the text of tyour chapter about concrollers. AOZ supports all Markdown tags (or should! ;) 
+so you can have images, links, lists ... for tables and formatted code output, please use:
+~~~
+This is some code.
+	Tabs are respected.
+~~~
+
+@conclusion:
+Same here if you need a conclusion.
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Joy
+@description:Return the current state of the joystick
+@param:joystick:integer:The number of the joystick
+@return:integer:A binary number representing where each bit represents a direction. Bit 0: Joystick has been moved Up. Bit 1: Joystick has been moved Down. Bit 2: Joystick has been moved Left. Bit 3: Joystick has been moved Right. Bit 4: Fire-button has been pressedthe direction
+@examples:instructions:i_68
+@compatible: aoz, stos, amos
+@content:
+This inspects what is happening with the joystick and makes a report. Any kind of joystick is supported, and the keys are mapped as best as possible.
+AOZ also emulate joystick entry through the keyboard if no joystick is connected, with a default mapping to the arrow keys for directions and the space bar for fire.
+The mappingh is stored in the manifest that is created when you click on "New Application" in AOZ.
+~~~                
+Do
+J=Joy(1)
+Print Bin$(J,5),J
+Loop
+~~~
+When you run that routine, reports are given about the movements of the joystick and the status of the fire-button in
+the form of binary numbers. The pattern of ones and zeros in the report can then be inspected. Binary bits shown as
+zero indicate that nothing is happening, whereas if any of the bits in the report is shown as a one, it means that the
+joystick has been moved in the direction that relates to that bit. Here is a list of those bits along with their meanings.
+~~~                
+Bit number 	Meaning
+0 		Joystick has been moved Up
+1 		Joystick has been moved Down
+2 		Joystick has been moved Left
+3 		Joystick has been moved Right
+4 		Fire-button has been pressed
+~~~
+
+api*/
+Function Joy, port=0
+{
+}
+End Function( { aoz.joy(%port) } )
+
+/**api
+@name:JUp
+@description:Test for joystick movement up
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick is positionned up, False if not
+@compatible: aoz, stos, amos
+@content:
+This returns a value of True if the joystick connected to the given port number has been pushed up, otherwise a value of False.
+These functions can be demonstrated by the following example:
+~~~                
+Do
+	If Jleft(1) Then Print "WEST"
+	If Jright(1) Then Print "EAST"
+	If Jup(1) Then Print "NORTH"
+	If Jdown(1) Then Print "SOUTH"
+Loop
+~~~
+
+api*/
+Function JUp, port, lock
+{
+}
+End Function( { aoz.jUp(%port,%lock) } )
+
+/**api
+@name:JDown
+@description:Test for joystick movement down
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick is positionned down, False if not
+@compatible: aoz, stos, amos
+@content:
+This returns a value of True if the joystick connected to the given port number has been pushed down, otherwise a value of False.
+These functions can be demonstrated by the following example:
+~~~                
+Do
+	If Jleft(1) Then Print "WEST"
+	If Jright(1) Then Print "EAST"
+	If Jup(1) Then Print "NORTH"
+	If Jdown(1) Then Print "SOUTH"
+Loop
+~~~
+
+api*/
+Function JDown, port, lock
+{
+}
+End Function( { aoz.jDown(%port,%lock) } )
+
+/**api
+@name:JLeft
+@description:Test for joystick movement left
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick is positionned left, False if not
+@compatible: aoz, stos, amos
+@examples:instructions:i_68
+@content:
+This returns True if the joystick connected to the given port number has been pushed to the
+left, otherwise False is returned.
+These functions can be demonstrated by the following example:
+~~~                
+Do
+If Jleft(1) Then Print "WEST"
+If Jright(1) Then Print "EAST"
+If Jup(1) Then Print "NORTH"
+If Jdown(1) Then Print "SOUTH"
+Loop
+~~~
+
+api*/
+Function JLeft, port, lock
+{
+}
+End Function( { aoz.jLeft(%port,%lock) } )
+
+/**api
+@name:JRight
+@description:Test for joystick movement right
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick is positionned right, False if not
+@compatible: aoz
+@examples:instructions:i_68
+@content:
+This returns True if the joystick connected to the given port number has been pushed to the
+right, otherwise False is returned.
+These functions can be demonstrated by the following example:
+~~~                
+Do
+	If Jleft(1) Then Print "WEST"
+	If Jright(1) Then Print "EAST"
+	If Jup(1) Then Print "NORTH"
+	If Jdown(1) Then Print "SOUTH"
+Loop
+~~~
+
+api*/
+Function JRight, port, lock
+{
+}
+End Function( { aoz.jRight(%port,%lock) } )
+
+/**api
+@name:JUpLeft
+@description:Test for joystick movement up and left
+@author: Brian Flanagan
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick is positionned up, False if not
+@examples:instructions:i_68
+@compatible: aoz
+@content:
+This returns True if the joystick connected to the given port number has been pushed to the
+up-left diagonal, otherwise False is returned.
+These functions can be demonstrated by the following example:
+~~~                
+Do
+	If JUpLeft(1) Then Print "NORTH-WEST"
+	If JUpRight(1) Then Print "NORTH-EAST"
+	If JDownLeft(1) Then Print "SOUTH-WEST"
+	If JDownRight(1) Then Print "SOUTH-EAST"
+Loop
+~~~
+
+api*/
+Function JUpLeft, port, lock
+{
+}
+End Function( { aoz.jUpLeft(%port,%lock) } )
+
+/**api
+@name:JUpRight
+@description:Test for joystick movement up and right
+@author: Brian Flanagan
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick is positionned up, False if not
+@examples:instructions:i_68
+@compatible: aoz
+@content:
+This returns True if the joystick connected to the given port number has been pushed to the
+up-right diagonal, otherwise False is returned.
+These functions can be demonstrated by the following example:
+~~~                
+Do
+	If JUpLeft(1) Then Print "NORTH-WEST"
+	If JUpRight(1) Then Print "NORTH-EAST"
+	If JDownLeft(1) Then Print "SOUTH-WEST"
+	If JDownRight(1) Then Print "SOUTH-EAST"
+Loop
+~~~
+api*/
+Function JUpRight, port, lock
+{
+}
+End Function( { aoz.jUpRight(%port,%lock) } )
+
+/**api
+@name:JDownLeft
+@description:Test for joystick movement down and left
+@author: Brian Flanagan
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick is positionned up, False if not
+@examples:instructions:i_68
+@compatible: aoz
+@content:
+This returns True if the joystick connected to the given port number has been pushed to the
+down-left diagonal, otherwise False is returned.
+These functions can be demonstrated by the following example:
+~~~                
+Do
+	If JUpLeft(1) Then Print "NORTH-WEST"
+	If JUpRight(1) Then Print "NORTH-EAST"
+	If JDownLeft(1) Then Print "SOUTH-WEST"
+	If JDownRight(1) Then Print "SOUTH-EAST"
+Loop
+~~~
+
+api*/
+Function JDownLeft, port, lock
+{
+}
+End Function( { aoz.jDownLeft(%port,%lock) } )
+
+/**api
+@name:JDownRight
+@description:Test for joystick movement down and right
+@author: Brian Flanagan
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick is positionned up, False if not
+@examples:instructions:i_68
+@compatible: aoz
+@content:
+This returns True if the joystick connected to the given port number has been pushed to the
+down-right diagonal, otherwise False is returned.
+These functions can be demonstrated by the following example:
+~~~                
+Do
+	If JUpLeft(1) Then Print "NORTH-WEST"
+	If JUpRight(1) Then Print "NORTH-EAST"
+	If JDownLeft(1) Then Print "SOUTH-WEST"
+	If JDownRight(1) Then Print "SOUTH-EAST"
+Loop
+~~~
+
+api*/
+Function JDownRight, port, lock
+{
+}
+End Function( { aoz.jDownRight(%port,%lock) } )
+
+/**api
+@name:Fire
+@description:Test for joystick fire button
+@param:joystick:integer:The number of the joystick
+@param:lock:boolean:If true, the function will wait for the button to be released before being true again
+@return:boolean:True if joystick fire button is pressend, False if it is not
+@examples:instructions:i_68
+@compatible: aoz, stos, amos
+@content:
+To set up a routine for testing to see if the fire-button has been pressed, use the FIRE function followed by the
+joystick port number. A value of True will be given only if the fire-button on the relevant joystick has been pressed.
+~~~                
+Do
+	F=Fire(1)
+	If F=-1 Then Centre "BANG!": Shoot
+	Print
+Loop
+~~~
+As a default, the SPACE key is mapped to replace FIRE in case no joystick is connected to the machine.
+You can edit this setting in the manifest of the application, or while creating the project.
+api*/
+Function Fire, port, lock
+{
+}
+End Function( { aoz.fire(%port,%lock) } )
+
+/**api
+@name:JoyKey
+@description:Associates keystroke with joystick action
+@author: Brian Flanagan
+@param:_Direction$,_Key$
+@content:
+TODO
+~~~                
+
+~~~
+
+api*/
+Instruction JoyKey, direction$, key$
+{
+	aoz.setKeyMapping(%direction$,%key$)
+}
+End Instruction
+
+
+/**api
+@name:Gamepad Threshold
+@description:Get threshold to trigger up/down/left/right
+@author: Brian Flanagan
+@return:float :number > 0 and <=1, percentage
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Threshold
+{
+}
+End Function( { aoz.gamepad_Threshold } ) // getGamepadThreshold() })
+
+/**api
+@name:Gamepad Threshold
+@description:Set threshold to trigger up/down/left/right
+@author: Brian Flanagan
+@param:THRESHOLD:float:number betwwen 0 and 1, the givenm threshold
+@compatible: aoz
+@content:
+TOBF
+api*/
+Instruction Gamepad Threshold, value
+{
+	aoz.gamepad_Threshold = %value;
+}
+End Instruction
+
+/**api
+@name:Gamepad Button
+@description:Test for a button depressed on a complex gamepad
+@param:GAMEPAD:integer:The number of the gamepad
+@param:BUTTON:integer:The number of the button
+@return:boolean:True if th ebutton is pressed, False if it is not
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Button, port, button
+{
+}
+End Function( {aoz.gamepadButton(%port, %button)} )
+
+/**api
+@name:Gamepad Buttons
+@author: Brian Flanagan
+@description:Return number of selected gamepads
+@param:gamepad:integer:The number of the gamepad
+@return:integer:The number of buttons on gamepad[_GAMEPAD]
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Buttons,gamepad
+{
+}
+End Function( { aoz.gamepadNumButtons(%gamepad) } )
+
+/**api
+@name:Gamepad Axes
+@author: Brian Flanagan
+@description:Return number of axes for selected gamepad
+@param:GAMEPAD:integer:The number of the gamepad
+@return:integer:The number of axes on gamepad[_GAMEPAD]
+@content:
+TODO
+~~~                
+
+~~~
+
+api*/
+Function Gamepad Axes,gamepad
+{
+}
+End Function( { aoz.gamepadNumAxes(%gamepad) } )
+
+/**api
+@name:Gamepad Axis
+@description:Return the position of one of the axes of a gamepad
+@param:GAMEPAD:integer:The number of the gamepad
+@param:AXIS:integer:The number of the axis
+@return:float:The position of the axis, from -1 to 1
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Axis, gamepad, axis
+{
+}
+End Function( { aoz.gamepadAxis(%gamepad, %axis) } )
+
+/**api
+@name:Gamepad trigger
+@description:Return the position of one of the triggers of a gamepad
+@param:GAMEPAD:integer:The number of the gamepad
+@param:TRIGGER:integer:The number of the trigger
+@return:float:The position of the trigger, from 0 to 1
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Trigger, port, trigger
+{
+	//
+	// The gamepadTrigger function appears to be returning bogus information.
+	// It is mirroring the axes() function.
+	//
+}
+End Function( {aoz.gamepadTrigger(%port,%trigger)} )
+
+
+/**api
+@name: Gamepad Name$
+@description: Return the brand name of the gamepad
+@param:PORT:integer:The number of the gamepad
+@return:string: The name of the gamepad if connected, an empty string is no gamepad is connected
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Name$, port
+{
+	result = aoz.gamepadName$(%port);
+}
+End Function( { result } )
+
+/**api
+@name: Gamepad Vendor$
+@author: Brian Flanagan
+@description: Return the vendor code for the specified gamepad
+@param:GAMEPAD:integer:The number of the specified gamepad
+@return:string: The vendor code for the specified gamepad, if connected, an empty string if specified gamepad NOT connected
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Vendor$, gamepad
+{
+	result = aoz.gamepadVendor$(%gamepad);
+}
+End Function( { result } )
+
+/**api
+@name: Gamepad Product$
+@author: Brian Flanagan
+@description: Return the product code for the specified gamepad
+@param:GAMEPAD:integer:The number of the gamepad
+@return:string: The product code for the specified gamepad if connected, an empty string if specified gamepad NOT connected
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Product$, gamepad
+{
+	result = aoz.gamepadName$(%gamepad);
+}
+End Function( { result } )
+
+
+/**api
+@name:Gamepad Connected
+@description:Test if a gamepad is connected to the computer
+@param:GAMEPAD:integer:The number of the gamepad
+@return:boolean:True if a gamepad is connected and working, False if not
+@compatible: aoz
+@content:
+TOBF
+api*/
+Function Gamepad Connected, port
+{
+}
+End Function( { aoz.gamepadConnected(%port) } )
+
+
+/**api
+@name:Gamepad Map Buttons
+@description:Define a new mapping for the buttons of non-standard compliant gamepads. Doc to come.
+@param:GAMEPAD:integer:The number of the gamepad
+@param:MAPS:integers:A list of numbers separated by commas defining the mapping
+@compatible: aoz
+@content:
+TOBF
+api*/
+
+/**api
+@name:Gamepad Map Axes
+@description:Define a new mapping for the axes of non-standard compliant gamepads. Doc to come.
+@param:GAMEPAD:integer:The number of the gamepad
+@param:MAPS:integers:A list of numbers separated by commas defining the mapping
+@compatible: aoz
+@content:
+TOBF
+api*/
+
+/**api
+@name:Gamepad Map Triggers
+@description:Define a new mapping for the axes of non-standard compliant gamepads. Doc to come.
+@param:GAMEPAD:integer:The number of the gamepad
+@param:MAPS:integers:A list of numbers separated by commas defining the mapping
+@compatible: aoz
+@content:
+TOBF
+api*/

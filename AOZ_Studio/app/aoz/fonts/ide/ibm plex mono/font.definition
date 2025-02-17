@@ -1,0 +1,34 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ 
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ 
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ - Google Font Definition
+ *
+ */	
+<FONT_FACE-START>
+/* ibm-plex-mono-100 - latin-ext_cyrillic_latin_cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  src: local('IBM Plex Mono Thin'), local('IBMPlexMono-Thin'),
+       url('%GOOGLE_FONTS%/ibm plex mono/ibm-pmvleer.woff2') format('woff2') /* Super Modern Browsers */
+
+}
+/* ibm-plex-mono-100italic - latin-ext_cyrillic_latin_cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: italic;
+  font-weight: 500;
+  src: local('IBM Plex Mono Thin Italic'), local('IBMPlexMono-ThinItalic'),
+       url('%GOOGLE_FONTS%/ibm plex mono/ibm-pmvleei.woff2') format('woff2') /* Super Modern Browsers */
+}
+<FONT_FACE-END>

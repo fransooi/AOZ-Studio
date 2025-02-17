@@ -1,0 +1,240 @@
+#title_bar
+{
+	border-bottom: 1px solid var(--second-dark-bg-grey);
+	left: 0px;
+	right: 0px;
+    height: 4.5vw;
+    color: var(--primary-dark-bg-orange);
+    font-size: 2.5vw;
+    text-align: center;
+    padding: 4px;
+    font-family: 'Roboto';
+}
+
+#buttons_bar
+{
+	position: fixed;
+	border-top: 1px solid var(--second-dark-bg-grey);
+	left: 0px;
+	right: 0px;
+    height: 5vw;
+	bottom: 0px;
+    padding: 4px;
+    font-family: 'Roboto';
+	background-color: var(--primary-dark-bg-grey)
+}
+
+button.to_right
+{
+	position: absolute;
+	right: 16px;
+}
+
+#categories
+{
+	position: absolute;
+	height: 100%;
+    left: 4px;
+    right: 75vw;
+    top: 5.5vw;
+    bottom: 5vw;
+    overflow: hidden;
+    overflow-y: auto;
+    border-right: 1px solid var(--second-dark-bg-grey);
+}
+
+#templates
+{
+	position: absolute;
+	left: 25vw;
+	right: 0vw;
+	top: 4vw;
+	bottom: 5vw;
+	overflow: hidden;
+	overflow-y: auto;
+	margin: 2vw;
+}
+
+div.template
+{
+	left: 0px;
+	right: 0px;
+	padding: 4px;
+	margin: 2vw;
+	cursor:pointer;
+	border-radius: 6px;
+	border: 3px solid var(--primary-dark-bg-grey);
+}
+
+div.template:hover
+{
+	border-radius: 6px;
+	border: 3px solid var(--primary-dark-bg-orange);
+	color: var(--primary-dark-bg-grey);
+}
+
+div.tmp_info
+{
+	position: inherit;
+	display: block;
+	font-family: 'Roboto';
+    color: var(--second-dark-bg-grey);
+    padding-left: 12vw;
+    font-size: 1.7vw;
+	background-repeat: no-repeat;
+	background-image: url( 'images/template_pc.png' );
+	background-size: 10.5vw;
+	height: 94px;
+	line-height: 2.0vw;
+}
+
+div.tmp_info b
+{
+    color: var(--primary-dark-bg-cyan);
+    font-size: 2vw;
+}
+
+div.category
+{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-family: 'Roboto';
+    color: var(--second-dark-bg-grey);
+    font-size: 2vw;
+    border-radius: 6px;
+    border: 3px solid var(--primary-dark-bg-grey);
+    height: 7vh;
+    background-color: none;
+	cursor: pointer;
+}
+
+div.category:hover
+{
+    color: var(--primary-dark-bg-orange);
+    border: 3px solid var(--primary-dark-bg-orange);
+}
+
+div.category.selected
+{
+	border-radius: 6px;
+	border: 3px solid var(--primary-dark-bg-grey);
+	color: var(--primary-dark-bg-grey);
+	background-color: var(--primary-dark-bg-orange);
+}
+
+div.no_template
+{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-family: 'Roboto';
+	color: var(--second-dark-bg-grey);
+	font-size: 2vw;
+	height: 7vh;
+	background-color: none;
+}
+
+div.page
+{
+	width: auto;
+	margin: 2vw;
+}
+
+div.page_title
+{
+	width: 100%;
+	font-family: "Roboto";
+    color: var(--primary-dark-bg-blue);
+    font-size: 2.2vw;
+    font-weight: bold;
+    padding: 6px;
+    text-align: center;
+	margin-bottom: 1vw;
+}
+
+div.page_field
+{
+    font-family: 'Roboto';
+    width: 100%;
+    min-height: 1.5vw;
+    padding-bottom: 0.5vw;
+}
+
+div.page_field.check-box
+{
+	display: flex;
+	justify-content: left;
+	align-items: center;
+    padding-bottom: 0.5vw;
+}
+
+div.page_field label
+{
+    color: var(--primary-dark-bg-orange);
+    font-weight: bold;
+    display: block;
+	padding-bottom: 0.5vw;
+	font-size: 1.7vw;
+}
+
+div.page_field.check-box label
+{
+    padding-bottom: 0vw;
+}
+
+div.page_field input
+{
+	position: relative;
+	font-family: "Roboto";
+    border-radius: 4px;
+    border: 3px solid var(--second-dark-bg-grey);
+    height: auto;
+    padding: 4px;
+	width: 100%;
+    color: var(--primary-light-bg-blue);
+	font-size: 1.5vw;
+}
+
+div.page_field input.small
+{
+	width: 10vw;
+}
+
+div.page_field input:disabled
+{
+	background-color:#EEEEEE;
+	color: #888888;
+}
+
+div.page_field input:focus
+{
+	outline: none;
+    border: 3px solid var(--primary-light-bg-cyan);
+	color: var(--primary-light-bg-blue);
+}
+
+div.page_field input[type='checkbox']
+{
+    width: 3vw;
+}
+
+div.page_field select
+{
+	position: relative;
+	font-family: "Roboto";
+    border-radius: 4px;
+    border: 3px solid var(--second-dark-bg-grey);
+    height: auto;
+    padding: 4px;
+	width: auto;
+    color: var(--primary-light-bg-blue);
+	font-size: 1.5vw;
+}
+
+div.page_field select:focus
+{
+	outline: none;
+    border: 3px solid var(--primary-light-bg-cyan);
+	color: var(--primary-light-bg-blue);
+}

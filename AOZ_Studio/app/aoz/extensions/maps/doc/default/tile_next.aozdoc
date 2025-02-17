@@ -1,0 +1,19 @@
+<i>Tile Next</i>
+<b>Tile Next</b> xxxxxxx
+=
+This function and the associated "Tile Next" instruction allow you to scan all the tiles of the same value, either in the visible area or the whole map.
+
+This example asks for all the tiles with value "1345" and displays their coordinate in the map.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+TILEINDEX = Tile First( "MapView", 1345, True ) 	// Scans the whole map
+While TILEINDEX >= 0
+Print Tile X( TILEINDEX ), Tile Y( TileIndex )
+TILEINDEX = Tile Next
+Wend
+@code
+

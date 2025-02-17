@@ -1,0 +1,7 @@
+<i>Music Stop</i>
+<b>Music Stop</b> xxxxxxx
+=
+This instruction brings the current single passage of music to a halt. If there is any other active music held in the
+stack and waiting to be played, that music will begin to play at once.
+
+

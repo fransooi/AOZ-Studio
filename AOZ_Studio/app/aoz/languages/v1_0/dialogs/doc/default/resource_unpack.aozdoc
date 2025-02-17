@@ -1,0 +1,18 @@
+<i>Resource Unpack</i>
+<b>Resource Unpack</b> xxxxxxx
+=
+This instruction opens a screen using the settings that are stored in the Resource Bank. These screen settings include
+the number of colours, the resolution and the entire colour palette
+
+The parameters are given in the following order: the number of the screen to be defined from zero to 7, the width of
+this screen in pixels and the height of the screen in lines. Finally a simple flag is set for the flash feature, with a value of zero to turn off the flash, or any other appropriate value to assign the flash effect to that colour index
+number
+
+The new screen will be installed with the colour palette held in the Resource Bank
+
+The following example opens a screen using the settings from the internal Resource Bank, just like the Editor screen, where the flashing colour is index number 2
+@code
+Resource Screen Open 0,640,200,2
+@code
+
+

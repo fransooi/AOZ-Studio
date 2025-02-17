@@ -1,0 +1,12 @@
+<i>Bob Off</i>
+<b>Bob Off</b> xxxxxxx
+=
+Use this command to remove all Bobs from the screen simultaneously. If the index of a Bob is specified, only that Bob will be extinguished. For example:
+@code
+Bob Off 1: 			// Remove Bob 1 only
+Bob Off "mybob" 	// remove Bob "mybob" only
+Bob Off 			// Remove all Bobs from screen
+@code
+The BOB OFF instruction also turns off any animation or collision routines associated with these Bobs.
+
+

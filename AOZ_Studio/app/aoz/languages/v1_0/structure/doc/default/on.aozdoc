@@ -1,0 +1,57 @@
+<i>On</i>
+<b>On</b> xxxxxxx
+=
+ON can be used to force the program to jump to a pre-defined position when it recognises a specified variable.
+Furthermore, jumps can be made to a choice of several positions, depending on what value is held by the variable at
+the time it is spotted. ON can force a jump to any of the following structures.
+
+###Procedures.
+
+When using an ON ... PROC structure, one or more named procedures is used as the target destination
+for a jump, depending on the contents currently held by a variable. Look at the following line:
+@code
+On X Proc PROCEDURE1,PROCEDURE2
+@code
+That is exactly the same as saying:
+@code
+If X=1 Then PROCEDURE1
+If X=2 Then PROCEDURE2
+@code
+It is important to note that procedures used in this way cannot include any parameters. If information is to be
+transferred to the procedure, it should be placed in a global variable.
+
+###Goto
+
+Goto is used to jump to one of a list of numbered lines, or a label, depending on the result of an expression. For
+example:
+@code
+Print "Type in a value from 1 to 3"
+Input X
+On X Goto LABEL1,LABEL2,LABEL3
+LABEL1:
+Print "Ready"
+LABEL2:
+Print "Steady"
+LABEL3:
+Print "Go!"
+@code1
+For that to work properly, X must have a value from 1 up to the number of the highest possible destination. Any
+other values would cause problems. In fact the third line of that example is a very economical way of writing the
+following lines:
+@code
+If X=1 Then Goto LABEL1
+If X=2 Then Goto LABEL2
+If X=3 Then Goto LABEL3
+@code
+Now change the third line of the last example to this:
+@code
+On X Goto LABEL3,LABEL2,LABEL1
+@code
+
+###Gosub.
+
+The use of an ON GOSUB structure is identical to ON ... GOTO, except that it must employ a RETURN to
+jump back to the instruction immediately after the ON ... GOSUB statement. Destinations may be given as the name
+of a label, or the identification number of a line between 1 and the maximum number of possible destinations.
+ON is also used with the ON BREAK PROC structure, as well as ON ERROR GOTO
+

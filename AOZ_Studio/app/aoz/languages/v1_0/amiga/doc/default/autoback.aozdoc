@@ -1,0 +1,26 @@
+<i>Autoback</i>
+<b>Autoback</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+There are three AUTOBACK modes, and you can toggle between them by setting the mode values as follows:
+@code
+Autoback 0
+@code
+Manual mode. This mode deactivates the AUTOBACK system completely, so that graphics are drawn directly on
+the logical screen, for maximum speed. It is recommended for use with the BOB DRAW and BOB CLEAR
+commands.
+AUTOBACK 0 is useful when large amounts of graphics are drawn on screens being switched manually with
+SCREEN SWAP, because it is much faster than the standard system. But remember that you must take responsibility
+for synchronising between the logical and physical screens.
+@code
+Autoback 1
+@code
+Semi-automatic. In mode 1, AUTOBACK performs all graphical operations on both the logical and physical screens.
+Although Bob updates are not taken into account, this is an ideal mode for displaying hi-score tables and control
+panels. So as long as your Bobs are kept clear of any new graphics, this mode is perfect.
+@code
+Autoback 2
+@code
+
+

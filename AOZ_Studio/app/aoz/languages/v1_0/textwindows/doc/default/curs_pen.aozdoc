@@ -1,0 +1,20 @@
+<i>Curs Pen</i>
+<b>Curs Pen</b> xxxxxxx
+=
+As a default, whenever your screen mode provides four or more colours the text cursor is set to index number 2,
+which is endowed with a built-in flash. The flashing can be turned off and back on again at any time using the
+FLASH OFF and FLASH commands, but as soon as you select another colour for your text cursor, the automatic
+flash will not apply. To change colours, use the CURS PEN command, followed by the index number of your
+choice.
+
+For example:
+@code
+Curs Pen 2
+@code
+Note that the new colour only effects the text cursor in the current open window, and has no influence over other
+cursors used by any other windows. If you want to introduce a flash to that last example, you could add this line
+before the CURS PEN command:
+@code
+Flash 2,"(FFF,15)(000,15)"
+@code
+

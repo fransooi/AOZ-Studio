@@ -1,0 +1,25 @@
+<i>Player Register</i>
+<b>Player Register</b> xxxxxxx
+=
+This command links a guest account with an email and password. The email and password can then be used to login using the "Player Login" command.
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+
+Print "Register Guest Account": Print "======================"
+NAME$ = "": EMAIL$ = "": PASSWORD$ = ""
+Input "Player Name: "; NAME$
+Input "Email: "; EMAIL$
+Input "Password: "; PASSWORD$
+
+If EMAIL$ <> "" and NAME$ <> "" and PASSWORD$ <> ""
+// Registers the current guest account to an email and password
+Player Register email$=EMAIL$, password$=PASSWORD$, playerName$=NAME$
+
+If Player ErrorCode() <> 0
+Print Player ErrorMessage$()
+Else
+Print "Player is now registered"
+End If
+End If
+@code
+

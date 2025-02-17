@@ -1,0 +1,6 @@
+#loadAssetFile: "aozjs/editor-sdk/js/editor-sdk.js"
+
+SDK_BUSY = False : Global SDK_BUSY
+While SDK_BUSY = True
+	Wait Vbl
+Wend

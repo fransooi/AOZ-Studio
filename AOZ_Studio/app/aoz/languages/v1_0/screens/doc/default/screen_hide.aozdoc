@@ -1,0 +1,13 @@
+<i>Screen Hide</i>
+<b>Screen Hide</b> xxxxxxx
+=
+Use the SCREEN HIDE command to remove the current screen from view. It can then be restored using a SCREEN
+SHOW instruction, like this:
+@code
+Cls : Print "I am the Current Screen" : Wait 100
+Screen Hide : Wait Key
+Screen Show
+@code
+Any screen can be temporarily hidden, by including its index number after the SCREEN HIDE instruction. This
+screen is revealed with a similar request to SCREEN SHOW, followed by the relevant screen number.
+

@@ -1,0 +1,132 @@
+#splashScreen:False
+Curs Off
+
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __                                   
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  ) 
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/  
+//
+// ............................................................................................................
+//
+// Welcome to your AOZ Studio Lesson Create a HangMan 2 - Using Data - Neil Ives
+
+////////////////////////////////
+// Lets collect data on Data! //
+////////////////////////////////
+
+// In this tutorial we will learn about:
+// Data
+// Data list formats
+// Read(ing) Data
+// Restore
+// Using correct variable types when Data is mixed
+
+
+//////////////////////////////////
+// PART 1 Data and Data formats //
+//////////////////////////////////
+
+//Data lists allow values to be stored and read from within the application code.
+//Note: The Data list can be placed anywhere in the program code. Different parts of the code can access the same Data.
+
+//Data can be formatted in horizontal lines, like this. If the Data is stored on one line, commas must be used to separate the information.
+Data 1000,9000,8,231
+
+//Or vertically, like this:
+Data 1
+Data 2
+Data 3
+Data 4
+
+//Data does not need to have line numbers but if the lines of Data are 
+//numbered, 'Restore' can be used to set the Read point; See later.
+//If the Data lines are not numbered they are read in sequence, even if other code is executed between Data reads.
+
+1 Data 0.5
+2 Data 0.006
+3 Data 70.123
+4 Data 800.03
+5 Data 90.045
+6 Data "50 High Street Notown"
+7 Data "21 years old today"
+8 Data "Winner!"
+9 Data "FRANCOIS LIONET is cool"
+10 Data "AOZ is cooler!"
+
+/////////////////
+// PART 2 Read //
+/////////////////
+
+//Read is used to collect the values stored in the Data
+
+Print "Here the first 13 items of the Data list are read and printed in sequence:"
+
+For n = 1 to 13
+    Read S // Note: Read automatically progresses through the Data. It does not use n to locate the next item
+    Print S
+Next
+
+End // When above understood please Rem (//), or delete this 'End' to allow the next part of the code to run.
+
+CLS
+
+///////////////////////////////////////////////
+// PART 3 Use Restore and read a single line //
+///////////////////////////////////////////////
+
+// If the Data has line numbers Restore can be used to point to a starting point to read the Data
+
+Print "Using 'Restore' a single item of Data can be read and printed:"
+Restore 7:Read S$:Print S$//Restore points to Data line 7. Read a single value into variable S$. Print S$ on screen
+
+End // Please Rem, (//) or delete 'End' to allow the next part of the code to run.
+
+Cls
+
+//////////////////////////////////////////////////
+// PART 5 Use Restore and read a Range of lines //
+//////////////////////////////////////////////////
+
+Print "After using 'Restore' a range of items can be read and printed"
+
+Restore 1
+// Restore to line 1 and print the next 4 items
+For n = 1 to 5
+    Read t# // NOTE: The hash symbol indicates a floating point type of variable. Used for non integer numbers
+    Print t#
+next
+
+End // Please Rem (//) or delete 'End' to allow the next part of the code to run.
+
+Cls
+
+/////////////////////////////////////////////
+// PART 6 Use the correct type of variable //
+/////////////////////////////////////////////
+
+//Data statements can contain strings and numbers but the correct variable type must be used to collect the value
+Print "Here 5 items in the Data list are read and printed in sequence"
+// Please note that those items are strings so must be stored in a string variable
+// In this case it is named S$
+For n = 1 to 5
+    Read S$ //Note: Read automatically progresses through the Data. It does not use n to locate the next item
+    Print S$
+Next
+
+End // Please Rem (//) or delete 'End' to allow the next part of the code to run.
+
+Cls
+
+//////////////////////////////////
+// PART 7 Mismatched Data error //
+//////////////////////////////////
+
+Restore 1
+
+For n = 1 to 6
+    Read M# //This will show a mismatch error because we are using a Floating Point variable, (M#) and from line 6 of the Data we have strings
+    Print M#
+Next

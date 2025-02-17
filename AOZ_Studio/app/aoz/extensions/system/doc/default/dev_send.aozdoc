@@ -1,0 +1,8 @@
+<i>Dev Send</i>
+<b>Dev Send</b> xxxxxxx
+=
+This calls the SendIO command from Exec, and runs your operation using the Amiga's multi- tasking system. The
+new process will run invisibly in the background, and your AOZ program will continue from the next
+instruction immediately.
+
+

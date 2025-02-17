@@ -1,0 +1,9 @@
+<i>Rename</i>
+<b>Rename</b> xxxxxxx
+=
+This command is used to change the name of an existing file. If your choice of new filename is already in use by another file, the appropriate error message will be given.
+@code
+Rename "Ancient" To "Modern"
+@code
+
+

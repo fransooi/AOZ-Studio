@@ -1,0 +1,14 @@
+<i>function: test a channel for an active animation</i>
+value=<b>Chanan</b>(channel number)
+=
+This simple function is used to check if the specified animation channel is currently engaged. A value of -1 (true) is returned if the animation is active, otherwise a zero (false) is given if the animation is complete. Here is an example:
+@code
+Load "AMOSPro Tutorial:Objects/Sprites.abk" : Get Sprite Palette
+Sprite 9,150,150,1
+M$="Anim 12,(1,4)(2,4)"
+Amal 9,M$ : Amal On : Wait Vbl
+While Chanan(9)
+Wend
+Print "Animation complete!"
+@code
+

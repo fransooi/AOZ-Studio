@@ -1,0 +1,26 @@
+<!-- Informations -->
+	<script type="text/javascript">
+		function selectPath()
+		{
+			var path = client.openDirectoriesDialog( '%F_PATH$%', document.getElementById( 'V_PATH$' ).value );
+			if( path != undefined )
+			{
+				document.getElementById( 'V_PATH$' ).value = path;
+			}
+		}
+	</script>
+<div class="page">
+	<div class="page_title">%CAT_TITLE$%</div>
+
+	<div class="page_field">
+		<label for="V_TITLE$">%F_TITLE$%</label>
+		<input type="text" id="V_TITLE$" value="%V_TITLE$%" autofocus tabindex=1></input>
+	</div>
+	
+	<div class="page_field">
+		<label for="V_PATH$">%F_PATH$%</label>
+		<input type="text" id="V_PATH$" value="%V_PATH$%" tabindex=2 style="width:89%; display:inline-block" disabled></input>
+		<button id="btnPath" style="width:48px; display:inline-block">...</button>
+	</div>
+
+</div>

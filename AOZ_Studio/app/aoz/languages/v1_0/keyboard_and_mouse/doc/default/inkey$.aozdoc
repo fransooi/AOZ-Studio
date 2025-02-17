@@ -1,0 +1,25 @@
+<i>Inkey$</i>
+<b>Inkey$</b> xxxxxxx
+=
+This function checks to see if a key has been pressed, and reports back its value in a string. For example:
+@code
+Do
+K$=Inkey$
+If K$<>Then Print "You pressed a key!"
+Loop
+@code
+Now use the INKEY$ function to move your cursor around the screen, like this:
+@code
+Print "Use your cursor keys"
+Do
+K$=Inkey$
+If K$ <> Then Print K$;
+Loop
+@code
+The INKEY$ function does not wait for you to input anything from the keyboard, so if a character is not entered an empty string is returned.
+INKEY$ can only register a key-press from one of the keys that carries its own Ascii code, and the Ascii code numbers that represent the characters which can be printed on the screen.
+
+It has also been explained that certain keys like [Help] and the function keys [Fl] to [F10] do not carry as Ascii code at all, and if INKEY$ detects that this type of key has been pressed, a character with a value of zero will be returned. When this happens, the internal
+scan codes" of these keys can be found."
+
+

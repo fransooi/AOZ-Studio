@@ -1,0 +1,381 @@
+{
+    sprite_commands:
+    { 
+        name: "Sprite Commands"
+        intro:""
+        conclusion:""
+        commands:
+        {
+           "sprite":
+            [
+               The SPRITE command assigns an image to a Sprite, and displays it at the selected hardware coordinates.
+""
+The Sprite number can range from 0 to 63. Normally, Sprite number zero is not available because it is already
+allocated to the mouse pointer. To ensure that you have the maximum number of Sprites at your disposal, remove the
+mouse pointer from the screen with HIDE ON. Sprite identification numbers from 0 to 7 refer to the eight hardware
+Sprites whose limitations have already been explained. You will probably want to make use of the AMOS
+Professional computed Sprites in your programs instead, and these are assigned the numbers from 8 to 63.
+""
+The hardware coordinates hx and hy set the position at which the Sprite will be displayed. Since Sprites are totally
+independent from the current screen, normal screen coordinates cannot be used for this purpose. Instead, all Sprites
+are positioned by special hardware coordinates as used by the mouse pointer and the SCREEN DISPLAY command.
+Hardware coordinates can be converted from normal screen coordinates by the X HARD and Y HARD functions,
+which are explained later.
+""
+The position of the Sprite is measured from a single spot related to that Sprite, known as the "hot spot". This is
+usually taken to be the top left-hand corner of the Sprite, but it can be placed anywhere you like using the HOT
+SPOT command. Hot spots are explained in detail near the end of this Chapter.
+""
+When the Sprite has been allocated an identification number and given its display coordinates, you must select an
+image for the Sprite to display. Images are created using the Object Editor (there is a guided tour of this process in
+Chapter 13.2) and deposited in the Object Bank, which is normally memory bank 1. Each image in this bank is
+assigned its own number, starting from one. To select an image for a Sprite to display, simply give the appropriate
+image number. Sprite images may be installed into your programs using the LOAD command, like this:
+                '''
+                ~~~  
+   Load "Sprites.Abk"
+                ~~~
+                '''
+Once images have been installed in this way they will be saved along with your AOZ Studio programs
+automatically.
+""
+The image number and coordinate parameters can be omitted after a SPRITE command, but the appropriate commas
+must be included.
+""
+For example:
+                '''
+                ~~~ 
+		   Load "AMOSPro Tutorial:Objects/Sprites.Abk"
+		   Flash Off : Get Sprite Palette
+		   Curs Off : Cls 0
+		   Sprite 8,200,100,1
+		   Wait Key
+		   Sprite 8,,150,1
+		   Wait Key
+		   Sprite 8,250,,1
+		   Wait Key
+		   Sprite 8,,,2
+                ~~~
+                '''
+            ]
+            "set_sprite_buffer":
+            [
+                This command allocates extra memory for hardware and computed Sprites to work within. Although each hardware
+Sprite can be up to 270 lines in height, AOZ Studio reserves sufficient memory for 128 lines, as the default
+allocation.
+""
+If you are using computed Sprites, it is more practical to extend the SET SPRITE BUFFER number to a larger
+value. This is economical on memory, since each line only consumes 96 bytes. Thus a maximum height value of 256
+would require about 12k of extra memory.
+""
+Be warned that this command erases all current Sprite assignments, as well as re-setting the mouse pointer, so it
+must be used at the beginning of your programs! For example, the following line would be placed at the start of
+your listing:
+                '''
+                ~~~                
+		   Set Sprite Buffer 256
+                ~~~
+                '''
+            ]
+            "sprite_show": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_hide": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_off":
+            [
+                The SPRITE OFF command removes all sprites from your display, and all current Sprite movements are aborted. To re-start them, the movement pattern must be initialised again. (Please see the AMAL facilities explained in Chapter 7.6). If an optional Sprite number is given, only that Sprite will be de-activated and removed from the screen.
+""
+Please note that Sprites are de-activated every time the AOZ Studio editor is called up. Sprites are
+automatically returned to their original positions the next time Direct Mode is entered.
+            ]
+            "sprite_priority":
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_update": //same as sprite update on and off
+            [
+                The SPRITE UPDATE family of commands provide total control of Sprite movements. Normally, when a Sprite is
+moved its position is updated automatically during the next vertical blank period. Please see WAIT VBL if this
+needs explaining. However, when many Sprites are moved with the SPRITE command, updates will happen before
+all of the Sprites have been successfully repositioned, which can result in jerky patterns of movement. In these
+circumstances, the automatic updating system can be turned off with a SPRITE UPDATE OFF command.
+""
+When the Sprites have been moved successfully, a call to SPRITE UPDATE will reposition any Sprites that have
+been moved since the last update. Alternatively, SPRITE UPDATE ON returns to the default status of automatic
+updating.
+            ]
+            "sprite_update_on": //same as sprite update
+            [
+                The SPRITE UPDATE family of commands provide total control of Sprite movements. Normally, when a Sprite is
+moved its position is updated automatically during the next vertical blank period. Please see WAIT VBL if this
+needs explaining. However, when many Sprites are moved with the SPRITE command, updates will happen before
+all of the Sprites have been successfully repositioned, which can result in jerky patterns of movement. In these
+circumstances, the automatic updating system can be turned off with a SPRITE UPDATE OFF command.
+""
+When the Sprites have been moved successfully, a call to SPRITE UPDATE will reposition any Sprites that have
+been moved since the last update. Alternatively, SPRITE UPDATE ON returns to the default status of automatic
+updating.
+            ]
+            "sprite_update_off": //same as sprite update
+            [
+                The SPRITE UPDATE family of commands provide total control of Sprite movements. Normally, when a Sprite is
+moved its position is updated automatically during the next vertical blank period. Please see WAIT VBL if this
+needs explaining. However, when many Sprites are moved with the SPRITE command, updates will happen before
+all of the Sprites have been successfully repositioned, which can result in jerky patterns of movement. In these
+circumstances, the automatic updating system can be turned off with a SPRITE UPDATE OFF command.
+""
+When the Sprites have been moved successfully, a call to SPRITE UPDATE will reposition any Sprites that have
+been moved since the last update. Alternatively, SPRITE UPDATE ON returns to the default status of automatic
+updating.
+            ]
+            "sprite_scale": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_rotate": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_skew": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "x_sprite":
+            [
+                This function returns the current x-coordinate of the Sprite whose number is given in brackets. The Sprite number
+can range from 0 to 63, and positions are given in hardware coordinates. Use X SPRITE to check if a Sprite has
+passed off the edge of the screen.
+            ]
+            "y_sprite":
+            [
+                This gives the vertical position of the specified Sprite, measured in hardware coordinates.
+            ]
+            "i_sprite":
+            [
+                This function returns the current image number being used by the specified Sprite. If the Sprite is not displayed, a
+value of zero will be returned.
+            ]
+            "i_sprite$": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_base":
+            [
+                SPRITE BASE provides the address of the internal data list for whichever Sprite number is specified in brackets. If
+the Sprite does not exist, then the address of the table is returned as zero. Negative values for the Sprite number will
+return the address of the optional mask associated with that Sprite, and the number that is returned can contain one
+of three possible values, as follows:
+""
+- A negative number indicates that there is no mask for this Sprite.
+- Zero indicates that the specified Sprite does have a mask, but it is yet to be generated by the system.
+- A positive number indicates the address of the mask in memory. The first "long word" of this area holds the
+length of the mask, and the next gives the actual definition.
+            ]
+            "is_sprite": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "get_sprite":
+            [
+                Use this command to grab images directly from the screen and transform them into Sprites. Simply define the new
+image number, then give the coordinates, from top left-hand to bottom right-hand corner, of the rectangular area to
+be loaded into the Sprite Bank. The image will be grabbed from the current screen unless an optional screen number
+is specified.
+""
+Provided that the given coordinates lie inside of existing screen borders, there are no limitations to the area that can
+be grabbed in this way.
+""
+If there is no existing Sprite with the selected number, it will be created automatically. Similarly, the Sprite Bank
+will be reserved by AOZ Studio, if it is not already defined.
+""
+It should be noted that the GET BOB instruction is identical to GET SPRITE, making them interchangeable.
+            ]
+            "get_sprite_palette":
+            [
+                This command copies the colour values used by your Sprite and Bob images and loads them into the current screen.
+It is an intelligent instruction, so if 16-colour screens are in use, values are automatically copied into colour registers
+16 to 31. This means that you can use the same images for either Bobs or Sprites with no risk of colour clashes!
+Here is an example:
+                '''
+                ~~~                
+		   Load "AMOSPro Tutorial:Objects/Sprites.Abk"
+		   Curs Off : Flash Off : Cls 0
+		   Get Sprite Palette
+		   Rem Set computed Sprite at hardware coords 128,50 using image 1
+		   Sprite 8,128,50,1
+		   Wait Key
+                ~~~
+                '''
+The optional mask parameter allows the colour selection to be limited. Each colour is represented by a single digit in
+a 32-digit bit mask. If the appropriate digit is set to 1, the colour is copied from the Object Bank. Any colours to be
+omitted (masked) should have their digit set to 0. The following example copies colours 0 to 3 from the Object Bank
+into the screen:
+                '''
+                ~~~                
+		   Get Sprite Palette %0000000000001111
+                ~~~
+                '''
+                Because the mask is entered as a normal number, either hexadecimal or decimal modes can also be used:
+                '''
+                ~~~                
+		   Get Sprite Palette $FFFF0000
+                ~~~
+                '''
+Please note that the GET BOB PALETTE and GET OBJECT PALETTE instructions perform an identical task to
+the GET SPRITE PALETTE command.
+            ]
+            "sprite_add": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_move": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_move_x": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_move_y": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_move_on": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_move_off": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_move_freeze": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_moveon": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_anim": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_anim_on": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_anim_off": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "sprite_anim_freeze": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+        }
+    }
+}

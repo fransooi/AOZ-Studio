@@ -1,0 +1,9 @@
+<i>Dev Close</i>
+<b>Dev Close</b> xxxxxxx
+=
+Use this command to close one or more open devices.
+Memory used by the IO structure will be returned back to AOZ and the message port is released for
+subsequent use. If the channel number is omitted, all active devices are closed simultaneously, otherwise the single
+specified device is closed down. Note that if a specified channel is not already open, no error will be reported.
+
+

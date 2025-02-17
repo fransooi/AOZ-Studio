@@ -1,0 +1,18 @@
+<i>Drag Panel Start</i>
+<b>Drag Panel Start</b> xxxxxxx
+=
+You should call this instruction when the user clicks on an open panel. Once the drag is initilized,
+you must transmit to the IDE the coordinates of the mouse in your your application.
+
+To complete the drag, when the mouse is released, you should call "Drag Panel End"
+
+@code
+If Mouse Key
+Drag Panel Start, "panel_id", X Mouse, Y Mouse
+While Mouse Key
+Drag Panel "panel_id", X Mouse, Y Mouse
+Wend
+Drag Panel End "panel_id"
+End If
+@code
+

@@ -1,0 +1,14 @@
+<i>Paper</i>
+<b>Paper</b> xxxxxxx
+=
+To select a background colour on which your text is to be printed, the PAPER command is followed by a colour
+index number between 0 and 63, depending on the graphics mode in use, in exactly the same way as PEN. The
+normal default colour index number is 1, giving an orange background colour, with other possibilities listed under
+the SCREEN OPEN command in this User Guide. Run the following simple example:
+@code
+Pen 2:
+For INDEX=0 To 15
+Paper INDEX: Print "Paper number ";INDEX;Space$(23)
+Next INDEX
+@code
+

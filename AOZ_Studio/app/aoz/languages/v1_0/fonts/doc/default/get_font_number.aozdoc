@@ -1,0 +1,6 @@
+<i>Get Font Number</i>
+<b>Get Font Number</b> xxxxxxx
+=
+This function returns the number oof fonts that have been inserted in the application.
+There will always be at least one font available as soon as your application displays anything.
+

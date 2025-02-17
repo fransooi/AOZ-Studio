@@ -1,0 +1,24 @@
+<i>UI TextArea</i>
+<b>UI TextArea</b> xxxxxxx
+=
+@code
+// Display a default TextArea
+UI TextArea "MyTextArea"
+
+// To get the input text you can use the UI Value$ function
+Print UI Value$("MyTextArea")
+
+// You can set the input text value by setting its value$ parameter
+UI TextArea "MyTextArea", value$="TextArea Contents.."
+
+// You can also use the UI Value command
+UI Value "MyTextArea", value$="TextArea Contents.."
+
+// Bootstrap style with 5 rows of text
+UI TextArea "MyTextArea" class$="form-control", value$="Bootstrap Style with 5 rows of text", rows=5
+
+// Bootstrap style with google font
+#googleFont:"baloo"
+UI TextArea "MyTextArea", value$="Styled using bootstrap !!!!", rows=10, width=500, fontName$="baloo", class$="text-info bg-dark"
+@code
+

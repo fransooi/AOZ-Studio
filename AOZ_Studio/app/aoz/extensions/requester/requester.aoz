@@ -1,0 +1,152 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Files Requester Extension
+ * By Baptiste Bideaux
+ *
+ * @author BB
+ * @date 27/10/2020
+ *
+ */
+
+
+//
+// Initialization
+//
+{
+	this.aoz.requester = this;
+	this.context = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+	this.last_load_path = undefined;
+	this.last_save_path = undefined;
+	this.last_folder_path = undefined;
+	this.selected_path = undefined;
+	this.atom = undefined;
+
+	this.layer = document.createElement( 'iframe' );
+	this.layer.setAttribute( 'id', 'requester_dialog' );
+	this.layer.setAttribute( 'frameborder', 'no' );
+	this.layer.setAttribute( 'src', 'about:blank' );
+	this.layer.setAttribute( 'style', 'position: relative; display: none; width: 100%; height: 100%; overflow: hidden; left: 0px; top: 0px;' );
+	document.body.appendChild( this.layer );
+
+	this.html =
+	{
+		file_dialog: 'file_dialog.html'
+	};
+
+	if( window.parent && window.parent.atom )
+	{
+		this.atom = window.parent.atom;
+	};
+
+	this.load_done = true;
+
+   	this.wait = function()
+	{
+		if ( this.load_done )
+		{
+            if ( this.error )
+			{
+                throw this.error;
+			}
+			return true;
+		}
+		return false;
+	};
+
+	this.openFileDialog = function( title, filters )
+	{
+		if( this.atom == undefined || this.atom == null || this.atom.aozRequester == undefined || this.atom.aozRequester == null )
+		{
+			throw 'open_file_dialog_not_available';
+		}
+		this.showDialogHTML();
+	};
+
+	this.saveFileDialog = function( title, filters )
+	{
+		if( this.atom == undefined || this.atom == null || this.atom.aozRequester == undefined || this.atom.aozRequester == null )
+		{
+			throw 'save_file_dialog_not_available';
+		}
+	};
+
+	this.directoriesDialog = function( title )
+	{
+		if( this.atom == undefined || this.atom == null || this.atom.aozRequester == undefined || this.atom.aozRequester == null )
+		{
+			throw 'directories_dialog_not_available';
+		}
+	};
+
+	this.showDialogHTML = function()
+	{
+		this.layer.style.display = 'none';
+		this.layer.src = this.atom.aozConfig.installInformation.aozPath + 'extensions/requester/' + this.html.file_dialog;
+		this.layer.style.display = 'block';
+	}
+}
+
+/**doc
+@name:The AOZ Files Requester extension
+@description:Fourni les boites de dialogue d'accès aux dossiers et fichiers du système
+@author:Baptiste Bideaux
+@since:1.0.0 Beta 1
+doc*/
+
+/**api
+@name:Open File Dialog
+@description:Show The AOZ Open Files Dialog Box
+@param:*title$:string:Title of the dialog Box
+@param:*filter$:string:File extension filter.
+@compatible: aoz
+api*/
+Instruction Open File Dialog, title$, filter$
+{
+	#errors
+	aoz.requester.openFileDialog( %title$, %filter$ );
+}
+End Instruction
+
+/**api
+@name:Save File Dialog
+@description:Show The AOZ Save Files Dialog Box
+@param:title$:string:Title of the dialog Box
+@param:filter$:string:File extension filter.
+@compatible: aoz
+api*/
+Instruction Save File Dialog, title$, filter$
+{
+	#errors
+	aoz.requester.saveFileDialog( %title$, %filter$ );
+}
+End Instruction
+
+/**api
+@api:Directories Dialog
+@description:Show The AOZ Directories Dialog Box
+@param:title$:string:Title of the dialog Box
+@compatible: aoz
+api*/
+Instruction Directories Dialog, title$
+{
+	#errors
+	aoz.requester.directoriesDialog( %title$ );
+}
+End Instruction

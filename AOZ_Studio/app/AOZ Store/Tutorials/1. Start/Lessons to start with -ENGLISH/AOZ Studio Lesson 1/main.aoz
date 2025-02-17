@@ -1,0 +1,122 @@
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+//
+// Welcome to your AOZ Studio Lesson 1
+//
+// Note: You see these double slash (//) -> that means that anything afterwards (all marked in green)
+// is a comment. After the // you can put remarks, notes, explanations, not program instructions.
+//
+// Let's start!
+//
+//
+// The Print instruction---------------------------------------------
+// Below is a Print instruction (note no // in front of it).
+// Print will display on the screen the sentence between the " ". Example:
+Print "Hello. Go back to program code by clicking on the Cross"
+
+// TODO: Click now on the "Run in AOZ Viewer" button on the very top center of the window (it looks like a black Play on grey)
+// Or press the F2 key.
+// Wait about 10 seconds for the transpilation to occur, this is the process to transform your
+// program made of AOZ Instructions (easy to understand for humans) into executable instructions
+// (that your computer may understand and Run).
+
+// You should have seen the "Hello. Go back to..." in the automatically opened window.
+
+// Note: if you want to see your program in a web browser like Chrome, Click on the "Run in browser" button
+// It is the grey PLAY button, or press the F1 key
+//
+// So... yes, you are a programmer!
+
+// Great, now one step further. Try putting your own words, or "string" between the speech
+// marks (" ") of the Print in line 22 and Press F2.
+
+End
+// Now let's continue the lesson. First delete the End instruction above, or add 2 slashes // in front of it.
+// That will allow your program not to stop and the following instructions to be executed as well:
+
+
+// The Locate instruction---------------------------------------------
+// Locate tells the program where to Print the string on the screen.
+Locate 5,3
+Print "QUESTIONS"
+End
+
+// The numbers after "Locate" tell the computer the number of text columns, down and across;
+// in this case 5 across and 2 down from the top
+//
+// Press the F2 key again
+//
+// You have seen the new Printed line? Great now, delete the last End instruction above,
+// so the following instructions will be executed as well:
+
+// The Input instruction----------------------------------------------
+// Input allows you to ask for information and use it in the program
+Input "What is your name? ";name$
+Print name$
+Input "How old are you? ";age
+Print "Your age is: ";age
+End
+
+// The first "Input" asks for a name and that is a string so the string variable name$ was
+// chosen in this example (We might have used MyName$ or rabbit$ or ....)
+// It makes sense to use a word that means something to you the programmer.
+// The second use of "Input"asks for a number and stores it in the variable "age".
+//
+// Notice how the semi-colon, (;) allows us to combine the printed
+// "Your age is: " to the variable stored in age
+//
+// Press F2
+// Note: you may have to click in the window before entering the Input question (to focus the window)
+// Now, remove the End instruction above, so the following instructions will be executed as well:
+
+// The Pen instruction and the For-to-Next instruction---------------
+// Pen instruction sets the colour of the text.
+// For-to-Next instruction is a combined one to create a loop of automatically repetitive instructions
+For n = 1 to 15
+    Pen n
+    Locate 40,n
+    Print name$ + " is great!"
+    Wait 0.5
+Next
+End
+
+// This above code will run through many colours for the on-sreen text, the variable n will
+// step by step increase from 1 to 15
+// The first time in the For-to-Next loop n=1 and therefore will execute:
+//   - the instruction Pen 1 that will display that color 1 (white)
+//   - set the position of Locate 40 (width), 1 (height)
+//   - then will do the Print
+// when the program execute the Next Instruction, like a loop it will starts back on the line: For n= 1 to 20
+// while increasing the value of n
+// So now n=2 and therefore Pen 2 and Locate 40,2 this will move the next Print one line below (line 2)
+// with the next color (2) etc, etc, up to... n=15, this will be the end of the For...to...Next loop
+// and the program will continue the instructions after the word "Next"
+
+// If you do not get it right away, no worries. You can try with a simple program only with For-to-Next
+// loop with a Print inside like:
+// For n = 1 to 5
+//     Print n
+// Next
+
+// Note that the Wait instruction is pausing the program for the value here of 0.2 seconds, so you can see the Print
+// one by one. Do not worry about understanding all of it. Have fun trying to change text and values.
+//
+// OK lot of explanations, so now let see what it does.
+// Press the F2 key or PLAY buttons
+// We will later use the word "PLAY" to say Press one of the three compilation button (compilation for the editor ATOM, Web browser or in the AOZ TV)
+
+
+//    _       __     ____       __                 __
+//   | |     / /__  / / /  ____/ /___  ____  ___  / /
+//   | | /| / / _ \/ / /  / __  / __ \/ __ \/ _ \/ /
+//   | |/ |/ /  __/ / /  / /_/ / /_/ / / / /  __/_/
+//   |__/|__/\___/_/_/   \__,_/\____/_/ /_/\___(_)
+
+// Well, congratulations! That's the end of lesson 1. You are ready to move to Lesson 2 :)

@@ -1,0 +1,28 @@
+<i>Break On</i>
+<b>Break On</b> xxxxxxx
+=
+The BREAK OFF command can be included in a program to stop a particular routine from being interrupted while
+it is running. To re-start the interrupt feature, use BREAK ON. But be warned!
+
+Never run a program that is still being edited with BREAK OFF activated, or you will lose your work. Make a
+back-up copy first. Here are two examples, and if you insist on ignoring this advice, you may be foolhardy enough
+to try the second one!
+
+@code
+Break Off
+Print "Try and press the Break keys now"
+Wait 500
+Break On
+Print "Break keys activated"
+Wait 100
+Direct
+@code
+
+@code
+Break Off
+Do
+Print "Try to get out of that!"
+Wait Key
+Loop
+@code
+

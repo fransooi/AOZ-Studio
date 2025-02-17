@@ -1,0 +1,8 @@
+<i>Set Bitmap Font</i>
+<b>Set Bitmap Font</b> xxxxxxx
+=
+Bitmap fonts are less flexible than ordinary fonts, but have the great advantage to be in full color.
+Actually, a graphical font can contain other things than letters, icons, arrows etc.
+
+Use the "Bitmap text" to display any text after you have defined
+

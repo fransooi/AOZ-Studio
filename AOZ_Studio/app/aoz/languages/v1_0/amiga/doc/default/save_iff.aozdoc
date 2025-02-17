@@ -1,0 +1,13 @@
+<i>Save Iff</i>
+<b>Save Iff</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The SAVE IFF command saves the current screen as an IFF picture file with the selected filename onto disc. Certain data is automatically added to this IFF file, which stores the present screen settings, including any SCREEN DISPLAY, SCREEN OFFSET, SCREEN HIDE and SCREEN SHOW. This will be stored and recognised by AOZ Studio whenever this file is loaded again, so that the IFF screen will be displayed exactly as it was
+saved. Please note that this data will be ignored by other graphics packages, such as Dpaint 3, also that it is not
+possible to save double buffered or dual playfield screens with this command.
+
+An optional parameter can be added after the filename, which selects whether or not the IFF file is to be compacted
+before it is saved. A value of 1 specifies that the standard AOZ Studio compression system is to be used,
+whereas a zero saves the picture without any compression.
+

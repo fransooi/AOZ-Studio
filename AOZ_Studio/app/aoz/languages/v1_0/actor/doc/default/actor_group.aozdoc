@@ -1,0 +1,11 @@
+<i>function:returns the Group value of the Actor</i>
+T$=<b>Actor Group$</b>(number)
+T$=<b>Actor Group$</b>(name$)
+=
+@code
+Cls 0
+Actor 1, x=100, y=50, image$="magic", Group$="player"
+Print Str$( Actor Group$( 1 ) )
+@code
+Display "player" on the screen
+

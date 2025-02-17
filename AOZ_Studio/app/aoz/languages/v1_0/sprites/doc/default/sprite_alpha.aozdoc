@@ -1,0 +1,17 @@
+<i>Sprite Alpha</i>
+<b>Sprite Alpha</b> xxxxxxx
+=
+This instruction allows you to turn any opaque sprite into a semi-transparent image. The sprite will completely disappear from display with an Alpha value of 0, but will remain active (like a ghost object which can be useful for collision detection)...
+
+The next example displays a sprite on the screen and slowly fades it away...
+@code
+Curs Off : Cls 0 					// Set up screen
+Sprite 1, 670,450, "gameover.png" 	// Display sprite at a new position
+do
+For A# = 1 To 0 Step -0.01 		// Define alpha fade from 1 to 0 in 100 steps
+Sprite Alpha 1, A#			// Set new alpha level
+Wait Vbl					// Wait, and re-draw sprite with new alpha level.
+Next A#
+loop
+@code
+

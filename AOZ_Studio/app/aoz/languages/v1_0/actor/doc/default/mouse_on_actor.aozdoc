@@ -1,0 +1,5 @@
+<i>function:tests if the mouse pointer is on an actor</i>
+value=<b>Mouse On Actor</b>
+value=<b>Mouse On Actor</b>
+=
+True if the mouse cursor is under an Actor, else False.

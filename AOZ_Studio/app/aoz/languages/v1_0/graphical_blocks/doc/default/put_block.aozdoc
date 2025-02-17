@@ -1,0 +1,12 @@
+<i>Put Block</i>
+<b>Put Block</b> xxxxxxx
+=
+To re-draw a Block at its original coordinates on the current screen, simply add the Block's identification number
+after the PUT BLOCK command.
+
+If you want to draw the Block at a new position, then add the new x,y-coordinates for the It left-hand corner, after
+the Block number.
+
+If you are in Amiga emulation, the last two parameters will have an effect. The Amiga's screen is divided into segments known as "bit-planes", and Blocks are normally displayed using all the
+available screen bit-planes, which is a bit-pattern of %111111. Re-setting these bit-planes can create numerous special effects...
+

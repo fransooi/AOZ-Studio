@@ -1,0 +1,23 @@
+<i>Set Font</i>
+<b>Set Font</b> xxxxxxx
+=
+AOZ offers a full support of Google Font, and cherry on the cake the fonts are embedded inside of the application: they will be displayed even if the application is ran offline.
+
+You can with the tag "googleFont" at the beginning of your application add as many fonts as you want. You can also define the fonts in the manifest of the application itself...
+Amiga lovers can add real Amiga fonts with the tag: "amigaFont": ... both Google and Amiga fonts can be mixed in the display.
+
+Once the font is set, it will be used by all graphical text- related instructions.
+This command is used to select the character set to be employed by a TEXT instruction, like this:
+@code
+googleFont: "Francois One"
+amigaFont: "Ruby"
+
+// Print a big hello in the middle of the screen
+Set Font "Francois One", 50, "bold"
+Text "Welcome to AOZ", Screen Width / 2, Screen Height / 2, "center middle"
+
+// And a little line in the bottom of the screen
+Set Font "Ruby", 16
+Text "Remember this Amiga font?", Screen Width / 2, Screen Height - 100, "center top"
+@code
+

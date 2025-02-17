@@ -1,0 +1,536 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Memory Access Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Xtra Amiga Memory
+@description:Instructions and functions to handle memory access
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Poke
+@description:Change a one-byte word at a memory address
+@param:address:address:The address to change. It should contain the "maginal number" returned by the Start function.
+@param:value:integer:The value to set, from 0 to 255
+@compatible: aoz, stos, amos
+@content:
+The POKE command moves a number from 0 to 255 into the memory location at the specified address. 
+
+The address should be resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset to the address. Normal computer memory is inaccessible.
+
+This example reserves a memory bank and poke random numbers in it...
+~~~
+Reserve As Work 10, 1000
+For A = 0 To Length( 10 )
+	Poke Start( 10 ) + A, Rnd( 256 )
+Next
+~~~
+api*/
+Instruction Poke, address, value
+{
+	#errors
+	aoz.poke(%address,%value);
+}
+End Instruction
+
+/**api
+@name:Doke
+@description:Change a two-byte word at a memory address. Value is set in little-endian in PC mode and big-endian in Amiga mode
+@param:address:address:The address to change. It should contain the "maginal number" returned by the Start function.
+@param:value:integer:The value to set, fropm 0 to 65535
+@compatible: aoz, stos, amos
+@content:
+The DOKE command moves a number from 0 to 65535 into the memory location at the specified address. 
+
+The address should be resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset to the address. Normal computer memory is inaccessible.
+
+This example reserves a memory bank and poke random numbers in it...
+~~~
+Reserve As Work 10, 1000
+For A = 0 To Length( 10 ) Step 2
+	Doke Start( 10 ) + A, Rnd( 65536 )
+Next
+~~~
+api*/
+Instruction Doke, address, value
+{
+	#errors
+	aoz.doke(%address,%value);
+}
+End Instruction
+
+/**api
+@name:Loke
+@description:Change a four-byte word at a memory address. Value is set in little-endian in PC mode and big-endian in Amiga mode
+@param:address:address:The address to change. It should contain the "maginal number" returned by the Start function.
+@param:value:integer:The value to set
+@compatible: aoz, stos, amos
+@content:
+The LOKE command moves a number from 0 to 4297967296 into the memory location at the specified address. 
+
+The address should be resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset to the address. Normal computer memory is inaccessible.
+
+This example reserves a memory bank and poke random numbers in it...
+~~~
+Reserve As Work 10, 1000
+For A = 0 To Length( 10 ) Step 4
+	Loke Start( 10 ) + A, Rnd( 4297967296 )
+Next
+~~~
+api*/
+Instruction Loke, address, value
+{
+	#errors
+	aoz.loke(%address,%value);
+}
+End Instruction
+
+/**api
+@name:Poke$
+@description:Write the ascii values of a string in memory
+@param:address:address:The address to write to. It should contain the "maginal number" returned by the Start function.
+@param:text$:string:The string to write
+@compatible: aoz, stos, amos
+@content:
+Use the POKE$ command to take a source string and copy it directly to a chosen memory location, one character at a time. 
+The address parameter holds the address of the first byte to be loaded with the new string data.
+The copying operation will continue until the last character of the source string is reached, and the end address will be as follows:
+~~~                
+address+Len(string$)-1
+~~~
+Example
+~~~                
+Reserve As Data 10,1000: Rem Reserve a memory bank
+Poke$ Start( 10 ), "Hello AOZ!"
+~~~
+api*/
+Instruction Poke$, address, text$
+{
+	#errors
+	aoz.poke$(%address,%text$);
+}
+End Instruction
+
+/**api
+@name:Peek$
+@description:Read a string from memory
+@param:address:address:The address to read. It should contain the "maginal number" returned by the Start function.
+@param:*length:integer:The number of bytes to read.
+@param:*stop$:string:The ascii code of the character signifying the end of the string. Default is 0
+@return:string:The string contained at the address
+@compatible: aoz, stos, amos
+@content:
+PEEK$ reads the maximum number of characters specified in the length parameter, into a new string. If this is not a
+sensible value, the length is assumed to be 65500. The address parameter is the location of the first character to be
+read.
+The address should be resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset. Normal computer memory is inaccessible.
+
+There is an optional stop$ parameter, and if this is included, AOZ Studio will stop in its tracks the moment a
+specified stop$ character is encountered in the memory area. You will then be left with a string of characters up to
+the final stop$. Here is an example using PEEK$:
+~~~                
+Reserve As Data 10,1000 : Rem Reserve a memory bank
+Poke$ Start( 10 ), "Hello AOZ!"
+Print Peek$( Start( 10 ), 10 )
+~~~
+api*/
+// TODO: check stop$ parameter
+Function Peek$, address, length, stop$
+{
+}
+End Function( {aoz.peek$(%address,%length,%stop$)} )
+
+/**api
+@name:Peek
+@description:read a byte from an address
+@param:address:address:The address to change. It should contain the "maginal number" returned by the Start function.
+@return:integer:The value contained at the address
+@compatible: aoz, stos, amos
+@content:
+The PEEK function returns a single 8-bit byte from an address in memory.
+
+The address is resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset. Normal computer memory is inaccessible.
+
+This example reserves and fill a memory bank with random numbers, and then print then out...
+~~~
+Reserve As Work 10, 1000
+For A = 0 To Length( 10 )
+	Poke Start( 10 ) + A, Rnd( 256 )
+Next
+Wait Key
+For A = 0 To Length( 10 )
+	Print Peek Start( 10 ) + A; " ";
+Next
+api*/
+Function Peek, address
+{
+}
+End Function( {aoz.peek(%address)} )
+
+/**api
+@name:Deek
+@description:Read a two-bytes value from an address. 
+@param:address:address:The address to change. It should contain the "maginal number" returned by the Start function.
+@return:integer:The value contained at the address
+@compatible: aoz, stos, amos
+@content:
+The DEEK function returns a single 16-bit word from an address in memory. Value is read in little-endian in PC mode and big-endian in Amiga mode
+
+The address is resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset. Normal computer memory is inaccessible.
+
+This example reserves and fill a memory bank with random numbers, and then print then out...
+~~~
+Reserve As Work 10, 1000
+For A = 0 To Length( 10 ) Step 2
+	Doke Start( 10 ) + A, Rnd( 65536 )
+Next
+Wait Key
+For A = 0 To Length( 10 ) Step 2
+	Print Deek Start( 10 ) + A; " ";
+Next
+~~~
+api*/
+Function Deek, address
+{
+}
+End Function( {aoz.deek(%address)} )
+
+/**api
+@name:Leek
+@description:Read a four-bytes value from an address. Value is read in little-endian in PC mode and big-endian in Amiga mode
+@param:address:address:The address to change. It should contain the "maginal number" returned by the Start function.
+@return:integer:The value contained at the address
+@compatible: aoz, stos, amos
+@content:
+The LEEK function returns a single 32-bit word from an address in memory. Value is read in little-endian in PC mode and big-endian in Amiga mode
+
+The address is resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset. Normal computer memory is inaccessible.
+
+This example reserves and fill a memory bank with random numbers, and then print then out...
+~~~
+Reserve As Work 10, 1000
+For A = 0 To Length( 10 ) Step 4
+	Doke Start( 10 ) + A, Rnd( 65536 * 65536 )
+Next
+Wait Key
+For A = 0 To Length( 10 ) Step 4
+	Print Leek Start( 10 ) + A; " ";
+Next
+~~~
+api*/
+Function Leek, address
+{
+}
+End Function( {aoz.leek(%address)} )
+
+/**api
+@name:Fill
+@description:fill memory block with the contents of a variable.
+@param:start:integer:The address to change. It should contain the "maginal number" returned by the Start function.
+@param:finish:integer:The address of the end of the area to fill. It should contain the "maginal number" returned by the Start function.
+@param:pattern:integer:The four-byte pattern that will be repeated when filling
+@compatible: aoz, stos, amos
+@content:
+The FILL instruction packs an area of memory specified from start to finish. This area is filled with multiple copies
+of a specified four-byte pattern. The addresses of the start and finish determine the size and position of the memory
+block, and they must both be even.
+api*/
+Instruction Fill, start To end, pattern
+{
+	#errors
+	aoz.fill(%start,%end,%pattern);
+}
+End Instruction
+
+/**api
+@name:Copy
+@description:Copy a memory block
+@param:start:integer:The address of the block to copy. It should contain the "maginal number" returned by the Start function.
+@param:finish:integer:The address of the end of the area to copy. It should contain the "maginal number" returned by the Start function.
+@param:destination:integer:The destination address, should be resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset to the address. Normal computer memory is inaccessible.
+@compatible: aoz, stos, amos
+@content:
+As normal memory is unaccessible on modern machines, AOZ solves the address by using the "Start" function to get the address of a bank (magical number) and adding the offset. 
+
+The COPY command is used to move large sections of memory banks from one place to another.
+
+Specify the start and finish locations of the data to be moved, then give the destination of the position of memory
+area which is to be loaded with the data. 
+
+api*/
+Instruction Copy, start To end, destination
+{
+	#errors
+	aoz.copy(%start,%end,%destination);
+}
+End Instruction
+
+/**api
+@name:Hunt
+@description:Find a string of characters in memory
+@param:start:integer:The address of the block to copy. It should contain the "maginal number" returned by the Start function.
+@param:finish:integer:The address of the end of the area to copy. It should contain the "maginal number" returned by the Start function.
+@param:text$:string:The string to look for
+@return:integer:The position of the first character if found, zero if not found
+@compatible: aoz, stos, amos
+@content:
+As normal memory is unaccessible on modern machines, AOZ solves the address by using the "Start" function to get the address of a bank (magical number) and adding the offset. 
+
+HUNT is really a low level version of the familiar INSTR$ command. It searches the memory area defined by the
+given start and finish addresses, looking for the first occurrence of the characters held in your specified string.
+If the search is successful, the position of the first character in memory is returned, otherwise a value of zero will be
+given. When using this function, take great care in selecting the start and finish points for the search.
+api*/
+Function Hunt, start To finish, text$
+{
+}
+End Function( {aoz.hunt(%start,%finish,%text$)} )
+
+/**api
+@name:BSet
+@description:Set a bit of a variable to 1
+@param:variable:variable:The integer variable to change
+@param:position:integer:The number of the bit to set
+@compatible: aoz, stos, amos
+@content:
+The BSET command sets a bit to 1. Specify the bit by giving its position in a variable or an expression. If an
+expression is used instead of a variable, it will be treated as an address only if AOZ can detect the "magical number" that indicate a memory bank. 
+api*/
+
+/**api
+@name:BClr
+@description:Set a bit of a variable to 0
+@param:variable:variable:The integer variable to change
+@param:position:integer:The number of the bit to clear
+@content:
+The BCLR command clears a bit by setting it to zero. The bit number can be from 0 to 31, and pinpoints the single binary digit to be cleared. 
+
+If an expression is used instead of a variable, it will be treated as an address only if AOZ can detect the "magical number" that indicate a memory bank. 
+api*/
+
+/**api
+@name:BChg
+@description:Toggle a bit of a variable
+@param:variable:variable:The integer variable to change
+@param:postion:integer:The number of the bit to toggle
+@content:
+This instruction flips a binary bit from 0 to 1, or from 1 to 0, as appropriate.
+
+If an expression is used instead of a variable, it will be treated as an address only if AOZ can detect the "magical number" that indicate a memory bank. 
+api*/
+
+/**api
+@name:BTst
+@description:Test a bit in an interger number
+@param:position:integer:The number of the bit to test
+@param:value:integer:The number to test
+@return:integer:True if the bit is set to one, False if not
+@compatible: aoz, stos, amos
+@content:
+The BTST function tests a single binary bit in a given value. Specify the number of the bit to be tested, from 0 to 31,
+then give the chosen variable or expression. If the given value is an expression, it will be used as an address, so the
+bit will then be checked at LEEK(value) instead. Note that only bits 0 to 7 can be tested by this system, and that
+AOZ Studio will take your bit number and perform an automatic AND operation with 7, to ensure that it lies
+in the correct range.
+
+If the test is successful, True is returned, otherwise False is given. For example:
+~~~                
+B=%1010
+Print Btst(3,B)
+Print Btst(2,B)
+~~~
+api*/
+Function BTst, position, value
+{
+}
+End Function( {((%value&(1<<%position))!=0)} )
+
+/**api
+@name:Ror.b
+@description:Rotate the content of an integer variable to the right on the first 8 bits
+@param:number:integer:The number or shifts
+@param:variable:variable:The integer variable to rotate
+@content:
+The ROR command is invaluable as a rapid method of dividing a positive number by a power of two, like this:
+~~~
+B=1
+Ror.l 2,B
+Print B
+~~~
+Here is an example routine:
+~~~
+Curs Off : Locate 0,20 : Centre "Press a key to ROL the number"
+Locate 0,0 : Print "Binary version"
+Locate 0,4 : Print "Decimal version"
+B=65536 : Rem Set initial value
+Do
+	Locate 0,2: Print Bin$(B,32) : Rem Display number in binary
+	Locate 0,6: Print B;" "; : Rem Nine spaces
+	Wait Key
+	Ror.b 1,B : Rem Try ROR.L and ROL.W too
+Loop
+api*/
+
+/**api
+@name:Ror.w
+@description:Rotate the content of an integer variable to the right on the first 16 bits
+@param:number:integer:The number or shifts
+@param:variable:variable:The integer variable to rotate
+@content:
+The ROL command is invaluable as a rapid method of dividing a positive number by a power of two, like this:
+~~~
+B=1
+Ror.l 2,B
+Print B
+~~~
+Here is an example routine:
+~~~
+Curs Off : Locate 0,20 : Centre "Press a key to ROL the number"
+Locate 0,0 : Print "Binary version"
+Locate 0,4 : Print "Decimal version"
+B=65536 : Rem Set initial value
+Do
+	Locate 0,2: Print Bin$(B,32) : Rem Display number in binary
+	Locate 0,6: Print B;" "; : Rem Nine spaces
+	Wait Key
+	Ror.l 1,B : Rem Try ROR.L and ROL.B too
+Loop
+api*/
+
+/**api
+@name:Ror.l
+@description:Rotate the content of an integer variable to the right on 32 bits
+@param:number:integer:The number or shifts
+@param:variable:variable:The integer variable to rotate
+@content:
+The ROL command is invaluable as a rapid method of multiplying a positive number by a power of two, like this:
+~~~
+B=1
+Rol.l 2,B
+Print B
+~~~
+Here is an example routine:
+~~~
+Curs Off : Locate 0,20 : Centre "Press a key to ROL the number"
+Locate 0,0 : Print "Binary version"
+Locate 0,4 : Print "Decimal version"
+B=1 : Rem Set initial value
+Do
+	Locate 0,2: Print Bin$(B,32) : Rem Display number in binary
+	Locate 0,6: Print B;" "; : Rem Nine spaces
+	Wait Key
+	Rol.l 1,B : Rem Try ROR.W and ROL.B too
+Loop
+api*/
+
+/**api
+@name:Rol.b
+@description:Rotate the content of an integer variable to the left on the first 8 bits
+@param:number:integer:The number or shifts
+@param:variable:variable:The integer variable to rotate
+@compatible: aoz, stos, amos
+@content:
+~~~
+B = 1
+Rol.b 2,B
+Print B
+~~~
+Here is an example routine:
+~~~
+Curs Off : Locate 0,20 : Centre "Press a key to ROL the number"
+Locate 0,0 : Print "Binary version"
+Locate 0,4 : Print "Decimal version"
+B = 1 : Rem Set initial value
+Do
+	Locate 0,2: Print Bin$(B,32) : Rem Display number in binary
+	Locate 0,6: Print B;" "; : Rem Nine spaces
+	Wait Key
+	Rol.b 1,B : Rem Try ROL.W and ROL.L too
+Loop
+api*/
+
+/**api
+@name:Rol.w
+@description:Rotate the content of an integer variable to the left on the first 16 bits
+@param:number:integer:The number or shifts
+@param:variable:variable:The integer variable to rotate
+@compatible: aoz, stos, amos
+@content:
+~~~
+B = 1
+Rol.w 2,B
+Print B
+~~~
+Here is an example routine:
+~~~
+Curs Off : Locate 0,20 : Centre "Press a key to ROL the number"
+Locate 0,0 : Print "Binary version"
+Locate 0,4 : Print "Decimal version"
+B = 1 : Rem Set initial value
+Do
+	Locate 0,2: Print Bin$(B,32) : Rem Display number in binary
+	Locate 0,6: Print B;" "; : Rem Nine spaces
+	Wait Key
+	Rol.w 1,B : Rem Try ROL.B and ROL.L too
+Loop
+api*/
+
+/**api
+@name:Rol.l
+@description:Rotate the content of an integer variable to the left on 32 bits
+@param:number:integer:The number or shifts
+@param:variable:variable:The integer variable to rotate
+@compatible: aoz, stos, amos
+@content:
+~~~
+B = 1
+Rol.w 2,B
+Print B
+~~~
+Here is an example routine:
+~~~
+Curs Off : Locate 0,20 : Centre "Press a key to ROL the number"
+Locate 0,0 : Print "Binary version"
+Locate 0,4 : Print "Decimal version"
+B = 1 : Rem Set initial value
+Do
+	Locate 0,2: Print Bin$(B,32) : Rem Display number in binary
+	Locate 0,6: Print B;" "; : Rem Nine spaces
+	Wait Key
+	Rol.l 1,B : Rem Try ROL.B and ROL.W too
+Loop
+api*/
+

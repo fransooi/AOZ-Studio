@@ -1,0 +1,91 @@
+#loadAssetFile: "aozjs/editor-sdk/js/arduino/arduino.leds.js"
+
+//
+// LEDS
+//
+Procedure INIT_LED[ PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.initLed( '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_ON[ PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledON( '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_OFF[ PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledOFF( '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_TOGGLE[ PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledToggle( '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_BLINK[ MILLISECONDS, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledBlink( " + Str$( MILLISECONDS ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_STROBE[ MILLISECONDS, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledStrobe( " + Str$( MILLISECONDS ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_PULSE[ MILLISECONDS, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledPulse( " + Str$( MILLISECONDS ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_STOP[ PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledStop( '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+//
+// LEDS RGB
+//
+Procedure INIT_LED_RGB[ PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.initLedRGB( '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_COLOR[ COLOR$, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledColor( " + COLOR$ + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_FADEOUT[ MILLISECONDS, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledFadeOut( " + Str$( MILLISECONDS ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_FADEIN[ MILLISECONDS, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledFadeIn( " + Str$( MILLISECONDS ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_BRIGHTNESS[ VALUE, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledBrightness( " + Str$( VALUE ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc
+
+Procedure LED_INTENSITY[ VALUE, PROCNAME$ ]
+    JS Execute "application.editorSDK.arduino.leds.ledIntensity( " + Str$( VALUE ) + ", '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend    
+End Proc

@@ -1,0 +1,28 @@
+<i>Screen Alpha</i>
+<b>Screen Alpha</b> xxxxxxx
+=
+This instruction allows you to turn any Screen Image with it's contents (with the exception of sprites) into a semi-transparent image. The screen will completely disappear from display with an Alpha value of 0, but will remain active.
+
+The next example displays some graphics on the screen and slowly fades it away...
+@code
+
+Curs Off
+Set Font 0,80
+Set Transparent 0
+Ink 3
+// Fill the screen with coloured boxes
+For f=0 to 100
+Colour 3,rnd(16581375)
+Bar Rnd(Screen Width-200),Rnd(Screen Height-200),Rnd(350)+50,Rnd(350)+50
+Next f
+Ink 1
+// Add Some Text
+Text Screen Width/2,Screen Height/2,"Press Any Key To Fade","#center"
+Wait Key
+For a#=1 to 0 Step -0.01
+Screen Alpha a#
+Wait Vbl
+Next a#
+End
+@code
+

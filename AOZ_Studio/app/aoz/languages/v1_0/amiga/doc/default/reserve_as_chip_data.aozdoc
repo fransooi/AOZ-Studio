@@ -1,0 +1,17 @@
+<i>Reserve As Chip Data</i>
+<b>Reserve As Chip Data</b> xxxxxxx
+=
+Note: this command is equivalent to "Reserve As Data" in AOZ.
+
+(extracted from the AMOSPro manual)
+
+Use this variation of the RESERVE AS instruction to allocate a permanent area of memory using Chip Ram. If there is none available, an "Out of Memory" error will be reported. You can obtain an instant read-out of the
+remaining chip memory by calling the CHIP FREE function, as follows:
+@code
+CF=Chip Free
+Print "Remaining Chip memory = ";CF;" bytes."
+@code
+Once a bank has been defined by this command, it will be saved automatically, along with your AOZ Studio
+Basic program.
+
+

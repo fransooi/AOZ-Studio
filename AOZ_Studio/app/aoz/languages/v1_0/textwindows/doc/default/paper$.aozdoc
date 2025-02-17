@@ -1,0 +1,11 @@
+<i>Paper$</i>
+<b>Paper$</b> xxxxxxx
+=
+Similarly to the PEN$ function, PAPER$ returns a character string that automatically sets the background colour
+when the string is printed on the screen. For example:
+@code
+Pen 1
+B$=Paper$(3)+"Flash Harry"+Paper$(1)+"The Invisible Man"
+Print B$
+@code
+

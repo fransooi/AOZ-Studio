@@ -1,0 +1,23 @@
+<i>Run</i>
+<b>Run</b> xxxxxxx
+=
+
+When followed by a filename and used inside a program, the RUN command is extremely useful. Authors of vast
+computer games, involving many levels of play, need not be restricted by the storage space of a single disc or the
+memory available in your Amiga. Each level of play can be written as a separate program and then saved as a
+different filename. This means that at the end of one level of play, the next stage can be loaded automatically.
+
+For example:
+@code
+Run "Next level.AOZ"
+@code
+In order for this instruction to work in your browser, the *Path* parameter should contain the URL of the AOZ application to run.
+
+This method is known as "chaining" programs together. When programs run like this, data screens and banks will be
+kept, allowing you to pass data and display a screen of graphics while the next level is loading. But the redundant
+last program will be erased to make room for the new program, so you should remember the fact that any variables
+will be lost in the process.
+
+In fact, AMOS Professional does allow you to pass variable data from one program to another, by making use of
+"Command Lines".
+

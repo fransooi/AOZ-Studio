@@ -1,0 +1,9 @@
+<i>Set Block Alpha</i>
+<b>Set Block Alpha</b> xxxxxxx
+=
+@code
+Get Block 1, 100, 100 To 300, 400		// Grab a portion of the screen
+Set Block Alpha 0.5						// Set the block to be semi-transparent
+Put Block 1, 101, 101					// Make it somewhat "bold" by pasting it one pixel away...
+@code
+

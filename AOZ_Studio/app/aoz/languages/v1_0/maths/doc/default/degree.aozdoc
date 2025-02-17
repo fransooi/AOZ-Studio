@@ -1,0 +1,12 @@
+<i>Degree</i>
+<b>Degree</b> xxxxxxx
+=
+If, for any reason, you are unhappy with the complexities of radians, AOZ is happy to accept your
+trigonometric instructions in degrees. Once the DEGREE command has been activated, all subsequent calls to the
+trigonometric functions will expect degrees to be used.
+@code
+Degree
+Print Sin(45)
+@code
+
+

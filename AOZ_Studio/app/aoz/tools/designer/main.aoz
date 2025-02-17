@@ -1,0 +1,5615 @@
+// ################################################################################################
+// UI Designer V1.0
+// By Phil Bell
+// Created July 2021
+// phil@aozwithphil.com
+// ################################################################################################
+// UI Designer V1.1
+// By Phil Bell
+// 23 Sep 2021
+// Added class picker functionality
+// Added "Password"	to available options for a UI TextBox
+// ################################################################################################
+// UI Designer V1.2
+// 18 Oct 2021
+// BB: Added UI Image component
+// Phil Bell: UI Iframe UNDO/REDO Bug Fix
+//			  UI Image extended UNDO/REDO and extended PROPERTIES_CHANGED
+// ################################################################################################
+// UI Designer V1.3
+// 25 Apr 2022
+// Phil Bell: Extended all components with the group property
+//			: Updated designer code to take advantage of the group property
+//			: Extended the UI Image to include the class$ property
+// ################################################################################################
+// UI Designer V1.4
+// 26 Apr 2022
+// Phil Bell: Added Min, Max, Step properties to the UI TextBox component
+//			: Extended UI TextBox type$ to include Range, Date Time, Week, Month
+// ################################################################################################
+// UI Designer V1.5
+// 8 Apr 2022
+// Phil Bell: Bug Fix : Update Code button was not being hidden
+// ################################################################################################
+// UI Designer V1.6
+// 10 May 2022
+// Phil Bell: Reference to application.aoz.renderer.canvas no longer valid
+//			: Added "Show Margins" option in the settings panel
+//			: Updated adornment to show margins
+//			: Added center vertical and horizonal button to adornment
+// ################################################################################################
+// UI Designer V1.7
+// 11 May 2022
+// Phil Bell: Fixed the code that sanitizes the OnClick, OnChange and Name (ID) component properties
+// ################################################################################################
+// UI Designer V1.8
+// 17 June 2022
+// Phil Bell: Changed the way OnClick & OnChange properties are sanitized - this is now done
+// when the AOZ code is generated
+// ################################################################################################
+
+#useAssetsResources:false
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#googleFont:"roboto"
+#fps:false
+#clean:true
+
+Break Off
+
+//Include "includes/libs/editor-sdk/editor-sdk.aozinc"
+//Include "includes/libs/editor-sdk/archiver.aozinc"
+//Include "includes/libs/editor-sdk/banks.aozinc"
+//Include "includes/libs/editor-sdk/filesystem.aozinc"
+//Include "includes/libs/editor-sdk/net.aozinc"
+//Include "includes/libs/editor-sdk/project.aozinc"
+//Include "includes/libs/editor-sdk/dialogs.aozinc"
+
+VERSION$ = "V1.8"
+Global VERSION$
+
+JS Execute "document.title = 'UI Designer " + VERSION$ + "'"
+
+// Populated by reading the project source code in client.js
+SCREEN_IDX = 0
+SCREEN_SWITCH_IDX = 0
+SCREEN_COUNT = 0
+SCREEN_ITEM$ = ""
+MAX_SCREENS = 50
+CUSTOM_CSS_COUNT = 0
+Dim SCREEN_NAME$(MAX_SCREENS)
+Dim SCREEN_COMPONENT_COUNT(MAX_SCREENS)
+Dim SCREEN_COMPONENT$(MAX_SCREENS, 500)
+Dim CUSTOM_CSS$(50)
+Global SCREEN_NAME$(), SCREEN_COMPONENT_COUNT(), SCREEN_COMPONENT$(), SCREEN_COUNT, SCREEN_IDX, SCREEN_ITEM$, SCREEN_SWITCH_IDX, MAX_SCREENS, CUSTOM_CSS$()
+
+// Tracks if the designer has been run from AOZ Studio
+IS_EDITOR_AVAILABLE = 0
+Global IS_EDITOR_AVAILABLE
+
+// Load required files
+Load Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+Load Asset "resources/assets/css/styles.css"
+Load Asset "resources/assets/js/client.js"
+
+// wait for the client.js to be loaded
+JS_LOADED = 0
+Repeat
+	Wait Vbl
+	{
+		if (typeof client === 'object') {
+			vars.JS_LOADED = 1;
+		};
+	}
+Until JS_LOADED = 1
+
+IF IS_EDITOR_AVAILABLE = 1
+	//GET_CURRENT_PROJECT_FOLDER
+	//LOAD_IMAGES_BANK[AOZ_PROJECT_PATH$]
+End If
+
+// If no screens then create empty screen
+If SCREEN_COUNT = 0
+	SCREEN_COUNT = 1
+	SCREEN_NAME$(0) = "UIScreen1"
+	SCREEN_COMPONENT_COUNT(0) = 0
+End If
+
+// Load any CSS found in the project source code
+If CUSTOM_CSS_COUNT > 0
+	For i = 0 to CUSTOM_CSS_COUNT - 1
+		Load Asset CUSTOM_CSS$(i), 1
+	Next i
+End If
+
+// Populate the screen selector UI component
+SetScreenSelectorItems
+
+BOOTSTRAP_ICON_COUNT = 1370
+Dim BOOTSTRAP_ICONS$(BOOTSTRAP_ICON_COUNT)
+Global BOOTSTRAP_ICONS$(), BOOTSTRAP_ICON_COUNT
+
+// Load the bootstrap icon css class names
+For i = 0 to BOOTSTRAP_ICON_COUNT - 1
+	Read BOOTSTRAP_ICONS$(i)
+Next i
+
+// Populate the Bootstrap style css class names
+Dim BOOTSTRAP_CLASS$(101)
+Global BOOTSTRAP_CLASS$()
+For i = 0 to 101
+	Read BOOTSTRAP_CLASS$(i)
+Next i
+
+// Load the fontnames defined in the manifest
+NUMBER_OF_FONTS = Get Font Number()
+FONT_NAME_ITEMS$ = ":-unset,"
+
+Dim FONT_NAME$(NUMBER_OF_FONTS)
+Global FONT_NAME$(), NUMBER_OF_FONTS, FONT_NAME_ITEMS$
+
+// Create items for the fonts UI Select
+For i = 0 To NUMBER_OF_FONTS -1
+	FontName[i]
+	FONT_NAME$(i) = PARAM$
+	FONT_NAME_ITEMS$ = FONT_NAME_ITEMS$ + Lower$(Trim$(PARAM$)) + ":" + Trim$(PARAM$) + ":" + Lower$(Trim$(PARAM$)) + ","
+Next i
+
+// Remove the last 'comma'
+FONT_NAME_ITEMS$ = Left$(FONT_NAME_ITEMS$, Len(FONT_NAME_ITEMS$) - 1)
+
+// Tracks the drag & drop functionality
+MOUSE_XPOS = 0: MOUSE_YPOS = 0: MINFITS# = 0
+Global MOUSE_XPOS, MOUSE_YPOS, MINFITS#
+
+// Creates the component adornment and drag/drop/resize events
+JS Execute "client.initDesignerEvents();"
+
+// Used to give a unique ID$ to all the designer interface UI components
+// This is to avoid any duplicates ID$ with user component names(ID$)
+ID_PREFIX$ = "hkjsuiwyuwhgsbnvyutwuy_"
+Global ID_PREFIX$
+
+TOOLBOX_VISIBLE = 0			// 0 = false, 1 = true
+SELECTED_PANEL = 0			// 0 = components, 1 = properties, 2 = settings
+PICKER_PAGE = 0				// Tracks the selected page on the picker screens
+PICKER_PAGE_MAX = 0			// Tracks the max page for the picker page
+Global TOOLBOX_VISIBLE, SELECTED_PANEL, PICKER_PAGE, PICKER_PAGE_MAX
+
+// Required for undo/redo system
+DRAG_OLD_X = 0: DRAG_OLD_Y = 0: DRAG_OLD_WIDTH = 0: DRAG_OLD_HEIGHT = 0
+Global DRAG_OLD_X, DRAG_OLD_Y, DRAG_OLD_WIDTH, DRAG_OLD_HEIGHT
+
+// Used in the code generation
+LB$ = "<br>": TB$ = "&nbsp;&nbsp;&nbsp;&nbsp;": NB$="&nbsp;": AOZ_CODE$=""
+Global LB$, TB$, NB$, AOZ_CODE$
+
+// Other
+CLASS_PREVIEW_CONTROL_ID$ = ""
+Global CLASS_PREVIEW_CONTROL_ID$
+
+// Application screen size
+DW = 1920: DH=1080
+
+// User settings
+SCRW = DW: SCRH = DH: GRID_SIZE = 20: BACKGROUND_COLOR$ = "$000000": SHOW_GRID$ = "true": DEFAULT_FONT$="": SHOW_MARGINS$ = "true"
+Global DW, DH, SCRW, SCRH, GRID_SIZE, BACKGROUND_COLOR$, SHOW_GRID$, DEFAULT_FONT$, SHOW_MARGINS$
+
+// Get stored user settings from browser storage
+JS Execute "client.getUserSettings();"
+
+// Array to hold the user components
+MAX_CONTROLS = 500
+Dim USER_CONTROL_STATUS(MAX_CONTROLS)
+Dim USER_CONTROL_ID$(MAX_CONTROLS)
+Dim USER_CONTROL_TYPE$(MAX_CONTROLS)
+Global USER_CONTROL_STATUS(), USER_CONTROL_ID$(), USER_CONTROL_TYPE$(), MAX_CONTROLS
+
+// Used to display a list of components added to the designer
+CONTROL_LIST$ = ""
+Global CONTROL_LIST$
+
+// Open default application screen
+Screen Open 0, DW, DH, 256, Lowres
+Flash Off: Curs Off
+Color 0, Val(BACKGROUND_COLOR$)
+Cls
+
+// Tracks which user component has been selected
+SELECTED_ID$ = ""
+Global SELECTED_ID$
+
+// Track if the current screen has any changes
+SCREEN_HAS_CHANGES = false
+Global SCREEN_HAS_CHANGES
+
+// Show the screen and add the menu,undo,redo buttons
+DisplayScreen
+UI Button ID_PREFIX$ + "show_toolbox", x=1820, y=10, content$="", iconClass$="bi bi-list", width=80, fontSize = 40, class$="ui_designer__layer3 btn btn-outline-secondary", onClick$="TOGGLE_TOOL_BOX"
+UI Button ID_PREFIX$ + "undo", x=1620, y=10, content$="", iconClass$="bi bi-arrow-counterclockwise", width=80, fontSize = 40, class$="ui_designer__layer3 btn btn-outline-secondary", onClick$="DO_UNDO"
+UI Button ID_PREFIX$ + "redo", x=1720, y=10, content$="", iconClass$="bi bi-arrow-clockwise", width=80, fontSize = 40, class$="ui_designer__layer3 btn btn-outline-secondary", onClick$="DO_REDO"
+Colour 10, $3c3c3c
+
+DisplaySelectedScreen[0]
+
+KEY_TRIGGER = 0
+
+Do
+	// Escape Key - removes the UI component selector adornment
+	If KEY_TRIGGER = 0 and Key State(27)
+		KEY_TRIGGER = 1
+		If SELECTED_ID$ <> ""
+			SELECTED_ID$ = ""
+			{
+				window.application.hideAdornment();
+			}
+			HideProperties
+			DisplayScreen
+			UI Cls "margin_labels"
+		End If
+	End If
+
+	// Reset key trigger
+	If Key State(27) = False
+		KEY_TRIGGER = 0
+	End If
+
+	Refresh
+Loop
+
+Procedure UpdateAdornment
+// Update
+{
+	client.updateAdornment(this.root.vars.SELECTED_ID$);
+}
+
+	If SELECTED_ID$ <> "" And SHOW_MARGINS$ = "true"
+
+		DisplayScreen
+		Ink 10: Line Width 3
+		w = 0: h = 0: mb = 0: mr = 0
+		x = UI X(SELECTED_ID$)
+		y = UI Y(SELECTED_ID$)
+
+		{
+			var el = document.getElementById(this.root.vars.SELECTED_ID$);
+			var rect = el.getBoundingClientRect();
+			this.vars.w = (rect.width / this.root.vars.MINFITS_f);
+			this.vars.h = (rect.height / this.root.vars.MINFITS_f);
+			this.vars.mb = this.root.vars.SCRH - this.vars.y - (rect.height / this.root.vars.MINFITS_f);
+			this.vars.mr = this.root.vars.SCRW - this.vars.x - (rect.width / this.root.vars.MINFITS_f);
+		}
+
+		Draw 0, y + (h / 2) To x - 100, y + (h / 2)
+		Draw x + w + 100, y + (h / 2) To SCRW, y + (h / 2)
+		Draw x + (w / 2), 0 To x + (w / 2), y - 125
+		Draw x + (w / 2), y + h + 85 To x + (w / 2), SCRH
+
+		UI TextBlock ID_PREFIX$ + "margin_left", x = x - 85, y = y + (h / 2) - 20, content$ = Str$(UI X(SELECTED_ID$)), width=60, class$="ui_noselect rounded-pill bg-dark text-center ui_adornment_label", group$="margin_labels"
+		UI TextBlock ID_PREFIX$ + "margin_top", x = x + (w / 2) - 30, y = y - 115, content$ = Str$(UI Y(SELECTED_ID$)), width=60, class$="ui_noselect rounded-pill bg-dark text-center ui_adornment_label", group$="margin_labels"
+		UI TextBlock ID_PREFIX$ + "margin_bottom", x = x + (w / 2) - 30, y = y + h + 40, content$ = Str$(Int(mb)), width=60, class$="ui_noselect rounded-pill bg-dark text-center ui_adornment_label", group$="margin_labels"
+		UI TextBlock ID_PREFIX$ + "margin_right", x = x + w + 30, y = y + (h / 2) - 20, content$ = Str$(Int(mr)), width=60, class$="ui_noselect rounded-pill bg-dark text-center ui_adornment_label", group$="margin_labels"
+	Else
+		Cls
+		UI Cls "margin_labels"
+		DisplayScreen
+	End If
+End Proc
+
+Procedure DO_UNDO[ID$]
+// Undo
+	{
+		client.undo();
+	}
+End Proc
+
+Procedure DO_REDO[ID$]
+// Redo
+	{
+		client.redo();
+	}
+End Proc
+
+// Thanks Dave Baldwin :-)
+Procedure FontName[fontNumber]
+	s$=Font$(fontNumber)
+    L=Len(s$)
+    For N=1 to L
+        If Mid$(s$,N,1)="(" then Exit
+    Next N
+    s$=Left$(s$,N-1)
+End Proc[s$]
+
+Procedure DisplaySelectedScreen[idx]
+
+	// Reset array and remove any existing components
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_STATUS(i) = 1
+			UI Delete USER_CONTROL_ID$(i)
+		End If
+		USER_CONTROL_STATUS(i) = 0
+	Next i
+
+	// Add the components to the screen
+	If SCREEN_COMPONENT_COUNT(idx) > 0
+		For c = 0 to SCREEN_COMPONENT_COUNT(idx) -1
+			component$ = SCREEN_COMPONENT$(idx, c)
+			AddComponentByInstruction[component$]
+		Next c
+	End If
+
+	SELECTED_ID$ = ""
+	UpdateAdornment
+	UpdateControlList
+	SCREEN_HAS_CHANGES = false
+
+	{
+		client.resetUndoRedo();
+	}
+End Proc
+
+Procedure AddComponentByInstruction[component$]
+	cType$ = "": cId$ = ""
+
+	// Parse the component instruction
+	{
+		this.vars._args = {};
+
+		var items = this.vars.component$.split(', ');
+		var parts = items[0].split(' ');
+		var start, prm, isString;
+		this.vars.cType$ = parts[0] + ' ' + parts[1];
+		prm = parts[2].split('=');
+		this.vars.cId$ = prm[prm.length - 1].slice(1, -1);
+		this.vars._args.id = prm[prm.length - 1].slice(1, -1);
+
+		if (items.length > 1) {
+
+			items = [];
+			start = 0;
+			isString = false;
+
+			// Extract parameter and value
+			for (var p = 0; p < this.vars.component$.length; p++) {
+
+				if (p == this.vars.component$.length - 1) {
+					items.push(this.vars.component$.substring(start, p+1).trim());
+					break;
+				}
+
+				if (this.vars.component$.substring(p, p+1) == ',' && start == 0) {
+					start = p + 1;
+					continue;
+				}
+
+				if (this.vars.component$.substring(p, p+1) == '"' && isString == false && start > 0) {
+					isString = true;
+					continue;
+				}
+
+				if (this.vars.component$.substring(p, p+1) == '"' && isString == true && start > 0) {
+					isString = false;
+					continue;
+				}
+
+				if ((this.vars.component$.substring(p, p+1) == ',') && start > 0 && isString == false) {
+					items.push(this.vars.component$.substring(start, p).trim());
+					start = p+1;
+					isString = false;
+				}
+			}
+		} else {
+			items = [];
+		}
+
+		// Set the variable values
+		for (var p = 0; p < items.length; p++) {
+			start = items[p].indexOf('=');
+			parts[0] = items[p].substring(0, start);
+			parts[1] = items[p].substring(start + 1, items[p].length);
+
+			if (parts[0].trim().indexOf('$') < 0) {
+				this.vars._args[parts[0].trim()] = parts[1].trim();
+			} else {
+				this.vars._args[parts[0].trim().slice(0, -1)] = parts[1].trim().slice(1, -1);
+			}
+		}
+	}
+
+	// Get a free array element to store the new component
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_STATUS(i) = 0
+			USER_CONTROL_STATUS(i) = 1
+			USER_CONTROL_ID$(i) = cId$
+			USER_CONTROL_TYPE$(i) = cType$
+			Exit
+		End If
+	Next i
+
+	If cType$ = "UI Button"
+		{
+			if (typeof this.vars._args.width == 'undefined') {
+				this.vars._args.width = 150;
+			}
+
+			if (typeof this.vars._args.height == 'undefined') {
+				this.vars._args.height = 50;
+			}
+
+			this.aoz.ui.addButton(this.vars._args);
+		}
+	End If
+
+	If cType$ = "UI TextBox"
+		{ this.aoz.ui.addTextBox(this.vars._args);}
+	End If
+
+	If cType$ = "UI ColorPicker"
+		{ this.aoz.ui.addColourPicker(this.vars._args);}
+	End If
+
+	If cType$ = "UI Slider"
+		{ this.aoz.ui.addSlider(this.vars._args);}
+	End If
+
+	If cType$ = "UI Select"
+		{ this.aoz.ui.addSelect(this.vars._args);}
+	End If
+
+	If cType$ = "UI CheckBox"
+		{ this.aoz.ui.addCheckBox(this.vars._args);}
+	End If
+
+	If cType$ = "UI Radio"
+		{ this.aoz.ui.addRadio(this.vars._args);}
+	End If
+
+	If cType$ = "UI TextBlock"
+		{
+			if (typeof this.vars._args.height == 'undefined') {
+				this.vars._args.height = 40;
+			}
+
+			this.aoz.ui.addTextBlock(this.vars._args);
+		}
+	End If
+
+	If cType$ = "UI TextArea"
+		{ this.aoz.ui.addTextArea(this.vars._args);}
+	End If
+
+	If cType$ = "UI Progress"
+		{ this.aoz.ui.addProgress(this.vars._args);}
+	End If
+
+	If cType$ = "UI IFrame"
+		{
+			this.aoz.ui.addIFrame(this.vars._args);
+			// Add class to iframe to disable mouse events
+			var el = document.getElementById(this.vars._args.id);
+			elf = el.getElementsByTagName('iframe');
+			elf[0].setAttribute('class', 'iframe__responsive ui_iframe_no_events');
+		}
+	End If
+
+	If cType$ = "UI Image"
+		{
+			this.aoz.ui.addImage(this.vars._args);
+		}
+	End If
+
+	// Add custom drag/drop events
+	{
+		client.addDesignerComponentEvents(vars.cId$);
+	}
+End Proc
+
+Procedure GetNewId[type$, idx]
+	i$ = ""
+	Do
+		i$ = type$ + Trim$(Str$(idx))
+		gotNewId = true
+
+		For t = 0 to MAX_CONTROLS - 1
+			If USER_CONTROL_STATUS(t) = 1 and USER_CONTROL_ID$(t) = i$
+				gotNewId = false
+				Exit
+			End If
+		Next t
+
+		If gotNewId = false
+			Add idx, 1
+		Else
+			Exit
+		End If
+	Loop
+End Proc[i$]
+
+Procedure UpdateControlList
+	// Update the variable that hold the items for the component selector UI
+	CONTROL_LIST$ = ""
+	For c = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_STATUS(c) = 1
+			CONTROL_LIST$ = CONTROL_LIST$ + USER_CONTROL_ID$(c) + ":" + USER_CONTROL_ID$(c) + " (" + USER_CONTROL_TYPE$(c) + "),"
+		End If
+	Next c
+	If CONTROL_LIST$ <> ""
+		CONTROL_LIST$ = Left$(CONTROL_LIST$, Len(CONTROL_LIST$) - 1)
+	End If
+End Proc
+
+Procedure ShowToolBox
+	If SELECTED_PANEL = 0
+		SHOW_COMPONENTS
+		Pop Proc
+	End If
+
+	If SELECTED_PANEL = 1
+		SHOW_PROPERTIES
+		Pop Proc
+	End If
+
+	If SELECTED_PANEL = 2
+		SHOW_SETTINGS
+		Pop Proc
+	End If
+End Proc
+
+Procedure SHOW_SETTINGS[ID$]
+	SELECTED_PANEL = 2
+	HideToolbox
+	HideProperties
+
+	// Toolbar
+	UI TextBlock ID_PREFIX$ + "toolbar_background", width=500, height=1080, x=1420, y=0, class$="bg-light ui_designer__layer1", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_components", x=1440, y=10, content$="", iconClass$="bi bi-tools", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-outline-primary", onClick$="SHOW_COMPONENTS", tooltip$="Components", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_properties", x=1530, y=10, content$="", iconClass$="bi bi-pencil", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-outline-primary", onClick$="SHOW_PROPERTIES", tooltip$="Properties", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_settings", x=1620, y=10, content$="", iconClass$="bi bi-gear", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-primary", tooltip$="Settings", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "screen_save", x=1710, y=10, content$="", iconClass$="bi bi-file-earmark-check-fill", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-success", onClick$="UI_BUTTON_CLICK", tooltip$="Update Code Editor", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "undo", x=1220
+	UI Button ID_PREFIX$ + "redo", x=1320
+
+	// Project
+	UI TextBlock ID_PREFIX$ + "toolbox_title_2", x=1440, y=110, content$="Project", class$="ui_designer__layer2 badge rounded-pill bg-dark text-info", width=460, group$="toolboxControl"
+	UI Select ID_PREFIX$ + "toolbox_screen_selector", x=1440, y=160, class$="ui_designer__layer2 form-select", items$=SCREEN_ITEM$, value$=Str$(SCREEN_IDX), width=330, onChange$="LOAD_SELECTED_SCREEN", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "screen_new", x=1790, y=160, content$="", iconClass$="bi bi-file-earmark-plus", width=50, class$="ui_designer__layer2 btn btn-success", onClick$="UI_BUTTON_CLICK", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "view_aoz_code", x=1850, y=160, content$="", iconClass$="bi bi-code-slash", width=50, class$="ui_designer__layer2 btn btn-primary", onClick$="UI_BUTTON_CLICK", group$="toolboxControl"
+
+	//Settings
+	UI TextBlock ID_PREFIX$ + "toolbox_title_1", x=1440, y=230, content$="Settings", class$="ui_designer__layer2 badge rounded-pill bg-dark text-info", width=460, group$="toolboxControl"
+
+	UI TextBlock ID_PREFIX$ + "toolbox_label_1", x=1440, y=280, content$="Screen Width", class$="ui_designer__layer2 text-secondary", width=300, group$="toolboxControl"
+	UI TextBox ID_PREFIX$ + "screen_width", x=1770, y=280, value$=Str$(SCRW), width=130, class$="ui_designer__layer2 form-control", type$="number", min=0, max=DW, onChange$="SETTINGS_CHANGED", group$="toolboxControl"
+
+	UI TextBlock ID_PREFIX$ + "toolbox_label_2", x=1440, y=330, content$="Screen Height", class$="ui_designer__layer2 text-secondary", width=300, group$="toolboxControl"
+	UI TextBox ID_PREFIX$ + "screen_height", x=1770, y=330, value$=Str$(SCRH), width=130, class$="ui_designer__layer2 form-control", type$="number", min=0, max=DH, onChange$="SETTINGS_CHANGED", group$="toolboxControl"
+
+	UI TextBlock ID_PREFIX$ + "toolbox_label_3", x=1440, y=380, content$="Grid Size", class$="ui_designer__layer2 text-secondary", width=300, group$="toolboxControl"
+	UI TextBox ID_PREFIX$ + "screen_grid_size", x=1770, y=380, value$=Str$(GRID_SIZE), width=130, class$="ui_designer__layer2 form-control", type$="number", min=5, max=50, onChange$="SETTINGS_CHANGED", group$="toolboxControl"
+
+	UI TextBlock ID_PREFIX$ + "toolbox_label_4", x=1440, y=430, content$="Background Color", class$="ui_designer__layer2 text-secondary", width=300, group$="toolboxControl"
+	UI ColorPicker ID_PREFIX$ + "screen_background_color", x=1770, y=430, value$="#" + Right$(BACKGROUND_COLOR$, 6), class$="ui_designer__layer2", onChange$="SETTINGS_CHANGED", width=130, group$="toolboxControl"
+
+	UI TextBlock ID_PREFIX$ + "toolbox_label_5", x=1440, y=480, content$="Show Grid", class$="ui_designer__layer2 text-secondary", width=300, group$="toolboxControl"
+	UI CheckBox ID_PREFIX$ + "screen_show_grid", x=1770, y=480, value$=SHOW_GRID$, class$="ui_designer__layer2 form-check-input", onChange$="SETTINGS_CHANGED", group$="toolboxControl"
+
+	UI TextBlock ID_PREFIX$ + "toolbox_label_6", x=1440, y=530, content$="Show Margins", class$="ui_designer__layer2 text-secondary", width=300, group$="toolboxControl"
+	UI CheckBox ID_PREFIX$ + "screen_show_margins", x=1770, y=530, value$=SHOW_MARGINS$, class$="ui_designer__layer2 form-check-input", onChange$="SETTINGS_CHANGED", group$="toolboxControl"
+
+	UI TextBlock ID_PREFIX$ + "toolbox_label_7", x=1440, y=580, content$="Default Font", class$="ui_designer__layer2 text-secondary", width=300, group$="toolboxControl"
+	UI Select ID_PREFIX$ + "default_font_name", x=1610, y=580, width=290, value$=DEFAULT_FONT$, class$="ui_designer__layer2 form-select", onChange$="SETTINGS_CHANGED", items$=FONT_NAME_ITEMS$, group$="toolboxControl"
+
+End Proc
+
+Procedure SHOW_PROPERTIES[ID$]
+	SELECTED_PANEL = 1
+	HideToolbox
+	HideProperties
+
+	UI TextBlock ID_PREFIX$ + "toolbar_background", width=500, height=1080, x=1420, y=0, class$="bg-light ui_designer__layer1", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_components", x=1440, y=10, content$="", iconClass$="bi bi-tools", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-outline-primary", onClick$="SHOW_COMPONENTS", tooltip$="Components", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_properties", x=1530, y=10, content$="", iconClass$="bi bi-pencil", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-primary", tooltip$="Properties", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_settings", x=1620, y=10, content$="", iconClass$="bi bi-gear", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-outline-primary", onClick$="SHOW_SETTINGS", tooltip$="Settings", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "screen_save", x=1710, y=10, content$="", iconClass$="bi bi-file-earmark-check-fill", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-success", onClick$="UI_BUTTON_CLICK", tooltip$="Update Code Editor", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "undo", x=1220
+	UI Button ID_PREFIX$ + "redo", x=1320
+
+	UI TextBlock ID_PREFIX$ + "toolbox_title_1", x=1440, y=110, content$="Properties", class$="ui_designer__layer2 badge rounded-pill bg-dark text-info", width=460, group$="toolboxControl"
+
+	UPDATE_PROPERTY_DISPLAY[SELECTED_ID$]
+End Proc
+
+Procedure SHOW_COMPONENTS[ID$]
+	SELECTED_PANEL = 0
+	HideToolbox
+	HideProperties
+
+	UI TextBlock ID_PREFIX$ + "toolbar_background", width=500, height=1080, x=1420, y=0, class$="bg-light ui_designer__layer1", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_components", x=1440, y=10, content$="", iconClass$="bi bi-tools", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-primary", tooltip$="Components", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_properties", x=1530, y=10, content$="", iconClass$="bi bi-pencil", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-outline-primary", onClick$="SHOW_PROPERTIES", tooltip$="Properties", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_show_settings", x=1620, y=10, content$="", iconClass$="bi bi-gear", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-outline-primary", onClick$="SHOW_SETTINGS", tooltip$="Settings", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "screen_save", x=1710, y=10, content$="", iconClass$="bi bi-file-earmark-check-fill", width=80, fontSize = 40, class$="ui_designer__layer2 btn btn-success", onClick$="UI_BUTTON_CLICK", tooltip$="Update Code Editor", tooltipPlacement$="bottom", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "undo", x=1220
+	UI Button ID_PREFIX$ + "redo", x=1320
+
+	UI TextBlock ID_PREFIX$ + "toolbox_title_1", x=1440, y=110, content$="UI Components", class$="ui_designer__layer2 badge rounded-pill bg-dark text-info", width=460, group$="toolboxControl", group$="toolboxControl"
+
+	UI Button ID_PREFIX$ + "toolbox_add_button", x=1440, y=170, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-aspect-ratio", tooltip$="UI Button", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_textbox", x=1560, y=170, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-input-cursor-text", tooltip$="UI TextBox", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_textblock", x=1680, y=170, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-card-text", tooltip$="UI TextBlock", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_textarea", x=1800, y=170, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-textarea-t", tooltip$="UI TextArea", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_slider", x=1440, y=290, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-sliders", tooltip$="UI Slider", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_select", x=1560, y=290, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-menu-button", tooltip$="UI Select", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_radio", x=1680, y=290, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-ui-radios", tooltip$="UI Radio", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_checkbox", x=1800, y=290, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-check-square", tooltip$="UI CheckBox", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_progress", x=1440, y=410, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-segmented-nav", tooltip$="UI Progress", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_colorpicker", x=1560, y=410, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-palette", tooltip$="UI ColorPicker", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_iframe", x=1680, y=410, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-pip", tooltip$="UI IFrame", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+	UI Button ID_PREFIX$ + "toolbox_add_image", x=1800, y=410, class$="ui_designer__layer2 btn btn-outline-dark", iconClass$="bi bi-card-image", tooltip$="UI Image", tooltipPlacement$="top", fontSize = 60, width=100, onClick$="TOOL_BOX_CLICK", content$="", group$="toolboxControl"
+End Proc
+
+Procedure FORCE_SELECT_CONTROL[ID$]
+	// Fired when double click on a component
+	If TOOLBOX_VISIBLE = 0
+		SELECTED_ID$ = ID$
+		TOGGLE_TOOL_BOX
+		SHOW_PROPERTIES
+	End If
+End Proc
+
+Procedure DELETE_CONTROL[ID$, SKIP_UNDO]
+
+	// Get the array index
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_ID$(i) = ID$
+			Exit
+		End If
+	Next i
+
+	If SKIP_UNDO = false
+		code$ = ""
+
+		If USER_CONTROL_TYPE$(i) = "UI Button"
+			CodeUIButton[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI TextBox"
+			CodeUITextBox[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI TextBlock"
+			CodeUITextBlock[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI TextArea"
+			CodeUITextArea[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI Slider"
+			CodeUISlider[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI Select"
+			CodeUISelect[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI Radio"
+			CodeUIRadio[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI CheckBox"
+			CodeUICheckBox[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI Progress"
+			CodeUIProgress[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI ColorPicker"
+			CodeUIColorPicker[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI IFrame"
+			CodeUIIFrame[i]
+			code$ = PARAM$
+		End If
+
+		If USER_CONTROL_TYPE$(i) = "UI Image"
+			CodeUIImage[i]
+			code$ = PARAM$
+		End If
+
+		{
+			// Add command to the undo/redo system
+			this.vars.code$ = this.vars.code$.trim();
+
+			client.addCommand({
+				commandName: 'removeComponent',
+				id: this.vars.ID$,
+				propertyName: '',
+				oldValue: '',
+				newValue: this.vars.code$
+			});
+		}
+	End If
+
+	// Delete the component
+	UI Delete ID$
+	SELECTED_ID$ = ""
+	USER_CONTROL_STATUS(i) = 0
+
+	UpdateControlList
+	HideProperties
+	SCREEN_HAS_CHANGES = true
+	UpdateAdornment
+End Proc
+
+Procedure HideToolbox
+	UI Cls group$="toolboxControl"
+	UI Button ID_PREFIX$ + "undo", x=1620
+	UI Button ID_PREFIX$ + "redo", x=1720
+End Proc
+
+Procedure HideProperties
+	UI Cls group$ = "propertyControl"
+End Proc
+
+Procedure TOGGLE_TOOL_BOX
+	If TOOLBOX_VISIBLE = 0
+		TOOLBOX_VISIBLE = 1
+		ShowToolBox
+	Else
+		TOOLBOX_VISIBLE = 0
+		HideToolbox
+		HideProperties
+	End If
+End Proc
+
+Procedure SETTINGS_CHANGED[ID$, VALUE$]
+
+	If ID$ = ID_PREFIX$ + "screen_width"
+		SCRW = Val(VALUE$)
+		{
+			window.localStorage.setItem('AOZDesignerDefaults_Width', window.application.root.vars.SCRW);
+		}
+		DisplayScreen
+		Pop Proc
+	End If
+	If ID$ = ID_PREFIX$ + "screen_height"
+		SCRH = Val(VALUE$)
+		{
+			window.localStorage.setItem('AOZDesignerDefaults_Height', window.application.root.vars.SCRH);
+		}
+		DisplayScreen
+		Pop Proc
+	End If
+	If ID$ = ID_PREFIX$ + "screen_grid_size"
+		GRID_SIZE = Val(VALUE$)
+		{
+			window.localStorage.setItem('AOZDesignerDefaults_GridSize', window.application.root.vars.GRID_SIZE);
+		}
+		DisplayScreen
+		Pop Proc
+	End If
+	If ID$ = ID_PREFIX$ + "screen_background_color"
+		BACKGROUND_COLOR$ = "$" + Right$(VALUE$, 6)
+		{
+			window.localStorage.setItem('AOZDesignerDefaults_BackgroundColor', window.application.root.vars.BACKGROUND_COLOR$);
+		}
+		Color 0, Val(BACKGROUND_COLOR$)
+		DisplayScreen
+		Pop Proc
+	End If
+	If ID$ = ID_PREFIX$ + "screen_show_grid"
+		SHOW_GRID$ = VALUE$
+		{
+			window.localStorage.setItem('AOZDesignerDefaults_ShowGrid', window.application.root.vars.SHOW_GRID$);
+		}
+		DisplayScreen
+		Pop Proc
+	End If
+	If ID$ = ID_PREFIX$ + "default_font_name"
+		DEFAULT_FONT$ = VALUE$
+		{
+			window.localStorage.setItem('AOZDesignerDefaults_FontName', window.application.root.vars.DEFAULT_FONT$);
+		}
+		Pop Proc
+	End If
+	If ID$ = ID_PREFIX$ + "screen_show_margins"
+		SHOW_MARGINS$ = VALUE$
+		{
+			window.localStorage.setItem('AOZDesignerDefaults_ShowMargins', window.application.root.vars.SHOW_MARGINS$);
+		}
+		DisplayScreen
+		UpdateAdornment
+		Pop Proc
+	End If
+
+End Proc
+
+Procedure DisplayScreen
+	Cls
+	//Screen border
+	Ink 3: Bar 0, 0 to SCRW, SCRH
+	Ink 0: Bar 2, 2 to SCRW - 2, SCRH - 2
+
+	// Grid
+	If SHOW_GRID$="true"
+		For x = 0 to SCRW step GRID_SIZE
+			For y = 0 to SCRH step GRID_SIZE
+				Plot x, y, 3
+			Next y
+		Next x
+	End If
+End Proc
+
+Procedure SELECT_CONTROL[ID$]
+	If ID$ = ""
+		Pop Proc
+	End If
+
+	SELECTED_ID$ = ID$
+	UpdateAdornment
+
+	If TOOLBOX_VISIBLE = 1
+		HideProperties
+		SELECTED_PANEL = 1
+		SHOW_PROPERTIES
+	End If
+End Proc
+
+Procedure SELECT_CONTROL_FROM_LIST[ID$, VALUE$]
+	HideProperties
+	SELECTED_ID$ = VALUE$
+	UPDATE_PROPERTY_DISPLAY[VALUE$]
+	UpdateAdornment
+End Proc
+
+Procedure UPDATE_PROPERTY_DISPLAY[ID$]
+
+	If TOOLBOX_VISIBLE = 0 or SELECTED_PANEL <> 1 or ID$ = ""
+		Pop Proc
+	End If
+
+	// ** Need a better way to do this
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_ID$(i) = ID$
+			Exit
+		End If
+	Next i
+
+	UI Select ID_PREFIX$ + "property_control_selector", x=1440, y=165, class$="ui_designer__layer2 form-select", items$=CONTROL_LIST$, value$=SELECTED_ID$, width=460, onChange$="SELECT_CONTROL_FROM_LIST", group$="propertyControl"
+	UI TextBlock ID_PREFIX$ + "property_label_21", x=1440, y=220, content$="Name(ID$)", class$="ui_designer__layer2 text-secondary", width=50, group$="propertyControl"
+
+	UI TextBox ID_PREFIX$ + "property_id", x=1580, y=220, value$=USER_CONTROL_ID$(i), width=320, class$="ui_designer__layer2 form-control", group$="propertyControl", onChange$="PROPERTIES_CHANGED"
+
+	UI TextBlock ID_PREFIX$ + "property_label_1", x=1440, y=270, content$="X", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_x", x=1770, y=270, value$=Str$(UI X(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", min=0, max=SCRW, onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Slider ID_PREFIX$ + "property_x_slider", x=1580, y=280, value=UI X(SELECTED_ID$), max=SCRW, onChange$="PROPERTIES_SLIDER_CHANGED", class$="ui_designer__layer2", width=160, group$="propertyControl"
+	UI TextBlock ID_PREFIX$ + "property_label_2", x=1440, y=320, content$="Y", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_y", x=1770, y=320, value$=Str$(UI Y(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", min=0, max=SCRH, onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Slider ID_PREFIX$ + "property_y_slider", x=1580, y=330, value=UI Y(SELECTED_ID$), max=SCRH, onChange$="PROPERTIES_SLIDER_CHANGED", class$="ui_designer__layer2", width=160, group$="propertyControl"
+
+	If USER_CONTROL_TYPE$(i) = "UI Button"
+		AddWidthProperty[1440, 370]
+		AddHeightProperty[1440, 420]
+		AddFontSize[1440, 470]
+		AddPaddingProperty[1440, 520]
+		AddContentProperty[1440, 570]
+		AddFontNameProperty[1440, 620]
+		AddTooltipProperty[1440, 670]
+		AddTooltipPlacementProperty[1440, 720]
+		AddIconClassProperty[1440, 770]
+		AddClassProperty[1440, 820]
+		AddOnClickProperty[1440, 870]
+		AddGroupProperty[1440, 920]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI ColorPicker"
+		AddWidthProperty[1440, 370]
+		AddHeightProperty[1440, 420]
+		AddColorPickerProperty[1440, 470]
+		AddOnChangeProperty[1440, 520]
+		AddGroupProperty[1440, 570]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Slider"
+		AddWidthProperty[1440, 370]
+		AddMinProperty[1440, 420]
+		AddMaxProperty[1440, 470]
+		AddStepProperty[1440, 520]
+
+		UI TextBlock ID_PREFIX$ + "property_label_14", x=1440, y=570, content$="Value", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+		UI TextBox ID_PREFIX$ + "property_slider_value", x=1770, y=570, value$=UI Value$(SELECTED_ID$), width=130, class$="ui_designer__layer2 form-control", type$="number", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+
+		AddOnChangeProperty[1440, 620]
+		AddGroupProperty[1440, 670]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Select"
+		AddWidthProperty[1440, 370]
+		AddFontSize[1440, 420]
+		AddPaddingProperty[1440, 470]
+		AddValueStringProperty[1440, 520]
+		AddFontNameProperty[1440, 570]
+		AddClassProperty[1440, 620]
+		AddOnChangeProperty[1440, 670]
+		AddItemsProperty[1440, 720]
+		AddGroupProperty[1440, 770]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI CheckBox"
+		AddWidthProperty[1440, 370]
+		AddHeightProperty[1440, 420]
+
+		UI TextBlock ID_PREFIX$ + "property_label_16", x=1440, y=470, content$="Value", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+		UI CheckBox ID_PREFIX$ + "property_checkbox", x=1770, y=470, value$=UI Value$(SELECTED_ID$), class$="ui_designer__layer2 form-check-input", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+
+		AddClassProperty[1440, 520]
+		AddOnChangeProperty[1440, 570]
+		AddGroupProperty[1440, 620]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Radio"
+		AddFontSize[1440, 370]
+		AddPaddingProperty[1440, 420]
+		AddValueStringProperty[1440, 470]
+		AddFontNameProperty[1440, 520]
+		AddClassProperty[1440, 570]
+		AddOnChangeProperty[1440, 620]
+		AddItemsProperty[1440, 670]
+		AddGroupProperty[1440, 720]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextBox"
+		AddWidthProperty[1440, 370]
+		AddFontSize[1440, 420]
+		AddPaddingProperty[1440, 470]
+		AddValueStringProperty[1440, 520]
+		AddFontNameProperty[1440, 570]
+		AddPlaceholderProperty[1440, 620]
+		AddClassProperty[1440, 670]
+		AddTypeProperty[1440, 720]
+		AddOnChangeProperty[1440, 770]
+		AddGroupProperty[1440, 820]
+		AddMinProperty[1440, 870]
+		AddMaxProperty[1440, 920]
+		AddStepProperty[1440, 970]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextBlock"
+		AddWidthProperty[1440, 370]
+		AddHeightProperty[1440, 420]
+		AddFontSize[1440, 470]
+		AddPaddingProperty[1440, 520]
+		AddContentProperty[1440, 570]
+		AddFontNameProperty[1440, 620]
+		AddClassProperty[1440, 670]
+		AddGroupProperty[1440, 720]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextArea"
+		AddWidthProperty[1440, 370]
+		AddFontSize[1440, 420]
+		AddPaddingProperty[1440, 470]
+
+		UI TextBlock ID_PREFIX$ + "property_label_15", x=1440, y=520, content$="Rows", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+		UI TextBox ID_PREFIX$ + "property_rows", x=1770, y=520, value$=Str$(UI Rows(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", min=1, max=100, onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+		UI Slider ID_PREFIX$ + "property_rows_slider", x=1580, y=530, value=UI Rows(SELECTED_ID$), min=1, max=100, onChange$="PROPERTIES_SLIDER_CHANGED", class$="ui_designer__layer2", width=160, group$="propertyControl"
+
+		AddValueStringProperty[1440, 570]
+		AddFontNameProperty[1440, 620]
+		AddPlaceholderProperty[1440, 670]
+		AddClassProperty[1440, 720]
+		AddGroupProperty[1440, 770]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Progress"
+		AddWidthProperty[1440, 370]
+		AddHeightProperty[1440, 420]
+		AddValueProperty[1440, 470, 0, 100]
+		AddClassProperty[1440, 520]
+		UI Delete ID_PREFIX$ + "class_selector"
+		AddGroupProperty[1440, 570]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI IFrame"
+		AddWidthProperty[1440, 370]
+		AddHeightProperty[1440, 420]
+		AddSrcProperty[1440, 470]
+		AddClassProperty[1440, 520]
+		AddGroupProperty[1440, 570]
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Image"
+		AddWidthProperty[1440, 370]
+		AddHeightProperty[1440, 420]
+		AddSrcProperty[1440, 470]
+		AddOnClickProperty[1440, 520]
+		AddTooltipProperty[1440, 570]
+		AddTooltipPlacementProperty[1440, 620]
+		AddClassProperty[1440, 670]
+		UI Delete ID_PREFIX$ + "class_selector"
+		AddGroupProperty[1440, 720]
+	End If
+End Proc
+
+Procedure AddMinProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_11", x=xpos, y=ypos, content$="Min", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_min", x=xpos+330, y=ypos, value$=Str$(UI Min(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddMaxProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_12", x=xpos, y=ypos, content$="Max", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_max", x=xpos+330, y=ypos, value$=Str$(UI Max(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddStepProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_13", x=xpos, y=ypos, content$="Step", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_step", x=xpos+330, y=ypos, value$=Str$(UI Step(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddWidthProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_3", x=xpos, y=ypos, content$="Width", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_width", x=xpos+330, y=ypos, value$=Str$(UI Width(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", min=0, max=SCRW, onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Slider ID_PREFIX$ + "property_width_slider", x=xpos+140, y=ypos+10, value=UI Width(SELECTED_ID$), max=SCRW, onChange$="PROPERTIES_SLIDER_CHANGED", class$="ui_designer__layer2", width=160, group$="propertyControl"
+End Proc
+
+Procedure AddFontSize[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_4", x=xpos, y=ypos, content$="Font Size", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_fontsize", x=xpos+330, y=ypos, value$=Str$(UI FontSize(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", max=256, onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Slider ID_PREFIX$ + "property_fontsize_slider", x=xpos+140, y=ypos+10, value=UI FontSize(SELECTED_ID$), max=256, onChange$="PROPERTIES_SLIDER_CHANGED", class$="ui_designer__layer2", width=160, group$="propertyControl"
+End Proc
+
+Procedure AddHeightProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_5", x=xpos, y=ypos, content$="Height", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_height", x=xpos+330, y=ypos, value$=Str$(UI Height(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", min=0, max=SCRH, onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Slider ID_PREFIX$ + "property_height_slider", x=xpos+140, y=ypos+10, value=UI Height(SELECTED_ID$), max=SCRH, onChange$="PROPERTIES_SLIDER_CHANGED", class$="ui_designer__layer2", width=160, group$="propertyControl"
+End Proc
+
+Procedure AddPaddingProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_6", x=xpos, y=ypos, content$="Padding", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_padding", x=xpos+330, y=ypos, value$=Str$(UI Padding(SELECTED_ID$)), width=130, class$="ui_designer__layer2 form-control", type$="number", min=0, max=100, onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Slider ID_PREFIX$ + "property_padding_slider", x=xpos+140, y=ypos+10, value=UI Padding(SELECTED_ID$), max=100, onChange$="PROPERTIES_SLIDER_CHANGED", class$="ui_designer__layer2", width=160, group$="propertyControl"
+End Proc
+
+Procedure AddContentProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_7", x=xpos, y=ypos, content$="Content", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_content", x=xpos+140, y=ypos, value$=UI Content$(SELECTED_ID$), width=320, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddValueStringProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_8", x=xpos, y=ypos, content$="Value", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_value_string", x=xpos+140, y=ypos, value$=UI Value$(SELECTED_ID$), width=320, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddValueProperty[xpos, ypos, minv, maxv]
+	UI TextBlock ID_PREFIX$ + "property_label_9", x=xpos, y=ypos, content$="Value", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_value", x=xpos+330, y=ypos, value$=UI Value$(SELECTED_ID$), width=130, class$="ui_designer__layer2 form-control", type$="number", min=minv, max=maxv, onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Slider ID_PREFIX$ + "property_value_slider", x=xpos+140, y=ypos+10, value=Val(UI Value$(SELECTED_ID$)), min=minv, max=maxv, onChange$="PROPERTIES_SLIDER_CHANGED", class$="ui_designer__layer2", width=160, group$="propertyControl"
+End Proc
+
+Procedure AddColorPickerProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_10", x=xpos, y=ypos, content$="Value", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI ColorPicker ID_PREFIX$ + "property_colorpicker", x=xpos+330, y=ypos, width=130, value$=UI Value$(SELECTED_ID$), class$="ui_designer__layer2", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddFontNameProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_17", x=xpos, y=ypos, content$="Font", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI Select ID_PREFIX$ + "property_fontname", x=xpos+140, y=ypos, value$=UI FontName$(SELECTED_ID$), class$="ui_designer__layer2 form-select", onChange$="PROPERTIES_CHANGED", items$=FONT_NAME_ITEMS$, width=320, group$="propertyControl"
+End Proc
+
+Procedure AddGroupProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_group_label", x=xpos, y=ypos, content$="Group", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_group", x=xpos+140, y=ypos, value$=UI Group$(SELECTED_ID$), width=320, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddPlaceholderProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_18", x=xpos, y=ypos, content$="Placeholder", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_placeholder", x=xpos+140, y=ypos, value$=UI Placeholder$(SELECTED_ID$), width=320, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddTooltipProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_19", x=xpos, y=ypos, content$="Tooltip", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_tooltip", x=xpos+140, y=ypos, value$=UI Tooltip$(SELECTED_ID$), width=320, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure AddTooltipPlacementProperty[xpos, ypos]
+	tooltip_items$ = "auto:Auto,top:Top,left:Left,right:Right,bottom:Bottom"
+	UI TextBlock ID_PREFIX$ + "property_label_20", x=xpos, y=ypos, content$="Tooltip Placement", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI Select ID_PREFIX$ + "property_tooltip_placement", x=xpos+310, y=ypos, width=150, value$=UI TooltipPlacement$(SELECTED_ID$), class$="ui_designer__layer2 form-select", onChange$="PROPERTIES_CHANGED", items$=tooltip_items$, group$="propertyControl"
+End Proc
+
+Procedure AddIconClassProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_22", x=xpos, y=ypos, content$="Icon", class$="ui_designer__layer2 text-secondary", width=50, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_icon_class", x=xpos+200, y=ypos, value$=UI IconClass$(SELECTED_ID$), width=260, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Button ID_PREFIX$ + "icon_selector", content$="", x=xpos+140, y=ypos, class$="ui_designer__layer2 btn btn-outline-dark", fontSize=20, iconClass$="bi bi-eyedropper", width=50, onClick$="SHOW_ICON_SELECTOR", group$="propertyControl"
+End Proc
+
+Procedure AddClassProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_23", x=xpos, y=ypos, content$="Class", class$="ui_designer__layer2 text-secondary", width=50, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_class", x=xpos+200, y=ypos, value$=UI Class$(SELECTED_ID$), width=260, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Button ID_PREFIX$ + "class_selector", content$="", x=xpos+140, y=ypos, class$="ui_designer__layer2 btn btn-outline-dark", fontSize=20, iconClass$="bi bi-pencil-fill", width=50, onClick$="SHOW_CLASS_SELECTOR", group$="propertyControl"
+End Proc
+
+Procedure AddTypeProperty[xpos, ypos]
+	type_items$ = "text:Text,number:Number,range:Range,time:Time,date:Date,datetime-local:Date Time,week:Week,month:Month,password:Password"
+	UI TextBlock ID_PREFIX$ + "property_label_24", x=xpos, y=ypos, content$="Type", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI Select ID_PREFIX$ + "property_type", x=xpos+250, y=ypos, width=210, value$=UI Type$(SELECTED_ID$), class$="ui_designer__layer2 form-select", onChange$="PROPERTIES_CHANGED", items$=type_items$, group$="propertyControl"
+End Proc
+
+Procedure AddOnChangeProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_25", x=xpos, y=ypos, content$="OnChange", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_onchange", x=xpos+140, y=ypos, value$=UI OnChange$(SELECTED_ID$), width=320, class$="ui_designer__layer2 form-control", group$="propertyControl", onChange$="PROPERTIES_CHANGED"
+End Proc
+
+Procedure AddOnClickProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_26", x=xpos, y=ypos, content$="OnClick", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_onclick", x=xpos+140, y=ypos, value$=UI OnClick$(SELECTED_ID$), width=320, class$="ui_designer__layer2 form-control", group$="propertyControl", onChange$="PROPERTIES_CHANGED"
+End Proc
+
+Procedure AddItemsProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_27", x=xpos, y=ypos, content$="Items", class$="ui_designer__layer2 text-secondary", width=50, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_items", x=xpos+200, y=ypos, value$=UI Items$(SELECTED_ID$), width=260, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+	UI Button ID_PREFIX$ + "items_editor", content$="", x=xpos+140, y=ypos, class$="ui_designer__layer2 btn btn-outline-dark", fontSize=20, iconClass$="bi bi-pencil-fill", width=50, onClick$="SHOW_ITEMS_EDITOR", group$="propertyControl"
+End Proc
+
+Procedure AddSrcProperty[xpos, ypos]
+	UI TextBlock ID_PREFIX$ + "property_label_28", x=xpos, y=ypos, content$="Source", class$="ui_designer__layer2 text-secondary", width=300, group$="propertyControl"
+	UI TextBox ID_PREFIX$ + "property_src", x=xpos+140, y=ypos, value$=UI Src$(SELECTED_ID$), width=320, class$="ui_designer__layer2 form-control", onChange$="PROPERTIES_CHANGED", group$="propertyControl"
+End Proc
+
+Procedure SELECT_CONTROL_MOVE[ID$, SHIFTX, SHIFTY, WIDTH, HEIGHT, DRAGSTATE$]
+	XPOS = Int((MOUSE_XPOS - SHIFTX) / GRID_SIZE) * GRID_SIZE
+	YPOS = Int((MOUSE_YPOS - SHIFTY) / GRID_SIZE) * GRID_SIZE
+
+	XPOS = Max(XPOS, 0)
+	YPOS = Max(YPOS, 0)
+	XPOS = MIN(XPOS, SCRW - (WIDTH / MINFITS#))
+	YPOS = MIN(YPOS, SCRH - (HEIGHT / MINFITS#))
+
+	If DRAGSTATE$ = "start"
+		DRAG_OLD_X = UI X(ID$)
+		DRAG_OLD_Y = UI Y(ID$)
+		Pop Proc
+	Else
+		If DRAGSTATE$ = "end"
+			If DRAG_OLD_X <> UI X(ID$) or DRAG_OLD_Y <> UI Y(ID$)
+			// Add command to the undo/redo system
+			{
+				client.addCommand( {
+					commandName: 'move',
+					id: this.vars.ID$,
+					old_x: application.root.vars.DRAG_OLD_X,
+					old_y: application.root.vars.DRAG_OLD_Y,
+					x: this.vars.XPOS,
+					y: this.vars.YPOS
+				});
+			}
+			End If
+		Pop Proc
+		End If
+	End If
+
+	// Using the UI Button Instruction to update x & y, works with all components
+	UI Button ID$, x=XPOS, y=YPOS
+
+	// Update property displays
+	If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+		UI TextBox ID_PREFIX$ + "property_x", value$=Str$(UI X(ID$))
+		UI Slider ID_PREFIX$ + "property_x_slider", value=UI X(ID$)
+		UI TextBox ID_PREFIX$ + "property_y", value$=Str$(UI Y(ID$))
+		UI Slider ID_PREFIX$ + "property_y_slider", value=UI Y(ID$)
+	End If
+
+	SCREEN_HAS_CHANGES = true
+
+	UpdateAdornment
+End Proc
+
+Procedure RESIZE_EAST[ID$, OFFSET, DRAGSTATE$]
+	cwidth = UI Width(ID$)
+
+	If OFFSET < 0
+		Add cwidth, Abs(OFFSET)
+	Else
+		Add cwidth, -OFFSET
+		cwidth = Max(10, cwidth)
+	End If
+
+	If DRAGSTATE$ = "start"
+		DRAG_OLD_WIDTH = UI Width(ID$)
+		Pop Proc
+	Else
+		If DRAGSTATE$ = "end"
+			If DRAG_OLD_WIDTH <> UI Width(ID$)
+			// Add command to the undo/redo system
+			{
+				client.addCommand({
+					commandName: 'propertyChange',
+					id: this.vars.ID$,
+					propertyName: 'property_width',
+					oldValue: application.root.vars.DRAG_OLD_WIDTH,
+					newValue: this.vars.cwidth
+				});
+			}
+			End If
+		Pop Proc
+		End If
+	End If
+
+	UI Button ID$, width=cwidth
+
+	If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+		UI TextBox ID_PREFIX$ + "property_width", value$=Str$(UI Width(ID$))
+		UI Slider ID_PREFIX$ + "property_width_slider", value=UI Width(ID$)
+	End If
+
+	UpdateAdornment
+	SCREEN_HAS_CHANGES = true
+End Proc
+
+Procedure RESIZE_WEST[ID$, OFFSET, DRAGSTATE$]
+	cwidth = UI Width(ID$)
+	cx = UI X(ID$)
+
+	If OFFSET < 0
+		Add cwidth, Abs(OFFSET)
+		Add cx, OFFSET
+	Else
+		If cwidth - OFFSET > 9
+			Add cwidth, -OFFSET
+			Add cx, Abs(OFFSET)
+		End If
+	End If
+
+	If DRAGSTATE$ = "start"
+		DRAG_OLD_WIDTH = UI Width(ID$)
+		DRAG_OLD_X = UI X(ID$)
+		Pop Proc
+	Else
+		If DRAGSTATE$ = "end"
+			If DRAG_OLD_WIDTH <> UI Width(ID$)
+			// Add command to the undo/redo system
+			{
+				client.addCommand({
+					commandName: 'resize_west',
+					id: this.vars.ID$,
+					old_width: application.root.vars.DRAG_OLD_WIDTH,
+					old_x: application.root.vars.DRAG_OLD_X,
+					width: this.vars.cwidth,
+					x: this.vars.cx
+				});
+			}
+			End If
+		Pop Proc
+		End If
+	End If
+
+	UI Button ID$, width=cwidth, x=cx
+
+	If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+		UI TextBox ID_PREFIX$ + "property_width", value$=Str$(UI Width(ID$))
+		UI Slider ID_PREFIX$ + "property_width_slider", value=UI Width(ID$)
+		UI TextBox ID_PREFIX$ + "property_x", value$=Str$(UI X(ID$))
+		UI Slider ID_PREFIX$ + "property_x_slider", value=UI X(ID$)
+	End If
+
+	UpdateAdornment
+	SCREEN_HAS_CHANGES = true
+End Proc
+
+Procedure RESIZE_NORTH[ID$, OFFSET, DRAGSTATE$]
+	cheight = UI Height(ID$)
+	cy = UI Y(ID$)
+
+	If OFFSET < 0
+		Add cheight, Abs(OFFSET)
+		Add cy, OFFSET
+	Else
+		If cheight - OFFSET > 9
+			Add cheight, -OFFSET
+			Add cy, Abs(OFFSET)
+		End If
+	End If
+
+	If DRAGSTATE$ = "start"
+		DRAG_OLD_HEIGHT = UI Height(ID$)
+		DRAG_OLD_Y = UI Y(ID$)
+		Pop Proc
+	Else
+		If DRAGSTATE$ = "end"
+			If DRAG_OLD_HEIGHT <> UI Height(ID$)
+			// Add command to the undo/redo system
+			{
+				client.addCommand({
+					commandName: 'resize_north',
+					id: this.vars.ID$,
+					old_height: application.root.vars.DRAG_OLD_HEIGHT,
+					old_y: application.root.vars.DRAG_OLD_Y,
+					height: this.vars.cheight,
+					y: this.vars.cy
+				});
+			}
+			End If
+		Pop Proc
+		End If
+	End If
+
+	UI TextBlock ID$, height=cheight, y=cy
+
+	If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+		UI TextBox ID_PREFIX$ + "property_height", value$=Str$(UI Height(ID$))
+		UI Slider ID_PREFIX$ + "property_height_slider", value=UI Height(ID$)
+		UI TextBox ID_PREFIX$ + "property_y", value$=Str$(UI Y(ID$))
+		UI Slider ID_PREFIX$ + "property_y_slider", value=UI Y(ID$)
+	End If
+
+	UpdateAdornment
+	SCREEN_HAS_CHANGES = true
+End Proc
+
+Procedure RESIZE_SOUTH[ID$, OFFSET, DRAGSTATE$]
+	cheight = UI Height(ID$)
+
+	If OFFSET < 0
+		Add cheight, Abs(OFFSET)
+	Else
+		Add cheight, -OFFSET
+		cheight = Max(10, cheight)
+	End If
+
+	If DRAGSTATE$ = "start"
+		DRAG_OLD_HEIGHT = UI Height(ID$)
+		Pop Proc
+	Else
+		If DRAGSTATE$ = "end"
+			If DRAG_OLD_HEIGHT <> UI Height(ID$)
+			// Add command to the undo/redo system
+			{
+				client.addCommand({
+					commandName: 'propertyChange',
+					id: this.vars.ID$,
+					propertyName: 'property_height',
+					oldValue: application.root.vars.DRAG_OLD_HEIGHT,
+					newValue: this.vars.cheight
+				});
+			}
+			End If
+		Pop Proc
+		End If
+	End If
+
+	UI TextBlock ID$, height=cheight
+
+	If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+		UI TextBox ID_PREFIX$ + "property_height", value$=Str$(UI Height(ID$))
+		UI Slider ID_PREFIX$ + "property_height_slider", value=UI Height(ID$)
+	End If
+
+	UpdateAdornment
+	SCREEN_HAS_CHANGES = true
+End Proc
+
+Procedure PROPERTIES_SLIDER_CHANGED[ID$, VALUE]
+	SCREEN_HAS_CHANGES = true
+	OLD_VALUE = 0
+
+	If ID$ = ID_PREFIX$ + "property_x_slider"
+		OLD_VALUE = UI X(SELECTED_ID$)
+		// Add command to the undo/redo system
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_x',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: this.vars.VALUE
+			});
+		}
+		UI Button SELECTED_ID$, x=VALUE
+		UI TextBox ID_PREFIX$ + "property_x", value$=Str$(VALUE)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_y_slider"
+		OLD_VALUE = UI Y(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_y',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: this.vars.VALUE
+			});
+		}
+		UI Button SELECTED_ID$, y=VALUE
+		UI TextBox ID_PREFIX$ + "property_y", value$=Str$(VALUE)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_width_slider"
+		OLD_VALUE = UI Width(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_width',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: this.vars.VALUE
+			});
+		}
+		UI Button SELECTED_ID$, width=VALUE
+		UI TextBox ID_PREFIX$ + "property_width", value$=Str$(VALUE)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_height_slider"
+		OLD_VALUE = UI Height(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_height',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: this.vars.VALUE
+			});
+		}
+		UI TextBlock SELECTED_ID$, height=VALUE
+		UI TextBox ID_PREFIX$ + "property_height", value$=Str$(VALUE)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_fontsize_slider"
+		OLD_VALUE = UI FontSize(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_fontsize',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: this.vars.VALUE
+			});
+		}
+		UI Button SELECTED_ID$, fontSize=VALUE
+		UI TextBox ID_PREFIX$ + "property_fontsize", value$=Str$(VALUE)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_padding_slider"
+		OLD_VALUE = UI Padding(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_padding',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: this.vars.VALUE
+			});
+		}
+		UI Button SELECTED_ID$, padding=VALUE
+		UI TextBox ID_PREFIX$ + "property_padding", value$=Str$(VALUE)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_rows_slider"
+		OLD_VALUE = UI Rows(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_rows',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: this.vars.VALUE
+			});
+		}
+		UI TextArea SELECTED_ID$, rows=VALUE
+		UI TextBox ID_PREFIX$ + "property_rows", value$=Str$(VALUE)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_value_slider"
+		OLD_VALUE = Val(UI Value$(SELECTED_ID$))
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_value',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: this.vars.VALUE
+			});
+		}
+		UI Progress SELECTED_ID$, value=VALUE
+		UI TextBox ID_PREFIX$ + "property_value", value$=Str$(VALUE)
+		Pop Proc
+	End If
+End Proc
+
+Procedure APPLY_UNDO_REDO[ID$, COMMAND_NAME$, PROPERTY_NAME$, VALUE$]
+
+	SCREEN_HAS_CHANGES = true
+
+	If COMMAND_NAME$ = "propertyChange"
+
+		SELECT_CONTROL_FROM_LIST["", ID$]
+
+		If PROPERTY_NAME$ = "property_x"
+			UI Button ID$, x=Val(VALUE$)
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Slider ID_PREFIX$ + "property_x_slider", value=Val(VALUE$)
+				UI TextBox ID_PREFIX$ + "property_x", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_y"
+			UI Button ID$, y=Val(VALUE$)
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Slider ID_PREFIX$ + "property_y_slider", value=Val(VALUE$)
+				UI TextBox ID_PREFIX$ + "property_y", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_width"
+			UI Button ID$, width=Val(VALUE$)
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Slider ID_PREFIX$ + "property_width_slider", value=Val(VALUE$)
+				UI TextBox ID_PREFIX$ + "property_width", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_height"
+			UI Button ID$, height=Val(VALUE$)
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Slider ID_PREFIX$ + "property_height_slider", value=Val(VALUE$)
+				UI TextBox ID_PREFIX$ + "property_height", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_fontsize"
+			UI Button ID$, fontSize=Val(VALUE$)
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Slider ID_PREFIX$ + "property_fontsize_slider", value=Val(VALUE$)
+				UI TextBox ID_PREFIX$ + "property_fontsize", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_padding"
+			UI Button ID$, padding=Val(VALUE$)
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Slider ID_PREFIX$ + "property_padding_slider", value=Val(VALUE$)
+				UI TextBox ID_PREFIX$ + "property_padding", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_rows"
+			UI TextArea ID$, rows=Val(VALUE$)
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Slider ID_PREFIX$ + "property_rows_slider", value=Val(VALUE$)
+				UI TextBox ID_PREFIX$ + "property_rows", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_value"
+			UI Value ID$, value$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Slider ID_PREFIX$ + "property_value_slider", value=Val(VALUE$)
+				UI TextBox ID_PREFIX$ + "property_value", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_content"
+			// Get the array index of the selected control
+			For s = 0 to MAX_CONTROLS - 1
+				If USER_CONTROL_ID$(s) = SELECTED_ID$
+					Exit
+				End If
+			Next s
+
+			If USER_CONTROL_TYPE$(s) = "UI Button"
+				UI Button ID$, content$=VALUE$
+			Else
+				UI TextBlock ID$, content$=VALUE$
+			End If
+
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_content", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_items"
+			// Get the array index of the selected control
+			For s = 0 to MAX_CONTROLS - 1
+				If USER_CONTROL_ID$(s) = SELECTED_ID$
+					Exit
+				End If
+			Next s
+
+			If USER_CONTROL_TYPE$(s) = "UI Radio"
+				UI Radio ID$, items$=VALUE$
+			Else
+				UI Select ID$, items$=VALUE$
+			End If
+
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_items", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_value_string"
+			UI Value ID$, value$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_value_string", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_colorpicker"
+			UI Value ID$, value$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_colorpicker", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_min"
+			// Get the array index of the selected control
+			For s = 0 to MAX_CONTROLS - 1
+				If USER_CONTROL_ID$(s) = SELECTED_ID$
+					Exit
+				End If
+			Next s
+
+			If USER_CONTROL_TYPE$(s) = "UI Slider"
+				UI Slider ID$, min=val(VALUE$)
+			Else
+				UI TextBox ID$, min=val(VALUE$)
+			End If
+
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_min", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_max"
+			// Get the array index of the selected control
+			For s = 0 to MAX_CONTROLS - 1
+				If USER_CONTROL_ID$(s) = SELECTED_ID$
+					Exit
+				End If
+			Next s
+
+			If USER_CONTROL_TYPE$(s) = "UI Slider"
+				UI Slider ID$, max=val(VALUE$)
+			Else
+				UI TextBox ID$, max=val(VALUE$)
+			End If
+
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_max", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_step"
+			// Get the array index of the selected control
+			For s = 0 to MAX_CONTROLS - 1
+				If USER_CONTROL_ID$(s) = SELECTED_ID$
+					Exit
+				End If
+			Next s
+
+			If USER_CONTROL_TYPE$(s) = "UI Slider"
+				UI Slider ID$, step=val(VALUE$)
+			Else
+				UI TextBox ID$, step=val(VALUE$)
+			End If
+
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_step", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_slider_value"
+			UI Slider ID$, value=val(VALUE$)
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_slider_value", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_checkbox"
+			UI CheckBox ID$, value$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI CheckBox ID_PREFIX$ + "property_checkbox", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_fontname"
+			UI Button ID$, fontName$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Select ID_PREFIX$ + "property_fontname", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_placeholder"
+			UI TextBox ID$, placeholder$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_placeholder", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_tooltip"
+			UI Button ID$, tooltip$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_tooltip", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_tooltip_placement"
+			UI Button ID$, tooltipPlacement$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Select ID_PREFIX$ + "property_tooltip_placement", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_icon_class"
+			UI Button ID$, iconClass$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_icon_class", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_group"
+			UI Button ID$, group$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_group", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_class"
+			UI Button ID$, class$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_class", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_type"
+			UI TextBox ID$, type$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Select ID_PREFIX$ + "property_type", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_src"
+			// Get the array index of the selected control
+			For s = 0 to MAX_CONTROLS - 1
+				If USER_CONTROL_ID$(s) = SELECTED_ID$
+					Exit
+				End If
+			Next s
+
+			If USER_CONTROL_TYPE$(s) = "UI IFrame"
+				UI IFrame ID$, src$=VALUE$
+				{
+					var el = document.getElementById(vars.ID$);
+					elf = el.getElementsByTagName('iframe');
+					elf[0].setAttribute('class', 'iframe__responsive ui_iframe_no_events');
+				}
+			Else
+				UI Image ID$, src$=VALUE$
+			End If
+
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_src", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_onchange"
+			UI TextBox ID$, onChange$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_onchange", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_onclick"
+			UI Button ID$, onClick$=VALUE$
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI TextBox ID_PREFIX$ + "property_onclick", value$=VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+		If PROPERTY_NAME$ = "property_id"
+
+			// Get the array index of the component
+			For s = 0 to MAX_CONTROLS - 1
+				If USER_CONTROL_ID$(s) = ID$
+					Exit
+				End If
+			Next s
+
+			{
+				// Update the component id
+				window.application.adornment.setAttribute('data-control-id', this.vars.VALUE$);
+				this.aoz.ui.updateId(this.vars.ID$, this.vars.VALUE$);
+			}
+
+			// Update the id in the array
+			USER_CONTROL_ID$(s) = VALUE$
+			SELECTED_ID$ = VALUE$
+
+			// Update the select UI component
+			UpdateControlList
+
+			If TOOLBOX_VISIBLE and SELECTED_PANEL = 1
+				UI Select ID_PREFIX$ + "property_control_selector", items$=CONTROL_LIST$, value$=SELECTED_ID$
+				UI TextBox ID_PREFIX$ + "property_id", value$ = VALUE$
+			End If
+			UpdateAdornment
+			Pop Proc
+		End If
+	End If
+
+	If COMMAND_NAME$ = "addComponent" or COMMAND_NAME$ = "removeComponent"
+		If PROPERTY_NAME$ = "remove"
+			DELETE_CONTROL[ID$, true]
+		Else
+			AddComponentByInstruction[value$]
+			UpdateAdornment
+			UpdateControlList
+			SELECT_CONTROL[ID$]
+		End If
+		Pop Proc
+	End If
+End Proc
+
+Procedure CENTER_HORIZONTAL_CONTROL[ID$]
+	OLD_VALUE = UI X(ID$)
+	w = UI Width(ID$)
+
+	If w = 0
+		{
+			var el = document.getElementById(this.root.vars.SELECTED_ID$);
+			var rect = el.getBoundingClientRect();
+			this.vars.w = rect.width / this.root.vars.MINFITS_f;
+		}
+	End If
+
+	VALUE = (SCRW / 2) - (w / 2)
+
+	// Add command to the undo/redo system
+	{
+		client.addCommand({
+			commandName: 'propertyChange',
+			id: this.vars.ID$,
+			propertyName: 'property_x',
+			oldValue: this.vars.OLD_VALUE,
+			newValue: this.vars.VALUE
+		});
+	}
+
+	UI Button ID$, x = VALUE
+	SELECT_CONTROL[ID$]
+End Proc
+
+Procedure CENTER_VERTICAL_CONTROL[ID$]
+	OLD_VALUE = UI Y(ID$)
+	h = UI Height(ID$)
+
+	If h = 0
+		{
+			var el = document.getElementById(this.root.vars.SELECTED_ID$);
+			var rect = el.getBoundingClientRect();
+			this.vars.h = rect.height / this.root.vars.MINFITS_f;
+		}
+	End If
+
+	VALUE = (SCRH / 2) - (h / 2)
+
+	// Add command to the undo/redo system
+	{
+		client.addCommand({
+			commandName: 'propertyChange',
+			id: this.vars.ID$,
+			propertyName: 'property_y',
+			oldValue: this.vars.OLD_VALUE,
+			newValue: this.vars.VALUE
+		});
+	}
+
+	UI Button ID$, y = VALUE
+	SELECT_CONTROL[ID$]
+End Proc
+
+Procedure DUPLICATE_CONTROL[ID$]
+
+	NEWID$ = ""
+
+	// Get a free array element
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_STATUS(i) = 0
+			USER_CONTROL_STATUS(i) = 1
+			Exit
+		End If
+	Next i
+
+	If i = MAX_CONTROLS
+		UI Popup "Popup", content$="You have reached the maximum number of components", placement$="top-center", delay=5000, class$="bg-danger text-light"
+		Pop Proc
+	End If
+
+	// Get the index of the component to be copied
+	For s = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_ID$(s) = ID$
+			Exit
+		End If
+	Next s
+
+	TYPE$ = USER_CONTROL_TYPE$(s)
+	{
+		this.vars.TYPE$ = this.vars.TYPE$.replace(/ /g,'');
+	}
+	GetNewId[TYPE$, 0]
+	NEWID$ = PARAM$
+
+	{
+		// Use the private function to clone the component
+		// This does not copy event listeners
+		this.aoz.ui.clone(this.vars.ID$, this.vars.NEWID$);
+	}
+
+	// Set the array for the copied component
+	USER_CONTROL_ID$(i) = NEWID$
+	USER_CONTROL_TYPE$(i) = USER_CONTROL_TYPE$(s)
+
+	// Get the instruction code required to create the component
+	code$ = ""
+
+	If USER_CONTROL_TYPE$(i) = "UI Button"
+		CodeUIButton[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextBox"
+		CodeUITextBox[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextBlock"
+		CodeUITextBlock[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextArea"
+		CodeUITextArea[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Slider"
+		CodeUISlider[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Select"
+		CodeUISelect[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Radio"
+		CodeUIRadio[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI CheckBox"
+		CodeUICheckBox[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Progress"
+		CodeUIProgress[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI ColorPicker"
+		CodeUIColorPicker[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI IFrame"
+		CodeUIIFrame[i]
+		code$ = PARAM$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Image"
+		CodeUIImage[i]
+		code$ = PARAM$
+	End If
+
+	// Add command to the undo/redo system
+	{
+		this.vars.code$ = this.vars.code$.trim();
+
+		client.addCommand({
+			commandName: 'addComponent',
+			id: this.vars.NEWID$,
+			propertyName: '',
+			oldValue: '',
+			newValue: this.vars.code$
+		});
+	}
+
+	// Update
+	UpdateControlList
+
+	// Add custom drag/drop events
+	{
+		client.addDesignerComponentEvents(vars.NEWID$);
+	}
+	SELECTED_ID$ = NEWID$
+	SCREEN_HAS_CHANGES = true
+	SELECT_CONTROL[NEWID$]
+End Proc
+
+// Adds a UI component to the designer
+Procedure TOOL_BOX_CLICK[ID$]
+
+	code$ = ""
+
+	// Get a free array element to store the new component
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_STATUS(i) = 0
+			USER_CONTROL_STATUS(i) = 1
+			Exit
+		End If
+	Next i
+
+	If i = MAX_CONTROLS
+		UI Popup "Popup", content$="You have reached the maximum number of components", placement$="top-center", delay=5000, class$="bg-danger text-light"
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_button"
+		GetNewId["UIButton", i]
+		ID$ = PARAM$
+		UI Button ID$, x=GRID_SIZE, y=GRID_SIZE, fontName$=DEFAULT_FONT$, height=50, width=150
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI Button"
+		CodeUIButton[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_textbox"
+		GetNewId["UITextBox", i]
+		ID$ = PARAM$
+		UI TextBox ID$, x=GRID_SIZE, y=GRID_SIZE, fontName$=DEFAULT_FONT$
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI TextBox"
+		CodeUITextBox[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_textblock"
+		GetNewId["UITextBlock", i]
+		ID$ = PARAM$
+		UI TextBlock ID$, class$="text-light", x=GRID_SIZE, y=GRID_SIZE, fontName$=DEFAULT_FONT$, height=40
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI TextBlock"
+		CodeUITextBlock[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_textarea"
+		GetNewId["UITextArea", i]
+		ID$ = PARAM$
+		UI TextArea ID$, x=GRID_SIZE, y=GRID_SIZE, fontName$=DEFAULT_FONT$
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI TextArea"
+		CodeUITextArea[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_slider"
+		GetNewId["UISlider", i]
+		ID$ = PARAM$
+		UI Slider ID$, x=GRID_SIZE, y=GRID_SIZE
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI Slider"
+		CodeUISlider[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_select"
+		GetNewId["UISelect", i]
+		ID$ = PARAM$
+		UI Select ID$, x=GRID_SIZE, y=GRID_SIZE, fontName$=DEFAULT_FONT$, items$="1:Select item 1,2:Select item 2"
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI Select"
+		CodeUISelect[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_radio"
+		GetNewId["UIRadio", i]
+		ID$ = PARAM$
+		UI Radio ID$, items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", x=GRID_SIZE, y=GRID_SIZE, value$="1", fontName$=DEFAULT_FONT$
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI Radio"
+		CodeUIRadio[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_checkbox"
+		GetNewId["UICheckBox", i]
+		ID$ = PARAM$
+		UI CheckBox ID$, x=GRID_SIZE, y=GRID_SIZE, class$="form-check-input"
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI CheckBox"
+		CodeUICheckBox[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_progress"
+		GetNewId["UIProgress", i]
+		ID$ = PARAM$
+		UI Progress ID$, value=50, x=GRID_SIZE, y=GRID_SIZE
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI Progress"
+		CodeUIProgress[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_colorpicker"
+		GetNewId["UIColorPicker", i]
+		ID$ = PARAM$
+		UI ColorPicker ID$, value$="#cccccc", x=GRID_SIZE, y=GRID_SIZE
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI ColorPicker"
+		CodeUIColorPicker[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_iframe"
+		GetNewId["UIIFrame", i]
+		ID$ = PARAM$
+		UI IFrame ID$, x=GRID_SIZE, y=GRID_SIZE
+
+		// add a class to the iframe to disable mouse inputs
+		{
+			var el = document.getElementById(vars.ID$);
+			elf = el.getElementsByTagName('iframe');
+			elf[0].setAttribute('class', 'iframe__responsive ui_iframe_no_events');
+		}
+
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI IFrame"
+		CodeUIIFrame[i]
+		code$ = PARAM$
+	End If
+
+	If ID$ = ID_PREFIX$ + "toolbox_add_image"
+		GetNewId["UIImage", i]
+		ID$ = PARAM$
+		UI Image ID$, x=GRID_SIZE, y=GRID_SIZE, height=100, width=100
+		USER_CONTROL_ID$(i) = ID$
+		USER_CONTROL_TYPE$(i) = "UI Image"
+		CodeUIImage[i]
+		code$ = PARAM$
+	End If
+
+	// Add custom drag/drop events
+	{
+		client.addDesignerComponentEvents(vars.ID$);
+	}
+
+	SELECTED_ID$ = ID$
+	UpdateAdornment
+	UpdateControlList
+	SCREEN_HAS_CHANGES = true
+
+	// Add command to the undo/redo system
+	{
+		this.vars.code$ = this.vars.code$.trim();
+
+		client.addCommand({
+			commandName: 'addComponent',
+			id: this.root.vars.SELECTED_ID$,
+			propertyName: '',
+			oldValue: '',
+			newValue: this.vars.code$
+		});
+	}
+End Proc
+
+Procedure PROPERTIES_CHANGED[ID$, VALUE$]
+	SCREEN_HAS_CHANGES = true
+	OLD_VALUE = 0
+	OLD_VALUE$ = ""
+
+	If ID$ = ID_PREFIX$ + "property_x"
+		OLD_VALUE = UI X(SELECTED_ID$)
+		// Add command to the undo/redo system
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_x',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI Button SELECTED_ID$, x=Val(VALUE$)
+		UI Slider ID_PREFIX$ + "property_x_slider", value=Val(VALUE$)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_y"
+		OLD_VALUE = UI Y(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_y',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI Button SELECTED_ID$, y=Val(VALUE$)
+		UI Slider ID_PREFIX$ + "property_y_slider", value=Val(VALUE$)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_width"
+		OLD_VALUE = UI Width(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_width',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI CheckBox SELECTED_ID$, width=Val(VALUE$)
+		UI Slider ID_PREFIX$ + "property_width_slider", value=Val(VALUE$)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_height"
+		OLD_VALUE = UI Height(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_height',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI TextBlock SELECTED_ID$, height=Val(VALUE$)
+		UI Slider ID_PREFIX$ + "property_height_slider", value=Val(VALUE$)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_fontsize"
+		OLD_VALUE = UI FontSize(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_fontsize',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI Button SELECTED_ID$, fontSize=Val(VALUE$)
+		UI Slider ID_PREFIX$ + "property_fontsize_slider", value=Val(VALUE$)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_padding"
+		OLD_VALUE = UI Padding(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_padding',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI Button SELECTED_ID$, padding=Val(VALUE$)
+		UI Slider ID_PREFIX$ + "property_padding_slider", value=Val(VALUE$)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_content"
+		// Get the array index of the selected control
+		For s = 0 to MAX_CONTROLS - 1
+			If USER_CONTROL_ID$(s) = SELECTED_ID$
+				Exit
+			End If
+		Next s
+
+		OLD_VALUE$ = UI Content$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_content',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+
+		If USER_CONTROL_TYPE$(s) = "UI Button"
+			UI Button SELECTED_ID$, content$=VALUE$
+		Else
+			UI TextBlock SELECTED_ID$, content$=VALUE$
+		End If
+
+		UI TextBox ID$, value$ = VALUE$
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_items"
+		// Get the array index of the selected control
+		For s = 0 to MAX_CONTROLS - 1
+			If USER_CONTROL_ID$(s) = SELECTED_ID$
+				Exit
+			End If
+		Next s
+
+		OLD_VALUE$ = UI Items$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_items',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+
+		If USER_CONTROL_TYPE$(s) = "UI Radio"
+			UI Radio SELECTED_ID$, items$=VALUE$
+		Else
+			UI Select SELECTED_ID$, items$=VALUE$
+		End If
+
+		UI TextBox ID$, value$ = VALUE$
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_value_string"
+		OLD_VALUE$ = UI Value$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_value_string',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI Value SELECTED_ID$, value$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_value"
+		OLD_VALUE = Val(UI Value$(SELECTED_ID$))
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_value',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI Progress SELECTED_ID$, value=Val(VALUE$)
+		UI Slider ID_PREFIX$ + "property_value_slider", value=Val(VALUE$)
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_colorpicker"
+		OLD_VALUE$ = UI Value$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_colorpicker',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI ColorPicker SELECTED_ID$, value$=VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_min"
+		OLD_VALUE = UI Min(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_min',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+
+		// Get the array index of the selected control
+		For s = 0 to MAX_CONTROLS - 1
+			If USER_CONTROL_ID$(s) = SELECTED_ID$
+				Exit
+			End If
+		Next s
+
+		If USER_CONTROL_TYPE$(s) = "UI Slider"
+			UI Slider SELECTED_ID$, min=Val(VALUE$)
+		Else
+			UI TextBox SELECTED_ID$, min=Val(VALUE$)
+		End If
+
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_max"
+		OLD_VALUE = UI Max(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_max',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+
+		// Get the array index of the selected control
+		For s = 0 to MAX_CONTROLS - 1
+			If USER_CONTROL_ID$(s) = SELECTED_ID$
+				Exit
+			End If
+		Next s
+
+		If USER_CONTROL_TYPE$(s) = "UI Slider"
+			UI Slider SELECTED_ID$, max=Val(VALUE$)
+		Else
+			UI TextBox SELECTED_ID$, max=Val(VALUE$)
+		End If
+
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_step"
+		OLD_VALUE = UI Step(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_step',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+
+		// Get the array index of the selected control
+		For s = 0 to MAX_CONTROLS - 1
+			If USER_CONTROL_ID$(s) = SELECTED_ID$
+				Exit
+			End If
+		Next s
+
+		If USER_CONTROL_TYPE$(s) = "UI Slider"
+			UI Slider SELECTED_ID$, step=Val(VALUE$)
+		Else
+			UI TextBox SELECTED_ID$, step=Val(VALUE$)
+		End If
+
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_slider_value"
+		OLD_VALUE = Val(UI Value$(SELECTED_ID$))
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_slider_value',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI Slider SELECTED_ID$, value=Val(VALUE$)
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_rows"
+		OLD_VALUE = UI Rows(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_rows',
+				oldValue: this.vars.OLD_VALUE,
+				newValue: parseInt(this.vars.VALUE$)
+			});
+		}
+		UI TextArea SELECTED_ID$, rows=Val(VALUE$)
+		UI Slider ID_PREFIX$ + "property_rows_slider", value=Val(VALUE$)
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_checkbox"
+		OLD_VALUE$ = UI Value$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_checkbox',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI CheckBox SELECTED_ID$, value$=VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_fontname"
+		OLD_VALUE$ = UI FontName$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_fontname',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI Button SELECTED_ID$, fontName$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_placeholder"
+		OLD_VALUE$ = UI Placeholder$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_placeholder',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI TextBox SELECTED_ID$, placeHolder$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_tooltip"
+		OLD_VALUE$ = UI Tooltip$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_tooltip',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI Button SELECTED_ID$, tooltip$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_tooltip_placement"
+		OLD_VALUE$ = UI TooltipPlacement$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_tooltip_placement',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI Button SELECTED_ID$, tooltipPlacement$=VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_icon_class"
+		OLD_VALUE$ = UI IconClass$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_icon_class',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI Button SELECTED_ID$, iconClass$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_class"
+		OLD_VALUE$ = UI Class$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_class',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI Button SELECTED_ID$, class$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_group"
+		OLD_VALUE$ = UI Group$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_group',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI Button SELECTED_ID$, group$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_type"
+		OLD_VALUE$ = UI Type$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_type',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI TextBox SELECTED_ID$, type$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		UpdateAdornment
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_onchange"
+		// Replace white space with underscore
+		{
+			//this.vars.VALUE$ = this.vars.VALUE$.replace(/[^a-zA-Z0-9_ ]/g, "");
+			//this.vars.VALUE$ = this.vars.VALUE$.replace(/ /g,'_');
+		}
+
+		OLD_VALUE$ = UI OnChange$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_onchange',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI TextBox SELECTED_ID$, onChange$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_onclick"
+		// Replace white space with underscore
+		{
+			//this.vars.VALUE$ = this.vars.VALUE$.replace(/[^a-zA-Z0-9_ ]/g, "");
+			//this.vars.VALUE$ = this.vars.VALUE$.replace(/ /g,'_');
+		}
+		OLD_VALUE$ = UI OnClick$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_onclick',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+		UI Button SELECTED_ID$, onClick$=VALUE$
+		UI TextBox ID$, value$ = VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_src"
+
+		For s = 0 to MAX_CONTROLS - 1
+			If USER_CONTROL_ID$(s) = SELECTED_ID$
+				Exit
+			End If
+		Next s
+
+		OLD_VALUE$ = UI Src$(SELECTED_ID$)
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.root.vars.SELECTED_ID$,
+				propertyName: 'property_src',
+				oldValue: this.vars.OLD_VALUE$,
+				newValue: this.vars.VALUE$
+			});
+		}
+
+		If USER_CONTROL_TYPE$(s) = "UI IFrame"
+			UI IFrame SELECTED_ID$, src$=VALUE$
+			{
+				var el = document.getElementById(this.root.vars.SELECTED_ID$);
+				elf = el.getElementsByTagName('iframe');
+				elf[0].setAttribute('class', 'iframe__responsive ui_iframe_no_events');
+			}
+		Else
+			UI Image SELECTED_ID$, src$=VALUE$
+			updateAdornment
+		End If
+
+		UI TextBox ID$, value$ = VALUE$
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "property_id"
+
+		// Check if new ID already exists
+		id_count = 0
+		For c = 0 to MAX_CONTROLS - 1
+			If Lower$(USER_CONTROL_ID$(c)) = Lower$(VALUE$)
+				Add id_count, 1
+				Exit
+			End If
+		Next c
+
+		// Get the array index of the selected control
+		For s = 0 to MAX_CONTROLS - 1
+			If USER_CONTROL_ID$(s) = SELECTED_ID$
+				Exit
+			End If
+		Next s
+
+		If VALUE$ = ""
+			UI TextBox ID_PREFIX$ + "property_id", value$=USER_CONTROL_ID$(s)
+			UI Popup "Popup", content$="You must enter an Name for the component", placement$="top-center", delay=5000, class$="bg-warning"
+			Pop Proc
+		End If
+
+		If id_count > 0 and c <> s
+			UI TextBox ID_PREFIX$ + "property_id", value$=USER_CONTROL_ID$(s)
+			UI Popup "Popup", content$="The Name you entered already exists.", placement$="top-center", delay=5000, class$="bg-warning"
+			Pop Proc
+		End If
+
+		// Add command to the undo/redo system
+		{
+			client.addCommand({
+				commandName: 'propertyChange',
+				id: this.vars.VALUE$,
+				propertyName: 'property_id',
+				oldValue: this.root.vars.SELECTED_ID$,
+				newValue: this.vars.VALUE$
+			});
+
+			// Update the component id
+			window.application.adornment.setAttribute('data-control-id', this.vars.VALUE$);
+			this.aoz.ui.updateId(this.root.vars.SELECTED_ID$, this.vars.VALUE$);
+		}
+
+		// Update the id
+		USER_CONTROL_ID$(s) = VALUE$
+		SELECTED_ID$ = VALUE$
+
+		// Update the select UI component
+		UpdateControlList
+		UI Select ID_PREFIX$ + "property_control_selector", items$=CONTROL_LIST$, value$=SELECTED_ID$
+		UI TextBox ID$, value$ = VALUE$
+
+		Pop Proc
+	End If
+End Proc
+
+Procedure SHOW_ICON_SELECTOR[ID$]
+
+	UI TextBlock ID_PREFIX$ + "picker_background", width=DW, height=DH, x=0, y=0, class$="bg-light ui_designer__layer3", content$=""
+	UI Button ID_PREFIX$ + "close_picker", x=1800, y=10, content$="", iconClass$="bi bi-x-square", width=80, fontSize = 40, class$="ui_designer__layer4 btn btn-outline-secondary", onClick$="CLOSE_PICKER_EVENT"
+	UI Button ID_PREFIX$ + "next_picker", x=970, y=1000, content$="", iconClass$="bi bi-arrow-right-circle", width=80, fontSize = 30, class$="ui_designer__layer4 btn btn-primary", onClick$="SHOW_ICON_SELECTOR"
+	UI Button ID_PREFIX$ + "prev_picker", x=850, y=1000, content$="", iconClass$="bi bi-arrow-left-circle", width=80, fontSize = 30, class$="ui_designer__layer4 btn btn-primary", onClick$="SHOW_ICON_SELECTOR"
+
+	UI TextBox ID_PREFIX$ + "picker_filter", x=30, y=40, width=400, fontSize=30, placeHolder$="search icons...", class$="ui_designer__layer4 form-control", onChange$="PICKER_FILTER_CHANGED"
+
+	If ID$ = ID_PREFIX$ + "next_picker"
+		Add PICKER_PAGE, 1
+		PICKER_PAGE = Min(PICKER_PAGE_MAX, PICKER_PAGE)
+		ShowIconPage[PICKER_PAGE, UI Value$(ID_PREFIX$ + "picker_filter")]
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "prev_picker"
+		Add PICKER_PAGE, -1
+		PICKER_PAGE = Max(0, PICKER_PAGE)
+		ShowIconPage[PICKER_PAGE, UI Value$(ID_PREFIX$ + "picker_filter")]
+		Pop Proc
+	End If
+
+	ShowIconPage[PICKER_PAGE, UI Value$(ID_PREFIX$ + "picker_filter")]
+End Proc
+
+Procedure PICKER_FILTER_CHANGED[ID$, VALUE$]
+	PICKER_PAGE = 0
+	ShowIconPage[0, VALUE$]
+End Proc
+
+Procedure ShowIconPage[page, filter$]
+
+	Dim FILTERED_ICONS(BOOTSTRAP_ICON_COUNT)
+	MATCHCOUNT = 0
+	ICONS_PER_PAGE = 105
+
+	For i = 0 to  BOOTSTRAP_ICON_COUNT - 1
+		UI Delete ID_PREFIX$ + "icon_" + Trim$(Str$(i))
+
+		If filter$ <> ""
+			If Instr(BOOTSTRAP_ICONS$(i), trim$(filter$)) >= 0
+				FILTERED_ICONS(MATCHCOUNT) = i
+				Add MATCHCOUNT, 1
+			End If
+		Else
+			FILTERED_ICONS(MATCHCOUNT) = i
+			Add MATCHCOUNT, 1
+		End If
+	Next i
+
+	PICKER_PAGE_MAX = MATCHCOUNT / ICONS_PER_PAGE
+	If MATCHCOUNT mod ICONS_PER_PAGE > 0 Then Add PICKER_PAGE_MAX, 1
+	Add PICKER_PAGE_MAX, -1
+
+	UI TextBlock ID_PREFIX$ + "picker_page_label", 20, 1000, content$="Page" + Str$(page + 1) + " of " + Str$(Max(PICKER_PAGE_MAX + 1, 1)), fontSize=30, class$="ui_designer__layer4"
+
+	iconIndex = (page * ICONS_PER_PAGE)
+	For ypos = 120 to 940 step 120
+		For xpos = 70 to 1750 step 120
+			If iconIndex > MATCHCOUNT -1
+				Exit
+			End If
+			UI Button ID_PREFIX$ + "icon_" + Trim$(Str$(FILTERED_ICONS(iconIndex))), x=xpos, y=ypos, fontSize=50, width=100, content$="", class$="ui_designer__layer4 btn btn-outline-secondary", iconClass$=BOOTSTRAP_ICONS$(FILTERED_ICONS(iconIndex)), onClick$="ICON_SELECTED", tooltip$=BOOTSTRAP_ICONS$(FILTERED_ICONS(iconIndex)), tooltipPlacement$="top"
+			Add iconIndex, 1
+		Next xpos
+		If iconIndex > MATCHCOUNT -1
+			Exit
+		End If
+	Next ypos
+End Proc
+
+Procedure HideIconPicker
+	UI Delete ID_PREFIX$ + "picker_background"
+	UI Delete ID_PREFIX$ + "close_picker"
+	UI Delete ID_PREFIX$ + "next_picker"
+	UI Delete ID_PREFIX$ + "prev_picker"
+	UI Delete ID_PREFIX$ + "picker_page_label"
+	UI Delete ID_PREFIX$ + "picker_filter"
+	For i = 0 to BOOTSTRAP_ICON_COUNT - 1
+		UI Delete ID_PREFIX$ + "icon_" + Trim$(Str$(i))
+	Next i
+End Proc
+
+Procedure CLOSE_PICKER_EVENT[ID$]
+	HideIconPicker
+End Proc
+
+Procedure ICON_SELECTED[ID$]
+	pos = Instr(ID$, "icon_", 0)
+	selected = Val(Right$(ID$, Len(ID$) - pos - 5))
+	HideIconPicker
+
+	OLD_VALUE$ = UI IconClass$(SELECTED_ID$)
+	VALUE$ = BOOTSTRAP_ICONS$(selected)
+	// Add command to the undo/redo system
+	{
+		client.addCommand({
+			commandName: 'propertyChange',
+			id: this.root.vars.SELECTED_ID$,
+			propertyName: 'property_icon_class',
+			oldValue: this.vars.OLD_VALUE$,
+			newValue: this.vars.VALUE$
+		});
+	}
+
+	UI Button SELECTED_ID$, iconClass$=VALUE$
+	UI TextBox ID_PREFIX$ + "property_icon_class", value$=VALUE$
+	UpdateAdornment
+	SCREEN_HAS_CHANGES = true
+End Proc
+
+Procedure SHOW_ITEMS_EDITOR[ID$]
+	UI TextBlock ID_PREFIX$ + "items_editor_background", width=DW, height=DH, x=0, y=0, class$="bg-light ui_designer__layer3", content$=""
+	UI Button ID_PREFIX$ + "close_items_editor", x=1800, y=10, content$="", iconClass$="bi bi-file-earmark-check-fill", width=80, fontSize = 40, class$="ui_designer__layer4 btn btn-outline-secondary", onClick$="CLOSE_ITEMS_EDITOR_EVENT"
+	UI TextBlock ID_PREFIX$ + "items_editor_page_label", 20, 20, content$="Items Editor", class$="ui_designer__layer4", fontSize=35
+
+	Dim v$(10), i$(10)
+	items$ = UI Items$(SELECTED_ID$)
+	itemCount = 0
+
+	{
+		var ops = this.vars.items$.split(',');
+		if (ops && ops.length > 0) {
+			this.vars.itemCount = ops.length;
+			var parts;
+			for (var c = 0; c < ops.length; c++) {
+				parts = ops[c].split(':');
+				if (parts && parts[0]) {
+					this.vars.v$_array.setValue([c], parts[0]);
+				}
+				if (parts && parts[1]) {
+					this.vars.i$_array.setValue([c], parts[1]);
+				}
+			}
+		}
+	}
+
+	UI TextBlock ID_PREFIX$ + "items_editor_page_label1", 300, 90, content$="Value", class$="ui_designer__layer4 fw-bold", fontSize=30
+	UI TextBlock ID_PREFIX$ + "items_editor_page_label2", 470, 90, content$="Item Text", class$="ui_designer__layer4 fw-bold", fontSize=30
+
+	For i = 0 to 9
+		UI TextBox ID_PREFIX$ + "items_editor_v_" + Trim$(Str$(i)), x = 300, y = 150 + (i * 80), class$="ui_designer__layer4 form-control", width=150
+		UI TextBox ID_PREFIX$ + "items_editor_i_" + Trim$(Str$(i)), x = 470, y = 150 + (i * 80), class$="ui_designer__layer4 form-control", width=1150
+		If i < itemCount
+			UI Value ID_PREFIX$ + "items_editor_v_" + Trim$(Str$(i)), value$=v$(i)
+			UI Value ID_PREFIX$ + "items_editor_i_" + Trim$(Str$(i)), value$=i$(i)
+		End If
+	Next i
+
+	UI Button ID_PREFIX$ + "save_items_editor", x=1470, y=950, content$="Save", width=150, fontSize = 30, class$="ui_designer__layer4 btn btn-success", onClick$="SAVE_ITEM_EDITOR_ITEMS"
+
+End Proc
+
+Procedure SAVE_ITEM_EDITOR_ITEMS[ID$]
+	value$ = "": v$ = "": i$ = "": OLD_VALUE$ = ""
+	For i = 0 to 9
+		v$ = Trim$(UI Value$(ID_PREFIX$ + "items_editor_v_" + Trim$(Str$(i))))
+		i$ = Trim$(UI Value$(ID_PREFIX$ + "items_editor_i_" + Trim$(Str$(i))))
+
+		v$ = Replace$(v$, ",", " ")
+		v$ = Replace$(v$, ":", " ")
+		i$ = Replace$(i$, ",", " ")
+		i$ = Replace$(i$, ":", " ")
+
+		{
+			this.vars.i$ = client.removeQuotes(this.vars.i$);
+			this.vars.v$ = client.removeQuotes(this.vars.v$);
+		}
+
+		If Len(v$) > 0
+			value$ = value$ + v$ + ":" + i$ + ","
+		End If
+	Next i
+	value$ = Left$(value$, Len(value$) - 1)
+
+	// Get the index of the component to be updated
+	For s = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_ID$(s) = SELECTED_ID$
+			Exit
+		End If
+	Next s
+
+	OLD_VALUE$ = UI Items$(SELECTED_ID$)
+	// Add command to the undo/redo system
+	{
+		client.addCommand({
+			commandName: 'propertyChange',
+			id: this.root.vars.SELECTED_ID$,
+			propertyName: 'property_items',
+			oldValue: this.vars.OLD_VALUE$,
+			newValue: this.vars.value$
+		});
+	}
+
+	If USER_CONTROL_TYPE$(s) = "UI Radio"
+		UI Radio SELECTED_ID$, items$=value$
+	Else
+		UI Select SELECTED_ID$, items$=value$
+	End If
+
+	CLOSE_ITEMS_EDITOR_EVENT
+	UpdateAdornment
+
+	UI TextBox ID_PREFIX$ + "property_items", value$=value$
+	SCREEN_HAS_CHANGES = true
+End Proc
+
+Procedure CLOSE_ITEMS_EDITOR_EVENT[ID$]
+	UI Delete ID_PREFIX$ + "items_editor_background"
+	UI Delete ID_PREFIX$ + "close_items_editor"
+	UI Delete ID_PREFIX$ + "items_editor_page_label"
+	UI Delete ID_PREFIX$ + "items_editor_page_label1"
+	UI Delete ID_PREFIX$ + "items_editor_page_label2"
+	UI Delete ID_PREFIX$ + "save_items_editor"
+	For i = 0 to 9
+		UI Delete ID_PREFIX$ + "items_editor_v_" + Trim$(Str$(i))
+		UI Delete ID_PREFIX$ + "items_editor_i_" + Trim$(Str$(i))
+	Next i
+End Proc
+
+Procedure CLOSE_CODE_VIEW[ID$]
+	UI Delete ID_PREFIX$ + "code_view_background"
+	UI Delete ID_PREFIX$ + "close_code_view"
+	UI Delete ID_PREFIX$ + "code_view_page_label"
+	UI Delete ID_PREFIX$ + "code_view_text"
+	UI Delete ID_PREFIX$ + "code_view_copy"
+End Proc
+
+Procedure UpdateEventNames
+	event_name$ = ""
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_STATUS(i) = 1
+			event_name$ = UI OnClick$(USER_CONTROL_ID$(i))
+			If event_name$ <> ""
+				{
+					this.vars.event_name$ = this.vars.event_name$.replace(/[^a-zA-Z0-9_ ]/g, "");
+					this.vars.event_name$ = this.vars.event_name$.replace(/ /g,'_').toUpperCase();
+				}
+				UI Button USER_CONTROL_ID$(i), onClick$ = event_name$
+			End If
+
+			event_name$ = UI OnChange$(USER_CONTROL_ID$(i))
+			If event_name$ <> ""
+				{
+					this.vars.event_name$ = this.vars.event_name$.replace(/[^a-zA-Z0-9_ ]/g, "");
+					this.vars.event_name$ = this.vars.event_name$.replace(/ /g,'_').toUpperCase();
+				}
+				UI TextBox USER_CONTROL_ID$(i), onChange$ = event_name$
+			End If
+		End If
+	Next i
+End Proc
+
+Procedure UpdateProject
+
+	If IS_EDITOR_AVAILABLE = 0
+		UI Popup ID_PREFIX$ + "pop_up", content$="Unable to update, please launch the UI Designer from the AOZ Studio Toolbar.", placement$="top-center", delay=5000, class$="text-white bg-danger"
+		Pop Proc
+	End If
+
+	UpdateEventNames
+
+	Dim fontName$(MAX_CONTROLS)
+	Dim clickEvents$(MAX_CONTROLS)
+	Dim changeEvents$(MAX_CONTROLS)
+	Dim changeEventParams$(MAX_CONTROLS)
+	fontNameCounter = 0: clickEventCounter = 0:	changeEventCounter = 0
+	code$ = "": iconsUsed = false
+	fonts$ = "": clicks$ = "": changes$ = ""
+
+	CodeComment["// ##*AOZUIDesignerGeneratedCode*##"]: code$ = code$ + PARAM$ + LB$
+	CodeKeyWord["Procedure"]: code$ = code$ + PARAM$ + NB$
+	CodeLabel[SCREEN_NAME$(SCREEN_IDX)]: code$ = code$ + PARAM$ + LB$
+
+	CodeComment["// ********************************************************************************"]: code$ = code$ + PARAM$ + LB$
+	CodeComment["// The contents of this procedure is generated by the UI Designer."]: code$ = code$ + PARAM$ + LB$
+	CodeComment["// Do not modify the contents of this procedure with the code editor."]: code$ = code$ + PARAM$ + LB$
+	CodeComment["// ********************************************************************************"]: code$ = code$ + PARAM$ + LB$
+
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_STATUS(i) = 1
+			If USER_CONTROL_TYPE$(i) = "UI Button"
+				CodeUIButton[i]
+				code$ = code$ + PARAM$ + LB$
+				If UI IconClass$(USER_CONTROL_ID$(i)) <> ""
+					iconsUsed = true
+				End If
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI TextBox"
+				CodeUITextBox[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI TextBlock"
+				CodeUITextBlock[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI TextArea"
+				CodeUITextArea[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Slider"
+				CodeUISlider[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Select"
+				CodeUISelect[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Radio"
+				CodeUIRadio[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI CheckBox"
+				CodeUICheckBox[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Progress"
+				CodeUIProgress[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI ColorPicker"
+				CodeUIColorPicker[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI IFrame"
+				CodeUIIFrame[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If UI FontName$(USER_CONTROL_ID$(i)) <> ""
+				found = false
+				For e = 0 to fontNameCounter - 1
+					If fontName$(e) = UI FontName$(USER_CONTROL_ID$(i))
+						found = true
+						Exit
+					End If
+				Next e
+				If found = false
+					fontName$(fontNameCounter) = UI FontName$(USER_CONTROL_ID$(i))
+					Add fontNameCounter, 1
+				End If
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Image"
+				CodeUIImage[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If UI OnClick$(USER_CONTROL_ID$(i)) <> ""
+				found = false
+				For e = 0 to clickEventCounter - 1
+					If clickEvents$(e) = UI OnClick$(USER_CONTROL_ID$(i))
+						found = true
+						Exit
+					End If
+				Next e
+				If found = false
+					clickEvents$(clickEventCounter) = UI OnClick$(USER_CONTROL_ID$(i))
+					Add clickEventCounter, 1
+				End If
+			End If
+
+			If UI OnChange$(USER_CONTROL_ID$(i)) <> ""
+				found = false
+				For e = 0 to changeEventCounter - 1
+					If changeEvents$(e) = UI OnChange$(USER_CONTROL_ID$(i))
+						found = true
+						Exit
+					End If
+				Next e
+				If found = false
+					changeEvents$(changeEventCounter) = UI OnChange$(USER_CONTROL_ID$(i))
+					Add changeEventCounter, 1
+				End If
+			End If
+		End If
+	Next i
+
+	CodeKeyWord["End Proc"]: code$ = code$ + PARAM$ + NB$
+
+	For i = 0 to fontNameCounter - 1
+		fonts$ = fonts$ + fontName$(i) + ","
+	Next i
+	fonts$ = Left$(fonts$, Len(fonts$) -1)
+
+	For i = 0 to clickEventCounter - 1
+		clicks$ = clicks$ + clickEvents$(i) + ","
+	Next i
+	clicks$ = Left$(clicks$, Len(clicks$) -1)
+
+	For i = 0 to changeEventCounter - 1
+		changes$ = changes$ + changeEvents$(i) + ","
+	Next i
+	changes$ = Left$(changes$, Len(changes$) -1)
+
+	{
+		client.updateProject(this.vars.code$, this.root.vars.SCREEN_IDX, this.vars.iconsUsed, this.vars.fonts$, this.vars.clicks$, this.vars.changes$);
+	}
+
+	UI Popup ID_PREFIX$ + "pop_up", content$="Your AOZ Studio project has been updated.", placement$="top-center", delay=5000, class$="text-white bg-success"
+	SCREEN_HAS_CHANGES = false
+End Proc
+
+Procedure ViewCode
+	UpdateEventNames
+
+	UI TextBlock ID_PREFIX$ + "code_view_background", width=DW, height=DH, x=0, y=0, class$="bg-light ui_designer__layer3", content$=""
+	UI Button ID_PREFIX$ + "close_code_view", x=1800, y=10, content$="", iconClass$="bi bi-x-square", width=100, fontSize = 60, class$="ui_designer__layer4 btn btn-outline-secondary", onClick$="CLOSE_CODE_VIEW"
+	UI TextBlock ID_PREFIX$ + "code_view_page_label", 20, 20, content$="Code View", class$="ui_designer__layer4", fontSize=35
+	UI Button ID_PREFIX$ + "code_view_copy", x=20, y=80, content$="Copy to clipboard", iconClass$="bi bi-clipboard-check", class$="ui_designer__layer4 btn btn-primary", width=270, onClick$="COPY_CODE_TO_CLIPBOARD"
+
+	UI TextBlock ID_PREFIX$ + "code_view_text", x=20, y=140, content$="", width=DW-40, height=DH-180, class$="ui_designer__layer4 bg-dark text-light text-nowrap", fontName$="roboto mono"
+
+	code$ = "": v$ = "": tags$ = ""
+
+	CodeTag["#displayWidth:", Str$(SCRW)]: tags$ = tags$ + PARAM$ + LB$
+	CodeTag["#displayHeight:", Str$(SCRH)]: tags$ = tags$ + PARAM$ + LB$
+	CodeColor[BACKGROUND_COLOR$]: code$ = code$ + PARAM$ + LB$ + LB$
+	CodeLabel[SCREEN_NAME$(SCREEN_IDX)]:	code$ = code$ + PARAM$ + LB$ + LB$
+	CodeKeyWord["Do"]: code$ = code$ + PARAM$ + LB$
+	CodeKeyWord["Wait Vbl"]: code$ = code$ + TB$ + PARAM$ + LB$
+	CodeKeyWord["Loop"]: code$ = code$ + PARAM$ + LB$ + LB$
+
+	CodeComment["// ##*AOZUIDesignerGeneratedCode*##"]: code$ = code$ + PARAM$ + LB$
+	CodeKeyWord["Procedure"]: code$ = code$ + PARAM$ + NB$
+	CodeLabel[SCREEN_NAME$(SCREEN_IDX)]: code$ = code$ + PARAM$ + LB$
+
+	CodeComment["// ********************************************************************************"]: code$ = code$ + PARAM$ + LB$
+	CodeComment["// The contents of this procedure is generated by the UI Designer."]: code$ = code$ + PARAM$ + LB$
+	CodeComment["// Do not modify the contents of this procedure with the code editor."]: code$ = code$ + PARAM$ + LB$
+	CodeComment["// ********************************************************************************"]: code$ = code$ + PARAM$ + LB$
+
+	Dim clickEvents$(MAX_CONTROLS)
+	Dim changeEvents$(MAX_CONTROLS)
+	Dim fontName$(MAX_CONTROLS)
+	clickEventCounter = 0
+	changeEventCounter = 0
+	fontNameCounter = 0
+	found = false
+	iconsUsed = false
+
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_STATUS(i) = 1
+		 	If USER_CONTROL_TYPE$(i) = "UI Button"
+				CodeUIButton[i]
+				code$ = code$ + PARAM$ + LB$
+				If UI IconClass$(USER_CONTROL_ID$(i)) <> ""
+					iconsUsed = true
+				End If
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI TextBox"
+				CodeUITextBox[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI TextBlock"
+				CodeUITextBlock[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI TextArea"
+				CodeUITextArea[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Slider"
+				CodeUISlider[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Select"
+				CodeUISelect[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Radio"
+				CodeUIRadio[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI CheckBox"
+				CodeUICheckBox[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Progress"
+				CodeUIProgress[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI ColorPicker"
+				CodeUIColorPicker[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI IFrame"
+				CodeUIIFrame[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If USER_CONTROL_TYPE$(i) = "UI Image"
+				CodeUIImage[i]
+				code$ = code$ + PARAM$ + LB$
+			End If
+
+			If UI FontName$(USER_CONTROL_ID$(i)) <> ""
+				found = false
+				For e = 0 to fontNameCounter - 1
+					If fontName$(e) = UI FontName$(USER_CONTROL_ID$(i))
+						found = true
+						Exit
+					End If
+				Next e
+				If found = false
+					fontName$(fontNameCounter) = UI FontName$(USER_CONTROL_ID$(i))
+					Add fontNameCounter, 1
+				End If
+			End If
+
+			If UI OnClick$(USER_CONTROL_ID$(i)) <> ""
+				found = false
+				For e = 0 to clickEventCounter - 1
+					If clickEvents$(e) = UI OnClick$(USER_CONTROL_ID$(i))
+						found = true
+						Exit
+					End If
+				Next e
+				If found = false
+					clickEvents$(clickEventCounter) = UI OnClick$(USER_CONTROL_ID$(i))
+					Add clickEventCounter, 1
+				End If
+			End If
+
+			If UI OnChange$(USER_CONTROL_ID$(i)) <> ""
+				found = false
+				For e = 0 to changeEventCounter - 1
+					If changeEvents$(e) = UI OnChange$(USER_CONTROL_ID$(i))
+						found = true
+						Exit
+					End If
+				Next e
+				If found = false
+					changeEvents$(changeEventCounter) = UI OnChange$(USER_CONTROL_ID$(i))
+					Add changeEventCounter, 1
+				End If
+			End If
+		End If
+	Next i
+
+	CodeKeyWord["End Procedure"]: code$ = code$ + PARAM$
+	code$ = code$ + LB$ + LB$
+
+	For i = 0 to clickEventCounter - 1
+		CodeEvent[clickEvents$(i), "ID$", "// Add your onClick$ code here"]
+		code$ = code$ + PARAM$ + LB$ + LB$
+	Next i
+
+	For i = 0 to changeEventCounter - 1
+		CodeEvent[changeEvents$(i), "ID$, VALUE$", "// Add your onChange$ code here"]
+		code$ = code$ + PARAM$ + LB$ + LB$
+	Next i
+
+	For i = 0 to fontNameCounter - 1
+		CodeTagString["#googleFont:", fontName$(i)]
+		tags$ = tags$ + PARAM$ + LB$
+	Next i
+
+	If iconsUsed = true
+		CodeKeyWord["Load CSS"]: tags$ = tags$ + PARAM$ + NB$
+		CodeStringParam["", "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css", false]
+		tags$ = tags$ + PARAM$ + LB$ + LB$
+	End If
+
+	AOZ_CODE$ = tags$ + code$
+
+	UI TextBlock ID_PREFIX$ + "code_view_text", content$=AOZ_CODE$
+
+End Proc
+
+Procedure COPY_CODE_TO_CLIPBOARD[ID$]
+	JS Execute "client.copyToClipboard(window.application.vars.AOZ_CODE$, true);"
+	UI Popup "popupCodeCopied", content$="The code has been copied to the clipboard.", delay=3000, placement$="top-center", class$="text-white bg-success"
+End Proc
+
+Procedure CodeEvent[name$, params$, comment$]
+	T$=""
+	If name$ <> ""
+		CodeKeyWord["Procedure"]: T$ = T$ + PARAM$ + NB$ + name$ + "[" + params$ + "]" + LB$
+		CodeComment[comment$] : T$ = T$ + TB$ + PARAM$ + LB$
+		CodeKeyWord["End Procedure"]: T$ = T$ + PARAM$
+	End If
+End Proc[T$]
+
+Procedure CodeUIColorPicker[idx]
+	T$ = ""
+	CodeKeyWord["UI ColorPicker"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 40]: T$ = T$ + PARAM$
+	CodeValueParam["height", UI Height(USER_CONTROL_ID$(idx)), true, 40]: T$ = T$ + PARAM$
+	CodeStringParam["value$", UI Value$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["onChange$", UI OnChange$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUIProgress[idx]
+	T$ = ""
+	CodeKeyWord["UI Progress"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 300]: T$ = T$ + PARAM$
+	CodeValueParam["height", UI Height(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["value", Val(UI Value$(USER_CONTROL_ID$(idx))), true, 50]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUIIFrame[idx]
+	T$ = ""
+	CodeKeyWord["UI IFrame"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 300]: T$ = T$ + PARAM$
+	CodeValueParam["height", UI Height(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeStringParam["src$", UI Src$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUICheckBox[idx]
+	T$ = ""
+	CodeKeyWord["UI CheckBox"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 30]: T$ = T$ + PARAM$
+	CodeValueParam["height", UI Height(USER_CONTROL_ID$(idx)), true, 30]: T$ = T$ + PARAM$
+	CodeStringParam["value$", UI Value$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["onChange$", UI OnChange$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUIRadio[idx]
+	T$ = ""
+	CodeKeyWord["UI Radio"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["padding", UI Padding(USER_CONTROL_ID$(idx)), true, 5]: T$ = T$ + PARAM$
+	CodeValueParam["fontSize", UI FontSize(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeStringParam["value$", UI Value$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["fontName$", UI FontName$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["items$", UI Items$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["onChange$", UI OnChange$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUISelect[idx]
+	T$ = ""
+	CodeKeyWord["UI Select"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 300]: T$ = T$ + PARAM$
+	CodeValueParam["padding", UI Padding(USER_CONTROL_ID$(idx)), true, 5]: T$ = T$ + PARAM$
+	CodeValueParam["fontSize", UI FontSize(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeStringParam["value$", UI Value$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["fontName$", UI FontName$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["items$", UI Items$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["onChange$", UI OnChange$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUISlider[idx]
+	T$ = ""
+	CodeKeyWord["UI Slider"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 300]: T$ = T$ + PARAM$
+	CodeValueParam["min", UI Min(USER_CONTROL_ID$(idx)), true, 0]: T$ = T$ + PARAM$
+	CodeValueParam["max", UI Max(USER_CONTROL_ID$(idx)), true, 100]: T$ = T$ + PARAM$
+	CodeValueParam["step", UI Step(USER_CONTROL_ID$(idx)), true, 1]: T$ = T$ + PARAM$
+	CodeValueParam["value", Val(UI Value$(USER_CONTROL_ID$(idx))), true, 0]: T$ = T$ + PARAM$
+	CodeStringParam["onChange$", UI OnChange$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUITextArea[idx]
+	T$ = ""
+	CodeKeyWord["UI TextArea"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 300]: T$ = T$ + PARAM$
+	CodeValueParam["padding", UI Padding(USER_CONTROL_ID$(idx)), true, 5]: T$ = T$ + PARAM$
+	CodeValueParam["fontSize", UI FontSize(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["rows", UI Rows(USER_CONTROL_ID$(idx)), true, 2]: T$ = T$ + PARAM$
+	CodeStringParam["value$", UI Value$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["fontName$", UI FontName$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["placeHolder$", UI Placeholder$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUITextBlock[idx]
+	T$ = ""
+	CodeKeyWord["UI TextBlock"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 400]: T$ = T$ + PARAM$
+	CodeValueParam["height", UI Height(USER_CONTROL_ID$(idx)), true, 40]: T$ = T$ + PARAM$
+	CodeValueParam["padding", UI Padding(USER_CONTROL_ID$(idx)), true, 5]: T$ = T$ + PARAM$
+	CodeValueParam["fontSize", UI FontSize(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeStringParam["content$", UI Content$(USER_CONTROL_ID$(idx)), true, true]: T$ = T$ + PARAM$
+	CodeStringParam["fontName$", UI FontName$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUITextBox[idx]
+	T$ = ""
+	CodeKeyWord["UI TextBox"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 150]: T$ = T$ + PARAM$
+	CodeValueParam["padding", UI Padding(USER_CONTROL_ID$(idx)), true, 5]: T$ = T$ + PARAM$
+	CodeValueParam["fontSize", UI FontSize(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeStringParam["value$", UI Value$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["fontName$", UI FontName$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["placeHolder$", UI Placeholder$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["type$", UI Type$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeValueParam["min", UI Min(USER_CONTROL_ID$(idx)), true, 0]: T$ = T$ + PARAM$
+	CodeValueParam["max", UI Max(USER_CONTROL_ID$(idx)), true, 100]: T$ = T$ + PARAM$
+	CodeValueParam["step", UI Step(USER_CONTROL_ID$(idx)), true, 1]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["onChange$", UI OnChange$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUIButton[idx]
+	T$ = ""
+	CodeKeyWord["UI Button"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 0]: T$ = T$ + PARAM$
+	CodeValueParam["height", UI Height(USER_CONTROL_ID$(idx)), true, 0]: T$ = T$ + PARAM$
+	CodeValueParam["padding", UI Padding(USER_CONTROL_ID$(idx)), true, 5]: T$ = T$ + PARAM$
+	CodeValueParam["fontSize", UI FontSize(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeStringParam["content$", UI Content$(USER_CONTROL_ID$(idx)), true, true]: T$ = T$ + PARAM$
+	CodeStringParam["fontName$", UI FontName$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["tooltip$", UI Tooltip$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["tooltipPlacement$", UI TooltipPlacement$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["iconClass$", UI IconClass$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["onClick$", UI OnClick$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeUIImage[idx]
+	T$ = ""
+	CodeKeyWord["UI Image"]: T$ = PARAM$ + " "
+	CodeStringParam["", USER_CONTROL_ID$(idx), true]: T$ = T$ + PARAM$
+	CodeValueParam["x", UI X(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["y", UI Y(USER_CONTROL_ID$(idx)), true, 20]: T$ = T$ + PARAM$
+	CodeValueParam["width", UI Width(USER_CONTROL_ID$(idx)), true, 0]: T$ = T$ + PARAM$
+	CodeValueParam["height", UI Height(USER_CONTROL_ID$(idx)), true, 0]: T$ = T$ + PARAM$
+	CodeStringParam["tooltip$", UI Tooltip$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["tooltipPlacement$", UI TooltipPlacement$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["onClick$", UI OnClick$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["src$", UI Src$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["class$", UI Class$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	CodeStringParam["group$", UI Group$(USER_CONTROL_ID$(idx)), true]: T$ = T$ + PARAM$
+	T$ = Left$(T$, Len(T$) - 2)
+End Proc[T$]
+
+Procedure CodeTagString[name$, value$]
+	T$ = ""
+	If value$ <> ""
+	{
+		this.vars.T$ += this.vars.name$;
+		this.vars.T$ += '"';
+		this.vars.T$ += this.vars.value$;
+		this.vars.T$ += '"';
+	}
+
+	End If
+End Proc[T$]
+
+Procedure CodeTag[name$, value$]
+	T$ = ""
+	{
+		this.vars.T$ += this.vars.name$;
+		this.vars.T$ += this.vars.value$;
+	}
+
+End Proc[T$]
+
+Procedure CodeComment[value$]
+	T$ = ""
+	{
+		this.vars.T$ += this.vars.value$;
+	}
+End Proc[T$]
+
+Procedure CodeColor[value$]
+	T$ = ""
+	{
+		this.vars.T$ += 'Color';
+		this.vars.T$ += ' 0';
+		this.vars.T$ += ', ';
+		this.vars.T$ += this.vars.value$.replace('#', '$').toUpperCase();
+	}
+End Proc[T$]
+
+Procedure CodeKeyWord[value$]
+	T$ = ""
+	{
+		this.vars.T$ += this.vars.value$;
+	}
+End Proc[T$]
+
+Procedure CodeLabel[value$]
+	T$ = ""
+	{
+		this.vars.T$ += this.vars.value$;
+	}
+End Proc[T$]
+
+Procedure CodeStringParam[param$, value$, addComma, includeEmpty]
+	T$ = ""
+
+	If value$ <> "" or includeEmpty = true
+		{
+			if (this.vars.param$ != '') {
+				this.vars.T$ += this.vars.param$;
+				this.vars.T$ += '=';
+			}
+
+			this.vars.T$ += '"';
+			this.vars.T$ += client.replaceQuotes(this.vars.value$);
+			this.vars.T$ += '"';
+
+			if (this.vars.addComma == true) {
+				this.vars.T$ += ', ';
+			}
+		}
+	End If
+End Proc[T$]
+
+Procedure CodeValueParam[param$, value, addComma, defaultValue]
+	T$ = ""
+	If value <> defaultValue
+		{
+			this.vars.T$ += this.vars.param$;
+			this.vars.T$ += '=';
+			this.vars.T$ += this.vars.value;
+			if (this.vars.addComma == true) {
+				this.vars.T$ += ', ';
+			}
+		}
+	End If
+End Proc[T$]
+
+Procedure UI_BUTTON_CLICK[ID$]
+	If ID$ = ID_PREFIX$ + "screen_save"
+		UpdateProject
+		Pop Proc
+	End If
+
+	If ID$ = ID_PREFIX$ + "screen_new"
+		If SCREEN_HAS_CHANGES = true
+			UI Confirm title$="Your changes have not been saved", content$="Are you sure?", confirmButton$="Yes", closeButton$="No", onConfirm$="CONFIRM_NEW_SCREEN"
+			Pop Proc
+		End If
+
+		CONFIRM_NEW_SCREEN
+		Pop Proc
+	End If
+	If ID$ = ID_PREFIX$ + "view_aoz_code"
+		ViewCode
+		Pop Proc
+	End If
+End Proc
+
+Procedure LOAD_SELECTED_SCREEN[ID$, VALUE$]
+	SCREEN_SWITCH_IDX = Val(VALUE$)
+	UI Value ID_PREFIX$ + "toolbox_screen_selector", value$=Str$(SCREEN_IDX)
+
+	If SCREEN_HAS_CHANGES = true
+		UI Confirm title$="Your changes have not been saved", content$="Are you sure?", confirmButton$="Yes", closeButton$="No", onConfirm$="CONFIRM_SWITCH_SCREEN"
+		Pop Proc
+	End If
+
+	CONFIRM_SWITCH_SCREEN
+End Proc
+
+Procedure CONFIRM_SWITCH_SCREEN
+	SCREEN_IDX = SCREEN_SWITCH_IDX
+	UI Value ID_PREFIX$ + "toolbox_screen_selector", value$=Str$(SCREEN_IDX)
+	DisplaySelectedScreen[SCREEN_IDX]
+End Proc
+
+Procedure CONFIRM_NEW_SCREEN
+	UI TextBlock ID_PREFIX$ + "new_screen_background", width=DW, height=DH, x=0, y=0, class$="bg-light ui_designer__layer3", content$=""
+	UI Button ID_PREFIX$ + "close_new_screen", x=1800, y=10, content$="", iconClass$="bi bi-x-square", width=100, fontSize = 60, class$="ui_designer__layer4 btn btn-outline-secondary", onClick$="CLOSE_NEW_SCREEN_EVENT"
+	UI TextBlock ID_PREFIX$ + "new_screen_page_label", x=20, y=20, content$="New Screen", class$="ui_designer__layer4", fontSize=35
+	UI TextBlock ID_PREFIX$ + "new_screen_page_label2", x=750, y=160, content$="Enter a name for the new screen", class$="ui_designer__layer4"
+	UI TextBox ID_PREFIX$ + "new_screen_name", x=750, y=200, width=400, class$="ui_designer__layer4 form-control", onChange$="SCREEN_NAME_CHANGED"
+	UI Button ID_PREFIX$ + "new_screen_confirm_button", x=1050, y=260, content$="OK", width=100, class$="ui_designer__layer4 btn btn-success", onClick$="NEW_SCREEN_BUTTON"
+End Proc
+
+Procedure CLOSE_NEW_SCREEN_EVENT[ID$]
+	UI Delete ID_PREFIX$ + "new_screen_background"
+	UI Delete ID_PREFIX$ + "close_new_screen"
+	UI Delete ID_PREFIX$ + "new_screen_page_label"
+	UI Delete ID_PREFIX$ + "new_screen_page_label2"
+	UI Delete ID_PREFIX$ + "new_screen_name"
+	UI Delete ID_PREFIX$ + "new_screen_confirm_button"
+End Proc
+
+Procedure SCREEN_NAME_CHANGED[ID$, VALUE$]
+	DUMMY=0
+	// Remove white space and double quotes
+	{
+		this.vars.VALUE$ = this.vars.VALUE$.replace(/ /g,'');
+		this.vars.VALUE$ = client.removeQuotes(this.vars.VALUE$);
+	}
+
+	UI Value ID_PREFIX$ + "new_screen_name", value$=VALUE$
+End Proc
+
+Procedure NEW_SCREEN_BUTTON[ID$]
+	If UI Value$(ID_PREFIX$ + "new_screen_name") = ""
+		UI Popup "Popup", content$="You must enter a screen name.", placement$="top-center", delay=3000, class$="bg-danger text-light"
+		Pop Proc
+	End If
+
+	// Check if screen name already exists
+	For i = 0 To SCREEN_COUNT -1
+		If Lower$(SCREEN_NAME$(i)) = Lower$(UI Value$(ID_PREFIX$ + "new_screen_name"))
+			UI Popup "Popup", content$="A screen with that name already exists.", placement$="top-center", delay=3000, class$="bg-danger text-light"
+			Pop Proc
+		End If
+	Next
+
+	// Add the new screen
+	Add SCREEN_COUNT, 1
+	SCREEN_SWITCH_IDX = SCREEN_COUNT -1
+	SCREEN_NAME$(SCREEN_SWITCH_IDX) = UI Value$(ID_PREFIX$ + "new_screen_name")
+	SCREEN_COMPONENT_COUNT(SCREEN_SWITCH_IDX) = 0
+
+	// Update the screen selector and select the new screen
+	SetScreenSelectorItems
+	UI Select ID_PREFIX$ + "toolbox_screen_selector", items$=SCREEN_ITEM$, value$=Str$(SCREEN_SWITCH_IDX)
+
+	// Display the new screen
+	CONFIRM_SWITCH_SCREEN
+	CLOSE_NEW_SCREEN_EVENT
+	SCREEN_HAS_CHANGES = true
+	{
+		client.resetUndoRedo();
+	}
+End Proc
+
+Procedure SetScreenSelectorItems
+	// Generate the items for the screen selector
+	SCREEN_ITEM$ = ""
+	For i = 0 to SCREEN_COUNT -1
+		SCREEN_ITEM$ = SCREEN_ITEM$ + Str$(i) + ":" + SCREEN_NAME$(i) + ","
+	Next i
+	SCREEN_ITEM$ = Left$(SCREEN_ITEM$, Len(SCREEN_ITEM$) -1)
+End Proc
+
+Procedure CONFIRM_CLOSE
+	UI Confirm title$="Your changes have not been saved", content$="Are you sure?", confirmButton$="Yes", closeButton$="No", onConfirm$="CLOSE_WINDOW"
+End Proc
+
+Procedure CLOSE_WINDOW
+	SCREEN_HAS_CHANGES = false
+	{
+		client.close();
+	}
+End Proc
+
+Procedure SHOW_CLASS_SELECTOR[ID$]
+	CLASS_PREVIEW_CONTROL_ID$ = SELECTED_ID$ + "_class_preview"
+	existing_class$ = Lower$(UI Class$(SELECTED_ID$))
+	preview_class$ = existing_class$ + " ui_designer__layer5"
+	px = 50: py = 80
+
+	UI TextBlock ID_PREFIX$ + "class_editor_preview_label_2", x=20, y=10, content$="Preview", class$="fw-bold ui_designer__layer4"
+	UI TextBlock ID_PREFIX$ + "class_selector_background", width=DW, height=DH, x=0, y=0, class$="bg-light ui_designer__layer3", content$=""
+	UI Button ID_PREFIX$ + "close_class_editor", x=1800, y=10, content$="", iconClass$="bi bi-x-square", width=80, fontSize=40, class$="ui_designer__layer4 btn btn-outline-secondary", onClick$="CLOSE_CLASS_SELECTOR_EVENT"
+	UI Button ID_PREFIX$ + "apply_class_editor", x=1710, y=10, content$="", iconClass$="bi bi-file-earmark-check-fill", width=80, fontSize=40, class$="ui_designer__layer4 btn btn-success", onClick$="APPLY_CLASS_SELECTOR_EVENT"
+	UI TextBlock ID_PREFIX$ + "class_editor_preview_container", x=20, y=50, height=100, width=360, content$="", class$="ui_designer__layer4"
+	UI TextBlock ID_PREFIX$ + "class_editor_preview_label", x=20, y=160, height=100, width=DW, content$=existing_class$, class$="ui_designer__layer4 text-primary fw-bold"
+	UI TextBlock ID_PREFIX$ + "class_editor_preview_info", x=400, y=50, width=1240, height=70, padding=17, content$="<span class='me-1'><i class='bi bi-info-circle'></i></span>A number of these built in styles are specific to a component type and may not be fully compatible with some components", class$="alert alert-info ui_designer__layer4"
+
+	// Set background color of preview container to be the same as user setting
+	{
+		var el =  document.getElementById(this.root.vars.ID_PREFIX$ + 'class_editor_preview_container');
+		if (el) {
+			el.style.backgroundColor = this.root.vars.BACKGROUND_COLOR$.replace('$', '#');
+		}
+
+		client.setClassPickerSelected(vars.existing_class$);
+	}
+
+	// Get the array index
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_ID$(i) = SELECTED_ID$
+			Exit
+		End If
+	Next i
+
+	If USER_CONTROL_TYPE$(i) = "UI Button"
+		UI Button CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$, width=300
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextBox"
+		UI TextBox CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$, width=300, value$="TextBox Text"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextBlock"
+		UI TextBlock CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$, width=300
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextArea"
+		UI TextArea CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$, width=300, rows=1
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Select"
+		UI Select CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$, items$="1:This is item value 1,2:This is item value 2,3:This is item value 3", width=300
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Radio"
+		UI Radio CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$, items$="1:This is radio value 1"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI CheckBox"
+		UI CheckBox CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Progress"
+		UI Progress CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$, value=50
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI IFrame"
+		UI IFrame CLASS_PREVIEW_CONTROL_ID$, x=px, y=py, class$=preview_class$, width=300, height=40
+	End If
+
+	px = 20: py=200: index = 0: class_name$ = ""
+	For i = 0 to 17
+		UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), x=px, y=py + (i * 40), class$="form-check-input ui_designer__layer4", onchange$="CLASS_SELECTOR_CLICK"
+		UI TextBlock ID_PREFIX$ + "textblock_" + Trim$(Str$(i)), x=px+50, y=py + (i * 40), class$="text-dark ui_designer__layer4", content$=BOOTSTRAP_CLASS$(i)
+		class_name$ = BOOTSTRAP_CLASS$(i)
+		{
+			vars.index = client.classPickerIndexOf(vars.class_name$);
+		}
+		If index >= 0
+			UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), value$="true"
+		End If
+	Next i
+	Add px, 350: py=200
+	For i = 18 to 31
+		UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), x=px, y=py + ((i - 18) * 40), class$="form-check-input ui_designer__layer4", onchange$="CLASS_SELECTOR_CLICK"
+		UI TextBlock ID_PREFIX$ + "textblock_" + Trim$(Str$(i)), x=px+50, y=py + ((i - 18) * 40), class$="text-dark ui_designer__layer4", content$=BOOTSTRAP_CLASS$(i)
+		class_name$ = BOOTSTRAP_CLASS$(i)
+		{
+			vars.index = client.classPickerIndexOf(vars.class_name$);
+		}
+		If index >= 0
+			UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), value$="true"
+		End If
+	Next i
+	Add px, 300: py=200
+	For i = 32 to 51
+		UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), x=px, y=py + ((i - 32) * 40), class$="form-check-input ui_designer__layer4", onchange$="CLASS_SELECTOR_CLICK"
+		UI TextBlock ID_PREFIX$ + "textblock_" + Trim$(Str$(i)), x=px+50, y=py + ((i - 32) * 40), class$="text-dark ui_designer__layer4", content$=BOOTSTRAP_CLASS$(i)
+		class_name$ = BOOTSTRAP_CLASS$(i)
+		{
+			vars.index = client.classPickerIndexOf(vars.class_name$);
+		}
+		If index >= 0
+			UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), value$="true"
+		End If
+	Next i
+	Add px, 300: py=200
+	For i = 52 to 66
+		UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), x=px, y=py + ((i - 52) * 40), class$="form-check-input ui_designer__layer4", onchange$="CLASS_SELECTOR_CLICK"
+		UI TextBlock ID_PREFIX$ + "textblock_" + Trim$(Str$(i)), x=px+50, y=py + ((i - 52) * 40), class$="text-dark ui_designer__layer4", content$=BOOTSTRAP_CLASS$(i)
+		class_name$ = BOOTSTRAP_CLASS$(i)
+		{
+			vars.index = client.classPickerIndexOf(vars.class_name$);
+		}
+		If index >= 0
+			UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), value$="true"
+		End If
+	Next i
+	Add px, 300: py=200
+	For i = 67 to 86
+		UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), x=px, y=py + ((i - 67) * 40), class$="form-check-input ui_designer__layer4", onchange$="CLASS_SELECTOR_CLICK"
+		UI TextBlock ID_PREFIX$ + "textblock_" + Trim$(Str$(i)), x=px+50, y=py + ((i - 67) * 40), class$="text-dark ui_designer__layer4", content$=BOOTSTRAP_CLASS$(i)
+		class_name$ = BOOTSTRAP_CLASS$(i)
+		{
+			vars.index = client.classPickerIndexOf(vars.class_name$);
+		}
+		If index >= 0
+			UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), value$="true"
+		End If
+	Next i
+	Add px, 300: py=200
+	For i = 87 to 101
+		UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), x=px, y=py + ((i - 87) * 40), class$="form-check-input ui_designer__layer4", onchange$="CLASS_SELECTOR_CLICK"
+		UI TextBlock ID_PREFIX$ + "textblock_" + Trim$(Str$(i)), x=px+50, y=py + ((i - 87) * 40), class$="text-dark ui_designer__layer4", content$=BOOTSTRAP_CLASS$(i)
+		class_name$ = BOOTSTRAP_CLASS$(i)
+		{
+			vars.index = client.classPickerIndexOf(vars.class_name$);
+		}
+		If index >= 0
+			UI CheckBox ID_PREFIX$ + "check_" + Trim$(Str$(i)), value$="true"
+		End If
+	Next i
+End Proc
+
+Procedure CLOSE_CLASS_SELECTOR_EVENT[ID$]
+	UI Delete ID_PREFIX$ + "class_selector_background"
+	UI Delete ID_PREFIX$ + "close_class_editor"
+	UI Delete CLASS_PREVIEW_CONTROL_ID$
+	UI Delete ID_PREFIX$ + "apply_class_editor"
+	UI Delete ID_PREFIX$ + "class_editor_preview_container"
+	UI Delete ID_PREFIX$ + "class_editor_preview_label"
+	UI Delete ID_PREFIX$ + "class_editor_preview_info"
+	UI Delete ID_PREFIX$ + "class_editor_preview_label_2"
+	For i = 0 to 101
+		UI Delete ID_PREFIX$ + "check_" + Trim$(Str$(i))
+		UI Delete ID_PREFIX$ + "textblock_" + Trim$(Str$(i))
+	Next i
+End Proc
+
+Procedure CLASS_SELECTOR_CLICK[ID$, VALUE$]
+	item = 0
+	{
+		var items = vars.ID$.split('_');
+		vars.item = parseInt(items[2]);
+	}
+
+	class_name$ = BOOTSTRAP_CLASS$(item)
+	If VALUE$ = "true"
+	{
+		client.classPickerAdd(vars.class_name$);
+	}
+	Else
+	{
+		client.classPickerRemove(vars.class_name$);
+	}
+	End If
+
+	classes$ = ""
+	{
+		vars.classes$ = client.getClassPickerSelected();
+	}
+	UI TextBlock ID_PREFIX$ + "class_editor_preview_label", content$=classes$
+
+	// Get the array index
+	For i = 0 to MAX_CONTROLS - 1
+		If USER_CONTROL_ID$(i) = SELECTED_ID$
+			Exit
+		End If
+	Next i
+
+	If USER_CONTROL_TYPE$(i) = "UI Button"
+		UI Button CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextBox"
+		UI TextBox CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextBlock"
+		UI TextBlock CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI TextArea"
+		UI TextArea CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Select"
+		UI Select CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Radio"
+		UI Radio CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI CheckBox"
+		UI CheckBox CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI Progress"
+		UI Progress CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+
+	If USER_CONTROL_TYPE$(i) = "UI IFrame"
+		UI IFrame CLASS_PREVIEW_CONTROL_ID$, class$=classes$ + " ui_designer__layer4"
+	End If
+End Proc
+
+Procedure APPLY_CLASS_SELECTOR_EVENT[ID$]
+	classes$ = ""
+	OLD_VALUE$ = UI Class$(SELECTED_ID$)
+	{
+		vars.classes$ = client.getClassPickerSelected();
+
+		client.addCommand({
+			commandName: 'propertyChange',
+			id: this.root.vars.SELECTED_ID$,
+			propertyName: 'property_class',
+			oldValue: vars.OLD_VALUE$,
+			newValue: vars.classes$
+		});
+	}
+	UI IFrame SELECTED_ID$, class$=classes$
+	CLOSE_CLASS_SELECTOR_EVENT[""]
+	SELECT_CONTROL[SELECTED_ID$]
+End Proc
+
+// Bootstrap icon classes
+Data "bi bi-alarm-fill"
+Data "bi bi-alarm"
+Data "bi bi-align-bottom"
+Data "bi bi-align-center"
+Data "bi bi-align-end"
+Data "bi bi-align-middle"
+Data "bi bi-align-start"
+Data "bi bi-align-top"
+Data "bi bi-alt"
+Data "bi bi-app-indicator"
+Data "bi bi-app"
+Data "bi bi-archive-fill"
+Data "bi bi-archive"
+Data "bi bi-arrow-90deg-down"
+Data "bi bi-arrow-90deg-left"
+Data "bi bi-arrow-90deg-right"
+Data "bi bi-arrow-90deg-up"
+Data "bi bi-arrow-bar-down"
+Data "bi bi-arrow-bar-left"
+Data "bi bi-arrow-bar-right"
+Data "bi bi-arrow-bar-up"
+Data "bi bi-arrow-clockwise"
+Data "bi bi-arrow-counterclockwise"
+Data "bi bi-arrow-down-circle-fill"
+Data "bi bi-arrow-down-circle"
+Data "bi bi-arrow-down-left-circle-fill"
+Data "bi bi-arrow-down-left-circle"
+Data "bi bi-arrow-down-left-square-fill"
+Data "bi bi-arrow-down-left-square"
+Data "bi bi-arrow-down-left"
+Data "bi bi-arrow-down-right-circle-fill"
+Data "bi bi-arrow-down-right-circle"
+Data "bi bi-arrow-down-right-square-fill"
+Data "bi bi-arrow-down-right-square"
+Data "bi bi-arrow-down-right"
+Data "bi bi-arrow-down-short"
+Data "bi bi-arrow-down-square-fill"
+Data "bi bi-arrow-down-square"
+Data "bi bi-arrow-down-up"
+Data "bi bi-arrow-down"
+Data "bi bi-arrow-left-circle-fill"
+Data "bi bi-arrow-left-circle"
+Data "bi bi-arrow-left-right"
+Data "bi bi-arrow-left-short"
+Data "bi bi-arrow-left-square-fill"
+Data "bi bi-arrow-left-square"
+Data "bi bi-arrow-left"
+Data "bi bi-arrow-repeat"
+Data "bi bi-arrow-return-left"
+Data "bi bi-arrow-return-right"
+Data "bi bi-arrow-right-circle-fill"
+Data "bi bi-arrow-right-circle"
+Data "bi bi-arrow-right-short"
+Data "bi bi-arrow-right-square-fill"
+Data "bi bi-arrow-right-square"
+Data "bi bi-arrow-right"
+Data "bi bi-arrow-up-circle-fill"
+Data "bi bi-arrow-up-circle"
+Data "bi bi-arrow-up-left-circle-fill"
+Data "bi bi-arrow-up-left-circle"
+Data "bi bi-arrow-up-left-square-fill"
+Data "bi bi-arrow-up-left-square"
+Data "bi bi-arrow-up-left"
+Data "bi bi-arrow-up-right-circle-fill"
+Data "bi bi-arrow-up-right-circle"
+Data "bi bi-arrow-up-right-square-fill"
+Data "bi bi-arrow-up-right-square"
+Data "bi bi-arrow-up-right"
+Data "bi bi-arrow-up-short"
+Data "bi bi-arrow-up-square-fill"
+Data "bi bi-arrow-up-square"
+Data "bi bi-arrow-up"
+Data "bi bi-arrows-angle-contract"
+Data "bi bi-arrows-angle-expand"
+Data "bi bi-arrows-collapse"
+Data "bi bi-arrows-expand"
+Data "bi bi-arrows-fullscreen"
+Data "bi bi-arrows-move"
+Data "bi bi-aspect-ratio-fill"
+Data "bi bi-aspect-ratio"
+Data "bi bi-asterisk"
+Data "bi bi-at"
+Data "bi bi-award-fill"
+Data "bi bi-award"
+Data "bi bi-back"
+Data "bi bi-backspace-fill"
+Data "bi bi-backspace-reverse-fill"
+Data "bi bi-backspace-reverse"
+Data "bi bi-backspace"
+Data "bi bi-badge-3d-fill"
+Data "bi bi-badge-3d"
+Data "bi bi-badge-4k-fill"
+Data "bi bi-badge-4k"
+Data "bi bi-badge-8k-fill"
+Data "bi bi-badge-8k"
+Data "bi bi-badge-ad-fill"
+Data "bi bi-badge-ad"
+Data "bi bi-badge-ar-fill"
+Data "bi bi-badge-ar"
+Data "bi bi-badge-cc-fill"
+Data "bi bi-badge-cc"
+Data "bi bi-badge-hd-fill"
+Data "bi bi-badge-hd"
+Data "bi bi-badge-tm-fill"
+Data "bi bi-badge-tm"
+Data "bi bi-badge-vo-fill"
+Data "bi bi-badge-vo"
+Data "bi bi-badge-vr-fill"
+Data "bi bi-badge-vr"
+Data "bi bi-badge-wc-fill"
+Data "bi bi-badge-wc"
+Data "bi bi-bag-check-fill"
+Data "bi bi-bag-check"
+Data "bi bi-bag-dash-fill"
+Data "bi bi-bag-dash"
+Data "bi bi-bag-fill"
+Data "bi bi-bag-plus-fill"
+Data "bi bi-bag-plus"
+Data "bi bi-bag-x-fill"
+Data "bi bi-bag-x"
+Data "bi bi-bag"
+Data "bi bi-bar-chart-fill"
+Data "bi bi-bar-chart-line-fill"
+Data "bi bi-bar-chart-line"
+Data "bi bi-bar-chart-steps"
+Data "bi bi-bar-chart"
+Data "bi bi-basket-fill"
+Data "bi bi-basket"
+Data "bi bi-basket2-fill"
+Data "bi bi-basket2"
+Data "bi bi-basket3-fill"
+Data "bi bi-basket3"
+Data "bi bi-battery-charging"
+Data "bi bi-battery-full"
+Data "bi bi-battery-half"
+Data "bi bi-battery"
+Data "bi bi-bell-fill"
+Data "bi bi-bell"
+Data "bi bi-bezier"
+Data "bi bi-bezier2"
+Data "bi bi-bicycle"
+Data "bi bi-binoculars-fill"
+Data "bi bi-binoculars"
+Data "bi bi-blockquote-left"
+Data "bi bi-blockquote-right"
+Data "bi bi-book-fill"
+Data "bi bi-book-half"
+Data "bi bi-book"
+Data "bi bi-bookmark-check-fill"
+Data "bi bi-bookmark-check"
+Data "bi bi-bookmark-dash-fill"
+Data "bi bi-bookmark-dash"
+Data "bi bi-bookmark-fill"
+Data "bi bi-bookmark-heart-fill"
+Data "bi bi-bookmark-heart"
+Data "bi bi-bookmark-plus-fill"
+Data "bi bi-bookmark-plus"
+Data "bi bi-bookmark-star-fill"
+Data "bi bi-bookmark-star"
+Data "bi bi-bookmark-x-fill"
+Data "bi bi-bookmark-x"
+Data "bi bi-bookmark"
+Data "bi bi-bookmarks-fill"
+Data "bi bi-bookmarks"
+Data "bi bi-bookshelf"
+Data "bi bi-bootstrap-fill"
+Data "bi bi-bootstrap-reboot"
+Data "bi bi-bootstrap"
+Data "bi bi-border-all"
+Data "bi bi-border-bottom"
+Data "bi bi-border-center"
+Data "bi bi-border-inner"
+Data "bi bi-border-left"
+Data "bi bi-border-middle"
+Data "bi bi-border-outer"
+Data "bi bi-border-right"
+Data "bi bi-border-style"
+Data "bi bi-border-top"
+Data "bi bi-border-width"
+Data "bi bi-border"
+Data "bi bi-bounding-box-circles"
+Data "bi bi-bounding-box"
+Data "bi bi-box-arrow-down-left"
+Data "bi bi-box-arrow-down-right"
+Data "bi bi-box-arrow-down"
+Data "bi bi-box-arrow-in-down-left"
+Data "bi bi-box-arrow-in-down-right"
+Data "bi bi-box-arrow-in-down"
+Data "bi bi-box-arrow-in-left"
+Data "bi bi-box-arrow-in-right"
+Data "bi bi-box-arrow-in-up-left"
+Data "bi bi-box-arrow-in-up-right"
+Data "bi bi-box-arrow-in-up"
+Data "bi bi-box-arrow-left"
+Data "bi bi-box-arrow-right"
+Data "bi bi-box-arrow-up-left"
+Data "bi bi-box-arrow-up-right"
+Data "bi bi-box-arrow-up"
+Data "bi bi-box-seam"
+Data "bi bi-box"
+Data "bi bi-braces"
+Data "bi bi-bricks"
+Data "bi bi-briefcase-fill"
+Data "bi bi-briefcase"
+Data "bi bi-brightness-alt-high-fill"
+Data "bi bi-brightness-alt-high"
+Data "bi bi-brightness-alt-low-fill"
+Data "bi bi-brightness-alt-low"
+Data "bi bi-brightness-high-fill"
+Data "bi bi-brightness-high"
+Data "bi bi-brightness-low-fill"
+Data "bi bi-brightness-low"
+Data "bi bi-broadcast-pin"
+Data "bi bi-broadcast"
+Data "bi bi-brush-fill"
+Data "bi bi-brush"
+Data "bi bi-bucket-fill"
+Data "bi bi-bucket"
+Data "bi bi-bug-fill"
+Data "bi bi-bug"
+Data "bi bi-building"
+Data "bi bi-bullseye"
+Data "bi bi-calculator-fill"
+Data "bi bi-calculator"
+Data "bi bi-calendar-check-fill"
+Data "bi bi-calendar-check"
+Data "bi bi-calendar-date-fill"
+Data "bi bi-calendar-date"
+Data "bi bi-calendar-day-fill"
+Data "bi bi-calendar-day"
+Data "bi bi-calendar-event-fill"
+Data "bi bi-calendar-event"
+Data "bi bi-calendar-fill"
+Data "bi bi-calendar-minus-fill"
+Data "bi bi-calendar-minus"
+Data "bi bi-calendar-month-fill"
+Data "bi bi-calendar-month"
+Data "bi bi-calendar-plus-fill"
+Data "bi bi-calendar-plus"
+Data "bi bi-calendar-range-fill"
+Data "bi bi-calendar-range"
+Data "bi bi-calendar-week-fill"
+Data "bi bi-calendar-week"
+Data "bi bi-calendar-x-fill"
+Data "bi bi-calendar-x"
+Data "bi bi-calendar"
+Data "bi bi-calendar2-check-fill"
+Data "bi bi-calendar2-check"
+Data "bi bi-calendar2-date-fill"
+Data "bi bi-calendar2-date"
+Data "bi bi-calendar2-day-fill"
+Data "bi bi-calendar2-day"
+Data "bi bi-calendar2-event-fill"
+Data "bi bi-calendar2-event"
+Data "bi bi-calendar2-fill"
+Data "bi bi-calendar2-minus-fill"
+Data "bi bi-calendar2-minus"
+Data "bi bi-calendar2-month-fill"
+Data "bi bi-calendar2-month"
+Data "bi bi-calendar2-plus-fill"
+Data "bi bi-calendar2-plus"
+Data "bi bi-calendar2-range-fill"
+Data "bi bi-calendar2-range"
+Data "bi bi-calendar2-week-fill"
+Data "bi bi-calendar2-week"
+Data "bi bi-calendar2-x-fill"
+Data "bi bi-calendar2-x"
+Data "bi bi-calendar2"
+Data "bi bi-calendar3-event-fill"
+Data "bi bi-calendar3-event"
+Data "bi bi-calendar3-fill"
+Data "bi bi-calendar3-range-fill"
+Data "bi bi-calendar3-range"
+Data "bi bi-calendar3-week-fill"
+Data "bi bi-calendar3-week"
+Data "bi bi-calendar3"
+Data "bi bi-calendar4-event"
+Data "bi bi-calendar4-range"
+Data "bi bi-calendar4-week"
+Data "bi bi-calendar4"
+Data "bi bi-camera-fill"
+Data "bi bi-camera-reels-fill"
+Data "bi bi-camera-reels"
+Data "bi bi-camera-video-fill"
+Data "bi bi-camera-video-off-fill"
+Data "bi bi-camera-video-off"
+Data "bi bi-camera-video"
+Data "bi bi-camera"
+Data "bi bi-camera2"
+Data "bi bi-capslock-fill"
+Data "bi bi-capslock"
+Data "bi bi-card-checklist"
+Data "bi bi-card-heading"
+Data "bi bi-card-image"
+Data "bi bi-card-list"
+Data "bi bi-card-text"
+Data "bi bi-caret-down-fill"
+Data "bi bi-caret-down-square-fill"
+Data "bi bi-caret-down-square"
+Data "bi bi-caret-down"
+Data "bi bi-caret-left-fill"
+Data "bi bi-caret-left-square-fill"
+Data "bi bi-caret-left-square"
+Data "bi bi-caret-left"
+Data "bi bi-caret-right-fill"
+Data "bi bi-caret-right-square-fill"
+Data "bi bi-caret-right-square"
+Data "bi bi-caret-right"
+Data "bi bi-caret-up-fill"
+Data "bi bi-caret-up-square-fill"
+Data "bi bi-caret-up-square"
+Data "bi bi-caret-up"
+Data "bi bi-cart-check-fill"
+Data "bi bi-cart-check"
+Data "bi bi-cart-dash-fill"
+Data "bi bi-cart-dash"
+Data "bi bi-cart-fill"
+Data "bi bi-cart-plus-fill"
+Data "bi bi-cart-plus"
+Data "bi bi-cart-x-fill"
+Data "bi bi-cart-x"
+Data "bi bi-cart"
+Data "bi bi-cart2"
+Data "bi bi-cart3"
+Data "bi bi-cart4"
+Data "bi bi-cash-stack"
+Data "bi bi-cash"
+Data "bi bi-cast"
+Data "bi bi-chat-dots-fill"
+Data "bi bi-chat-dots"
+Data "bi bi-chat-fill"
+Data "bi bi-chat-left-dots-fill"
+Data "bi bi-chat-left-dots"
+Data "bi bi-chat-left-fill"
+Data "bi bi-chat-left-quote-fill"
+Data "bi bi-chat-left-quote"
+Data "bi bi-chat-left-text-fill"
+Data "bi bi-chat-left-text"
+Data "bi bi-chat-left"
+Data "bi bi-chat-quote-fill"
+Data "bi bi-chat-quote"
+Data "bi bi-chat-right-dots-fill"
+Data "bi bi-chat-right-dots"
+Data "bi bi-chat-right-fill"
+Data "bi bi-chat-right-quote-fill"
+Data "bi bi-chat-right-quote"
+Data "bi bi-chat-right-text-fill"
+Data "bi bi-chat-right-text"
+Data "bi bi-chat-right"
+Data "bi bi-chat-square-dots-fill"
+Data "bi bi-chat-square-dots"
+Data "bi bi-chat-square-fill"
+Data "bi bi-chat-square-quote-fill"
+Data "bi bi-chat-square-quote"
+Data "bi bi-chat-square-text-fill"
+Data "bi bi-chat-square-text"
+Data "bi bi-chat-square"
+Data "bi bi-chat-text-fill"
+Data "bi bi-chat-text"
+Data "bi bi-chat"
+Data "bi bi-check-all"
+Data "bi bi-check-circle-fill"
+Data "bi bi-check-circle"
+Data "bi bi-check-square-fill"
+Data "bi bi-check-square"
+Data "bi bi-check"
+Data "bi bi-check2-all"
+Data "bi bi-check2-circle"
+Data "bi bi-check2-square"
+Data "bi bi-check2"
+Data "bi bi-chevron-bar-contract"
+Data "bi bi-chevron-bar-down"
+Data "bi bi-chevron-bar-expand"
+Data "bi bi-chevron-bar-left"
+Data "bi bi-chevron-bar-right"
+Data "bi bi-chevron-bar-up"
+Data "bi bi-chevron-compact-down"
+Data "bi bi-chevron-compact-left"
+Data "bi bi-chevron-compact-right"
+Data "bi bi-chevron-compact-up"
+Data "bi bi-chevron-contract"
+Data "bi bi-chevron-double-down"
+Data "bi bi-chevron-double-left"
+Data "bi bi-chevron-double-right"
+Data "bi bi-chevron-double-up"
+Data "bi bi-chevron-down"
+Data "bi bi-chevron-expand"
+Data "bi bi-chevron-left"
+Data "bi bi-chevron-right"
+Data "bi bi-chevron-up"
+Data "bi bi-circle-fill"
+Data "bi bi-circle-half"
+Data "bi bi-circle-square"
+Data "bi bi-circle"
+Data "bi bi-clipboard-check"
+Data "bi bi-clipboard-data"
+Data "bi bi-clipboard-minus"
+Data "bi bi-clipboard-plus"
+Data "bi bi-clipboard-x"
+Data "bi bi-clipboard"
+Data "bi bi-clock-fill"
+Data "bi bi-clock-history"
+Data "bi bi-clock"
+Data "bi bi-cloud-arrow-down-fill"
+Data "bi bi-cloud-arrow-down"
+Data "bi bi-cloud-arrow-up-fill"
+Data "bi bi-cloud-arrow-up"
+Data "bi bi-cloud-check-fill"
+Data "bi bi-cloud-check"
+Data "bi bi-cloud-download-fill"
+Data "bi bi-cloud-download"
+Data "bi bi-cloud-drizzle-fill"
+Data "bi bi-cloud-drizzle"
+Data "bi bi-cloud-fill"
+Data "bi bi-cloud-fog-fill"
+Data "bi bi-cloud-fog"
+Data "bi bi-cloud-fog2-fill"
+Data "bi bi-cloud-fog2"
+Data "bi bi-cloud-hail-fill"
+Data "bi bi-cloud-hail"
+Data "bi bi-cloud-haze-1"
+Data "bi bi-cloud-haze-fill"
+Data "bi bi-cloud-haze"
+Data "bi bi-cloud-haze2-fill"
+Data "bi bi-cloud-lightning-fill"
+Data "bi bi-cloud-lightning-rain-fill"
+Data "bi bi-cloud-lightning-rain"
+Data "bi bi-cloud-lightning"
+Data "bi bi-cloud-minus-fill"
+Data "bi bi-cloud-minus"
+Data "bi bi-cloud-moon-fill"
+Data "bi bi-cloud-moon"
+Data "bi bi-cloud-plus-fill"
+Data "bi bi-cloud-plus"
+Data "bi bi-cloud-rain-fill"
+Data "bi bi-cloud-rain-heavy-fill"
+Data "bi bi-cloud-rain-heavy"
+Data "bi bi-cloud-rain"
+Data "bi bi-cloud-slash-fill"
+Data "bi bi-cloud-slash"
+Data "bi bi-cloud-sleet-fill"
+Data "bi bi-cloud-sleet"
+Data "bi bi-cloud-snow-fill"
+Data "bi bi-cloud-snow"
+Data "bi bi-cloud-sun-fill"
+Data "bi bi-cloud-sun"
+Data "bi bi-cloud-upload-fill"
+Data "bi bi-cloud-upload"
+Data "bi bi-cloud"
+Data "bi bi-clouds-fill"
+Data "bi bi-clouds"
+Data "bi bi-cloudy-fill"
+Data "bi bi-cloudy"
+Data "bi bi-code-slash"
+Data "bi bi-code-square"
+Data "bi bi-code"
+Data "bi bi-collection-fill"
+Data "bi bi-collection-play-fill"
+Data "bi bi-collection-play"
+Data "bi bi-collection"
+Data "bi bi-columns-gap"
+Data "bi bi-columns"
+Data "bi bi-command"
+Data "bi bi-compass-fill"
+Data "bi bi-compass"
+Data "bi bi-cone-striped"
+Data "bi bi-cone"
+Data "bi bi-controller"
+Data "bi bi-cpu-fill"
+Data "bi bi-cpu"
+Data "bi bi-credit-card-2-back-fill"
+Data "bi bi-credit-card-2-back"
+Data "bi bi-credit-card-2-front-fill"
+Data "bi bi-credit-card-2-front"
+Data "bi bi-credit-card-fill"
+Data "bi bi-credit-card"
+Data "bi bi-crop"
+Data "bi bi-cup-fill"
+Data "bi bi-cup-straw"
+Data "bi bi-cup"
+Data "bi bi-cursor-fill"
+Data "bi bi-cursor-text"
+Data "bi bi-cursor"
+Data "bi bi-dash-circle-dotted"
+Data "bi bi-dash-circle-fill"
+Data "bi bi-dash-circle"
+Data "bi bi-dash-square-dotted"
+Data "bi bi-dash-square-fill"
+Data "bi bi-dash-square"
+Data "bi bi-dash"
+Data "bi bi-diagram-2-fill"
+Data "bi bi-diagram-2"
+Data "bi bi-diagram-3-fill"
+Data "bi bi-diagram-3"
+Data "bi bi-diamond-fill"
+Data "bi bi-diamond-half"
+Data "bi bi-diamond"
+Data "bi bi-dice-1-fill"
+Data "bi bi-dice-1"
+Data "bi bi-dice-2-fill"
+Data "bi bi-dice-2"
+Data "bi bi-dice-3-fill"
+Data "bi bi-dice-3"
+Data "bi bi-dice-4-fill"
+Data "bi bi-dice-4"
+Data "bi bi-dice-5-fill"
+Data "bi bi-dice-5"
+Data "bi bi-dice-6-fill"
+Data "bi bi-dice-6"
+Data "bi bi-disc-fill"
+Data "bi bi-disc"
+Data "bi bi-discord"
+Data "bi bi-display-fill"
+Data "bi bi-display"
+Data "bi bi-distribute-horizontal"
+Data "bi bi-distribute-vertical"
+Data "bi bi-door-closed-fill"
+Data "bi bi-door-closed"
+Data "bi bi-door-open-fill"
+Data "bi bi-door-open"
+Data "bi bi-dot"
+Data "bi bi-download"
+Data "bi bi-droplet-fill"
+Data "bi bi-droplet-half"
+Data "bi bi-droplet"
+Data "bi bi-earbuds"
+Data "bi bi-easel-fill"
+Data "bi bi-easel"
+Data "bi bi-egg-fill"
+Data "bi bi-egg-fried"
+Data "bi bi-egg"
+Data "bi bi-eject-fill"
+Data "bi bi-eject"
+Data "bi bi-emoji-angry-fill"
+Data "bi bi-emoji-angry"
+Data "bi bi-emoji-dizzy-fill"
+Data "bi bi-emoji-dizzy"
+Data "bi bi-emoji-expressionless-fill"
+Data "bi bi-emoji-expressionless"
+Data "bi bi-emoji-frown-fill"
+Data "bi bi-emoji-frown"
+Data "bi bi-emoji-heart-eyes-fill"
+Data "bi bi-emoji-heart-eyes"
+Data "bi bi-emoji-laughing-fill"
+Data "bi bi-emoji-laughing"
+Data "bi bi-emoji-neutral-fill"
+Data "bi bi-emoji-neutral"
+Data "bi bi-emoji-smile-fill"
+Data "bi bi-emoji-smile-upside-down-fill"
+Data "bi bi-emoji-smile-upside-down"
+Data "bi bi-emoji-smile"
+Data "bi bi-emoji-sunglasses-fill"
+Data "bi bi-emoji-sunglasses"
+Data "bi bi-emoji-wink-fill"
+Data "bi bi-emoji-wink"
+Data "bi bi-envelope-fill"
+Data "bi bi-envelope-open-fill"
+Data "bi bi-envelope-open"
+Data "bi bi-envelope"
+Data "bi bi-eraser-fill"
+Data "bi bi-eraser"
+Data "bi bi-exclamation-circle-fill"
+Data "bi bi-exclamation-circle"
+Data "bi bi-exclamation-diamond-fill"
+Data "bi bi-exclamation-diamond"
+Data "bi bi-exclamation-octagon-fill"
+Data "bi bi-exclamation-octagon"
+Data "bi bi-exclamation-square-fill"
+Data "bi bi-exclamation-square"
+Data "bi bi-exclamation-triangle-fill"
+Data "bi bi-exclamation-triangle"
+Data "bi bi-exclamation"
+Data "bi bi-exclude"
+Data "bi bi-eye-fill"
+Data "bi bi-eye-slash-fill"
+Data "bi bi-eye-slash"
+Data "bi bi-eye"
+Data "bi bi-eyedropper"
+Data "bi bi-eyeglasses"
+Data "bi bi-facebook"
+Data "bi bi-file-arrow-down-fill"
+Data "bi bi-file-arrow-down"
+Data "bi bi-file-arrow-up-fill"
+Data "bi bi-file-arrow-up"
+Data "bi bi-file-bar-graph-fill"
+Data "bi bi-file-bar-graph"
+Data "bi bi-file-binary-fill"
+Data "bi bi-file-binary"
+Data "bi bi-file-break-fill"
+Data "bi bi-file-break"
+Data "bi bi-file-check-fill"
+Data "bi bi-file-check"
+Data "bi bi-file-code-fill"
+Data "bi bi-file-code"
+Data "bi bi-file-diff-fill"
+Data "bi bi-file-diff"
+Data "bi bi-file-earmark-arrow-down-fill"
+Data "bi bi-file-earmark-arrow-down"
+Data "bi bi-file-earmark-arrow-up-fill"
+Data "bi bi-file-earmark-arrow-up"
+Data "bi bi-file-earmark-bar-graph-fill"
+Data "bi bi-file-earmark-bar-graph"
+Data "bi bi-file-earmark-binary-fill"
+Data "bi bi-file-earmark-binary"
+Data "bi bi-file-earmark-break-fill"
+Data "bi bi-file-earmark-break"
+Data "bi bi-file-earmark-check-fill"
+Data "bi bi-file-earmark-check"
+Data "bi bi-file-earmark-code-fill"
+Data "bi bi-file-earmark-code"
+Data "bi bi-file-earmark-diff-fill"
+Data "bi bi-file-earmark-diff"
+Data "bi bi-file-earmark-easel-fill"
+Data "bi bi-file-earmark-easel"
+Data "bi bi-file-earmark-excel-fill"
+Data "bi bi-file-earmark-excel"
+Data "bi bi-file-earmark-fill"
+Data "bi bi-file-earmark-font-fill"
+Data "bi bi-file-earmark-font"
+Data "bi bi-file-earmark-image-fill"
+Data "bi bi-file-earmark-image"
+Data "bi bi-file-earmark-lock-fill"
+Data "bi bi-file-earmark-lock"
+Data "bi bi-file-earmark-lock2-fill"
+Data "bi bi-file-earmark-lock2"
+Data "bi bi-file-earmark-medical-fill"
+Data "bi bi-file-earmark-medical"
+Data "bi bi-file-earmark-minus-fill"
+Data "bi bi-file-earmark-minus"
+Data "bi bi-file-earmark-music-fill"
+Data "bi bi-file-earmark-music"
+Data "bi bi-file-earmark-person-fill"
+Data "bi bi-file-earmark-person"
+Data "bi bi-file-earmark-play-fill"
+Data "bi bi-file-earmark-play"
+Data "bi bi-file-earmark-plus-fill"
+Data "bi bi-file-earmark-plus"
+Data "bi bi-file-earmark-post-fill"
+Data "bi bi-file-earmark-post"
+Data "bi bi-file-earmark-ppt-fill"
+Data "bi bi-file-earmark-ppt"
+Data "bi bi-file-earmark-richtext-fill"
+Data "bi bi-file-earmark-richtext"
+Data "bi bi-file-earmark-ruled-fill"
+Data "bi bi-file-earmark-ruled"
+Data "bi bi-file-earmark-slides-fill"
+Data "bi bi-file-earmark-slides"
+Data "bi bi-file-earmark-spreadsheet-fill"
+Data "bi bi-file-earmark-spreadsheet"
+Data "bi bi-file-earmark-text-fill"
+Data "bi bi-file-earmark-text"
+Data "bi bi-file-earmark-word-fill"
+Data "bi bi-file-earmark-word"
+Data "bi bi-file-earmark-x-fill"
+Data "bi bi-file-earmark-x"
+Data "bi bi-file-earmark-zip-fill"
+Data "bi bi-file-earmark-zip"
+Data "bi bi-file-earmark"
+Data "bi bi-file-easel-fill"
+Data "bi bi-file-easel"
+Data "bi bi-file-excel-fill"
+Data "bi bi-file-excel"
+Data "bi bi-file-fill"
+Data "bi bi-file-font-fill"
+Data "bi bi-file-font"
+Data "bi bi-file-image-fill"
+Data "bi bi-file-image"
+Data "bi bi-file-lock-fill"
+Data "bi bi-file-lock"
+Data "bi bi-file-lock2-fill"
+Data "bi bi-file-lock2"
+Data "bi bi-file-medical-fill"
+Data "bi bi-file-medical"
+Data "bi bi-file-minus-fill"
+Data "bi bi-file-minus"
+Data "bi bi-file-music-fill"
+Data "bi bi-file-music"
+Data "bi bi-file-person-fill"
+Data "bi bi-file-person"
+Data "bi bi-file-play-fill"
+Data "bi bi-file-play"
+Data "bi bi-file-plus-fill"
+Data "bi bi-file-plus"
+Data "bi bi-file-post-fill"
+Data "bi bi-file-post"
+Data "bi bi-file-ppt-fill"
+Data "bi bi-file-ppt"
+Data "bi bi-file-richtext-fill"
+Data "bi bi-file-richtext"
+Data "bi bi-file-ruled-fill"
+Data "bi bi-file-ruled"
+Data "bi bi-file-slides-fill"
+Data "bi bi-file-slides"
+Data "bi bi-file-spreadsheet-fill"
+Data "bi bi-file-spreadsheet"
+Data "bi bi-file-text-fill"
+Data "bi bi-file-text"
+Data "bi bi-file-word-fill"
+Data "bi bi-file-word"
+Data "bi bi-file-x-fill"
+Data "bi bi-file-x"
+Data "bi bi-file-zip-fill"
+Data "bi bi-file-zip"
+Data "bi bi-file"
+Data "bi bi-files-alt"
+Data "bi bi-files"
+Data "bi bi-film"
+Data "bi bi-filter-circle-fill"
+Data "bi bi-filter-circle"
+Data "bi bi-filter-left"
+Data "bi bi-filter-right"
+Data "bi bi-filter-square-fill"
+Data "bi bi-filter-square"
+Data "bi bi-filter"
+Data "bi bi-flag-fill"
+Data "bi bi-flag"
+Data "bi bi-flower1"
+Data "bi bi-flower2"
+Data "bi bi-flower3"
+Data "bi bi-folder-check"
+Data "bi bi-folder-fill"
+Data "bi bi-folder-minus"
+Data "bi bi-folder-plus"
+Data "bi bi-folder-symlink-fill"
+Data "bi bi-folder-symlink"
+Data "bi bi-folder-x"
+Data "bi bi-folder"
+Data "bi bi-folder2-open"
+Data "bi bi-folder2"
+Data "bi bi-fonts"
+Data "bi bi-forward-fill"
+Data "bi bi-forward"
+Data "bi bi-front"
+Data "bi bi-fullscreen-exit"
+Data "bi bi-fullscreen"
+Data "bi bi-funnel-fill"
+Data "bi bi-funnel"
+Data "bi bi-gear-fill"
+Data "bi bi-gear-wide-connected"
+Data "bi bi-gear-wide"
+Data "bi bi-gear"
+Data "bi bi-gem"
+Data "bi bi-geo-alt-fill"
+Data "bi bi-geo-alt"
+Data "bi bi-geo-fill"
+Data "bi bi-geo"
+Data "bi bi-gift-fill"
+Data "bi bi-gift"
+Data "bi bi-github"
+Data "bi bi-globe"
+Data "bi bi-globe2"
+Data "bi bi-google"
+Data "bi bi-graph-down"
+Data "bi bi-graph-up"
+Data "bi bi-grid-1x2-fill"
+Data "bi bi-grid-1x2"
+Data "bi bi-grid-3x2-gap-fill"
+Data "bi bi-grid-3x2-gap"
+Data "bi bi-grid-3x2"
+Data "bi bi-grid-3x3-gap-fill"
+Data "bi bi-grid-3x3-gap"
+Data "bi bi-grid-3x3"
+Data "bi bi-grid-fill"
+Data "bi bi-grid"
+Data "bi bi-grip-horizontal"
+Data "bi bi-grip-vertical"
+Data "bi bi-hammer"
+Data "bi bi-hand-index-fill"
+Data "bi bi-hand-index-thumb-fill"
+Data "bi bi-hand-index-thumb"
+Data "bi bi-hand-index"
+Data "bi bi-hand-thumbs-down-fill"
+Data "bi bi-hand-thumbs-down"
+Data "bi bi-hand-thumbs-up-fill"
+Data "bi bi-hand-thumbs-up"
+Data "bi bi-handbag-fill"
+Data "bi bi-handbag"
+Data "bi bi-hash"
+Data "bi bi-hdd-fill"
+Data "bi bi-hdd-network-fill"
+Data "bi bi-hdd-network"
+Data "bi bi-hdd-rack-fill"
+Data "bi bi-hdd-rack"
+Data "bi bi-hdd-stack-fill"
+Data "bi bi-hdd-stack"
+Data "bi bi-hdd"
+Data "bi bi-headphones"
+Data "bi bi-headset"
+Data "bi bi-heart-fill"
+Data "bi bi-heart-half"
+Data "bi bi-heart"
+Data "bi bi-heptagon-fill"
+Data "bi bi-heptagon-half"
+Data "bi bi-heptagon"
+Data "bi bi-hexagon-fill"
+Data "bi bi-hexagon-half"
+Data "bi bi-hexagon"
+Data "bi bi-hourglass-bottom"
+Data "bi bi-hourglass-split"
+Data "bi bi-hourglass-top"
+Data "bi bi-hourglass"
+Data "bi bi-house-door-fill"
+Data "bi bi-house-door"
+Data "bi bi-house-fill"
+Data "bi bi-house"
+Data "bi bi-hr"
+Data "bi bi-hurricane"
+Data "bi bi-image-alt"
+Data "bi bi-image-fill"
+Data "bi bi-image"
+Data "bi bi-images"
+Data "bi bi-inbox-fill"
+Data "bi bi-inbox"
+Data "bi bi-inboxes-fill"
+Data "bi bi-inboxes"
+Data "bi bi-info-circle-fill"
+Data "bi bi-info-circle"
+Data "bi bi-info-square-fill"
+Data "bi bi-info-square"
+Data "bi bi-info"
+Data "bi bi-input-cursor-text"
+Data "bi bi-input-cursor"
+Data "bi bi-instagram"
+Data "bi bi-intersect"
+Data "bi bi-journal-album"
+Data "bi bi-journal-arrow-down"
+Data "bi bi-journal-arrow-up"
+Data "bi bi-journal-bookmark-fill"
+Data "bi bi-journal-bookmark"
+Data "bi bi-journal-check"
+Data "bi bi-journal-code"
+Data "bi bi-journal-medical"
+Data "bi bi-journal-minus"
+Data "bi bi-journal-plus"
+Data "bi bi-journal-richtext"
+Data "bi bi-journal-text"
+Data "bi bi-journal-x"
+Data "bi bi-journal"
+Data "bi bi-journals"
+Data "bi bi-joystick"
+Data "bi bi-justify-left"
+Data "bi bi-justify-right"
+Data "bi bi-justify"
+Data "bi bi-kanban-fill"
+Data "bi bi-kanban"
+Data "bi bi-key-fill"
+Data "bi bi-key"
+Data "bi bi-keyboard-fill"
+Data "bi bi-keyboard"
+Data "bi bi-ladder"
+Data "bi bi-lamp-fill"
+Data "bi bi-lamp"
+Data "bi bi-laptop-fill"
+Data "bi bi-laptop"
+Data "bi bi-layer-backward"
+Data "bi bi-layer-forward"
+Data "bi bi-layers-fill"
+Data "bi bi-layers-half"
+Data "bi bi-layers"
+Data "bi bi-layout-sidebar-inset-reverse"
+Data "bi bi-layout-sidebar-inset"
+Data "bi bi-layout-sidebar-reverse"
+Data "bi bi-layout-sidebar"
+Data "bi bi-layout-split"
+Data "bi bi-layout-text-sidebar-reverse"
+Data "bi bi-layout-text-sidebar"
+Data "bi bi-layout-text-window-reverse"
+Data "bi bi-layout-text-window"
+Data "bi bi-layout-three-columns"
+Data "bi bi-layout-wtf"
+Data "bi bi-life-preserver"
+Data "bi bi-lightbulb-fill"
+Data "bi bi-lightbulb-off-fill"
+Data "bi bi-lightbulb-off"
+Data "bi bi-lightbulb"
+Data "bi bi-lightning-charge-fill"
+Data "bi bi-lightning-charge"
+Data "bi bi-lightning-fill"
+Data "bi bi-lightning"
+Data "bi bi-link-45deg"
+Data "bi bi-link"
+Data "bi bi-linkedin"
+Data "bi bi-list-check"
+Data "bi bi-list-nested"
+Data "bi bi-list-ol"
+Data "bi bi-list-stars"
+Data "bi bi-list-task"
+Data "bi bi-list-ul"
+Data "bi bi-list"
+Data "bi bi-lock-fill"
+Data "bi bi-lock"
+Data "bi bi-mailbox"
+Data "bi bi-mailbox2"
+Data "bi bi-map-fill"
+Data "bi bi-map"
+Data "bi bi-markdown-fill"
+Data "bi bi-markdown"
+Data "bi bi-mask"
+Data "bi bi-megaphone-fill"
+Data "bi bi-megaphone"
+Data "bi bi-menu-app-fill"
+Data "bi bi-menu-app"
+Data "bi bi-menu-button-fill"
+Data "bi bi-menu-button-wide-fill"
+Data "bi bi-menu-button-wide"
+Data "bi bi-menu-button"
+Data "bi bi-menu-down"
+Data "bi bi-menu-up"
+Data "bi bi-mic-fill"
+Data "bi bi-mic-mute-fill"
+Data "bi bi-mic-mute"
+Data "bi bi-mic"
+Data "bi bi-minecart-loaded"
+Data "bi bi-minecart"
+Data "bi bi-moisture"
+Data "bi bi-moon-fill"
+Data "bi bi-moon-stars-fill"
+Data "bi bi-moon-stars"
+Data "bi bi-moon"
+Data "bi bi-mouse-fill"
+Data "bi bi-mouse"
+Data "bi bi-mouse2-fill"
+Data "bi bi-mouse2"
+Data "bi bi-mouse3-fill"
+Data "bi bi-mouse3"
+Data "bi bi-music-note-beamed"
+Data "bi bi-music-note-list"
+Data "bi bi-music-note"
+Data "bi bi-music-player-fill"
+Data "bi bi-music-player"
+Data "bi bi-newspaper"
+Data "bi bi-node-minus-fill"
+Data "bi bi-node-minus"
+Data "bi bi-node-plus-fill"
+Data "bi bi-node-plus"
+Data "bi bi-nut-fill"
+Data "bi bi-nut"
+Data "bi bi-octagon-fill"
+Data "bi bi-octagon-half"
+Data "bi bi-octagon"
+Data "bi bi-option"
+Data "bi bi-outlet"
+Data "bi bi-paint-bucket"
+Data "bi bi-palette-fill"
+Data "bi bi-palette"
+Data "bi bi-palette2"
+Data "bi bi-paperclip"
+Data "bi bi-paragraph"
+Data "bi bi-patch-check-fill"
+Data "bi bi-patch-check"
+Data "bi bi-patch-exclamation-fill"
+Data "bi bi-patch-exclamation"
+Data "bi bi-patch-minus-fill"
+Data "bi bi-patch-minus"
+Data "bi bi-patch-plus-fill"
+Data "bi bi-patch-plus"
+Data "bi bi-patch-question-fill"
+Data "bi bi-patch-question"
+Data "bi bi-pause-btn-fill"
+Data "bi bi-pause-btn"
+Data "bi bi-pause-circle-fill"
+Data "bi bi-pause-circle"
+Data "bi bi-pause-fill"
+Data "bi bi-pause"
+Data "bi bi-peace-fill"
+Data "bi bi-peace"
+Data "bi bi-pen-fill"
+Data "bi bi-pen"
+Data "bi bi-pencil-fill"
+Data "bi bi-pencil-square"
+Data "bi bi-pencil"
+Data "bi bi-pentagon-fill"
+Data "bi bi-pentagon-half"
+Data "bi bi-pentagon"
+Data "bi bi-people-fill"
+Data "bi bi-people"
+Data "bi bi-percent"
+Data "bi bi-person-badge-fill"
+Data "bi bi-person-badge"
+Data "bi bi-person-bounding-box"
+Data "bi bi-person-check-fill"
+Data "bi bi-person-check"
+Data "bi bi-person-circle"
+Data "bi bi-person-dash-fill"
+Data "bi bi-person-dash"
+Data "bi bi-person-fill"
+Data "bi bi-person-lines-fill"
+Data "bi bi-person-plus-fill"
+Data "bi bi-person-plus"
+Data "bi bi-person-square"
+Data "bi bi-person-x-fill"
+Data "bi bi-person-x"
+Data "bi bi-person"
+Data "bi bi-phone-fill"
+Data "bi bi-phone-landscape-fill"
+Data "bi bi-phone-landscape"
+Data "bi bi-phone-vibrate-fill"
+Data "bi bi-phone-vibrate"
+Data "bi bi-phone"
+Data "bi bi-pie-chart-fill"
+Data "bi bi-pie-chart"
+Data "bi bi-pin-angle-fill"
+Data "bi bi-pin-angle"
+Data "bi bi-pin-fill"
+Data "bi bi-pin"
+Data "bi bi-pip-fill"
+Data "bi bi-pip"
+Data "bi bi-play-btn-fill"
+Data "bi bi-play-btn"
+Data "bi bi-play-circle-fill"
+Data "bi bi-play-circle"
+Data "bi bi-play-fill"
+Data "bi bi-play"
+Data "bi bi-plug-fill"
+Data "bi bi-plug"
+Data "bi bi-plus-circle-dotted"
+Data "bi bi-plus-circle-fill"
+Data "bi bi-plus-circle"
+Data "bi bi-plus-square-dotted"
+Data "bi bi-plus-square-fill"
+Data "bi bi-plus-square"
+Data "bi bi-plus"
+Data "bi bi-power"
+Data "bi bi-printer-fill"
+Data "bi bi-printer"
+Data "bi bi-puzzle-fill"
+Data "bi bi-puzzle"
+Data "bi bi-question-circle-fill"
+Data "bi bi-question-circle"
+Data "bi bi-question-diamond-fill"
+Data "bi bi-question-diamond"
+Data "bi bi-question-octagon-fill"
+Data "bi bi-question-octagon"
+Data "bi bi-question-square-fill"
+Data "bi bi-question-square"
+Data "bi bi-question"
+Data "bi bi-rainbow"
+Data "bi bi-receipt-cutoff"
+Data "bi bi-receipt"
+Data "bi bi-reception-0"
+Data "bi bi-reception-1"
+Data "bi bi-reception-2"
+Data "bi bi-reception-3"
+Data "bi bi-reception-4"
+Data "bi bi-record-btn-fill"
+Data "bi bi-record-btn"
+Data "bi bi-record-circle-fill"
+Data "bi bi-record-circle"
+Data "bi bi-record-fill"
+Data "bi bi-record"
+Data "bi bi-record2-fill"
+Data "bi bi-record2"
+Data "bi bi-reply-all-fill"
+Data "bi bi-reply-all"
+Data "bi bi-reply-fill"
+Data "bi bi-reply"
+Data "bi bi-rss-fill"
+Data "bi bi-rss"
+Data "bi bi-rulers"
+Data "bi bi-save-fill"
+Data "bi bi-save"
+Data "bi bi-save2-fill"
+Data "bi bi-save2"
+Data "bi bi-scissors"
+Data "bi bi-screwdriver"
+Data "bi bi-search"
+Data "bi bi-segmented-nav"
+Data "bi bi-server"
+Data "bi bi-share-fill"
+Data "bi bi-share"
+Data "bi bi-shield-check"
+Data "bi bi-shield-exclamation"
+Data "bi bi-shield-fill-check"
+Data "bi bi-shield-fill-exclamation"
+Data "bi bi-shield-fill-minus"
+Data "bi bi-shield-fill-plus"
+Data "bi bi-shield-fill-x"
+Data "bi bi-shield-fill"
+Data "bi bi-shield-lock-fill"
+Data "bi bi-shield-lock"
+Data "bi bi-shield-minus"
+Data "bi bi-shield-plus"
+Data "bi bi-shield-shaded"
+Data "bi bi-shield-slash-fill"
+Data "bi bi-shield-slash"
+Data "bi bi-shield-x"
+Data "bi bi-shield"
+Data "bi bi-shift-fill"
+Data "bi bi-shift"
+Data "bi bi-shop-window"
+Data "bi bi-shop"
+Data "bi bi-shuffle"
+Data "bi bi-signpost-2-fill"
+Data "bi bi-signpost-2"
+Data "bi bi-signpost-fill"
+Data "bi bi-signpost-split-fill"
+Data "bi bi-signpost-split"
+Data "bi bi-signpost"
+Data "bi bi-sim-fill"
+Data "bi bi-sim"
+Data "bi bi-skip-backward-btn-fill"
+Data "bi bi-skip-backward-btn"
+Data "bi bi-skip-backward-circle-fill"
+Data "bi bi-skip-backward-circle"
+Data "bi bi-skip-backward-fill"
+Data "bi bi-skip-backward"
+Data "bi bi-skip-end-btn-fill"
+Data "bi bi-skip-end-btn"
+Data "bi bi-skip-end-circle-fill"
+Data "bi bi-skip-end-circle"
+Data "bi bi-skip-end-fill"
+Data "bi bi-skip-end"
+Data "bi bi-skip-forward-btn-fill"
+Data "bi bi-skip-forward-btn"
+Data "bi bi-skip-forward-circle-fill"
+Data "bi bi-skip-forward-circle"
+Data "bi bi-skip-forward-fill"
+Data "bi bi-skip-forward"
+Data "bi bi-skip-start-btn-fill"
+Data "bi bi-skip-start-btn"
+Data "bi bi-skip-start-circle-fill"
+Data "bi bi-skip-start-circle"
+Data "bi bi-skip-start-fill"
+Data "bi bi-skip-start"
+Data "bi bi-slack"
+Data "bi bi-slash-circle-fill"
+Data "bi bi-slash-circle"
+Data "bi bi-slash-square-fill"
+Data "bi bi-slash-square"
+Data "bi bi-slash"
+Data "bi bi-sliders"
+Data "bi bi-smartwatch"
+Data "bi bi-snow"
+Data "bi bi-snow2"
+Data "bi bi-snow3"
+Data "bi bi-sort-alpha-down-alt"
+Data "bi bi-sort-alpha-down"
+Data "bi bi-sort-alpha-up-alt"
+Data "bi bi-sort-alpha-up"
+Data "bi bi-sort-down-alt"
+Data "bi bi-sort-down"
+Data "bi bi-sort-numeric-down-alt"
+Data "bi bi-sort-numeric-down"
+Data "bi bi-sort-numeric-up-alt"
+Data "bi bi-sort-numeric-up"
+Data "bi bi-sort-up-alt"
+Data "bi bi-sort-up"
+Data "bi bi-soundwave"
+Data "bi bi-speaker-fill"
+Data "bi bi-speaker"
+Data "bi bi-speedometer"
+Data "bi bi-speedometer2"
+Data "bi bi-spellcheck"
+Data "bi bi-square-fill"
+Data "bi bi-square-half"
+Data "bi bi-square"
+Data "bi bi-stack"
+Data "bi bi-star-fill"
+Data "bi bi-star-half"
+Data "bi bi-star"
+Data "bi bi-stars"
+Data "bi bi-stickies-fill"
+Data "bi bi-stickies"
+Data "bi bi-sticky-fill"
+Data "bi bi-sticky"
+Data "bi bi-stop-btn-fill"
+Data "bi bi-stop-btn"
+Data "bi bi-stop-circle-fill"
+Data "bi bi-stop-circle"
+Data "bi bi-stop-fill"
+Data "bi bi-stop"
+Data "bi bi-stoplights-fill"
+Data "bi bi-stoplights"
+Data "bi bi-stopwatch-fill"
+Data "bi bi-stopwatch"
+Data "bi bi-subtract"
+Data "bi bi-suit-club-fill"
+Data "bi bi-suit-club"
+Data "bi bi-suit-diamond-fill"
+Data "bi bi-suit-diamond"
+Data "bi bi-suit-heart-fill"
+Data "bi bi-suit-heart"
+Data "bi bi-suit-spade-fill"
+Data "bi bi-suit-spade"
+Data "bi bi-sun-fill"
+Data "bi bi-sun"
+Data "bi bi-sunglasses"
+Data "bi bi-sunrise-fill"
+Data "bi bi-sunrise"
+Data "bi bi-sunset-fill"
+Data "bi bi-sunset"
+Data "bi bi-symmetry-horizontal"
+Data "bi bi-symmetry-vertical"
+Data "bi bi-table"
+Data "bi bi-tablet-fill"
+Data "bi bi-tablet-landscape-fill"
+Data "bi bi-tablet-landscape"
+Data "bi bi-tablet"
+Data "bi bi-tag-fill"
+Data "bi bi-tag"
+Data "bi bi-tags-fill"
+Data "bi bi-tags"
+Data "bi bi-telegram"
+Data "bi bi-telephone-fill"
+Data "bi bi-telephone-forward-fill"
+Data "bi bi-telephone-forward"
+Data "bi bi-telephone-inbound-fill"
+Data "bi bi-telephone-inbound"
+Data "bi bi-telephone-minus-fill"
+Data "bi bi-telephone-minus"
+Data "bi bi-telephone-outbound-fill"
+Data "bi bi-telephone-outbound"
+Data "bi bi-telephone-plus-fill"
+Data "bi bi-telephone-plus"
+Data "bi bi-telephone-x-fill"
+Data "bi bi-telephone-x"
+Data "bi bi-telephone"
+Data "bi bi-terminal-fill"
+Data "bi bi-terminal"
+Data "bi bi-text-center"
+Data "bi bi-text-indent-left"
+Data "bi bi-text-indent-right"
+Data "bi bi-text-left"
+Data "bi bi-text-paragraph"
+Data "bi bi-text-right"
+Data "bi bi-textarea-resize"
+Data "bi bi-textarea-t"
+Data "bi bi-textarea"
+Data "bi bi-thermometer-half"
+Data "bi bi-thermometer-high"
+Data "bi bi-thermometer-low"
+Data "bi bi-thermometer-snow"
+Data "bi bi-thermometer-sun"
+Data "bi bi-thermometer"
+Data "bi bi-three-dots-vertical"
+Data "bi bi-three-dots"
+Data "bi bi-toggle-off"
+Data "bi bi-toggle-on"
+Data "bi bi-toggle2-off"
+Data "bi bi-toggle2-on"
+Data "bi bi-toggles"
+Data "bi bi-toggles2"
+Data "bi bi-tools"
+Data "bi bi-tornado"
+Data "bi bi-trash-fill"
+Data "bi bi-trash"
+Data "bi bi-trash2-fill"
+Data "bi bi-trash2"
+Data "bi bi-tree-fill"
+Data "bi bi-tree"
+Data "bi bi-triangle-fill"
+Data "bi bi-triangle-half"
+Data "bi bi-triangle"
+Data "bi bi-trophy-fill"
+Data "bi bi-trophy"
+Data "bi bi-tropical-storm"
+Data "bi bi-truck-flatbed"
+Data "bi bi-truck"
+Data "bi bi-tsunami"
+Data "bi bi-tv-fill"
+Data "bi bi-tv"
+Data "bi bi-twitch"
+Data "bi bi-twitter"
+Data "bi bi-type-bold"
+Data "bi bi-type-h1"
+Data "bi bi-type-h2"
+Data "bi bi-type-h3"
+Data "bi bi-type-italic"
+Data "bi bi-type-strikethrough"
+Data "bi bi-type-underline"
+Data "bi bi-type"
+Data "bi bi-ui-checks-grid"
+Data "bi bi-ui-checks"
+Data "bi bi-ui-radios-grid"
+Data "bi bi-ui-radios"
+Data "bi bi-umbrella-fill"
+Data "bi bi-umbrella"
+Data "bi bi-union"
+Data "bi bi-unlock-fill"
+Data "bi bi-unlock"
+Data "bi bi-upc-scan"
+Data "bi bi-upc"
+Data "bi bi-upload"
+Data "bi bi-vector-pen"
+Data "bi bi-view-list"
+Data "bi bi-view-stacked"
+Data "bi bi-vinyl-fill"
+Data "bi bi-vinyl"
+Data "bi bi-voicemail"
+Data "bi bi-volume-down-fill"
+Data "bi bi-volume-down"
+Data "bi bi-volume-mute-fill"
+Data "bi bi-volume-mute"
+Data "bi bi-volume-off-fill"
+Data "bi bi-volume-off"
+Data "bi bi-volume-up-fill"
+Data "bi bi-volume-up"
+Data "bi bi-vr"
+Data "bi bi-wallet-fill"
+Data "bi bi-wallet"
+Data "bi bi-wallet2"
+Data "bi bi-watch"
+Data "bi bi-water"
+Data "bi bi-whatsapp"
+Data "bi bi-wifi-1"
+Data "bi bi-wifi-2"
+Data "bi bi-wifi-off"
+Data "bi bi-wifi"
+Data "bi bi-wind"
+Data "bi bi-window-dock"
+Data "bi bi-window-sidebar"
+Data "bi bi-window"
+Data "bi bi-wrench"
+Data "bi bi-x-circle-fill"
+Data "bi bi-x-circle"
+Data "bi bi-x-diamond-fill"
+Data "bi bi-x-diamond"
+Data "bi bi-x-octagon-fill"
+Data "bi bi-x-octagon"
+Data "bi bi-x-square-fill"
+Data "bi bi-x-square"
+Data "bi bi-x"
+Data "bi bi-youtube"
+Data "bi bi-zoom-in"
+Data "bi bi-zoom-out"
+Data "bi bi-bank"
+Data "bi bi-bank2"
+Data "bi bi-bell-slash-fill"
+Data "bi bi-bell-slash"
+Data "bi bi-cash-coin"
+Data "bi bi-check-lg"
+Data "bi bi-coin"
+Data "bi bi-currency-bitcoin"
+Data "bi bi-currency-dollar"
+Data "bi bi-currency-euro"
+Data "bi bi-currency-exchange"
+Data "bi bi-currency-pound"
+Data "bi bi-currency-yen"
+Data "bi bi-dash-lg"
+Data "bi bi-exclamation-lg"
+Data "bi bi-file-earmark-pdf-fill"
+Data "bi bi-file-earmark-pdf"
+Data "bi bi-file-pdf-fill"
+Data "bi bi-file-pdf"
+Data "bi bi-gender-ambiguous"
+Data "bi bi-gender-female"
+Data "bi bi-gender-male"
+Data "bi bi-gender-trans"
+Data "bi bi-headset-vr"
+Data "bi bi-info-lg"
+Data "bi bi-mastodon"
+Data "bi bi-messenger"
+Data "bi bi-piggy-bank-fill"
+Data "bi bi-piggy-bank"
+Data "bi bi-pin-map-fill"
+Data "bi bi-pin-map"
+Data "bi bi-plus-lg"
+Data "bi bi-question-lg"
+Data "bi bi-recycle"
+Data "bi bi-reddit"
+Data "bi bi-safe-fill"
+Data "bi bi-safe2-fill"
+Data "bi bi-safe2"
+Data "bi bi-sd-card-fill"
+Data "bi bi-sd-card"
+Data "bi bi-skype"
+Data "bi bi-slash-lg"
+Data "bi bi-translate"
+Data "bi bi-x-lg"
+Data "bi bi-safe"
+
+// Bootstrap classes
+
+Data "btn"
+Data "btn-primary"
+Data "btn-secondary"
+Data "btn-success"
+Data "btn-danger"
+Data "btn-warning"
+Data "btn-info"
+Data "btn-light"
+Data "btn-dark"
+Data "btn-link"
+Data "btn-outline-primary"
+Data "btn-outline-secondary"
+Data "btn-outline-success"
+Data "btn-outline-danger"
+Data "btn-outline-warning"
+Data "btn-outline-info"
+Data "btn-outline-light"
+Data "btn-outline-dark"
+Data "border"
+Data "border-top"
+Data "border-end"
+Data "border-bottom"
+Data "border-start"
+Data "border-primary"
+Data "border-secondary"
+Data "border-success"
+Data "border-danger"
+Data "border-warning"
+Data "border-info"
+Data "border-light"
+Data "border-dark"
+Data "border-white"
+Data "rounded"
+Data "rounded-top"
+Data "rounded-end"
+Data "rounded-bottom"
+Data "rounded-start"
+Data "rounded-circle"
+Data "rounded-pill"
+Data "text-primary"
+Data "text-secondary"
+Data "text-success"
+Data "text-danger"
+Data "text-warning"
+Data "text-info"
+Data "text-light"
+Data "text-dark"
+Data "text-body"
+Data "text-muted"
+Data "text-white"
+Data "text-black-50"
+Data "text-white-50"
+Data "bg-primary"
+Data "bg-secondary"
+Data "bg-success"
+Data "bg-danger"
+Data "bg-warning"
+Data "bg-info"
+Data "bg-light"
+Data "bg-dark"
+Data "bg-body"
+Data "bg-white"
+Data "bg-transparent"
+Data "bg-gradient"
+Data "shadow"
+Data "shadow-lg"
+Data "shadow-sm"
+Data "text-start"
+Data "text-center"
+Data "text-end"
+Data "text-wrap"
+Data "text-nowrap"
+Data "text-break"
+Data "text-lowercase"
+Data "text-uppercase"
+Data "text-capitalize"
+Data "fw-bold"
+Data "fw-bolder"
+Data "fw-normal"
+Data "fw-light"
+Data "fw-lighter"
+Data "fst-italic"
+Data "fst-normal"
+Data "lh-1"
+Data "lh-sm"
+Data "lh-base"
+Data "lh-lg"
+Data "text-decoration-underline"
+Data "text-decoration-line-through"
+Data "text-decoration-none"
+Data "form-control"
+Data "form-check-input"
+Data "form-select"
+Data "alert"
+Data "alert-primary"
+Data "alert-secondary"
+Data "alert-success"
+Data "alert-danger"
+Data "alert-warning"
+Data "alert-info"
+Data "alert-light"
+Data "alert-dark"

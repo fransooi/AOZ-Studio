@@ -1,0 +1,23 @@
+<i>UI CheckBox</i>
+<b>UI CheckBox</b> xxxxxxx
+=
+@code
+// Display a default check box
+UI CheckBox "MyCheckBox"
+
+// To get the checkbox value you can use the UI Value$ function
+Print UI Value$("MyCheckBox")
+
+// You can set the checkbox value setting its value$ parameter
+UI CheckBox "MyCheckBox", value$="true"
+
+// You can also use the UI Value command
+UI Value "MyCheckBox", value$="false"
+
+// Example using the onChange$ event with a Boostrap style
+UI CheckBox "MyCheckBox", y=300, class$="form-check-input", width=80, height=80, onChange$="CHECKCHANGE"
+Procedure CHECKCHANGE[ID$, VALUE$]
+Print "Check Value: " + VALUE$
+End Proc
+@code
+

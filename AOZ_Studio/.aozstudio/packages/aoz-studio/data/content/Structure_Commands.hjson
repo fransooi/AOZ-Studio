@@ -1,0 +1,20 @@
+{
+    basic_langage_structure_instructions:
+    { 
+        name: "Error Handling"
+        intro: "When AOZ encounters an error in your programs, or if you attempt the impossible, automatic assistance is offered in the form of error messages displayed in the information line. If this happens while you are programming, you can try to correct the mistake immediately. If the problem is found when you try to test or run a program, AOZ will take you to the offending line as soon as you edit.\n\n Trapping errors\n\nRoutines can be set up in advance for handling errors inside an AOZ program, so that when a mistake is spotted, error trapping swings into action. This process is triggered by the following command:\n"
+        conclusion:"TODO"
+        commands:
+        {
+            "errtrap":
+            [
+                This function is used to return the error status after a previous TRAP command. If no error has been detected, a zero is returned, otherwise the appropriate error number is given. The related error message can then be returned using the ERR$ function, explained next.
+            ]
+            "err$":
+            [
+                This simple function returns an error message string. If the error number is out of range, then an empty string will be given. ERR$ will return error messages as long as they are loaded in memory, but messages will not be returned from a compiled program, or if the Editor has been KILLed.
+            ]
+            
+        }
+    }
+}

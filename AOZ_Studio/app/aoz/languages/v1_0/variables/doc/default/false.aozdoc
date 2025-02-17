@@ -1,0 +1,5 @@
+<i>function: hold value of 0 (False)</i>
+value=<b>False</b>
+=
+On modern machines, in all the conditional operations such as IF ... THEN and REPEAT ... UNTIL, the value of 1 is used to represent TRUE, and the value of 0 is used to represent FALSE.
+=

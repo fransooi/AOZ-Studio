@@ -1,0 +1,22 @@
+<i>Set Curs</i>
+<b>Set Curs</b> xxxxxxx
+=
+To customise the text cursor into something a little more personalised, you can change its shape into anything you
+like, providing you limit yourself to the eight lines of eight bits each that represent its appearance. Lines are
+numbered one to eight from top to bottom, and every bit set to 1 results in a pixel drawn in the current cursor pen
+colour, whereas a zero displays the current paper colour. To familiarise yourself with the technique, try the next
+example, which changes the text cursor into a Hallowe'en mask:
+@code
+L1=%00111100
+L2=%01111110
+L3=%01011010
+L4=%11100111
+L5=%10111101
+L6=%01011010
+L7=%00100100
+L8=%00011000
+Set Curs L1 L2 , L3 L4 L5, L6 , L7, L8
+@code
+Your routine will appear slightly different from that, because the system automatically strips away any leading zeros
+in binary listings.
+

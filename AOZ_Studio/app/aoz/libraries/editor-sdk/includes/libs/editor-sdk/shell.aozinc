@@ -1,0 +1,6 @@
+Load Asset "libs/editor-sdk/js/shell.js", "sdk-shell"
+Procedure _SHELL_EXECUTE[ CMD$, PROCNAME$ ]
+    JS Execute "application.editorSDK.shell.shellExecute( '" + CMD$ + "', '" + PROCNAME$ + "' )"
+	While SDK_BUSY
+	Wend
+End proc

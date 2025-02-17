@@ -1,0 +1,11 @@
+<i>Dual Priority</i>
+<b>Dual Priority</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+Normally, the first screen of a dual playfield is displayed directly over the second screen. To reverse this order, so
+that the second screen appears in front of the first, use the DUAL PRIORITY command. Please note that this
+instruction only changes the order of display, and has no effect on the screen organisation at all, so the first screen in
+the parameter list is still used for all colour assignments, and with the SCREEN DISPLAY command.
+
+

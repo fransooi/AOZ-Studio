@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "atom-space-pen-views": "^2.1.0",
+    "decompress-zip": "^0.3.3",
+    "figlet": "^1.5.0",
+    "fs-plus": "^3.1.1",
+    "inly": "^4.0.8",
+    "johnny-five": "^2.1.0",
+    "jquery-ui": "^1.12.1",
+    "JSON2": "^0.1.0",
+    "jstorage": "^0.4.8",
+    "loophole": "^1.1.0",
+    "md5": "^2.3.0",
+    "node-uuid": "^1.4.8",
+    "serialport": "^10.4.0",
+    "targz": "^1.0.1",
+    "theorist": "^1.0.2",
+    "tinycolor2": "^1.4.2"
+  }
+}

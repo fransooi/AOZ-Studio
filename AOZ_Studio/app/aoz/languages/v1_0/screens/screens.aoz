@@ -1,0 +1,1467 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Screen Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+*/
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Screen
+@description:Screen instructions and functions
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Screen Open
+@description:Open a new screen
+@param:index:index:The index of the screen to open. Any existing screen will be replaced by the new one
+@param:width:integer:The width of the screen in pixels
+@param:height:integer:The height of the screen in pixels
+@param:*numberOfColor:integer:The number of colors of the palette (optional)
+@param:*pixelMode:integer:Lowres, Hires, Laced or any combination
+@param:*lines:integer:Number of lines in the text window associated with the screen
+@param:*border:integer:0 for a borderless window, number of the border if a border is desired
+@param:*tags$:string:List of eventual tags
+@examples:instructions:i_34
+@compatible: aoz, amos
+@content:
+To open a new screen give the SCREEN OPEN command, followed by these parameters:
+
+- *index* is the identification index of the new screen. If a screen with this number already exists, it will be completely replaced by this new screen.
+
+- *width* sets up the number of pixels that will make up the width of the new screen. There is no problem in opening
+a screen that is wider than the physical limit of the television or monitor display, and extra-wide screens can be
+manipulated by the SCREEN OFFSET command. The widest possible screen depends on the browser and the platform your application is running on.
+
+- *height* holds the number of pixels that make up the height of the screen. Like the width parameter, this can be larger
+than the visible screen height to a maximum of 1023 pixels, and scrolled into view. Screens with oversized widths
+and heights can be used with all of the normal screen techniques which are explained later.
+
+- *numberOfColors* sets the number of colours to be used for the new screen to create a paletted screen.
+If you ommit this parameter, the screen will be create in True Color mode, without a palette (TODO)
+
+- *pixelMode* is a choice of the width of the pixel points on the screen and is specific to the Amiga.
+Lowres is the normal status, allowing 320 pixels to be displayed across the screen, at any one time. Hires halves the width of each pixel, and so allows 640 to
+be displayed.
+
+- *lines* if specified indicates the number of lines in the text window associated with the screen. If not specified the number of lines will be the one of the manifest of the application:
+	1. AOZ: 25 lines
+	2. Amiga NTSC: 25 lines
+	3. Amiga PAL: 32 lines
+	4. Amiga NTSC "Interlaced": 50 lines
+	5. Amiga PAL "Interlaced": 64 lines
+
+Note that the number of columns in the default window created in the back of the screen is calculated from the size of the font, which is itself the result of a calculation based on the number of lines, and is for default manifest values:
+	1. AOZ: 80 columns
+	2. Amiga "Lowres": 40 columns
+	3. Amiga "Hires": 80 columns
+
+- *tags$* is a list of text tags that allow you to control how the screen is open
+1. #keepCurrent: will not activate the new screen
+2. #noCls: will not clear the new screen and leave the canvas with it's original transparent color
+3. #noTextWindow: will not open a text window in the back, saving processing time if you only display graphics
+4. #findFreeIndex: will use the index you give as a basis and find a free screen above this index, if it is a number
+api*/
+Instruction Screen Open, index = (index), width, height, numberOfColors, pixelMode, \
+	lines, \
+	x, y, z, \
+	hotspotX, hotspotY, hotspotZ, \
+	skewX, skewY, skewZ, \
+	offsetX, offsetY, offsetZ, \
+	scaleX, scaleY, scaleZ, \
+	angle, alpha, visible, alwaysOnTop, \
+	depth, border, \
+	scene = (index), \
+	gravity#, \
+	skyType$, sky = (index),\
+	skyRed$, skyGreen$, skyBlue$, skyColor, \
+	ambientColor, ambientIntensity#, \
+	helpers, \
+	helperGrid,	helperAxis, helperGround, helperPhysics, \
+	tags$
+{
+	#errors
+	#waiting
+	aoz.screenOpen(
+	{
+		index:%index,
+		width:%width,
+		height:%height,
+		depth:%depth,
+		numberOfColors:%numberOfColors,
+		pixelMode:%pixelMode,
+		palette:undefined,
+		lines:%lines,
+		border:%border,
+		x:%x,
+		y:%y,
+		z:%z,
+		hotspotX:%hotspotX,
+		hotspotY:%hotspotY,
+		hotspotZ:%hotspotZ,
+		offsetX:%offsetX,
+		offsetY:%offsetY,
+		offsetZ:%offsetZ,
+		skewX:%skewX,
+		skewY:%skewY,
+		skewZ:%skewZ,
+		scaleX:%scaleX,
+		scaleY:%scaleY,
+		scaleZ:%scaleZ,
+		angle:%angle,
+		alpha:%alpha,
+		visible:%visible,
+		sceneID:%scene,
+		gravity:%gravity#,
+		skyType: %skyType$,
+		sky: %sky,
+		skyRed: %skyRed$,
+		skyGreen: %skyGreen$,
+		skyBlue: %skyBlue$,
+		skyColor: %skyColor,
+		ambientColor: %ambientColor,
+		ambientIntensity: %ambientIntensity#,
+		helpers: %helpers,
+		helperGrid: %helperGrid,
+		helperAxis: %helperAxis,
+		helperGround: %helperGround,
+		helperPhysics: %helperPhysics,
+		alwaysOnTop: %alwaysOnTop,
+	}, %tags$);
+	return true;
+}
+End Instruction
+
+/**api
+@name:Screen Close
+@description:Destroys the current screen or a given screen
+@param:index:index:The index of the screen to destroy, if ommited will destroy the current screen
+@param:*tags$:string:List of eventual tags
+@compatible: aoz, amos
+@examples:instructions:i_34
+@content:
+Use the SCREEN CLOSE command to erase a screen and free the memory it was using for other programming needs. Simply specify the index of the screen to be deleted.
+
+- *tags$* is a list of text tags that allow you to control how the screen is open
+1. #keepCurrent: will not re-activate any other screen (warning this can lead to crashes, only use this tag if you are sure the screen you close is not the current one)
+api*/
+Instruction Screen Close, index = (index), tags$
+{
+	#errors
+	aoz.screenClose(%index,%tags$);
+}
+End Instruction
+
+/**api
+@name:Screen Clone
+@description:Create an exact and synchronized copy of the current screen that can be displayed at another position and Z-order. Both screen share the same internal pixel buffers. Graphical operations are fobidden in the cloned screen
+@param:index:index:The index of the screen to create, will replace an existing screen
+@compatible: aoz, amos
+@examples:instructions:i_36
+@content:
+To create an identical copy of the current screen, and assign this new "clone" with a new screen number, use the
+SCREEN CLONE command followed by the destination screen number. Here is an example of a multi-cloned
+screen:
+~~~
+Screen Open 0,1280,20
+Screen Display 0,,70,,
+For S=1 To 7
+	Screen Clone S
+	Screen Display S,,S*20+70,,
+Next S
+Print "Start typing";
+Do
+	AS=Inkey$
+	If A$<> Then Print A$;
+Loop
+~~~
+Screen cloning is an ideal technique for two-player computer games, with each player controlling half of the visible
+display area.
+
+The clone uses the same memory area as the original screen, and will be displayed at the same place as the original.
+Any of the usual screen operations can be used with the clone, such as SCREEN DISPLAY and SCREEN OFFSET.
+However, because there is only one copy of the original screen data in memory, it is impossible to use the SCREEN
+command with the cloned copy.
+api*/
+Instruction Screen Clone, index = (index)
+{
+	#errors
+	aoz.screenClone(%index);
+}
+End Instruction
+
+/**api
+@name:Screen Hide
+@description:Make a screen disappear from display. The screen will remain active and drawing operation are still possible after this instruction
+@param:*index:index:The index of the screen, if ommited the instruction closes the current screen
+@compatible: aoz, amos
+@content:
+Use the SCREEN HIDE command to remove the current screen from view. It can then be restored using a SCREEN
+SHOW instruction, like this:
+~~~
+Cls : Print "I am the Current Screen" : Wait 100
+Screen Hide : Wait Key
+Screen Show
+~~~
+Any screen can be temporarily hidden, by including its index number after the SCREEN HIDE instruction. This
+screen is revealed with a similar request to SCREEN SHOW, followed by the relevant screen number.
+api*/
+Instruction Screen Hide, index = (index)
+{
+	#errors
+	aoz.getScreen(%index).setVisible(false,'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Show
+@description:Make a hidden screen reappear on display
+@param:*index:index:The index of the screen, if ommited the instruction affects the current screen
+@compatible: aoz, amos
+@content:
+Use the SCREEN HIDE command to remove the current screen from view. It can then be restored using a SCREEN
+SHOW instruction, like this:
+~~~
+Cls : Print "I am the Current Screen" : Wait 100
+Screen Hide : Wait Key
+Screen Show
+~~~
+Any screen can be temporarily hidden, by including its index number after the SCREEN HIDE instruction. This
+screen is revealed with a similar request to SCREEN SHOW, followed by the relevant screen number.
+api*/
+Instruction Screen Show, index = (index)
+{
+	#errors
+	aoz.getScreen(%index).setVisible(true,'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Display
+@description:Defines the display position and width of a screen
+@param:index:index:The index of the screen to display
+@param:x:integer:The horizontal coordinate of the top-left pixel of the screen on display
+@param:y:integer:The vertical coordinate of the top-left pixel of the screen on display
+@param:width:integer:The number of horizontal pixels to display
+@param:height:integer:The number of vertical pixels to display
+@examples:instructions:i_34
+@compatible: aoz, amos
+@content:
+To position a screen, the SCREEN DISPLAY command is used, followed by these parameters:
+
+- Index refers to the index of the screen to be displayed. All or any of the other parameters can be omitted, but the relevant commas must be included.
+
+The x,y-coordinates refer to physical positions on the monitor, and might be different depending on the current platform emulation.
+In Amiga mode, the renderer simulates the display of a CRT monitor with empty gaps around the active drawing area, and are referred to as "Hardware Coordinates"...
+
+- Width sets the width of the screen in pixels. If this is different from the original setting, only a part of the image
+will be shown, starting from the top left-hand corner of the screen.
+
+- Height is used to set the height of the screen in exactly the same way as the width.
+
+If any of the optional parameters are left out, the default settings will be applied automatically.
+api*/
+Instruction Screen Display, index=(index), x, y, width, height
+{
+	#errors
+	aoz.getScreen(%index).setPosition({x:%x,y:%y},'#update');
+	aoz.getScreen(%index).setSize({width:%width,height:%height},'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Center
+@description:Enforces the centering of a screen
+@param:index:index:The index of the screen to center
+@param:centerX:boolean:True to center the screen horizontally, False to leave the horizontal position unchanged
+@param:centerY:boolean:True to center the screen vertically, False to leave the vertical position unchanged
+@compatible: aoz
+api*/
+Instruction Screen Center, index = (index), centerX, centerY
+{
+	#errors
+	aoz.getScreen(%index).setCenter(%centerX,%centerY,'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Offset
+@description:Set the offet in the internal screen buffer of the top-left diplayed pixel, allowing scrollings
+@param:index:index:The index of the screen
+@param:xOffset:integer:The horizontal offset
+@param:yOffset:integer:The vertical offset
+@examples:instructions:i_34
+@content:
+Look at the diagram below, where the area of the visible screen is shown as a sort of "port-hole" 320 pixels wide by
+200 pixels high, inside a larger AOZ Studio screen. Of course, the port- hole can be made smaller using the
+SCREEN DISPLAY command.
+
+![Screen Offset example no1](help:img/screen_commands/screen_commands_ex1.png)
+
+The SCREEN OFFSET command is followed by the number of the screen to be displayed, then the x,y-coordinates
+of the "offset", which is the point where the top left-hand corner of the visible display is to start, measured from the
+top left-hand corner of the extra-large screen.
+api*/
+Instruction Screen Offset, index = (index), xOffset, yOffset
+{
+	#errors
+	aoz.getScreen(%index).setOffset({x:%xOffset,y:%yOffset},'#update');
+}
+End Instruction
+
+/**api
+@name:Screen To Front
+@description:Change the display order of the screen, and passes the screen in front of all other screens
+@param:*index:idnex:The index of the screen, if ommited the instruction will affect the current screen.
+@compatible: aoz, amos
+@examples:instructions:i_39
+@content:
+Use SCREEN TO FRONT to move the selected screen to the front of the display queue. If the screen number is
+omitted after the command, then the current screen will be brought to the front.
+~~~
+Centre "Hello! Screen 0 here"
+Wait 100
+Screen Open 1,1280,720
+Centre "Excuse me, make way for Screen 1"
+Wait 100 : Screen To Front 0
+Screen 0
+Wait 100 : Screen To Back
+~~~
+api*/
+Instruction Screen To Front, index = (index)
+{
+	#errors
+	aoz.screenToFront(aoz.getScreen(%index));
+}
+End Instruction
+
+/**api
+@name:Screen To Back
+@description:Change the display order of the screen, and passes the screen behind all other screens
+@param:*index:integer:The index of the screen, if ommited the instruction will affect the current screen.
+@compatible: aoz, amos
+@examples:instructions:i_39
+@content:
+This command is used to move a screen to the background of the display. If another screen is already there, it will
+be displayed in front of the chosen screen. Again, if the screen number is omitted after a SCREEN TO BACK
+command, the current screen will be relegated to the back of the display queue. Try this example:
+~~~
+Centre "Hello! Screen 0 here"
+Wait 100
+Screen Open 1,1280,720
+Centre "Excuse me, make way for Screen 1"
+Wait 100 : Screen To Front 0
+Screen 0
+Wait 100 : Screen To Back
+~~~
+api*/
+Instruction Screen To Back, index=(index)
+{
+	#errors
+	aoz.screenToBack(aoz.getScreen(%index));
+}
+End Instruction
+
+/**api
+@name:Screen Hot Spot
+@description:Set the hot-spot of a screen to a given coordinate. The hot-spot is the position within the screen where the Screen Offset will have effect and around which rotation will be done
+@param:index:integer:The index of the screen, if ommited the instruction will affect the current screen.
+@param:xSpot:integer:The horizontal position of the hot-spot
+@param:ySpot:integer:The vertical position of the hot-spot
+@compatible: aoz
+@content:
+AOZ introduces the ability to rotate screens as any other graphcial objects. All the bobs that are displayed inside of the screen will follow the rotation.
+
+The default position of the hot-spot of the screen is 0, 0 after it's creation. The next example show the importance of the hot spot when you rotate a screen...
+
+~~~
+Degree
+
+// Rotates the screen with it's default hot-spot, on the top-left corner
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+	Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+For A = 0 To 360
+	Screen Rotate 0, A
+	Wait Vbl
+Next
+Wait Key
+
+// Set the hot spot of the screen in the center
+Screen Hot Spot 0, Screen Width( 0 ) / 2, Screen Height( 0 ) / 2
+For A = 0 To 360
+	Screen Rotate 0, A
+	Wait Vbl
+Next
+Wait Key
+~~~
+api*/
+Instruction Screen Hot Spot, index = (index), xSpot, ySpot
+{
+	#errors
+	aoz.getScreen(%index).setHotspot({x:%xSpot,y:%ySpot},'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Hot Spot
+@description:Set the hot spot of a screen to a given coordinate. The hot-spot is the position within the screen where the Screen Offset will have effect and around which rotation will be done
+@param:*index:index:The index of the screen, if ommited the instruction will affect the current screen.
+@param:flags:integer:Flag of bits indicating the horizontal and vertical position of the hot-spot, 0: top or left, 1: center or middle, 2: right or bottom. Example: $11 centers the hot-spot horizontally and vertically
+@compatible: aoz
+@content:
+AOZ introduces the ability to rotate screens as any other graphcial objects. All the bobs that are displayed inside of the screen will follow the rotation.
+
+As for the Hot Spot instruction available for Bobs and Sprite, you can use a mask of bits to indicate one of the default positions of the hot-spot.
+- 0: indicate top or left,
+- 1: center or middle,
+- 2: right or bottom.
+
+Example: $11 centers the hot-spot horizontally and vertically
+
+~~~
+Degree
+
+// Rotates the screen with it's default hot-spot, on the top-left corner
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+	Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+For A = 0 To 360
+	Screen Rotate 0, A
+	Wait Vbl
+Next
+Wait Key
+
+// Set the hot spot of the screen in the center
+Screen Hot Spot 0, $11
+For A = 0 To 360
+	Screen Rotate 0, A
+	Wait Vbl
+Next
+Wait Key
+~~~
+api*/
+Instruction Screen Hot Spot, index = (index), flags
+{
+	#errors
+	aoz.getScreen(%index).setHotspot({x:'mask',y:%flags},'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Rotate
+@description:Rotate a screen around it's hot-spot on display. Warning, on software renderers this instruction will slow down the application
+@param:*index:index:The index of the screen, if ommited the instruction will affect the current screen.
+@param:angle:angle:The angle of the rotation of the screen. Default in radian, and degrees after the "Degree" instruction has been used
+@content:
+~~~
+Degree
+
+// Open a screen and display some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+	Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Set the hot spot of the screen to center/middle
+Screen Hot Spot 0, $11
+
+// Rotates the hot spot of the screen in the center
+For A = 0 To 360
+	Screen Rotate 0, A
+	Wait Vbl
+Next
+Wait Key
+~~~
+Warning: on software renderers this instruction will slow down the application
+api*/
+Instruction Screen Rotate, index=(index), angle#
+{
+	#errors
+	aoz.getScreen(%index).setAngle({z:(%angle#)*aoz.degreeRadian},'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Rotate
+@description:Rotate the current screen around it's hot-spot on display.
+@param:angle:angle:The angle of the rotation of the screen. Default in radian, and degrees after the "Degree" instruction has been used
+@content:
+~~~
+Degree
+
+// Open a screen and display some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+	Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Set the hot-spot of the screen to center/middle
+Screen Hot Spot 0, $11
+
+// Rotates the hot spot of the screen in the center
+For A = 0 To 360
+	Screen Rotate A
+	Wait Vbl
+Next
+Wait Key
+~~~
+Warning: on software renderers this instruction will slow down the application
+api*/
+Instruction Screen Rotate, angle#
+{
+	#errors
+	aoz.currentScreen.setAngle({z:(%angle#)*aoz.degreeRadian},'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Skew
+@description:Applies a horizontal and vertical distortion to a screen during the display process. Does not affect the content of the screen.
+@param:index:integer:The index of the screen
+@param:xSkew#:float:The number of pixel to shift at each horizontal pixel
+@param:ySkew#:float:The number of pixel to shift at each vertical pixel
+@compatible: aoz
+@content:
+~~~
+Degree
+
+// Open a screen and display some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+	Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Make the screen go berzerk!
+Do
+	Screen Skew 0, Rnd( 16 ) - 8, Rnd( 16 ) - 8
+	Wait Vbl
+Next
+~~~
+Warning: on software renderers this instruction will slow down the application
+api*/
+Instruction Screen Skew, index = (index), xSkew#, ySkew#
+{
+	#errors
+	aoz.getScreen(%index).setSkew({x:%xSkew#,y:%ySkew#},'#update');
+}
+End Instruction
+
+Instruction Screen Skew, xSkew#, ySkew#
+{
+	#errors
+	aoz.currentScreen.setSkew({x:%xSkew#,y:%ySkew#},true,'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Scale
+@description:Resize a screen during the display process. Does not affect the content of the screen.
+@param:index:index:The index of the screen
+@param:xScale:float:The horizontal scale. 1= no effect, 0.5= half the width, 2= twice the width, etc.
+@param:yScale:float:The vertical scale. 1= no effect, 0.5= half the height, 2= twice the height, etc.
+@content:
+~~~
+Degree
+
+// Open a screen and put some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+	Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Set the hot-spot of the screen to it's center
+Screen Hot Spot 0, $11
+
+// Make the screen zoom out
+For Z# = 1 To 0 Step -0.01
+	Screen Scale 0, Z#, Z#
+	Wait Vbl
+Next
+~~~
+Warning: on software renderers this instruction may slow down the application
+api*/
+Instruction Screen Scale, index = (index), xScale#, yScale#
+{
+	#errors
+	aoz.getScreen(%index).setScale({x:%xScale#,y:%yScale#},'#update');
+}
+End Instruction
+
+Instruction Screen Scale, xScale#, yScale#
+{
+	#errors
+	aoz.currentScreen.setScale({x:%xScale#,y:%yScale#},'#update');
+}
+End Instruction
+
+/**api
+@name:Screen Alpha
+@description:Set the global transparency of a Screen, also called "Alpha". All graphics, text and Bobs that are on the screen will be affected. Sprites are unaffected by Screen Alpha.
+@param:index:index:Index of the screen in the list of active screens (optional)
+@param:alpha#:float:Value of Alpha, from 1 (fully opaque) to 0 (fully transparent)
+@content:
+This instruction allows you to turn any Screen Image with it's contents (with the exception of sprites) into a semi-transparent image. The screen will completely disappear from display with an Alpha value of 0, but will remain active.
+
+The next example displays some graphics on the screen and slowly fades it away...
+~~~
+
+Curs Off
+Set Font 0,80
+Set Transparent 0
+Ink 3
+// Fill the screen with coloured boxes
+For f=0 to 100
+	Colour 3,rnd(16581375)
+	Bar Rnd(Screen Width-200),Rnd(Screen Height-200),Rnd(350)+50,Rnd(350)+50
+Next f
+Ink 1
+// Add Some Text
+Text Screen Width/2,Screen Height/2,"Press Any Key To Fade","#center"
+Wait Key
+For a#=1 to 0 Step -0.01
+	Screen Alpha a#
+	Wait Vbl
+Next a#
+End
+~~~
+api*/
+
+Instruction Screen Alpha, index = (index), alpha#
+{
+	#errors
+	aoz.getScreen(%index).setAlpha(%alpha#);
+}
+End Instruction
+
+Instruction Screen Alpha, alpha#
+{
+	#errors
+	aoz.currentScreen.setAlpha(%alpha#);
+}
+End Instruction
+/**api
+@name:Screen Blend
+@description:Set the Global Composite Operation of a Screen. This controls the way the screens pixels interact with underlying pixels as the screen is drawn. The instruction is in the experimental phase of development and functionality may change in the future.
+@param:index:integer:The index of the screen to apply the blend value to. Optional, if omitted, current screen index is used.
+@param:blend:integer:The value of the blend (see list below). Must be in the range from 0 to 25
+@content:
+This instruction allows you to change the way screen images are drawn, more specifically the way each pixel interacts with the pixels below it as it is drawn.
+ The table below list the blend value, the corresponding Global Composite Operation, and a description of what it actually does.
+
+ 0 - 'source-over'		- This is the default setting and draws new shapes on top of the existing canvas content.
+ 1 - 'source-in'		- The new shape is drawn only where both the new shape and the destination canvas overlap. Everything else is made transparent.
+ 2 - 'source-out'		- The new shape is drawn where it doesn't overlap the existing canvas content.
+ 3 - 'source-atop'		- The new shape is only drawn where it overlaps the existing canvas content.
+ 4 - 'destination-over'	- New shapes are drawn behind the existing canvas content.
+ 5 - 'destination-in'	- The existing canvas content is kept where both the new shape and existing canvas content overlap. Everything else is made transparent.
+ 6 - 'destination-out'	- The existing content is kept where it doesn't overlap the new shape.
+ 7 - 'destination-atop' - The existing canvas is only kept where it overlaps the new shape. The new shape is drawn behind the canvas content.
+ 8 - 'lighter'			- Where both shapes overlap the color is determined by adding color values.
+ 9 - 'copy'				- Only the new shape is shown.
+10 - 'xor'				- Shapes are made transparent where both overlap and drawn normal everywhere else.
+11 - 'multiply'			- The pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result.
+12 - 'screen'			- The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply)
+13 - 'overylay'			- A combination of multiply and screen. Dark parts on the base layer become darker, and light parts become lighter.
+14 - 'darken'			- Retains the darkest pixels of both layers.
+15 - 'lighten'			- Retains the lightest pixels of both layers.
+16 - 'color-dodge'		- Divides the bottom layer by the inverted top layer.
+17 - 'color-burn'		- Divides the inverted bottom layer by the top layer, and then inverts the result.
+18 - 'hard-light'		- A combination of multiply and screen like overlay, but with top and bottom layer swapped.
+19 - 'soft-light'		- A softer version of hard-light. Pure black or white does not result in pure black or white.
+20 - 'difference'		- Subtracts the bottom layer from the top layer or the other way round to always get a positive value.
+21 - 'exclusion'		- Like difference, but with lower contrast.
+22 - 'hue'				- Preserves the luma and chroma of the bottom layer, while adopting the hue of the top layer.
+23 - 'saturation'		- Preserves the luma and hue of the bottom layer, while adopting the chroma of the top layer.
+24 - 'color'			- Preserves the luma of the bottom layer, while adopting the hue and chroma of the top layer.
+25 - 'luminosity'		- Preserves the hue and chroma of the bottom layer, while adopting the luma of the top layer.
+~~~
+Screen Open 0,1920,1080
+api*/
+Instruction Screen Blend, index = (index), style
+{
+	#errors
+	aoz.getScreen(%index).setBlend(%style);
+}
+End Instruction
+Instruction Screen Blend, style
+{
+	#errors
+	aoz.currentScreen.setBlend(%style);
+}
+End Instruction
+/**api
+@name:Screen Copy
+@description:Copy an area from one screen to another or itself, resizing the area
+@param:sourceIndex:index:The index of the source screen
+@param:x1:integer:The horizontal coordinate of the top-left corner of the origin area to copy
+@param:y1:integer:The vertical coordinate of the top-left corner of the origin area to copy
+@param:x2:integer:The horizontal coordinate of the bottom-right corner of the origin area to copy
+@param:y2:integer:The vertical coordinate of the bottom-right corner of the origin area to copy
+@param:destinationIndex:index:The index of the destination screen
+@param:x3:integer:The horizontal coordinate of the top-left corner of the destination area
+@param:y3:integer:The vertical coordinate of the top-left corner of the destination area
+@param:x4:integer:The horizontal coordinate of the bottom-right corner of the destination area
+@param:y4:integer:The vertical coordinate of the bottom-right corner of the destination area
+@param:*mode:integer:The drawing mode to use while drawing (not implemented TODO)
+@examples:instructions:i_39
+@content:
+SCREEN COPY is the most important screen command of all. It can be used to achieve classic screen techniques
+like "wiping" from one screen to another, as well as providing all sorts of special effects. At its simplest level, use
+this command to copy the whole contents of one screen to another screen.
+Then determine the number of the destination screen, which is where you want the image copied to.
+
+For example:
+~~~
+Screen Copy 1 To 2
+~~~
+Exact sections of screens can be copied by giving the coordinates of the top left-hand and bottom right-hand corners
+of the areas to be copied, followed by the number of the destination screen and the coordinates where the copy's top
+left-hand corner should be placed. If the destination screen number is omitted, the copied image will appear at the
+new coordinates on the current screen. For example:
+~~~
+Circle 50,50,10 : Wait 50
+Screen Copy 0,20,20,70,70 To 0,100,100
+~~~
+Note that there are no limits to these coordinates, and any parts of the image that fall outside of the current visible
+screen area will be clipped automatically.
+api*/
+Instruction Screen Copy, sourceIndex = (index), x1, y1, x2, y2 To destinationIndex = (index), x3, y3, x4, y4, mode
+{
+	#errors
+	aoz.getScreen(%sourceIndex).screenCopy(aoz.getScreen(%destinationIndex),{x:%x1,y:%y1,width:(%x2)-(%x1)+1,height:(%y2)-(%y1)+1},{x:%x3,y:%y3,width:(%x4)-(%x3)+1,height:(%y4)-(%y3)+1},%mode);
+}
+End Instruction
+Instruction Screen Copy, sourceIndex = (index), x1, y1, x2, y2 To destinationIndex = (index), x3, y3, mode
+{
+	#errors
+	aoz.getScreen(%sourceIndex).screenCopy(aoz.getScreen(%destinationIndex),{x:%x1,y:%y1,width:(%x2)-(%x1)+1,height:(%y2)-(%y1)+1},{x:%x3,y:%y3},%mode);
+}
+End Instruction
+Instruction Screen Copy, sourceIndex = (index) To destinationIndex = (index), mode
+{
+	#errors
+	aoz.getScreen(%sourceIndex).screenCopy(aoz.getScreen(%destinationIndex),%mode);
+}
+End Instruction
+/**api
+@name:Screen Project
+@description:Copy an area from one screen to another or itself, with optional resizing and/or re-shaping or warping the area
+@param:sourceIndex:index:The index of the source screen
+@param:x1:integer:The horizontal coordinate of the top-left corner of the origin area to copy
+@param:y1:integer:The vertical coordinate of the top-left corner of the origin area to copy
+@param:x2:integer:The horizontal coordinate of the bottom-right corner of the origin area to copy
+@param:y2:integer:The vertical coordinate of the bottom-right corner of the origin area to copy
+@param:destinationIndex:index:The index of the destination screen
+@param:dx1:integer:The horizontal coordinate of the top-left corner of the destination area
+@param:dy1:integer:The vertical coordinate of the top-left corner of the destination area
+@param:dx2:integer:The horizontal coordinate of the top-right corner of the destination area
+@param:dy2:integer:The vertical coordinate of the top-right corner of the destination area
+@param:dx3:integer:The horizontal coordinate of the bottom-right corner of the destination area
+@param:dy3:integer:The vertical coordinate of the bottom-right corner of the destination area
+@param:dx4:integer:The horizontal coordinate of the bottom-left corner of the destination area
+@param:dy4:integer:The vertical coordinate of the bottom-left corner of the destination area
+
+@content:
+(work in progress)
+
+api*/
+Instruction Screen Project, sourceIndex = (index), x1, y1, x2, y2 To destinationIndex = (index), dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4
+{
+	#errors
+	aoz.getScreen(%sourceIndex).screenProject(aoz.getScreen(%destinationIndex),%x1,%y1,%x2,%y2,%dx1,%dy1,%dx2,%dy2,%dx3,%dy3,%dx4,%dy4);
+}
+End Instruction
+
+
+/**api
+@name:X Screen
+@description:Convert a hardware horizontal coordinate into a screen coordinate. Hardware coordinates are different from screen coordinate only in retro-machine display emulation (Amiga, Atari etc.)
+@param:*screenIndex:index:The index of the screen. If ommited, this function will concern the current screen.
+@param:x:integer:The hardware coordinate to convert
+@return:integer:The correponding horizontal coordinate in the Screen
+@compatible: amos
+@content:
+These functions transform a hardware coordinate into a screen coordinate, relative to the current screen. If the
+hardware coordinates lie outside of the screen, both functions will return relative offsets from the screen boundaries.
+An optional screen number may be included, in which case the coordinates will be returned relative to that screen.
+api*/
+Function X Screen, screenIndex = (index), x
+{
+	#errors
+	var s=aoz.getScreen(%screenIndex);
+}
+End Function( { ((%x-s.vars.x)/s.renderScale.x/s.vars.scaleX+s.vars.offsetX) } )
+
+Function X Screen, x
+{
+	#errors
+}
+End Function( { ((%x-aoz.currentScreen.vars.x)/aoz.currentScreen.renderScale.x/aoz.currentScreen.vars.scaleX+aoz.currentScreen.vars.offsetX) } )
+
+/**api
+@name:Y Screen
+@description:Convert a hardware vertical coordinate into a screen coordinate. Hardware coordinates are different from screen coordinate only in retro-machine display emulation (Amiga, Atari etc.)
+@param:*screenIndex:index:The index of the screen. If ommited, this function will concern the current screen.
+@param:y:integer:The hardware coordinate to convert
+@return:integer:The correponding vertical coordinate in the given screen
+@compatible: amos
+@content:
+These functions transform a hardware coordinate into a screen coordinate, relative to the current screen. If the
+hardware coordinates lie outside of the screen, both functions will return relative offsets from the screen boundaries.
+An optional screen number may be included, in which case the coordinates will be returned relative to that screen.
+api*/
+Function Y Screen, screenIndex = (index), y
+{
+	#errors
+	var s=aoz.getScreen(%screenIndex);
+}
+End Function( {((%y-s.vars.y)/s.renderScale.y/s.vars.scaleY+s.vars.offsetY)} )
+
+Function Y Screen, y
+{
+	#errors
+}
+End Function( { ((%y-aoz.currentScreen.vars.y)/aoz.currentScreen.renderScale.y/aoz.currentScreen.vars.scaleY+aoz.currentScreen.vars.offsetY)} )
+
+
+/**api
+@name:Def Scroll
+@description:Define a new scrolling zone in the current screen. This instruction has no visible effect until a "Scroll" instruction is used
+@param:index:index:The index of the scrolling zone to define
+@param:x1:integer:The horizontal coordinate of the top-left pixel of the rectangle to scroll
+@param:y1:integer:The vertical coordinate of the top-left pixel of the rectangle to scroll
+@param:x2:integer:The horizontal coordinate of the bottom-right pixel of the rectangle to scroll
+@param:y2:integer:The vertical coordinate of the bottom-right pixel of the rectangle to scroll
+@param:dx:integer:Signed horizontal shift to apply. 0= no scroll, -1= one pixel to the left, 1= one pixel to the right, etc
+@param:dy:integer:Signed vertical shift to apply. 0= no scroll, -1= one pixel to the top, 1= one pixel to the bottom, etc
+@examples:instructions:i_38
+@compatible: aoz, amos
+@content:
+Using AOZ Studio, you are able to define scrolling screen zones, and each one can have an individual pattern of movement.
+
+Simply follow your DEF SCROLL command with the index of the zone you are setting up.
+
+Then give the coordinates of the area of the zone to be scrolled, from the top left-hand corner to the diagonally opposite bottom right-hand corner. Finally, give this zone a scrolling pattern by
+setting the number of pixels to be shifted horizontally, and the number of pixels to be shifted vertically during each
+scrolling operation.
+
+Positive horizontal values will cause a shift to the right whereas negative values will shift the zone towards the left of the screen. Similarly, positive vertical values will scroll downwards and negative values
+cause an upward scroll.
+api*/
+Instruction Def Scroll, index = (index), x1, y1 To x2, y2, dx, dy
+{
+	#errors
+	aoz.currentScreen.defScroll(%index,{x:%x1,y:%y1,x2:%x2,y2:%y2},{x:%dx,y:%dy});
+}
+End Instruction
+
+Instruction Def Scroll, index = (index), x1, y1, width, height, dx, dy
+{
+	#errors
+	aoz.currentScreen.defScroll(%index,{x:%x1,y:%y1,width:%width,height:%height},{x:%dx,y:%dy});
+}
+End Instruction
+
+/**api
+@name:Scroll
+@description:Performs the action of scrolling for a pre-defined scrolling area.
+@param:index:index:The index of the scrolling area as defined with "Def Scroll"
+@compatible: aoz, amos
+@examples:instructions:i_38
+@content:
+Moves the pixels in the desired direction. The empty zones at the extremities of the scrollign area, on left, top and/or right and bottom are left unchanged and will have to be cleared
+
+To scroll a screen zone already specified with a DEF SCROLL setting, use SCROLL followed by the zone number you require.
+api*/
+Instruction Scroll, index = (index)
+{
+	#errors
+	aoz.currentScreen.scroll(%index);
+}
+End Instruction
+
+/**api
+@name:Appear
+@description:Progressively draw one screen into another using a fading effect
+@param:sourceScreen:index:Index of the source screen
+@param:destinationScreen:index:Index of the destination screen
+@param:pixels:integer:Value used to perform the effect
+@param:range:integer:Range of the apparition in number of pixels (optional)
+@compatible: notimplemented
+@content:
+This command creates a fade between two pictures. Choose the number of the source screen where the original
+picture comes from, then the number of the destination screen whose picture it fades into.
+
+Next determine a value that will cause the desired effect, by setting the number of pixel points on the screen, ranging
+from 1 pixel all the way up to every pixel in the display.
+
+Normally APPEAR affects the whole of your screen area, but there is an optional parameter that causes only part of
+the screen to be faded. Because screens are drawn from top to bottom, set the area to be faded by adding the range
+of the number of pixels from the top of the screen.
+
+For example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.Abk"
+Paste Bob 100,0,1
+Wait 100
+Screen Open 1,320,90,16
+Appear 0 To 1,1,28800
+~~~
+That example fades the top part of your default screen into the newly opened Screen 1. Obviously, the appearance of
+fades will vary, depending on the screen mode being used.
+api*/
+Instruction Appear, sourceScreen = (index) To destinationScreen = (index), pixels, range
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Zoom
+@description:Copy and scale a rectangle from one screen to another.
+@param:sourceScreen:index:Index of the source screen
+@param:x1:integer:Horizontal coordinate of the top-left corner of the rectangle to zoom in the source screen
+@param:y1:integer:Vertical coordinate of the top-left corner of the rectangle to zoom in the source screen
+@param:x2:integer:Horizontal coordinate of the bottom-right corner of the rectangle to zoom in the source screen
+@param:y2:integer:Vertical coordinate of the bottom-right corner of the rectangle to zoom in the source screen
+@param:destionationScreen:index:Index of the destination screen
+@param:x3:integer:Horizontal coordinate of the top-left corner of the rectangle to zoom in the destination screen
+@param:y3:integer:Vertical coordinate of the top-left corner of the rectangle to zoom in the destination screen
+@param:x4:integer:Horizontal coordinate of the bottom-right corner of the rectangle in the destination screen
+@param:y4:integer:Vertical coordinate of the bottom-right corner of the rectangle in the destination screen
+@examples:instructions:i_77
+@compatible: aoz, amos
+@content:
+This one command allows you to produce a range of remarkable effects that change the size of the image in any
+rectangular area of the screen. Depending on the relative sizes of the source and destination areas, images can be
+magnified, shrunk, squashed and stretched as you wish. ZOOM is qualified by the number of the screen from where
+your source picture will be taken, followed by the coordinates of the top left-hand corner and bottom right-hand
+corner of the area to be grabbed, After the TO structure, give the number of the destination screen and the new
+coordinates of the area which is to hold the zoomed image. AOZ Studio will automatically re-size the
+image.
+api*/
+Instruction Zoom, sourceIndex = (index), x1,y1,x2, y2 To destinationIndex = (index), x3, y3, x4, y4, mode
+{
+	#errors
+	aoz.getScreen(%sourceIndex).screenCopy(aoz.getScreen(%destinationIndex),{x:%x1,y:%y1,width:(%x2)-(%x1)+1,height:(%y2)-(%y1)+1},{x:%x3,y:%y3,width:(%x4)-(%x3)+1,height:(%y4)-(%y3)+1},%mode);
+}
+End Instruction
+
+/**api
+@name:XGr
+@description:Return the current horizontal coordinate of the graphical cursor in the current screen
+@compatible: aoz, stos, amos
+@examples:instructions:i_6
+@content:
+Use these functions to find the current coordinates of the graphics cursor, which is the default location for future
+drawing operations. For example:
+~~~
+Cls : Circle 100,100,50
+Print Xgr,Ygr
+~~~
+api*/
+Function XGr
+{
+	#errors
+}
+End Function( {aoz.currentScreen.grPosition.x} )
+
+/**api
+@name:YGr
+@description:Return the current vertical coordinate of the graphical cursor in the current screen
+@compatible: aoz, stos, amos
+@examples:instructions:i_6
+@content:
+Use these functions to find the current coordinates of the graphics cursor, which is the default location for future
+drawing operations. For example:
+~~~
+Cls : Circle 100,100,50
+Print Xgr,Ygr
+~~~
+api*/
+Function YGr
+{
+	 #errors
+}
+End Function( {aoz.currentScreen.grPosition.y} )
+
+/**api
+@name:ScIn
+@description:Check if the given coordinates are located above a given screen on display. Hardware coordinate are only different from screen coordinate for retro-machine emulation (Amiga, Atari etc.)
+@param:*index:index:The index of the screen to test.
+@param:x:integer:Horizontal hardware coordinate to test
+@param:y:integer:Vertical hardware coordinate to test
+@return:boolean:True if the given coordinate lay over the screen, False if not
+@return:integer:The number of the top-=most screen under the coordinates, or -1 if no screen is found.
+@examples:instructions:i_36
+@compatible: aoz, amos
+@content:
+The SCIN function (short for SCreen In) is normally used with X MOUSE and Y MOUSE to check whether the
+mouse cursor has entered a particular screen. It returns the number of the screen which is underneath the selected coordinates. If there is no screen there, a negative number will be returned.
+
+The return value varies if you specify or not the index of the screen to scan:
+
+### The index of a screenis specified
+The function will return TRUE iof the coordiantes lay above the screen and FALSE if they do not
+
+### The index of a screen is *not* specified
+The function will return the index of the top screen at the coordinates or -1 if no screen is found.
+api*/
+Function ScIn, index = (index), x, y
+{
+	#errors
+}
+End Function( {aoz.screenIn(%index,{x:%x,y:%y})} )
+
+Function ScIn, x, y
+{
+	#errors
+}
+End Function( {aoz.screenIn(undefined,{x:%x,y:%y})} )
+
+/**api
+@name:Mouse Screen
+@description:Return the index of the screen under the mouse
+@return:integer:-1 if the coordinate lay outside of all the displayed screens, or the index of the top-most screen if they lay inside of one
+@examples:instructions:i_49
+@compatible: aoz, amos
+@content:
+Use MOUSE SCREEN to return the number of the screen where the mouse pointer is currently located, like this:
+~~~
+X=Mouse Screen
+Print X
+~~~
+api*/
+Function Mouse Screen
+{
+	 #errors
+}
+End Function( {aoz.mouseScreen({x:aoz.xMouse,y:aoz.yMouse})} )
+
+/**api
+@name:Screen Colour
+@description:Return the number of colours in the palette of a given screen
+@param:*screenIndex:index:The index of the screen to query. If ommmited, the number of colours of the current screen will be returned.
+@return:integer:The number of colours in the palette
+@examples:instructions:i_36
+@compatible: aoz, amos
+@content:
+To find the maximum number of colours in the screen that is currently active, test the SCREEN COLOUR function now:
+~~~
+Print Screen Colour
+~~~
+api*/
+Function Screen Colour, screenIndex=(index)
+{
+	#errors
+}
+End Function( {aoz.getScreen(%screenIndex).vars.numberOfColors} )
+
+Function Screen Colour
+{
+	#errors
+}
+End Function( {aoz.currentScreen.vars.numberOfColors} )
+
+/**api
+@name:Screen Color
+@description:Return the number of colours in the palette of a given screen
+@param:*screenIndex:index:The index of the screen to query. If ommmited, the number of colours of the current screen will be returned.
+@return:integer:The number of colors in the palette
+@examples:instructions:i_36
+@compatible: aoz
+@content:
+To find the maximum number of colours in the screen that is currently active, test the SCREEN COLOUR function now:
+~~~
+Print Screen Color
+~~~
+api*/
+Function Screen Color, screenIndex=(index)
+{
+	#errors
+}
+End Function( {aoz.getScreen(%screenIndex).vars.numberOfColors} )
+
+Function Screen Color
+{
+	#errors
+}
+End Function( {aoz.currentScreen.vars.numberOfColors} )
+
+/**api
+@name:Screen Width
+@description:Return the width in pixels of a given screen
+@param:*screenIndex:index:The index of the screen to query. If ommited, AOZ will return the width of the current screen
+@return:integer:The width of the screen in pixel
+@examples:instructions:i_36
+@compatible: aoz, amos
+@content:
+The dimensions of the current screen can be found like this:
+~~~
+Print Screen Height
+Print Screen Width
+~~~
+api*/
+Function Screen Width, screenIndex = (index)
+{
+	#errors
+}
+End Function( {aoz.getScreen(%screenIndex).dimension.width} )
+
+Function Screen Width
+{
+	#errors
+}
+End Function( {aoz.currentScreen.dimension.width} )
+
+/**api
+@name:Screen Height
+@description:Return the height in pixels of a given screen
+@param:*screenIndex:index:The index of the screen to query. If ommited, AOZ will return the width of the current screen
+@return:integer:The height of the screen in pixel
+@examples:instructions:i_36
+@compatible: aoz, amos
+@content:
+~~~
+Print Screen Height
+Print Screen Width
+~~~
+api*/
+Function Screen Height, screenIndex = (index)
+{
+	#errors
+}
+End Function( {aoz.getScreen(%screenIndex).dimension.height} )
+
+Function Screen Height
+{
+	#errors
+}
+End Function( {aoz.currentScreen.dimension.height} )
+
+/**api
+@name:Screen
+@description:Set the given screen index as the current screen, all graphical operation being directed to this screen after this instruction
+@param:index:index:The index of the screen to set as active
+@compatible: aoz, amos
+@examples:instructions:i_39
+@content:
+SCREEN can be used as a function to return the number of the screen which is currently active. This screen is used
+for all drawing operations, but it is not necessarily visible.
+api*/
+Instruction Screen, index = (index)
+{
+	#errors
+	aoz.setScreen(%index);
+}
+End Instruction
+
+/**api
+@name:Screen
+@description:Return the index of the current screen, -1 if no screen is opened when the function is called
+@return:integer:The index of the current screen
+@examples:instructions:i_39,tutorials:instructions/i_40
+@content:
+SCREEN can be used as a function to return the number of the screen which is currently active. This screen is used
+for all drawing operations, but it is not necessarily visible.
+
+Warning: this function will return -1 if the screen index is a string!
+api*/
+Function Screen
+{
+}
+End Function( {isNaN( aoz.currentScreen.number ) ? -1 : aoz.currentScreen.number} )
+
+/*api
+@name:Screen Alpha
+@description:Return the transparency Alpha value of a given colour index in the current screen palette
+@param:screenIndex:index:The index of the colour in the colour palette
+@return:float:The alpha value, from 0 (fully transparent) to 1 (fully opaque)
+@compatible: aoz
+api
+Function Screen Alpha, screenUIndex = (index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.getColorAlpha(%number)} )
+*/
+
+/**api
+@name:Remap
+@description:Transforms the values of all the pixels in a rectangle matching a specific RGB value to another RGBA value.
+@param:color1:rgb:The RGB value of the color to look for
+@param:color2:rgba:The RGBA value of the color to replace with
+@param:*x:integer:The horizontal coordinate of the top-left corner of the origin area to scan
+@param:*y:integer:The vertical coordinate of the top-left corner of the origin area to scan
+@param:*width:integer:The horizontal coordinate of the bottom-right corner of the origin area to scan
+@param:*height:integer:The vertical coordinate of the bottom-right corner of the origin area to scan
+@compatible: aoz
+@content:
+This instruction will affect the whole screen if tyou ommit to declare the remapping zone...
+
+Warning, this operation can take a long time to process and make the browser irresponsive during a while
+api*/
+Instruction Remap, color1 To color2, x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.remap(%color1,%color2,{x:%x1,y:%y1,width:%width,height:%height});
+}
+End Instruction
+
+Instruction Remap, color1 To color2
+{
+	#errors
+	aoz.currentScreen.remap(%color1,%color2);
+}
+End Instruction
+
+/**api
+@name:Set Transparent
+@description:Set one or more colours of the current screen as transparent.
+@param:colors:integers:A list of indexes of colours in the screen palette eparated by a comma
+@compatible: aoz
+@content:
+After this instruction, the colors you have indicated will be transparent. It means that the user will see whatever lays behind the screen at the position where the given colors are used.
+
+Use this instruction to easliy create parallax scrollings as in this example:
+
+~~~
+Degree
+
+// Open a background screen and put some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+	Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Open a front screen, larger than the display and put some circles in it
+Screen Open 1, 1280 * 4, 720, 16
+
+// Set color 0 of the front screen (the current one) to transparent and clear the screen
+Set Transparent 0 : Cls 0
+Screen To Front 1			// Not really necessary... ;)
+For N = 0 To 100
+	Ink Rnd( 15 ) + 1 : Circle Rnd( 1280 * 4 ), Rnd( 720 ), Rnd( 200 )
+Next
+
+// Perform the scroll
+For X = 0 To 1280 * 4
+	Screen Offset 1, X, 0
+	Wait Vbl
+Next
+~~~
+Warning: this instruction will invoke a complete remapping of the screen that might take a long time. Use this instruction to make parralax scrolling diplays
+api*/
+
+/**api
+@name:Stop Transparent
+@description:Set one colour of the current screen as opaque. Will invoke a complete remapping of the screen that migght take a long time.
+@param:colors:integers:A list of indexes of colours in the screen palette eparated by a comma
+@compatible: aoz
+@content:
+api*/
+
+/**api
+@name:Set Alpha
+@description:Set the alpha of any palette colour in the current screen. This effect of this instruction will only be visible when the next graphical instruction using this colour are executed.
+@param:ink:integer:The index of the colour in the screen palette
+@param:alpha#:float:The value of the alpha, 1 = totally opaque, 0 = totally transparent (colour will not be visible and leave "holes" in the screen)
+@compatible: aoz
+@content:
+api*/
+Instruction Set Alpha, index, alpha#
+{
+	#errors
+	aoz.currentScreen.setColorAlpha([%index],[%alpha#]);
+}
+End Instruction
+
+/**api
+@name:Screen Filter
+@description:Set or add a graphical filter to a screen
+@param:index:index:Index of the screen in question. Use "current" or "." to indicate the current screen.
+@param:filterName$:string:Name of the filter to use (see list)
+@param:value1#:number:First value to use, a percentage or a number of pixels, depending on the filter
+@param:value2#:number:Second value to use, a percentage or a number of pixels, , depending on the filter
+@param:value3#:number:Third value to use, a percentage or a number of pixels, , depending on the filter
+@param:value4#:number:Fourth value to use, a percentage or a number of pixels (or a color), depending on the filter
+@content:
+This instruction applies one of the filters offered by Javascript and Aoz to the given screen. The whole screen, including
+the bobs it contain will see their display modified accordingly. The name, so the effect of the filter is
+specified in the first parameter, filterName$, and can be one of the following list, along with the first, second third
+and fourth parameter, which value and type depend on the filter itself.
+
+- "blur": Applies a Gaussian blur to the screen. The parameter defines the value of the standard deviation
+  to the Gaussian function, i.e., how many pixels on the screen blend into each other;
+  thus, a larger value will create more blur. A value of 0 leaves the input unchanged.
+
+- "brightness": Applies a linear multiplier to the screen, making it appear brighter or darker.
+  A value under 100% darkens the image, while a value over 100% brightens it.
+  A value of 0% will create an image that is completely black, while a value of 100% leaves the input unchanged.
+
+- "contrast": Adjusts the contrast of the screen. A value of 0% will create a drawing that is completely black.
+  A value of 100% leaves the drawing unchanged.
+
+- "grayscale": Converts the screen to grayscale. A value of 100% is completely grayscale.
+  A value of 0% leaves the drawing unchanged.
+
+- "hue-rotate": Applies a hue rotation on the screen. The value is expressed in degrees. 0 leaves the input unchanged.
+
+- "invert": Inverts the screen. A value of 100% means complete inversion.
+  A value of 0% leaves the drawing unchanged.
+
+- "opacity": Applies transparency to the screen. A value of 0% means completely transparent.
+  A value of 100% leaves the drawing unchanged.
+
+- "saturate": Saturates the screen. A value of 0% means completely un-saturated.
+  A value of 100% leaves the drawing unchanged.
+
+- "sepia": Converts the screen to sepia. A value of 100% means completely sepia.
+  A value of 0% leaves the drawing unchanged.
+
+Multiple filters can be used at the same time. For example, it is possible to display a blurred sepia version
+of a cicle, with two Set Filter commands in chain before the actual drawing. Use Filter Del to remove
+one or all filters.
+
+Please note tha tthe drop-shadow effect cannnot be applied to a screen. If you try, it will not generate
+an error but will have no effect.
+
+~~~
+// Create a nice color rotation effect.
+For A = 0 To 360
+	Screen Filter 1, "hue-rotate", A
+	Wait Vbl
+Next
+~~~
+
+If your screen contains bobs, the value of the bob effects will be added to the value of the screen effects.
+
+Please note that like every complex graphical operation, Filters will slow down the display or the drawing,
+specially complex filters like blur or drop-shadows. It is suggested to only use filters at key points, or
+key graphics of your application and not everywhere.
+
+api*/
+Instruction Screen Filter, index=(index), name$='', param1#=0, param2#=0, param3#=0, param4#=0
+{
+	#errors
+	aoz.getScreen(%index).setFilter({name:%name$,parameters:[%param1#,%param2#,%param3#,%param4#]});
+}
+End Instruction
+Instruction Screen Filter, name$='', param1#=0, param2#=0, param3#=0, param4#=0
+{
+	#errors
+	aoz.currentScreen.setFilter({name:%name$,parameters:[%param1#,%param2#,%param3#,%param4#]});
+}
+End Instruction
+/**api
+@name:Screen Filter Del
+@description:Remove a specific or all filters applied to a screen.
+@param:index:index:Index of the screen
+@param:filterName$:string:Name of the filter to use (see list in the Screen Filter instruction)
+@content:
+This instruction if used without parameters will restore the display of the screen to normal.
+If you specify the name of a filter, and if this filter is used, then it will be removed,
+preserving eventual other filters already in place.
+api*/
+Instruction Screen Filter Del, index=(index), name$
+{
+	#errors
+	aoz.getScreen(%index).delFilter({name:%name$});
+}
+End Instruction
+Instruction Screen Filter Del, name$
+{
+	#errors
+	aoz.currentScreen.delFilter({name:%name$});
+}
+End Instruction
+/**api
+@name:Screen Filter$
+@description:Returns the CSS string used by Javascript in the context.filter property.
+@param:index:index:Index of the screen
+@return:string:The CSS string
+@content:
+This function is intended to be used by advanced developers, and returns the actual string
+to set in the Javascript context before drawing.
+api*/
+Function Screen Filter$, index=(index)
+{
+	#errors
+}
+End Function({aoz.currentScreen.getFilterString({index:%index})})
+
+/**api
+@name:Screen Filter
+@description:Return the current value of the given filter
+@param:index:index:Index of the screen
+@param:name$:The name of the filter in question
+@return:number:The current value of the given filter
+api*/
+Function Screen Filter, index=(index), name$
+{
+	#errors
+}
+End Function({aoz.currentScreen.getFilter({index:%index,name:%name$})})
+
+/**api
+@name:FullScreen On
+@description:Enable the fullscreen
+api*/
+Instruction FullScreen On
+{
+	#errors
+	var el = document.getElementById( 'AOZCanvas' );
+	if( el )
+	{
+		el.requestFullscreen();
+	}
+}
+End Instruction
+
+/**api
+@name:FullScreen Off
+@description:Disable the fullscreen
+api*/
+Instruction FullScreen Off
+{
+	#errors
+	if( document.fullscreenElement )
+	{
+		document.exitFullscreen()
+	}
+}
+End Instruction

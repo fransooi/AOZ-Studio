@@ -1,0 +1,16 @@
+<i>Ellipse Arc x, y, radius1, radius2, angle1, angle2, rotation, fill, counterclockwise</i>
+<b>Ellipse Arc x, y, radius1, radius2, angle1, angle2, rotation, fill, counterclockwise</b> xxxxxxx
+=
+Ellipse Arc will draw the Arc of an ellipse between the two provided angles. The arc can be drawn in either clockwise or counterclockwise direction
+The following example draws 10 Arcs of the Ellipse in different colours
+@code
+Set Line Width 30
+Set Line Cap "round"
+Degree
+for f=0 to 9
+ink 3*(f+1)
+ellipse arc 960,540,400,250,f*36,f*36+28
+wait vbl
+next f
+@code
+

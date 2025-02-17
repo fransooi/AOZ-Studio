@@ -1,0 +1,44 @@
+{
+	"categories":
+	[
+		{
+			"title":
+			{
+				"fr": "Types de projets AOZ",
+				"en": "AOZ projects types"
+			},
+			"json_id": 2,
+			"context": "templates"
+		},
+		
+		{
+			"title":
+			{
+				"fr": "Tutoriels",
+				"en": "Tutorials"
+			},
+			"json_id": 3,
+			"context": "tutorials"
+		},
+
+		{
+			"title":
+			{
+				"fr": "Modèles de jeux",
+				"en": "Games Templates"
+			},
+			"json_id": 4,
+			"context": "games"
+		},
+		
+		{
+			"title":
+			{
+				"fr": "Modèles d'applications",
+				"en": "Applications Templates"
+			},
+			"json_id": 5,
+			"context": "apps"
+		}
+	]
+}

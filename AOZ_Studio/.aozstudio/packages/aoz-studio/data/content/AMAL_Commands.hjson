@@ -1,0 +1,38 @@
+{
+    amal_commands:
+    { 
+        name: "The AMOS Animation Language (AMAL)"
+        intro: "TODO"
+        conclusion:""
+        commands: 
+        {
+            "chanan":
+            [
+                ""
+                '''
+                ~~~                
+                TODO
+                ~~~
+                '''
+            ]
+            "chananmv":
+            [
+                ""
+                '''
+                ~~~                
+                TODO
+                ~~~
+                '''
+            ]
+            "amal_on":
+            [
+                ""
+                '''
+                ~~~                
+                TODO
+                ~~~
+                '''
+            ]
+        }
+    }
+}

@@ -1,0 +1,15 @@
+<i>Volume</i>
+<b>Volume</b> xxxxxxx
+=
+The VOLUME command controls the level of sound flowing through one or more channels, ranging from zero
+(complete silence) up to 63 (ear-splitting), like this:
+@code
+For L=0 To 63
+Volume L: Bell 80 : Wait 5
+Next L
+@code
+Once the VOLUME level has been set, all future sound effects and music will be delivered at that level, across all
+four channels. In order to create stereo effects and perfect sound mixes, each of the voices needs to be adjusted
+independently from one another.
+
+

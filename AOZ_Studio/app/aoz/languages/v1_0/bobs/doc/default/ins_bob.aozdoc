@@ -1,0 +1,6 @@
+<i>Ins Bob</i>
+<b>Ins Bob</b> xxxxxxx
+=
+This version of the INS BOB instruction works like the version with only one parameter but inserts a series of blank image after the numbered position in the current Object Bank and not only one.
+All of the images after this numbered position will then be moved down one place in the numerical order.
+

@@ -1,0 +1,18 @@
+<i>UI Value$</i>
+<b>UI Value$</b> xxxxxxx
+=
+Used to return the value of a UI component. Not all components have a value parameter. For example, attempting to return the value for a UI Popup components will return an empty value.
+@code
+// UI TextBox example
+UI TextBox "MyTextBox", value="The TextBox Value.."
+Print UI Value$("MyTextBox")
+
+// UI Radio
+UI Radio "MyRadio", items$="1:This is radio value 1,2:This is radio value 2,3:This is radio value 3", value$="2"
+Print UI Value$("MyRadio")
+
+// Slider example
+UI Slider "MySlider"
+Print UI Value$("MySlider")
+@code
+

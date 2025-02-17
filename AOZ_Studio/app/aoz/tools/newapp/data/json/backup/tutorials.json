@@ -1,0 +1,253 @@
+{
+	"tutorials":
+	[
+		{
+			"name": "beginner1",
+			"path": "tutorial_beginner1",
+			"title":
+			{
+				"fr": "Leçon 1 - Débuter la programmation avec AOZ.",
+				"en": "Lesson 1 - Start programming with AOZ."
+			},
+			"description":
+			{
+				"fr": "Faites vos premiers pas avec le langage AOZ.",
+				"en": "Take your first steps with the AOZ language."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Informations"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					},
+					"page_id": ""
+				}
+			]
+		},
+		{
+			"name": "beginner2",
+			"path": "tutorial_beginner2",
+			"title":
+			{
+				"fr": "Leçon 2 - Variables et conditions.",
+				"en": "Lesson 2 - Start programming with AOZ "
+			},
+			"description":
+			{
+				"fr": "Manipulez des variables et écrivez des tests de conditions.",
+				"en": "Manipulate variables and write condition tests."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Informations"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					},
+					"page_id": ""
+				}
+			]
+		},
+		{
+			"name": "beginner3",
+			"path": "tutorial_beginner3",
+			"title":
+			{
+				"fr": "Leçon 3 - Concept et logique.",
+				"en": "Lesson 3 - Concept and logic"
+			},
+			"description":
+			{
+				"fr": "Cette leçon vous apprendra à utiliser des procédures pour organiser votre programme et écrire la logique d'un petit jeu.",
+				"en": "This lesson will teach you how to use procedures to organize your program and write the logic of a small game."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Informations"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					},
+					"page_id": ""
+				}
+			]
+		},
+		{
+			"name": "beginner4",
+			"path": "tutorial_beginner4",
+			"title":
+			{
+				"fr": "Leçon 4 - Tracer des graphismes à l'écran.",
+				"en": "Lesson 4 - Draw graphics on the screen."
+			},
+			"description":
+			{
+				"fr": "Dessiner des formes et manipuler des couleurs à l'écran.",
+				"en": "Draw shapes and manipulate colors on the screen."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Informations"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					},
+					"page_id": ""
+				}
+			]
+		},
+		{
+			"name": "Magic Bird",
+			"path": "tutorial_magic_bird",
+			"title":
+			{
+				"fr": "Magic Bird",
+				"en": "Magic Bird"
+			},
+			"description":
+			{
+				"fr": "Créez un jeu de type Flappy Bird qui pourra s'exécuter sur le navigateur Internet, mais aussi sur smartphone et tablette.",
+				"en": "Create a Flappy Bird type game that can run on the web browser, but also on smartphone and tablet."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Informations"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					},
+					"page_id": ""
+				}
+			]
+		},
+
+		{
+			"name": "Actors",
+			"path": "tutorial_actor",
+			"title":
+			{
+				"fr": "Utilisation des Actors",
+				"en": "Using Actors"
+			},
+			"description":
+			{
+				"fr": "Exemple d'utilisation des Actors dans vos programmes AOZ.",
+				"en": "Example of the use of Actors in your AOZ programs."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Informations"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					},
+					"page_id": ""
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					},
+					"page_id": ""
+				}
+			]
+		}
+
+	]
+}

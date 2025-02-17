@@ -1,0 +1,13 @@
+<i>Console Open</i>
+<b>Console Open</b> xxxxxxx
+=
+The Console Open instruction is a variation of the Source Editor extension. It creates a console window,
+similar to the one you find in a DOS (or macOS or linux) command line window: the cursor is always located
+on the last line and you can only enter text there.
+
+When you press enter, the text entered on the last line is stored in a command buffer that you can access,
+as in system console windows, with Arrow Up and down.
+
+The "Console Command$" function allows you to get the command that the user has typed.
+
+

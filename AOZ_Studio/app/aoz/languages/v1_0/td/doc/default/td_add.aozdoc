@@ -1,0 +1,18 @@
+<i>Td Add</i>
+<b>Td Add</b> xxxxxxx
+=
+@code
+Rem Initialize the 3D engine
+Td Init
+
+Rem Set a view with a scene by default.
+Td View "my_view", Scene$ = "my_scene"
+
+Rem Copy the scene
+Td Copy "copied_cube", Scene$ = "my_scene", Object$ = "cube"
+
+Rem Add the copied 3D Object as "cube_2" in the scene named "my_scene"
+Td Add "cube_2", Scene$ = "my_scene", Object$ = "copied_cube", X# = 1, Y# = 0, Z# = 0
+
+@code
+

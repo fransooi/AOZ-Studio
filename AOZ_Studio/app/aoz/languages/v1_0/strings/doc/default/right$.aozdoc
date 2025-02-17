@@ -1,0 +1,16 @@
+<i>Right$</i>
+<b>Right$</b> xxxxxxx
+=
+Here are two examples demonstrating each version of usage:
+@code
+Print Right$("IGNORED54321",5)
+A$=Right$("REJECTED0123456789",10)
+Print A$
+@code
+
+@code
+B$="AOZ ******"
+Right$(B$,6)="Studio"
+Print B$
+@code
+

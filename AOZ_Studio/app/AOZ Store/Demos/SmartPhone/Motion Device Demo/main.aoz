@@ -1,0 +1,200 @@
+' *****************************************************************************
+' *
+' *   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+' *  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+' *  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+' *  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+' *  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+' *  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+' *
+' *****************************************************************************
+' *  TOUCH DRAW DEMO v1.0
+' *  Example of the use of the touch screen
+' *  sur plateforme mobile
+' *
+' *  AOZ Code by Baptiste BIDEAUX - August 2020
+' *  Images from https://www.freepng.fr/
+' *
+' *  Test Demo on line : https://app.aoz.studio/s4xoxvry
+#appTitle: "Motion Device Demo"
+#displayWidth: 720
+#displayHeight: 1280
+#splashScreen: True
+#useSounds:True
+#splashWaitSounds: True
+#googleFont:"Graduate"
+
+
+Rem Definition of global variables
+SELECTED_COLOR = 0 : TX = 0 : TY = 0 : TS = 0
+Global SELECTED_COLOR, TX, TY, TS
+
+Rem Opens in screen for a "Portrait" screen mode
+Screen Open 0, 720, 1280, 32, Lowres : Curs Off : Flash Off
+Palette $000000, $FFFFFF, $FF0000,$FF8800, $FFFF00, $00FF00, $008800, $0088FF, $00FFFF, $0000FF, $FFA726
+
+Cls 0
+Rem If the screen is not touch-sensitive
+If Touch Screen = False
+
+	Rem Warning message
+	Set Font 1, 40
+	Ink 1 : Text 0, 500, "A touch screen is required!"
+
+	Rem Exit the program
+	End
+
+End If
+
+Rem ------------------ MENU ----------------------------------
+
+Rem Text at the top of the screen
+Set Font 1, 88 : Ink 1
+Text 0, 88, "Touch a demo"
+
+Rem The 2 icons
+Paste Bob 232, 224, 2
+Paste Bob 232, 648, 3
+
+Rem
+Rem We define the AOZ procedure to be called each time
+Rem that there is an action on the touch screen on the Menu
+Rem
+Touch On Change "TOUCH_CHANGE_MENU"
+
+Rem Here the procedure that receives the information
+Rem each time a touch on the screen changes on the Menu
+Procedure TOUCH_CHANGE_MENU [ X, Y, LASTX, LASTY, STATE ]
+	TX = X : TY = Y : TS = STATE
+End Proc
+
+Rem Main loop
+Do
+		Rem Test if a demo is touched
+		If TS = 3
+
+			If TX > 232 And TX < 488
+
+				Rem It's the Touch Draw Demo
+				If TY > 224 And TY < 480 Then Goto TOUCH_DRAW
+
+				Rem It's the Orientation Demo
+				If TY > 648 And TY < 904 Then Goto ORIENTATION_DEMO
+
+			End If
+
+		End If
+	Wait Vbl
+Loop
+
+
+Rem ------------------ TOUCH DRAW DEMO ----------------------------------
+
+TOUCH_DRAW:
+
+Rem
+Rem We redefine the AOZ procedure to be called each time
+Rem that there is an action on the touch screen for the Drawing demo
+Rem
+Touch on Change "TOUCH_CHANGE_DRAW"
+
+Rem Here the procedure that receives the information
+Rem each time a touch on the screen changes
+Procedure TOUCH_CHANGE_DRAW [ X, Y, LASTX, LASTY, STATE ]
+
+	If STATE =1
+
+		If Y < 72
+			SELECTED_COLOR = Int(Int(X)/72)
+		End If
+
+		If Y > 1199 Then Ink 1 : Bar 0, 72 To 720, 1199
+
+	End If
+
+
+	If Y > 71 And Y < 1200
+
+		If STATE = 2 Then Ink SELECTED_COLOR : Draw Int( LASTX ), Int( LASTY ) To Int( X ), Int( Y )
+
+	End If
+
+End Proc
+
+Cls 1
+Rem Draws the elements on the screen (colors and button)
+Gosub DRAW_PALETTE
+Gosub DRAW_BUTTON
+
+Rem
+Rem Main Loop
+Rem
+Do
+
+	Rem Update palette bar
+	Gosub DRAW_PALETTE
+
+	Wait Vbl
+Loop
+
+DRAW_PALETTE:
+	Rem
+	Rem Draws the colors at the top of the screen
+	Rem
+	For R = 0 To 9
+		Ink R : Bar ( R * 72 ), 0 To ( R * 72 ) + 71, 71
+
+		Rem For the selected color
+		If SELECTED_COLOR = R
+			If R = 0 Then Ink 1 Else Ink 0
+			Box ( R * 72 ) + 8, 8 To ( R * 72 ) + 57, 57
+		End If
+	Next R
+Return
+
+DRAW_BUTTON:
+	Rem
+	Rem Draws the CLEAR button at the bottom of the screen
+	Rem
+	Ink 10 : Bar 200, 1200 To 520, 1280
+	Set Font 1, 60
+	Ink 0 : Text 260, 1264, "CLEAR"
+Return
+
+Rem ------------------ ORIENTATION DEMO ----------------------------------
+
+ORIENTATION_DEMO:
+Cls 0
+MAXX = 720  - 128
+MAXY = 1280 - 128
+
+Rem Draw Text of the rule
+Set Font 1, 30
+Ink 1 : Text 0, 30, "Tilt your device to move the ball"
+
+Rem
+Rem Main Loop
+Rem
+Do
+	Rem Get the oriantion on the XY axis
+	X = Orientation X
+	Y = Orientation Y
+
+	Rem Because we don't want the camera upside down.
+    Rem The values of x are restricted to the interval [-90.90].
+	If X >  90 Then X = 90
+  	If X < -90 Then X = -90
+
+	Rem To make the calculation easier.
+    Rem The interval of x and y is delimited on [0, 180].
+	X = X + 90
+	Y = Y + 90
+
+	Rem 64 is half the size of the ball.
+    Rem This centers the positioning point in the center of the ball.
+	Bob 1, ( MAXX * X / 180 - 64 ), ( MAXY * Y / 180 - 64 ), 1
+	Wait Vbl
+Loop
+
+Procedure TOUCH_CHANGE [ X, Y, LASTX, LASTY, STATE ]
+End Proc

@@ -1,0 +1,13 @@
+<i>HScroll</i>
+<b>HScroll</b> xxxxxxx
+=
+This command scrolls all text in the current open window horizontally, by a single character position. The following
+numbers can be used:
+@code
+Number 	Effect
+1 		Scroll current line to the left
+2 		Scroll entire screen to the left
+3 		Scroll current line to the right
+4 		Scroll entire screen to the right
+@code
+

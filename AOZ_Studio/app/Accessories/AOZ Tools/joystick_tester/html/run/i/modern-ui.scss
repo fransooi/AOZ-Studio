@@ -1,0 +1,74 @@
+
+.modern.auth-ui {
+	background-color: #17455e;
+	border: solid #4d879a;
+	border-width: 24px 16px 24px 60px;
+	box-sizing: content-box;
+	color: white;
+	width: 320px;
+
+	> h2 {
+		margin-top: 2px;
+	}
+
+	> ul {
+
+		&.fieldset {
+
+			> li:not(.remember-me) {
+				margin: 12px 14px 12px -36px;
+				width: 326px;
+
+				> input {
+					color: white;
+					padding: 0 10px 0 44px;
+
+					&::placeholder {
+						color: #ffdd99;
+					}
+				}
+
+				> label {
+					background: linear-gradient(65deg, #ffc600 60%, #ffab00 60%) -161px 0 no-repeat, #ffab00;
+					border: 1px solid #847532;
+					transform: skew(-25deg);
+				}
+			}
+		}
+
+		&.actions > li {
+
+			> button {
+				color: white;
+			}
+		}
+
+		.close > button,
+		.remember-me > input {
+			background-color: #8da4b0;
+			border-color: #ffab00;
+
+			&::before {
+				background-color: #17455e;
+			}
+		}
+	}
+
+	&.forgot-password h2 {
+		margin-top: 40px;
+	}
+
+	> .messages > li {
+		border: 1px solid;
+
+		&.error {
+			background-color: #f40;
+			border-color: #620;
+		}
+
+		&.information {
+			background-color: #4b0;
+			border-color: #150;
+		}
+	}
+}

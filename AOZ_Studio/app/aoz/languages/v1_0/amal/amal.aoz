@@ -1,0 +1,169 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Music Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+//
+// Initialization
+//
+{
+}
+
+/**doc
+@name:AMOS Animation Language (AMAL)
+@description:Instructions and functions to animate and move sprites, bobs, screens, rainbows or any other graphical objects
+@author:Francois Lionet
+doc*/
+
+/**api
+@name:Amal
+@description_file:amal.aozdoc
+@param:index:index:Index of the animation channel
+@param:string$:string:A string containing the AMAL program to be ran
+@content:
+api*/
+Instruction Amal, index=(index), string$
+{
+	#waiting
+	#errors
+	return{type:12,waitThis:aoz,callFunction:"amalStart",waitFunction:"amalStart_wait",args:[%index,%string$]};
+}
+End Instruction
+
+Instruction Amal, index=(index), address
+{
+	#waiting
+	#errors
+	return{type:12,waitThis:aoz,callFunction:"amalStart",waitFunction:"amalStart_wait",args:[%_number,%address]};
+}
+End Instruction
+
+Instruction Amal, index=(index), string$ To address
+{
+	#waiting
+	#errors
+	return{type:12,waitThis:aoz,callFunction:"amalStart",waitFunction:"amalStart_wait",args:[%index,%string$,%address]};
+}
+End Instruction
+
+/**api
+@name:Amal Freeze
+@description_file:amal_freeze.aozdoc
+@param:*index:index:Index of the channel
+@compatible: aoz, amos
+api*/
+Instruction Amal Freeze, index=(index)
+{
+	#errors
+	aoz.amalOnOff(false,%index);
+}
+End Instruction
+/**api
+
+@name:Amal Off
+@description_file:amal_off.aozdoc
+@param:*index:index:Index of the channel
+@compatible: aoz, amos
+api*/
+Instruction Amal Off, index=(index)
+{
+	#errors
+	aoz.amalOnOff(false,%index);
+}
+End Instruction
+
+/**api
+@name:Amal On
+@description_file:amal_on.aozdoc
+@param:index:index:Index of the channel (optional)
+@compatible:aoz, amos
+api*/
+Instruction Amal On, index=(index)
+{
+	#errors
+	aoz.amalOnOff(true,%index);
+}
+End Instruction
+
+/**api
+@name:Amalerr$
+@description_file:amalerr$.aozdoc
+@return:string:The text of the error
+@compatible: aoz
+api*/
+Function AmalErr$
+{
+}
+End Function( {aoz.amalError$()} )
+
+/**api
+@name:Amalerr
+@description_file:amalerr.aozdoc
+@return:string:The position of the error in the string
+@compatible: aoz, amos
+api*/
+Function AmalErr
+{
+}
+End Function( {aoz.amalError()} )
+
+/**api
+@name:Amreg
+@description_file:amreg.aozdoc
+@param:channel:integer:Index of the AMAL channel
+@param:register:integer:Index of the register
+@return:integer:The value of the register
+@compatible: aoz, stos, amos
+api*/
+
+/**api
+@name:Chanan
+@description_file:chanan.aozdoc
+@param:index:index:Index of the channel
+@return:boolean:string:True if the animation is actice, False if not
+@compatible:aoz, amos
+
+api*/
+Function Chanan, index=(index)
+{
+	#errors
+}
+End Function( {aoz.amal.isChannelAnimated(%index)} )
+
+/**api
+@name:Chanmv
+@description_file:chanmv.aozdoc
+@param:index:index:Index of the channel
+@return:boolean:True if the movement is active, false if not
+@compatible:aoz, amos
+api*/
+Function Chanmv, index=(%index)
+{
+	#errors
+}
+End Function( {aoz.amal.isChannelMoving(%index)} )

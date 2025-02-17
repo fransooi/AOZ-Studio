@@ -1,0 +1,10 @@
+<i>Title Bottom</i>
+<b>Title Bottom</b> xxxxxxx
+=
+Similarly, this instruction assigns a string to the bottom title of the current window, like this:
+@code
+Cls : Wind Open 5,75,50,24,15
+Border 5,6,
+Title Bottom "Bottom of the barrel"
+@code
+

@@ -1,0 +1,5 @@
+<i>Clip</i>
+<b>Clip</b> xxxxxxx
+=
+Used without parameters, the Clip command removes any clipping rectangle from the screen and restores the drawing area to the entire surface.
+

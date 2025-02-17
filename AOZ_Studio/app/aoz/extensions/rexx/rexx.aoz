@@ -1,0 +1,142 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ REXX Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:REXX Commands
+@description:Instructions and functions to call system REXX commands on the Amiga. Maybe implemented later for executable and node.js application, in the form of REXX and not AREXX
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:REXX Open
+@description:Open an REXX communication port. Maybe implemented later.
+@param:portName$:string:
+@compatible: notimplemented
+api*/
+Instruction REXX Open, portName$
+{
+	#notimplemented
+}
+End Instruction
+Instruction AREXX Open, portName$
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:REXX Close
+@description:Close the REXX communication port. Maybe implemented later.
+@compatible: notimplemented
+api*/
+Instruction REXX Close
+{
+	#notimplemented
+}
+End Instruction
+Instruction AREXX Close
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:REXX Wait
+@description:Wait for a message from an AREXX program. Maybe implemented later.
+@compatible: notimplemented
+api*/
+Instruction REXX Wait
+{
+	#notimplemented
+}
+End Instruction
+Instruction AREXX Wait
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:REXX Answer
+@description:answer a message from an AREXX program. Maybe implemented later.
+@param:value:integer:
+@param:return$:string:
+@compatible: notimplemented
+api*/
+Instruction REXX Wait, value, return$
+{
+	#notimplemented
+}
+End Instruction
+Instruction AREXX Wait, value, return$
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:REXX$
+@description:Get a message from an REXX program. Maybe implemented later.
+@return:string:
+@compatible: notimplemented
+api*/
+Function REXX$
+{
+	#notimplemented
+}
+End Function( {''} )
+Function AREXX$
+{
+	#notimplemented
+}
+End Function( {''} )
+
+/**api
+@name:REXX
+@description:Get a message from an REXX program. Maybe implemented later.
+@return:integer:
+@compatible: notimplemented
+api*/
+Function REXX
+{
+	#notimplemented
+}
+End Function( {0} )
+Function AREXX
+{
+	#notimplemented
+}
+End Function( {''} )

@@ -1,0 +1,36 @@
+<i>Change Mouse</i>
+<b>Change Mouse</b> xxxxxxx
+=
+
+The behavior fo the instruction is different depending on the type of the *shape* parameter...
+
+### *shape* is a number
+
+Pre-defined shapes are selected when the value of *shape* is under 3...
+@code
+Number 	Shape of mouse cursor
+1 		Arrow pointer (default shape)
+2 		Cross-hair
+3 		Clock
+@code
+If you select an image number greater than three,
+AOZ Studio will look at an image stored in the sprite bank, and install it as the mouse pointer. The first
+image in the bank may be called up by using Change Mouse 4, the second by specifying number 5, and so on.
+
+For example:
+@code
+Do
+For N=1 To 3
+Change Mouse N
+Wait 25
+Next N
+Loop
+@code
+
+### *shape* is a string:
+AOZ will first check if the *shape* parameter is equal to one fo the default Javascript shapes. If yes, it will set this one.
+
+List of Javascript cursor shape: [here](http://https://www.w3schools.com/jsref/prop_style_cursor.asp/).
+
+If not, tyhen AOZ will look int he Image bank to find the given image, and will set the mouse if found.
+

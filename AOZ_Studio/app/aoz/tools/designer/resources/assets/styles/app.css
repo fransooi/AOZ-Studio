@@ -1,0 +1,13 @@
+#splash
+{
+	position: absolute;
+	width: 320px;
+	height: 320px;
+	left: 33.33vw;
+	top: 25vh;
+	background-image: url( 'images/logo.png' );
+	background-repeat: no-repeat;
+	background-size: contain;
+	border: 2px solid #888888;
+	border-radius: 8px;
+}

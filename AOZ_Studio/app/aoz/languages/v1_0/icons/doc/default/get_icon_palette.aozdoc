@@ -1,0 +1,7 @@
+<i>Get Icon Palette</i>
+<b>Get Icon Palette</b> xxxxxxx
+=
+This instruction is usually employed to initialise a screen, after Icons have been loaded from disc.
+GET ICON PALETTE grabs the colours of the Icon images stored in Bank 2, and loads them in to the current
+screen.
+

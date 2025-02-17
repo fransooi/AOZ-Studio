@@ -1,0 +1,16 @@
+<i>JRight</i>
+<b>JRight</b> xxxxxxx
+=
+This returns True if the joystick connected to the given port number has been pushed to the
+right, otherwise False is returned.
+These functions can be demonstrated by the following example:
+@code
+Do
+If Jleft(1) Then Print "WEST"
+If Jright(1) Then Print "EAST"
+If Jup(1) Then Print "NORTH"
+If Jdown(1) Then Print "SOUTH"
+Loop
+@code
+
+

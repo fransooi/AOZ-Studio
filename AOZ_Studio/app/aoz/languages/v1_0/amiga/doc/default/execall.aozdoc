@@ -1,0 +1,10 @@
+<i>ExeCall</i>
+<b>ExeCall</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The EXECALL function performs a call to the Amiga's EXEC library, with the specified offset value. On entry, D0
+to D7 and A0 to A2 must be loaded with the control settings required by the function. A value is returned holding
+the contents of D0.
+
+

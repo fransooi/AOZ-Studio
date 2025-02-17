@@ -1,0 +1,22 @@
+<i>Wait</i>
+<b>Wait</b> xxxxxxx
+=
+The WAIT command tells the computer to stop the program and wait for as long as you want before moving on to
+the next instruction. The number that follows it is the waiting time, specified as a floating point number in seconds.
+
+The following example forces the program to wait for two seconds and 10 milliseconds:
+@code
+Print "I am the first instruction."
+Wait 2.010
+Print "I am the next instruction."
+@code
+
+The following example that works in Amiga emulation forces the program to wait for two seconds:
+@code
+#manifest: "Amiga"
+
+Print "I am the first instruction."
+Wait 100
+Print "I am the next instruction."
+@code
+

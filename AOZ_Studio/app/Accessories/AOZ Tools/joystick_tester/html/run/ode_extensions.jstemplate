@@ -1,0 +1,38 @@
+<HEADER-START>
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+//
+// MODULENAME
+// AUTHORNAME
+// VERSIONNUMBER
+// DATE
+// COPYRIGHT
+//
+// COMPILERINFOS
+//
+
+function MODULE_NAME( aoz, args )
+{
+	this.aoz=aoz;
+	this.parent=this;
+	this.root=this;
+	this.manifest=JSON.parse(atob('MANIFEST'));
+	this.vars=typeof args=='undefined'?{}:args;
+	this.contextName='MODULE_NAME';
+	this.aoz[ "extension" + "MODULE_SHORTNAME"]=this;
+	this.aoz.finalWait++;
+	MODULE_USESOUNDS
+
+<HEADER-END>
+<FOOTER-START>
+	this.aoz.run(this,0,null);
+};
+<FOOTER-END>

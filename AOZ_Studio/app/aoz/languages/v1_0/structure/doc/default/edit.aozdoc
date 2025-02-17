@@ -1,0 +1,11 @@
+<i>Edit</i>
+<b>Edit</b> xxxxxxx
+=
+The EDIT instruction forces the program to be abandoned, and returns you straight to the Edit Screen, like this:
+@code
+Print "Wait four seconds and then EDIT"
+Wait 200
+Edit
+Print "I have been ignored!"
+@code
+

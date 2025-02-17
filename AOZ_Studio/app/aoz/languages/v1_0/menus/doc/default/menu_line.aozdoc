@@ -1,0 +1,15 @@
+<i>Menu Line</i>
+<b>Menu Line</b> xxxxxxx
+=
+Use this command to change the display of options that relate to a particular title from a vertical block into a horizontal line.
+The line of options will now start from the left-hand corner of the first menu title and stretch to the bottom right-hand corner of the last title.
+
+Follow MENU LINE with the number of the level you want to affect, and make sure that this command is only called during your menu definitions.
+The level number the layer of the menu to be affected.
+
+It is perfectly legal to set individual items by this method, and with the following MENU TLINE and MENU BAR
+commands. This can result in some highly eccentric displays.
+@code
+Menu Line(1,1,1) : Rem Display sub-option 1,1,1 as a line
+@code
+

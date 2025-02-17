@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<title>My AOZ Application</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0,viewport-fit=cover">
+
+		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="pragma" content="no-cache">		
+		<meta http-equiv="expires" content="-1">
+		
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<link rel="apple-touch-icon" sizes="57x57" href="resources/appicon/icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="resources/appicon/icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="resources/appicon/icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="resources/appicon/icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="resources/appicon/icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="resources/appicon/icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="resources/appicon/icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="resources/appicon/icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="resources/appicon/icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="resources/appicon/icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="resources/appicon/icon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="resources/appicon/icon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="resources/appicon/icon-16x16.png">
+		<link rel="manifest" href="resources/appicon/manifest.json">
+		<meta name="msapplication-TileColor" content="#ffffff">
+		<meta name="msapplication-TileImage" content="resources/appicon/icon-144x144.png">
+		<meta name="theme-color" content="#ffffff">		
+		
+		<style type="text/css">
+		@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), local('Roboto'),
+       url('./resources/fonts/google/roboto-vleeer.woff') format('woff'), /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+       url('./resources/fonts/google/roboto-vleeer.woff2') format('woff2'); /* Chrome 26+, Opera 23+, Firefox 39+ */
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Roboto Italic'), local('Roboto-Italic'),
+       url('./resources/fonts/google/roboto-vleeei.woff') format('woff'), /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+       url('./resources/fonts/google/roboto-vleeei.woff2') format('woff2'); /* Chrome 26+, Opera 23+, Firefox 39+ */
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+       url('./resources/fonts/google/ibm-psvlr.woff') format('woff'), /* Modern Browsers */
+       url('./resources/fonts/google/ibm-psvlr.woff2') format('woff2'); /* Super Modern Browsers */
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: italic;
+  font-weight: 400;
+  src: local(''),
+       url('./resources/fonts/google/ibm-psvli.woff') format('woff'), /* Modern Browsers */
+       url('./resources/fonts/google/ibm-psvli.woff2') format('woff2'); /* Super Modern Browsers */
+}
+@font-face {
+  font-family: 'Source Code Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Code Pro'), local('SourceCodePro-Regular'),
+       url('./resources/fonts/google/source-cpvler.woff') format('woff'), /* Modern Browsers */
+       url('./resources/fonts/google/source-cpvler.woff2') format('woff2'); /* Super Modern Browsers */
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local('IBM Plex Mono'), local('IBMPlexMono'),
+       url('./resources/fonts/google/ibm-pmvleer.woff') format('woff'), /* Modern Browsers */
+       url('./resources/fonts/google/ibm-pmvleer.woff2') format('woff2'); /* Super Modern Browsers */
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: italic;
+  font-weight: 400;
+  src: local('IBM Plex Mono Italic'), local('IBMPlexMono-Italic'),
+       url('./resources/fonts/google/ibm-pmvleei.woff') format('woff'), /* Modern Browsers */
+       url('./resources/fonts/google/ibm-pmvleei.woff2') format('woff2'); /* Super Modern Browsers */
+}
+
+		body 
+		{
+  			margin: 0;
+  			overflow: hidden;
+			background-color:#000000;
+			font-family: Roboto|IBM Plex Sans|Source Code Pro|IBM Plex Mono,sans-serif;
+		}
+		
+		</style>
+		<script src="./run/files.js"></script>
+		<script src="./run/fontfaceobserver.standalone.js"></script>
+		<script src="./run/mainloop.min.js"></script>
+		<script src="./run/ramal.js"></script>
+		<script src="./run/ramaltranspiler.js"></script>
+		<script src="./run/rbanks.js"></script>
+		<script src="./run/rbob.js"></script>
+		<script src="./run/rdos.js"></script>
+		<script src="./run/renderer.js"></script>
+		<script src="./run/renderer_canvas.js"></script>
+		<script src="./run/rerrors.js"></script>
+		<script src="./run/rfilesystem.js"></script>
+		<script src="./run/rfilesystem_application.js"></script>
+		<script src="./run/rfilesystem_atom.js"></script>
+		<script src="./run/rfilesystem_googledrive.js"></script>
+		<script src="./run/rfilesystem_http.js"></script>
+		<script src="./run/rfilesystem_https.js"></script>
+		<script src="./run/rfilesystem_python.js"></script>
+		<script src="./run/rfilesystem_server.js"></script>
+		<script src="./run/rfonts.js"></script>
+		<script src="./run/rscreen.js"></script>
+		<script src="./run/rsound.js"></script>
+		<script src="./run/rsprite.js"></script>
+		<script src="./run/rtextwindow.js"></script>
+		<script src="./run/rutilities.js"></script>
+		<script src="./run/ext_IDE.js"></script>
+		<script src="./run/ext_json.js"></script>
+		<script src="./run/ext_websocket.js"></script>
+		<script src="./run/v1_0_animations.js"></script>
+		<script src="./run/v1_0_bobs.js"></script>
+		<script src="./run/v1_0_collisions.js"></script>
+		<script src="./run/v1_0_filesystem.js"></script>
+		<script src="./run/v1_0_fonts.js"></script>
+		<script src="./run/v1_0_graphics.js"></script>
+		<script src="./run/v1_0_keyboard_and_mouse.js"></script>
+		<script src="./run/v1_0_maths.js"></script>
+		<script src="./run/v1_0_screens.js"></script>
+		<script src="./run/v1_0_sprites.js"></script>
+		<script src="./run/v1_0_strings.js"></script>
+		<script src="./run/v1_0_time.js"></script>
+		<script src="./run/v1_0_ui.js"></script>
+		<script src="./run/v1_0_zones.js"></script>
+		<script src="./run/iff.js"></script>
+		<script src="./run/jdataview.js"></script>
+		<script src="./run/pttjpeg.js"></script>
+		<script src="./run/graham_scan_js-master/graham_scan.min.js"></script>
+		<script src="./run/sat-js-master/SAT.js"></script>
+		<script src="./run/createjs/createjs.min.js"></script>
+		<script src="./run/createjs/plugins/RelativePlugin.js"></script>
+		<script src="./run/createjs/plugins/RotationPlugin.js"></script>
+		<script src="./run/createjs/plugins/MotionGuidePlugin.js"></script>
+		<script src="./run/createjs/plugins/MovieClipPlugin.js"></script>
+		<script src="./run/createjs/plugins/ndgmr.Collision.js"></script>
+		<link href="./run/css/ui/global.css" rel="stylesheet"></link>
+		<link href="./run/bootstrap/bootstrap.min.css" rel="stylesheet"></link>
+		<script src="./run/bootstrap/bootstrap.bundle.min.js"></script>
+		<script src="./run/raoz.js"></script>
+		<script src="./run/application.js"></script>
+
+	</head>
+
+	<body>
+		<canvas id="AOZCanvas">
+			<p>Your browser does not support Canvas.</p>
+		</canvas>
+		<script>
+			window.addEventListener( "load", function()
+			{
+				window.application = new Application( 'AOZCanvas' );
+			}, false );
+			
+		</script>
+	</body>
+</html>

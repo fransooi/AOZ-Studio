@@ -1,0 +1,11 @@
+<i>Set Text</i>
+<b>Set Text</b> xxxxxxx
+=
+The SET TEXT command allows you to change the style of a font by selecting one of eight different styles that are
+produced by mixing the following three elements"
+@code
+Bit 0 Underline
+Bit 1 Bold
+Bit 2 Italic
+@code
+

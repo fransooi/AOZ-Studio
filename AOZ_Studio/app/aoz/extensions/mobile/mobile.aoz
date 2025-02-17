@@ -1,0 +1,303 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The Mobile Devices Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 14/08/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Smartphones and Tablets
+@description:Instructions and functions to handle the mobile platform
+@author:Baptiste Bideaux
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@lang:en
+@name:Touch Screen 
+@description:Returns True if the device screen is touch sensitive, otherwise False.
+@return:integer:Returns True if the device screen is touch sensitive, otherwise False..
+@compatible: aoz
+@content:
+api*/
+Function Touch Screen
+{
+	#errors
+}
+End Function( { aoz.is_touch || aoz.touchEmulation } )
+
+/**api
+@lang:en
+@name:Touch Count 
+@description:Returns the number of touches on the device's touch screen.
+@return:integer:Returns an integer value which can be 0 (no touch) or the number of touches.
+@compatible: aoz
+@content:
+api*/
+Function Touch Count
+{
+	#errors
+}
+End Function( { aoz.touches.length } )
+
+/**api
+@lang:en
+@name:Touch X 
+@description:Returns the horizontal position of a touch on the screen.
+@param:index:integer:Number of the touchdown whose horizontal position is to be recovered.
+@return:integer:Returns an integer value corresponding to the horizontal position of the touch.
+@compatible: aoz
+@content:
+api*/
+Function Touch X, index
+{
+	#errors
+}
+End Function( { aoz.getTouchX( %index ) } )
+
+/**api
+@lang:en
+@name:Touch Y 
+@description:Returns the vertical position of a touch on the screen.
+@param:index:integer:Number of the touchdown whose vertical position is to be recovered.
+@return:integer:Returns an integer value corresponding to the vertical position of the touch.
+@compatible: aoz
+@content:
+api*/
+Function Touch Y, index
+{
+	#errors
+}
+End Function( { aoz.getTouchY( %index ) } )
+
+/**api
+@lang:en
+@name:Touch State 
+@description:Returns the state of a touch on the screen. 
+@param:index:integer:Number of the touchdown whose condition we want to retrieve.
+@return:integer:Returns an integer value corresponding to the state of the touch.
+@compatible: aoz
+@content:
+The returned value may be:
+* 1 = Start
+* 2 = Move
+* 3 = End
+@description:If the touch not exists, -1 is returned.
+api*/
+Function Touch State, index
+{
+	#errors
+}
+End Function( { aoz.getTouchState( %index ) } )
+
+/**api
+@lang:en
+@name:Touch On Change 
+@description:Assign an AOZ procedure to touch-screen events.
+@param:procName$:string:Name of the procedure to be assigned
+@compatible: aoz
+@content:
+The procedure is called up each time an event occurs on the touch screen.
+For each event, the following information is sent to the procedure
+- X: Current X position of the touch
+- Y: Current Y-position of the touch
+- LASTX: Last X position of the touch
+- LASTY: Last Y position of the touch
+- STATE: State of the touch (1=START, 2=MOVE, 3=END)
+api*/
+Instruction Touch On Change, procName$
+{
+	#errors
+	aoz.touchOnChange( %procName$ );
+}
+End Instruction
+
+/**api
+@lang:en
+@name:Orientable 
+@description:Returns True if the device screen is orientable, otherwise False.
+@return:integer:True if the device screen is orientable, otherwise False..
+@compatible: aoz
+@content:
+api*/
+Function Orientable
+{
+	#errors
+}
+End Function( { aoz.is_orientable } )
+
+/**api
+@lang:en
+@name:Orientation X 
+@description:Returns the X angle of the orientation screen.
+@return:angle:Returns an value between -90 and 90 degres or radian if the application is set to use radians.
+@compatible: aoz
+@content:
+api*/
+Function Orientation X
+{
+	#errors
+}
+End Function( { aoz.orientationX } )
+
+/**api
+@lang:en
+@name:Orientation Y 
+@description:Returns the Y angle of the orientation screen.
+@return:angle:Returns the angle of the device on the Y axis. The value will be in radian unless your application has been set to use Degrees.
+@compatible: aoz
+@content:
+api*/
+Function Orientation Y
+{
+	#errors
+}
+End Function( { aoz.orientationY } )
+
+/**api
+@lang:en
+@name:Orientation Z 
+@description:Returns the Z angle of the orientation screen.
+@return:angle:Returns the angle of the device on the Y axis. The value will be in radian unless your application has been set to use Degrees.
+@compatible: aoz
+@content:
+api*/
+Function Orientation Z
+{
+	#errors
+}
+#End Function( { aoz.orientationZ } )
+
+/**api
+@lang:en
+@name:Accelerometer 
+@description:Returns True if the device has an accelerometer, otherwise False.
+@return:integer:Returns True if the device has an accelerometer, otherwise False..
+@compatible: aoz
+@content:
+api*/
+Function Accelerometer
+{
+	#errors
+}
+End Function( { aoz.is_accelerator } )
+
+/**api
+@lang:en
+@name:Acceleration X 
+@description:Returns the acceleration value on the X-axis of the device.
+@return:float:Returns the acceleration value on the X-axis of the device.
+@compatible: aoz
+@content:
+api*/
+Function Acceleration X
+{
+	#errors
+}
+End Function( { aoz.accelerationX } )
+
+/**api
+@lang:en
+@name:Acceleration Y 
+@description:Returns the acceleration value on the Y-axis of the device.
+@return:float:Returns the acceleration value on the Y-axis of the device.
+@compatible: aoz
+@content:
+api*/
+Function Acceleration Y
+{
+	#errors
+}
+End Function( { aoz.accelerationY } )
+
+/**api
+@lang:en
+@name:Acceleration Z 
+@description:Returns the acceleration value on the Z-axis of the device.
+@syntax:=Acceleration Z
+@return:float:Returns the acceleration value on the Z-axis of the device.
+@compatible: aoz
+@content:
+api*/
+Function Acceleration Z
+{
+	#errors
+}
+End Function( { aoz.accelerationZ } )
+
+/**api
+@lang:en
+@name:Orientation
+@description:Returns the orientation of the device. 0=Landscape, 1=Portrait
+@return:integer:Returns the orientation of the device. 0=Landscape, 1=Portrait
+@compatible: aoz
+@content:
+api*/
+Function Orientation
+{
+	#errors
+}
+End Function( { aoz.orientation } )
+
+/**api
+@lang:en
+@name:Lock Orientation
+@description:Locks the orientation of the device 
+@param:orientation$:string:A string indicating the orientation to lock, "portrait", "landscape" or "default"
+@compatible: aoz
+@content:
+api*/
+Instruction Lock Orientation, orientation$
+{
+	#errors
+	
+	screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
+	if( screen.lockOrientationUniversal == undefined )
+	{
+		return;
+	}
+	
+	switch( %ORIENTATION$ )
+	{
+		case 'portrait':
+			screen.lockOrientationUniversal( [ "portrait-primary", "portrait-secondary" ] );			
+			break;
+		
+		case 'landscape':
+			screen.lockOrientationUniversal( [ "landscape-primary", "landscape-secondary" ] );			
+			break;
+		
+		case 'default':
+			screen.lockOrientationUniversal( "default" );			
+			break;
+	}
+}
+End Instruction

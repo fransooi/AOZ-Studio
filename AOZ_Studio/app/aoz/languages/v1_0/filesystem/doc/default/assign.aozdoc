@@ -1,0 +1,14 @@
+<i>Assign</i>
+<b>Assign</b> xxxxxxx
+=
+As the AOZ filesystem complies with the Linux notion of Drives, you can create simulated drives in your application taht will in fact point to a folder on yoru machine.
+@code
+// This code
+Load Image "C:\Graphics\aoz.png", 0
+Wait Key
+
+// Has the same result as this one...
+Assign "TheGraphics: To "C:\Graphics"
+Load Image "TheGraphics:aoz.png", 0
+@code
+

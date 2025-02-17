@@ -1,0 +1,49 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Instructions Module Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"					// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "Scorm 1.2/2004 API Instructions"
+		author: "By Baptiste Bideaux"
+		version: "Version 0.99"
+		date: "01/07/2020"
+		copyright: "(c) AOZ Studio 2019"
+		start: "scorm.aoz"
+		name: "scorm"
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+				"scorm_not_found:			SCORM Environment not found.",
+				"invalid_argument_error:		Invalid argument error"
+			]
+			fr:
+			[
+				"scorm_not_found:			Environnement SCORM introuvable.",
+				"invalid_argument_error:		Argument incorrect"
+			]
+		}
+	}
+}

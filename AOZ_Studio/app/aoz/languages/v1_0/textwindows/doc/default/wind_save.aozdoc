@@ -1,0 +1,9 @@
+<i>Wind Save</i>
+<b>Wind Save</b> xxxxxxx
+=
+This command is extremely valuable for the AOZ Studio programmer. Once activated, the WIND SAVE
+feature allows you to move your windows anywhere on screen without corrupting the existing display, by the
+following method. The contents of the current window is saved as soon as the command is used, and then every
+time a new window is opened, the contents of the windows underneath get saved automatically. The screen is then
+re-drawn whenever a window is moved to a new position or closed.
+

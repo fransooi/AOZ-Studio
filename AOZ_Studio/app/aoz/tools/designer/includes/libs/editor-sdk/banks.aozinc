@@ -1,0 +1,46 @@
+Load Asset "resources/assets/libs/editor-sdk/js/banks.js", "sdk-banks"
+
+IMAGES_COUNT = 0 : IMAGE_NAME$ = ""
+Global IMAGES_COUNT, IMAGE_NAME$
+
+// Loads the '1.images' folder of the AOZ project given by PATH$ and store the number of loaded image in the IMAGES_COUNT variable.
+Procedure LOAD_IMAGES_BANK[ PATH$ ]
+	//JS Execute "application.editorSDK.banks.loadImagesBank( '" + PATH$ + "' );"
+	{
+		application.editorSDK.banks.loadImagesBank( '' + this.vars.PATH$ + '' );
+	}
+	While SDK_BUSY
+	Wend
+End Proc
+
+// Get the image N loaded by the LOAD_IMAGES_BANK and store the image in the current image bank under the "sdk_loaded_image" name.
+// To show the image, you can use:
+// - Bob 1, 100, 100, "sdk_loaded_image"
+// - Paste Bob 100,100, "sdk_loaded_image"
+// - Actor "my_actor", Image$="sdk_loaded_image"
+//
+Procedure GET_IMAGE_BANK[ N ]
+	JS Execute "application.editorSDK.banks.getImageBank( " + Str$( N ) + " );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+// Get the image NAME$ loaded by the LOAD_IMAGES_BANK and store the image in the current image bank under the "sdk_loaded_image" name.
+// To show the image, you can use:
+// - Bob 1, 100, 100, "sdk_loaded_image"
+// - Paste Bob 100,100, "sdk_loaded_image"
+// - Actor "my_actor", Image$="sdk_loaded_image"
+//
+Procedure GET_IMAGE_BANK_BY_NAME[ NAME$ ]
+	JS Execute "application.editorSDK.banks.getImageBankByName( '" + NAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+// Get the image N loaded and returns its name.
+//
+Procedure GET_IMAGE_NAME[ N ]
+	JS Execute "application.editorSDK.banks.getImageName( " + Str$( N ) + " );"
+	While SDK_BUSY
+	Wend
+End Proc

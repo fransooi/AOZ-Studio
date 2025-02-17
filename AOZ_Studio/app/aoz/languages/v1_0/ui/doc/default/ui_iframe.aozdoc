@@ -1,0 +1,11 @@
+<i>UI IFrame</i>
+<b>UI IFrame</b> xxxxxxx
+=
+@code
+// Embed a YouTube Video
+UI IFrame "aozVideo", width = 1344, height = 756, src$="https://www.youtube.com/embed/5H6HGR3eWwo"
+
+// Embed another web page
+UI IFrame "demoVideo", width = 1344, height = 756, src$="https://www.aoz.studio/faq-1"
+@code
+

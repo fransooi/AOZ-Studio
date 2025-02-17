@@ -1,0 +1,20 @@
+{
+	"path": "basic-3d",
+	"name":
+	{
+		"fr": "Manipulation d'objets 3D.",
+		"en": "3D Objects manipulation."
+	},
+	
+	"description":
+	{
+		"fr": "Ensemble de procèdures AOZ pour créer et manipuler des objets 3D. La bibliothèque utilisée est ThreeJS.",
+		"en": "Set of AOZ procedures to create and manipulate 3D objects. The library used is ThreeJS."
+	},
+	
+	"copyright" : "(c)2022 AOZ Studio",
+	"author": "Baptiste Bideaux",
+	"version": "1.0-0",
+	"licence": "GPLv3",
+	"dependencies":[]
+}

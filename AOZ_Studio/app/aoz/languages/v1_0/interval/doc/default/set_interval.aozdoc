@@ -1,0 +1,14 @@
+<i>Set Interval</i>
+<b>Set Interval</b> xxxxxxx
+=
+This example displays a "Hello World" message all the seconds...
+
+@code
+A = Set Interval( 1000, "HELLO" )
+
+Procedure HELLO[ ID ]
+Print "Hello World!"
+End Proc
+
+@code
+

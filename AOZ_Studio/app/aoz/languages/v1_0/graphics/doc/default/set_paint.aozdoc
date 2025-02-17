@@ -1,0 +1,22 @@
+<i>Set Paint</i>
+<b>Set Paint</b> xxxxxxx
+=
+This is a simple command that toggles outlines off and on for any shapes drawn using the POLYGON and BAR
+instructions. Follow SET PAINT with a mode value of 1, and borders will appear in the previous ink colour. If the
+mode is set by a zero, the default setting applies, with no borders shown. For example:
+@code
+Ink 0,1,2 : Set Paint 1
+Bar 5,5 To 200,100
+Set paint 0: Bar 210,75 To 310,190
+@code
+In the last example, the INK command carried additional parameters. These optional settings follow the usual colour
+number, and are used to determine paper and border colours. In other words, they can set the colours to be used for
+fill patterns and outlines of bars and polygons. Remember to include any commas for unused options, as follows:
+@code
+Ink 3: Rem Set ink colour
+Ink ,,5: Rem Set border outline only
+Ink 0,8,2: Rem Set ink, fill colour and border
+Ink 6,13: Rem Set ink and background fill colour
+@code
+
+

@@ -1,0 +1,11 @@
+<i>Do</i>
+<b>Do</b> xxxxxxx
+=
+This command, associated with LOOP will loop a list of AMOS Professional statements forever, with DO acting as the marker
+position for the LOOP to return to. Both the DO and LOOP should occupy their own lines, as follows:
+@code
+Do
+Print "FOREVER AND": Wait 25
+Loop
+@code
+

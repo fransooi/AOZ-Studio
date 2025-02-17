@@ -1,0 +1,1894 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The Player Instructions Set
+ * By Phil Bell July 2021
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author PB
+ * @date first pushed on 04/07/2020
+ */
+#need_server
+#need_javascript_file:"playfab/PlayFabClientApi.js"
+#noWarning:"instruction_not_implemented"
+
+{
+    this.aoz.player = this;
+
+	this.lastError = null;
+	this.api_error = null;
+	this.api_done = null;
+	this.api_pending = null
+	this.engine = undefined;
+	this.onErrorProcName = undefined;
+	this.onLeaderboardLoadedProcName = undefined;
+
+	this.load_wait = function()
+	{
+		if ( this.api_error )
+		{
+			var error = this.api_error;
+			this.api_error = null;
+			throw error;
+		}
+		return this.api_done;
+	};
+
+	// ###############################################
+	// Base class for player engines
+	// ###############################################
+	class BasePlayerEngine {
+		constructor(options) {
+			this.engineName = options.engineName;
+			this.key = options.key;
+			this.isGuest = false;
+			this.playerName = null;
+			this.leaderboardData = null;
+			this.userData = null;
+		}
+
+		// Required to be implemented in a derived engine class
+		init(successCallBack, errorCallBack) {throw "init function not implemented";}
+		getPlayerPropertyValue() {throw "getPlayerPropertyValue function not implemented";}
+		loadLeaderboard(name, maxItems, startPosition, successCallBack, errorCallBack) {throw "loadLeaderboard function not implemented";}
+		getLeaderboardItemValue(index, itemName) {throw "getLeaderboardItemValue function not implemented";}
+		updatePlayerName(playerName, successCallBack, errorCallBack) {throw "updatePlayerName function not implemented";}
+		login(email, password, successCallBack, errorCallBack) {throw "login function not implemented";}
+		register(email, password, playerName, successCallBack, errorCallBack) {throw "register function not implemented";}
+		updateLeaderboard(leaderboardName, value, successCallBack, errorCallBack) {throw "updateLeaderboard function not implemented";}
+		playerForget(successCallBack, errorCallBack) {throw "forgetPlayer function not implemented";}
+		sendAccountRecoveryEmail(email, successCallBack, errorCallBack) {throw "sendAccountRecoveryEmail function not implemented";}
+		getPlayerData(itemName) {throw "getPlayerData function not implemented";}
+		savePlayerData(itemName, itemValue, successCallBack, errorCallBack) {throw "savePlayerData function not implemented";}
+
+		// Helper functions
+		check_email(val){
+		    if(!val.match(/\S+@\S+\.\S+/)){
+		        return false;
+		    }
+		    if( val.indexOf(' ')!=-1 || val.indexOf('..')!=-1){
+		        return false;
+		    }
+		    return true;
+		}
+
+		getEngineName() {
+			return this.engineName;
+		}
+	}
+
+	// ###############################################
+	// Local engine (local browser storage)
+	// ###############################################
+	class LocalStorageEngine extends BasePlayerEngine {
+		constructor(options) {
+			super(options);
+
+			this.customId = null;
+			this.localStorageItemName = this.engineName + '_CustomID_' + this.key;
+			this.localStoragePlayers = this.engineName + '_players_' + this.key;
+			this.localStorageLeaderboards = this.engineName + '_leaderboards_' + this.key;
+
+			this.player = null;
+			this.leaderboardData = null;
+		}
+
+		getLeaderboard(leaderboardName) {
+			var items = this.getLeaderboards();
+			var index = items.findIndex(d => d.leaderboardName === leaderboardName.toLowerCase());
+			if (index >= 0) {
+				return items[index];
+			} else {
+				return null;
+			}
+		}
+
+		getLeaderboards() {
+			if (window.localStorage.getItem(this.localStorageLeaderboards))
+			{
+				return JSON.parse(window.localStorage.getItem(this.localStorageLeaderboards));
+			} else
+			{
+				return [];
+			}
+		}
+
+		setLeaderboards(leaderboards) {
+			window.localStorage.setItem(this.localStorageLeaderboards, JSON.stringify(leaderboards));
+		}
+
+		getPlayers() {
+			if (window.localStorage.getItem(this.localStoragePlayers))
+			{
+				return JSON.parse(window.localStorage.getItem(this.localStoragePlayers));
+			} else
+			{
+				return [];
+			}
+		}
+
+		setPlayers(players) {
+			window.localStorage.setItem(this.localStoragePlayers, JSON.stringify(players));
+		}
+
+		getPlayer() {
+			var players = this.getPlayers();
+			var index = players.findIndex(d => d.id === this.customId);
+			if (index >= 0) {
+				return players[index];
+			} else {
+				return null;
+			}
+		}
+
+		getPlayerName(id) {
+			var players = this.getPlayers();
+			var index = players.findIndex(d => d.id === id);
+			if (index >= 0) {
+				return players[index].playerName;
+			} else {
+				return '';
+			}
+		}
+
+		savePlayer() {
+			var players = this.getPlayers();
+			var index = players.findIndex(d => d.id === this.customId);
+
+			if (index >= 0) {
+				players[index] = this.player;
+				this.setPlayers(players);
+			}
+		}
+
+		init(successCallBack, errorCallBack) {
+
+			if (window.localStorage.getItem(this.localStorageItemName))
+			{
+				this.customId = window.localStorage.getItem(this.localStorageItemName);
+			}
+			else
+			{
+				// No stored CustomID so create and store a new ID
+				var dt = new Date().getTime();
+
+				var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+					var r = (dt + Math.random()*16)%16 | 0;
+					dt = Math.floor(dt/16);
+					return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+				});
+
+				this.customId = uuid.substring(0, 8);
+
+				// Store the new custom ID in the browser storage
+				window.localStorage.setItem(this.localStorageItemName, this.customId);
+			}
+
+			this.player = this.getPlayer();
+
+			// If a player does not exist, then create a store a new one
+			if (!this.player) {
+				this.player = {
+					id: this.customId,
+					playerName: 'Guest ' + this.customId.substring(0, 6),
+					isGuest: true,
+					email: '',
+					password: '',
+					playerData: []
+				}
+
+				var players = this.getPlayers();
+				players.push(this.player);
+				this.setPlayers(players);
+			}
+
+			if (successCallBack) successCallBack();
+		}
+
+		getPlayerPropertyValue(propertyName) {
+			switch (propertyName.toLowerCase()) {
+				case 'playername':
+					return this.player.playerName || '';
+					break;
+				case 'isguest':
+					return this.player.isGuest;
+					break;
+				case 'id':
+					return this.player.id;
+					break;
+				default:
+					return '';
+			}
+		}
+
+		loadLeaderboard(leaderboardName, maxItems, startPosition, successCallBack, errorCallBack) {
+			var leaderboard = this.getLeaderboard(leaderboardName);
+
+			if (!leaderboard) {
+				leaderboard = {
+					leaderboardName: leaderboardName.toLowerCase(),
+					items: []
+				}
+
+				var leaderboards = this.getLeaderboards();
+				leaderboards.push(leaderboard);
+				this.setLeaderboards(leaderboards);
+			}
+
+			this.leaderboardData = leaderboard.items.splice(startPosition, maxItems);
+
+			if (!this.leaderboardData) this.leaderboardData = [];
+
+			if (successCallBack) {
+				successCallBack(this.leaderboardData.length);
+			}
+		}
+
+		updateLeaderboard(leaderboardName, value, successCallBack, errorCallBack) {
+
+			var leaderboards = this.getLeaderboards();
+			var index = leaderboards.findIndex(d => d.leaderboardName === leaderboardName.toLowerCase());
+
+			if (index < 0) {
+				leaderboard = {
+					leaderboardName: leaderboardName.toLowerCase(),
+					items: []
+				}
+
+				leaderboards.push(leaderboard);
+				this.setLeaderboards(leaderboards);
+				index = leaderboards.findIndex(d => d.leaderboardName === leaderboardName.toLowerCase());
+			}
+
+			var itemIndex = leaderboards[index].items.findIndex(d => d.id === this.player.id);
+
+			if (itemIndex < 0) {
+				leaderboards[index].items.push({
+					id: this.player.id,
+					value: parseInt(value)
+				})
+				itemIndex = leaderboards[index].items.findIndex(d => d.id === this.player.id);
+			} else {
+				if (leaderboards[index].items[itemIndex].value < parseInt(value)) {
+					leaderboards[index].items[itemIndex].value = parseInt(value);
+				}
+			}
+
+			// sort the items
+			leaderboards[index].items.sort((a, b) => a.value < b.value && 1 || -1)
+
+			this.setLeaderboards(leaderboards);
+			this.leaderboardData = leaderboards[index].items[itemIndex];
+			if (successCallBack) successCallBack();
+		}
+
+		getLeaderboardItemValue(index, itemName) {
+			if (this.leaderboardData) {
+
+				var itemValue = '';
+
+				if (index < this.leaderboardData.length) {
+
+					itemName = itemName.toLowerCase().trim();
+
+					switch (itemName) {
+						case 'playername':
+							itemValue = this.getPlayerName(this.leaderboardData[index].id);
+							break;
+						case 'value':
+							itemValue = this.leaderboardData[index].value.toString();
+							break;
+						case 'id':
+							itemValue = this.leaderboardData[index].id.toString();
+							break;
+						break
+					}
+				}
+				return itemValue;
+			} else {
+				return '';
+			}
+		}
+
+		getPlayerData(itemName) {
+			var index = this.player.playerData.findIndex(d => d.itemName == itemName);
+			if (index >= 0) {
+				return this.player.playerData[index].itemValue;
+			} else {
+				return '';
+			}
+		}
+
+		savePlayerData(itemName, itemValue, successCallBack, errorCallBack) {
+			var index = this.player.playerData.findIndex(d => d.itemName == itemName);
+			if (index >= 0) {
+				this.player.playerData[index].itemValue = itemValue.toString();
+			} else {
+				this.player.playerData.push({
+					itemName: itemName,
+					itemValue: itemValue.toString()
+				});
+			}
+			this.savePlayer();
+			if (successCallBack) successCallBack();
+		}
+
+		sendAccountRecoveryEmail(email, successCallBack, errorCallBack) {
+			if (errorCallBack) {
+				errorCallBack({ errorCode: 3, errorMessage: 'Account Recovery Email not available when using the local player engine.' });
+			}
+		}
+
+		playerForget(successCallBack, errorCallBack) {
+			window.localStorage.removeItem(this.localStorageItemName);
+			this.init(successCallBack, errorCallBack);
+		}
+
+		login(email, password, successCallBack, errorCallBack) {
+
+			if (this.check_email(email) == false) {
+				if (errorCallBack) {
+					errorCallBack({ errorCode: 4, errorMessage: 'The email appears to be an invalid format.' });
+				}
+			} else {
+				var players = this.getPlayers();
+				var index = players.findIndex(d => d.email === email.toLowerCase() && d.password === password);
+				if (index >= 0) {
+					this.player = players[index];
+					window.localStorage.setItem(this.localStorageItemName, this.player.id);
+					if (successCallBack) successCallBack();
+				} else {
+					if (errorCallBack) {
+						errorCallBack({ errorCode: 2, errorMessage: 'Incorrect email or password.' });
+					}
+				}
+			}
+		}
+
+		register(email, password, playerName, successCallBack, errorCallBack) {
+			if (this.player.isGuest === false) {
+				if (errorCallBack) {
+					errorCallBack({ errorCode: 1, errorMessage: 'Player Account is already registered.' });
+				}
+			}
+			else {
+
+				if (this.check_email(email) == false) {
+					if (errorCallBack) {
+						errorCallBack({ errorCode: 4, errorMessage: 'The email appears to be an invalid format.' });
+					}
+				} else {
+					// Check if email already exists
+					var players = this.getPlayers();
+					var index = players.findIndex(d => d.email === email.toLowerCase());
+
+					if (index < 0) {
+						this.player.playerName = playerName;
+						this.player.email = email.toLowerCase();
+						this.player.password = password;
+						this.player.isGuest = false;
+						this.savePlayer();
+						if (successCallBack) successCallBack();
+					} else {
+						if (errorCallBack) {
+							errorCallBack({ errorCode: 1, errorMessage: 'Email is already registered.' });
+						}
+					}
+				}
+			}
+		}
+
+		updatePlayerName(playerName, successCallBack, errorCallBack) {
+			this.player.playerName = playerName;
+			this.savePlayer();
+			if (successCallBack) successCallBack();
+		}
+	}
+	// ###############################################
+	// End of Local engine
+	// ###############################################
+
+
+	// ###############################################
+	// PlayFab engine
+	// ###############################################
+	class PlayFabEngine extends BasePlayerEngine {
+		constructor(options) {
+			super(options);
+
+			this.titleId = options.key;
+			this.customId = null;
+			this.localStorageItemName = this.engineName + '_CustomID_' + this.titleId;
+			this.playerPlayFabId = null;
+		}
+
+		init(successCallBack, errorCallBack)
+		{
+			self = this;
+
+			if (window.localStorage.getItem(this.localStorageItemName))
+			{
+				this.customId = window.localStorage.getItem(this.localStorageItemName);
+			}
+			else
+			{
+				// No stored CustomID so create and store a new ID
+				var dt = new Date().getTime();
+
+				var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+					var r = (dt + Math.random()*16)%16 | 0;
+					dt = Math.floor(dt/16);
+					return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+				});
+
+				this.customId = uuid;
+ 			}
+
+			var loginWithCustomRequest =
+			{
+				CreateAccount: true,
+				CustomId: this.customId,
+				TitleId: this.titleId,
+				InfoRequestParameters: { GetUserData: true, GetUserAccountInfo: true }
+			}
+
+			PlayFabClientSDK.LoginWithCustomID(loginWithCustomRequest, function (result, error)
+			{
+				if (result !== null) {
+
+					PlayFab.settings.titleId = self.titleId;
+
+					// Store the unique ID for the player generated by PlayFab (needed for posting new scores)
+					self.playerPlayFabId = result.data.PlayFabId
+
+					// store the guest player name, uses the first 6 chars of the player PlayFabId
+					self.playerName = "Guest " + result.data.PlayFabId.substring(0, 6);
+					self.isGuest = true;
+
+					// Player already exists in PlayFab so get the stored player display name
+					if (result.data.NewlyCreated == false)
+					{
+						if (result.data.InfoResultPayload.AccountInfo.TitleInfo)
+						{
+							self.playerName = result.data.InfoResultPayload.AccountInfo.TitleInfo.DisplayName;
+						}
+
+						if (result.data.InfoResultPayload.UserData) {
+							self.userData = result.data.InfoResultPayload.UserData
+						}
+
+						if (result.data.InfoResultPayload.AccountInfo.Username)
+						{
+							self.isGuest = false;
+						}
+
+						if (successCallBack) successCallBack();
+
+					} else {
+
+						// Store the new custom ID in the browser storage
+						window.localStorage.setItem(self.localStorageItemName, self.customId);
+
+						// New player so store the generated guest player name
+						var updateUserTitleDisplayNameRequest = {
+							DisplayName: self.playerName
+						}
+						PlayFabClientSDK.UpdateUserTitleDisplayName(updateUserTitleDisplayNameRequest, function (result, error){
+							if (successCallBack) successCallBack();
+						});
+					}
+
+				} else if (error !== null) {
+					if (errorCallBack) {
+						errorCallBack(error);
+					}
+					self.titleId = null;
+				}
+			});
+		}
+
+		playerForget(successCallBack, errorCallBack) {
+			window.localStorage.removeItem(this.localStorageItemName);
+			this.init(successCallBack, errorCallBack);
+		}
+
+		getPlayerPropertyValue(propertyName) {
+			switch (propertyName.toLowerCase()) {
+				case 'playername':
+					return this.playerName || '';
+					break;
+				case 'isguest':
+					return this.isGuest;
+					break;
+				case 'id':
+					return this.playerPlayFabId;
+					break;
+				default:
+					return '';
+			}
+		}
+
+		getLeaderboardItemValue(index, itemName) {
+
+			if (this.leaderboardData) {
+
+				var itemValue = '';
+
+				if (index < this.leaderboardData.length) {
+
+					itemName = itemName.toLowerCase().trim();
+
+					switch (itemName) {
+						case 'playername':
+							itemValue = this.leaderboardData[index].DisplayName;
+							break;
+						case 'value':
+							itemValue = this.leaderboardData[index].StatValue.toString();
+							break;
+						case 'id':
+							itemValue = this.leaderboardData[index].PlayFabId.toString();
+							break;
+						break
+					}
+				}
+				return itemValue;
+			} else {
+				return '';
+			}
+		}
+
+		loadLeaderboard(name, maxItems, startPosition, successCallBack, errorCallBack) {
+
+			var self = this;
+
+			var getLeaderBoardRequest = {
+				MaxResultsCount: maxItems,
+				StartPosition: startPosition,
+				StatisticName: name
+			}
+
+			PlayFabClientSDK.GetLeaderboard(getLeaderBoardRequest, function(result, error) {
+				if (result !== null) {
+					self.leaderboardData = result.data.Leaderboard;
+					if (successCallBack) successCallBack(self.leaderboardData.length);
+				} else if (error !== null) {
+					if (errorCallBack) {
+						errorCallBack(error);
+					}
+				}
+			});
+		}
+
+		updatePlayerName(playerName, successCallBack, errorCallBack) {
+
+			var self = this;
+			PlayFab.settings.titleId = this.titleId;
+			playerName = playerName.trim();
+
+			// Create the params for the PlayFab API request
+			var updateUserTitleDisplayNameRequest = {
+				DisplayName: playerName
+			}
+
+			PlayFabClientSDK.UpdateUserTitleDisplayName(updateUserTitleDisplayNameRequest, function (result, error){
+				if (result !== null) {
+					self.playerName = playerName;
+					if (successCallBack) successCallBack();
+				} else if (error !== null) {
+					if (errorCallBack) {
+						errorCallBack(error);
+					}
+				}
+			});
+		}
+
+		login(email, password, successCallBack, errorCallBack) {
+			var self = this;
+
+			PlayFab.settings.titleId = this.titleId;
+
+			// Create a login request
+			var loginWithEmailAddressRequest = {
+				Email: email.trim(),
+				Password: password,
+				TitleId: this.titleId,
+				InfoRequestParameters: { GetUserData: true, GetUserAccountInfo: true }
+			}
+
+			PlayFabClientSDK.LoginWithEmailAddress(loginWithEmailAddressRequest, function (result, error) {
+
+				var errorMessage = '';
+
+				if (result !== null) {
+
+					if (result.data.InfoResultPayload.AccountInfo.Username)
+					{
+						self.isGuest = false;
+					}
+
+					if (result.data.InfoResultPayload.AccountInfo.TitleInfo.DisplayName) {
+						self.playerPlayFabId = result.data.PlayFabId
+						self.playerName = result.data.InfoResultPayload.AccountInfo.TitleInfo.DisplayName;
+						self.customId = result.data.InfoResultPayload.AccountInfo.CustomIdInfo.CustomId;
+
+						if (result.data.InfoResultPayload.UserData) {
+							self.userData = result.data.InfoResultPayload.UserData
+						}
+
+						if (successCallBack) successCallBack();
+
+					} else {
+						// Existing PlayFab Master Account - new to this title so update the title player display name
+						self.playerPlayFabId = result.data.PlayFabId
+						self.playerName = "Guest " + result.data.PlayFabId.substring(0, 6);
+						self.customId = result.data.InfoResultPayload.AccountInfo.CustomIdInfo.CustomId;
+
+						var updateUserTitleDisplayNameRequest = {
+							DisplayName: self.playerName
+						}
+						PlayFabClientSDK.UpdateUserTitleDisplayName(updateUserTitleDisplayNameRequest, function (result, error){
+							if (successCallBack) successCallBack();
+						});
+					}
+
+					// Save the CustomID in browser storage
+					window.localStorage.setItem(self.localStorageItemName, self.customId);
+
+				} else if (error !== null) {
+
+					if (error.errorDetails) {
+						if (error.errorDetails.Password) {
+							errorMessage = error.errorDetails.Password[0];
+						}
+
+						if (error.errorDetails.Email) {
+							errorMessage = error.errorDetails.Email[0];
+						}
+
+						if (error.errorDetails.Username) {
+							errorMessage = error.errorDetails.Username[0];
+						}
+					} else {
+						errorMessage = error.errorMessage;
+					}
+				}
+
+				if (errorMessage !== '') {
+					if (errorCallBack) {
+						errorCallBack({ errorCode: error.errorCode, errorMessage: errorMessage });
+					}
+				}
+			});
+		}
+
+		register(email, password, playerName, successCallBack, errorCallBack) {
+			var self = this;
+
+			if (this.isGuest === false) {
+				if (errorCallBack) {
+					errorCallBack({ errorCode: 1, errorMessage: 'Player Account is already registered' });
+				}
+			}
+			else {
+				PlayFab.settings.titleId = this.titleId;
+
+				var addUsernamePasswordRequest = {
+					Username: this.playerName.replace(/\s/g, ''),
+					Email: email.trim(),
+					Password: password
+				}
+
+				PlayFabClientSDK.AddUsernamePassword(addUsernamePasswordRequest, function (result, error) {
+
+					var errorMessage = '';
+
+					if (result !== null) {
+
+						self.isGuest = false;
+
+						// Update the user display Name
+						var updateUserTitleDisplayNameRequest = {
+							DisplayName: playerName.trim()
+						}
+
+						PlayFabClientSDK.UpdateUserTitleDisplayName(updateUserTitleDisplayNameRequest, function (result, error) {
+							self.playerName = playerName.trim();
+							if (successCallBack) successCallBack();
+						});
+
+					} else if (error !== null) {
+						if (error.errorDetails) {
+							if (error.errorDetails.Password) {
+								errorMessage = error.errorDetails.Password[0]
+							}
+
+							if (error.errorDetails.Email) {
+								errorMessage = error.errorDetails.Email[0]
+							}
+
+							if (error.errorDetails.Username) {
+								errorMessage = error.errorDetails.Username[0]
+							}
+						} else {
+							errorMessage = error.errorMessage;
+						}
+					}
+
+					if (errorMessage !== '') {
+						if (errorCallBack) {
+							errorCallBack({ errorCode: error.errorCode, errorMessage: errorMessage });
+						}
+					}
+				});
+			}
+		}
+
+		updateLeaderboard(leaderboardName, value, successCallBack, errorCallBack) {
+			var self = this;
+
+			PlayFab.settings.titleId = this.titleId;
+
+			// Create the params for the PlayFab API request
+			var updatePlayerStatisticsRequest = {
+				PlayFabId : this.playerPlayFabId,
+				Statistics: [ { "StatisticName": leaderboardName, value: parseInt(value) } ]
+			};
+
+			PlayFabClientSDK.UpdatePlayerStatistics(updatePlayerStatisticsRequest, function(result, error){
+				if (result !== null) {
+					if (successCallBack) successCallBack();
+				} else if (error !== null) {
+					if (errorCallBack) {
+						errorCallBack(error);
+					}
+				}
+			});
+		}
+
+		sendAccountRecoveryEmail(email, successCallBack, errorCallBack) {
+			var self = this;
+
+			PlayFab.settings.titleId = this.titleId;
+
+			var sendAccountRecoveryEmailRequest = {
+				Email: email,
+				TitleId: this.titleId
+			}
+
+			PlayFabClientSDK.SendAccountRecoveryEmail(sendAccountRecoveryEmailRequest, function (result, error) {
+				var errorMessage = '';
+
+				if (result !== null) {
+					if (successCallBack) successCallBack();
+				} else if (error !== null) {
+					if (error.errorDetails) {
+						if (error.errorDetails.Email) {
+							errorMessage = error.errorDetails.Email[0]
+						}
+					} else {
+						errorMessage = error.errorMessage;
+					}
+				}
+
+				if (errorMessage !== '') {
+					if (errorCallBack) {
+						errorCallBack({ errorCode: error.errorCode, errorMessage: errorMessage });
+					}
+				}
+			});
+		}
+
+		getPlayerData(itemName) {
+			if (this.userData && this.userData[itemName]) {
+				return this.userData[itemName].Value.toString();
+			} else {
+				return '';
+			}
+		}
+
+		savePlayerData(itemName, itemValue, successCallBack, errorCallBack) {
+			var self = this;
+
+			PlayFab.settings.titleId = this.titleId;
+
+			var data = {};
+			data[itemName] = itemValue;
+
+			var updateUserDataRequest = {
+				PlayFabId : this.playerPlayFabId,
+				Data: data
+			}
+
+			PlayFabClientSDK.UpdateUserData(updateUserDataRequest, function (result, error){
+				if (result !== null) {
+
+					// Update the cached userData
+					if (self.userData && self.userData[itemName]) {
+						self.userData[itemName].Value = itemValue.toString();
+					} else {
+						self.userData[itemName] = { Value: itemValue.toString() };
+					}
+
+					if (successCallBack) successCallBack();
+
+				} else if (error !== null) {
+					if (errorCallBack) {
+						errorCallBack(error);
+					}
+				}
+			});
+		}
+	}
+	// ###############################################
+	// End of PlayFab engine
+	// ###############################################
+
+	this.onError = function( errorCode, errorMessage )
+	{
+		if( this.onErrorProcName != undefined && this.onErrorProcName != '' )
+		{
+			this.aoz.runProcedure( this.onErrorProcName, { CODE: errorCode, MESSAGE$: errorMessage } );
+		}
+	}
+
+	this.onLeaderboardLoaded = function( count )
+	{
+		if( this.onLeaderboardLoadedProcName != undefined && this.onLeaderboardLoadedProcName != '' )
+		{
+			this.aoz.runProcedure( this.onLeaderboardLoadedProcName, { COUNT: count } );
+		}
+	}
+
+	this.playerInitialise = function ( args )
+	{
+		var self = this;
+
+		if( args == undefined )
+		{
+			throw "arguments_missing";
+		}
+
+		if( args.Key == undefined || args.Key == '' )
+		{
+			throw "argument_key_missing";
+		}
+
+		if (args.OnError && args.OnError !== '') {
+			this.onErrorProcName = args.OnError;
+		}
+
+		switch (args.Engine.toLowerCase())
+		{
+			case 'playfab':
+				this.engine = new PlayFabEngine({ engineName: 'PlayFab', key: args.Key });
+				break;
+			case 'local':
+				this.engine = new LocalStorageEngine({ engineName: 'LocalStorage', key: args.Key });
+				break;
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+
+		if (this.engine) {
+
+			if (this.api_pending == true) return;
+			this.api_pending = true;
+
+			this.engine.init(function(){
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.api_pending = false;
+				self.api_done = true;
+			}, function(error){
+				self.lastError = error;
+				self.api_pending = false;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+				self.engine = null;
+			});
+
+		} else {
+			this.lastError = { errorCode: 3, errorMessage: 'Engine not supported.' }
+			self.api_done = true;
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+		}
+	}
+
+	this.getPlayerPropertyValue = function(propertyName) {
+		if (this.engine) {
+			return this.engine.getPlayerPropertyValue(propertyName);
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+			return '';
+		}
+	}
+
+	this.getLastErrorCode = function()
+	{
+		if (this.lastError)
+			return this.lastError.errorCode;
+		else
+			return 0;
+	}
+
+	this.getLastErrorMessage = function()
+	{
+		if (this.lastError)
+			return this.lastError.errorMessage;
+		else
+		 	return '';
+	}
+
+	this.getLeaderboardItem = function(args){
+
+		if( args == undefined )
+		{
+			throw "arguments_missing";
+		}
+
+		if( args.Id == undefined ||  ( isNaN( args.Id ) && args.Id == "" ) )
+		{
+			throw "argument_id_missing";
+		}
+
+		if( args.ItemName == undefined || args.ItemName == '' )
+		{
+			throw "argument_itemName_missing";
+		}
+
+		if (this.engine) {
+			return this.engine.getLeaderboardItemValue(args.Id, args.ItemName);
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+			return '';
+		}
+	}
+
+	this.leaderboardLoad = function(args)
+	{
+		var self = this;
+
+		if( args == undefined )
+		{
+			throw "arguments_missing";
+		}
+
+		if( args.LeaderboardName == undefined || args.LeaderboardName == '' )
+		{
+			throw "argument_leaderboardName_missing";
+		}
+
+		if( args.MaxItems == undefined ||  ( isNaN( args.MaxItems ) && args.MaxItems == "" ) )
+		{
+			throw "argument_maxItems_missing";
+		}
+
+		if( args.StartPosition == undefined ||  ( isNaN( args.StartPosition ) && args.StartPosition == "" ) )
+		{
+			throw "argument_startPosition_missing";
+		}
+
+		if (args.OnLoaded && args.OnLoaded !== '') {
+			this.onLeaderboardLoadedProcName = args.OnLoaded;
+		}
+
+		if (this.engine) {
+
+			if (this.api_pending == true) return;
+			this.api_pending = true;
+			this.api_done = false;
+
+			// Load the leaderboard
+			this.engine.loadLeaderboard(args.LeaderboardName, args.MaxItems, args.StartPosition, function(count){
+				self.api_pending = false;
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.onLeaderboardLoaded(count);
+				self.api_done = true;
+			}, function(error){
+				self.api_pending = false;
+				self.lastError = error;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+			})
+
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			self.api_done = true;
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+		}
+	}
+
+	this.leaderboardUpdate = function(args)
+	{
+		var self = this;
+
+		if( args == undefined )
+		{
+			throw "arguments_missing";
+		}
+
+		if( args.LeaderboardName == undefined || args.LeaderboardName == '' )
+		{
+			throw "argument_leaderboardName_missing";
+		}
+
+		if( args.Value == undefined ||  ( isNaN( args.Value ) && args.Value == "" ) )
+		{
+			throw "argument_value_missing";
+		}
+
+		if (this.engine) {
+
+			if (this.api_pending == true) return;
+			this.api_pending = true;
+			this.api_done = false;
+
+			// Update the leaderboard
+			this.engine.updateLeaderboard(args.LeaderboardName, args.Value, function(){
+				self.api_pending = false;
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.api_done = true;
+			}, function(error){
+				self.api_pending = false;
+				self.lastError = error;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+			})
+
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			self.api_done = true;
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+		}
+	}
+
+	this.playerUpdate = function ( args )
+	{
+		var self = this;
+
+		if( args == undefined )
+		{
+			throw "arguments_missing";
+		}
+
+		if( args.PlayerName == undefined || args.PlayerName == '' )
+		{
+			throw "argument_playerName_missing";
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+
+		if (this.engine) {
+
+			if (this.api_pending === true) return;
+			this.api_pending = true;
+
+			this.engine.updatePlayerName(args.PlayerName, function(count){
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.api_pending = false;
+				self.api_done = true;
+			}, function(error){
+				self.lastError = error;
+				self.api_pending = false;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+			})
+
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			self.api_done = true;
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+		}
+	}
+
+	this.playerLogin = function ( args )
+	{
+		var self = this;
+
+		if( args == undefined )
+		{
+			throw "arguments_missing";
+		}
+
+		if( args.Email == undefined || args.Email == '' )
+		{
+			throw "argument_email_missing";
+		}
+
+		if( args.Password == undefined || args.Password == '' )
+		{
+			throw "argument_password_missing";
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+
+		if (this.engine) {
+
+			if (this.api_pending === true) return;
+			this.api_pending = true;
+
+			this.engine.login(args.Email, args.Password, function(count){
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.api_pending = false;
+				self.api_done = true;
+			}, function(error){
+				self.lastError = error;
+				self.api_pending = false;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+			})
+
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			self.api_done = true;
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+		}
+	}
+
+	this.playerRegister = function ( args )
+	{
+		var self = this;
+
+		if( args == undefined )
+		{
+			throw "arguments_missing";
+		}
+
+		if( args.Email == undefined || args.Email == '' )
+		{
+			throw "argument_email_missing";
+		}
+
+		if( args.Password == undefined || args.Password == '' )
+		{
+			throw "argument_password_missing";
+		}
+
+		if( args.PlayerName == undefined || args.PlayerName == '' )
+		{
+			throw "argument_playername_missing";
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+
+		if (this.engine) {
+
+			if (this.api_pending === true) return;
+			this.api_pending = true;
+
+			this.engine.register(args.Email, args.Password, args.PlayerName, function(count){
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.api_pending = false;
+				self.api_done = true;
+			}, function(error){
+				self.lastError = error;
+				self.api_pending = false;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+			})
+
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			self.api_done = true;
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+		}
+	}
+
+	this.playerForget = function(args){
+
+		var self = this;
+		this.api_done = false;
+		this.api_error = false;
+
+		if (this.engine) {
+
+			if (this.api_pending === true) return;
+			this.api_pending = true;
+
+			this.engine.playerForget(function(count){
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.api_pending = false;
+				self.api_done = true;
+			}, function(error){
+				self.lastError = error;
+				self.api_pending = false;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+			})
+
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+			self.api_done = true;
+			self.api_pending = false;
+		}
+	}
+
+	this.sendAccountRecoveryEmail = function ( args )
+	{
+		var self = this;
+
+		if( args == undefined )
+		{
+			throw "arguments_missing";
+		}
+
+		if( args.Email == undefined || args.Email == '' )
+		{
+			throw "argument_email_missing";
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+
+		if (this.engine) {
+
+			if (this.api_pending === true) return;
+			this.api_pending = true;
+
+			this.engine.sendAccountRecoveryEmail(args.Email, function(count){
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.api_pending = false;
+				self.api_done = true;
+			}, function(error){
+				self.lastError = error;
+				self.api_pending = false;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+			})
+
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			self.api_done = true;
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+		}
+	}
+
+	this.getPlayerData = function( args )
+	{
+		if( args.ItemName == undefined || args.ItemName == '' )
+		{
+			throw "argument_itemname_missing";
+		}
+
+		if (this.engine) {
+			return this.engine.getPlayerData(args.ItemName);
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+			return '';
+		}
+
+	}
+
+	this.savePlayerData = function( args )
+	{
+		var self = this;
+
+		if( args.ItemName == undefined || args.ItemName == '' )
+		{
+			throw "argument_itemname_missing";
+		}
+
+		if( args.ItemValue == undefined || args.ItemValue == '' )
+		{
+			throw "argument_itemvalue_missing";
+		}
+
+		this.api_done = false;
+		this.api_error = false;
+
+		if (this.engine) {
+
+			if (this.api_pending === true) return;
+			this.api_pending = true;
+
+			this.engine.savePlayerData(args.ItemName, args.ItemValue, function(count){
+				self.lastError = { errorCode: 0, errorMessage: '' }
+				self.api_pending = false;
+				self.api_done = true;
+			}, function(error){
+				self.lastError = error;
+				self.api_pending = false;
+				self.onError(error.errorCode, error.errorMessage);
+				self.api_done = true;
+			})
+
+		} else {
+			this.lastError = { errorCode: 2, errorMessage: 'Player has not been initialised' }
+			self.api_done = true;
+			this.onError(this.lastError.errorCode, this.lastError.errorMessage);
+		}
+	}
+
+	this.getEngineName = function()
+	{
+		if (this.engine) {
+			return this.engine.getEngineName();
+		} else {
+			return 'Engine Not Initialsed';
+		}
+	}
+}
+
+/**doc
+@name:Player and Leaderboards
+@description: Instructions and functions that provide player and leaderboards functions.
+@author:Phil Bell
+doc*/
+
+/**api
+@name:Player Initialise
+@description:Initialise the player engine and login.
+@param:engine$:string:The name of the engine to initialise. If not set, "local" by default.
+@param:key$:string:The key required by the specified engine.
+@param:onError$:string:The name of an AOZ procedure to be called if an error occurs during a player instruction.
+@content:
+This command must be used before using any of the other player commands.
+
+The browser application storage is first checked for a stored player, if a stored player is found it is used to log in to the engine. Otherwise a new guest player is created and used to log in.
+
+There are currently 2 engines available, "local" and "playfab". The local engine uses the browser application storage to store the player and leaderboard data offline. This engine is great to use during development and demo projects.
+
+The "playfab" engine refers to the Microsoft PlayFab Platform (https://playfab.com/). The player accounts and leaderboards are stored and managed online in the PlayFab Developer Console. Please see the "Player Demo" in the AOZ Store which includes instructions on how to configure PlayFab.
+~~~
+// Local example
+// The key$ can be any string value such as the name of your game/project. It is used as a unique identifier to store the player and leaderboard data.
+Player Initialise Key$="PlayerHelpDocExample"
+
+// Micorosft PlayFab example (onError$ is optional)
+// The Key$="51D14" refers to the TitleID of your project which can be found in the Microsoft PlayFab Developer Console.
+Player Initialise Engine$="playfab", Key$="51D14", onError$="ON_PLAYER_ERROR"
+
+// Check if an error occured
+If Player ErrorCode() <> 0
+	Print "A error occured during Player Initialise"
+	Print Player ErrorCode()
+	Print Player ErrorMessage$()
+Else
+	Print "Player Initialise Successfull"
+End If
+
+Procedure ON_PLAYER_ERROR[CODE, MESSAGE$]
+	// Optionally add code to handle errors that may occur from any of the Player instructions
+End Proc
+~~~
+api*/
+Instruction "Player Initialise", engine$="local", key$="", onerror$ = ""
+	{
+		#errors
+		#waiting
+
+		var args = {
+			Engine: %engine$,
+			Key: %key$,
+			OnError: %onerror$
+		};
+
+		return{type:12,waitThis:this.aoz.player,callFunction:"playerInitialise", waitFunction:"load_wait", args};
+	}
+End Instruction
+
+/**api
+@name:Player Forget
+@description:Removes the stored player from the browser application storage and reinitialises the player engine with a new guest account.
+@syntax:Player Forget
+@content:
+After using the "Player Initialise", there will be a stored player in the browser application storage. The stored player is used to login each time the "Player Initialise" is used.
+
+Use this command to remove the stored player from the browser application storage and to create a new guest account.
+api*/
+Instruction "Player Forget"
+	{
+		#errors
+		#waiting
+
+		return{type:12,waitThis:this.aoz.player,callFunction:"playerForget", waitFunction:"load_wait", args: {}};
+	}
+End Instruction
+
+/**api
+@name:Player SendAccountRecoveryEmail
+@description:Sends an email with instructions for recovering a player account. (If supported by the player engine)
+@param:email$:string:The email address for the account to be recovered.
+@content:
+The "local" engine does not support sending account recovery emails.
+
+Here is an example using the PlayFab engine.
+~~~
+Player Initialise Engine$="playfab", Key$="51D14"
+
+Print "Account Recovery": Print "================"
+EMAIL$ = "": PASSWORD$ = ""
+Input "Enter Email: "; EMAIL$
+
+If EMAIL$ <> ""
+	Player SendAccountRecoveryEmail email$=EMAIL$
+
+	If Player ErrorCode() <> 0
+		Print Player ErrorMessage$()
+	Else
+		Print "Email has been sent"
+	End If
+End If
+~~~
+api*/
+Instruction "Player SendAccountRecoveryEmail", email$ = ""
+{
+	#errors
+	#waiting
+
+	var args = {
+		Email: %email$
+	};
+
+	return{type:12,waitThis:this.aoz.player,callFunction:"sendAccountRecoveryEmail", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Player Register
+@description:Links a Guest player account to an email and password.
+@param:email$:string:The player email address
+@param:password$:string:The password
+@param:playerName$:string:The player name
+@content:
+This command links a guest account with an email and password. The email and password can then be used to login using the "Player Login" command.
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+
+Print "Register Guest Account": Print "======================"
+NAME$ = "": EMAIL$ = "": PASSWORD$ = ""
+Input "Player Name: "; NAME$
+Input "Email: "; EMAIL$
+Input "Password: "; PASSWORD$
+
+If EMAIL$ <> "" and NAME$ <> "" and PASSWORD$ <> ""
+	// Registers the current guest account to an email and password
+	Player Register email$=EMAIL$, password$=PASSWORD$, playerName$=NAME$
+
+	If Player ErrorCode() <> 0
+		Print Player ErrorMessage$()
+	Else
+		Print "Player is now registered"
+	End If
+End If
+~~~
+api*/
+Instruction "Player Register", email$ = "", password$ = "", playername$ = ""
+{
+	#errors
+	#waiting
+
+	var args = {
+		Email: %email$,
+		Password: %password$,
+		PlayerName: %playername$
+	};
+
+	return{type:12,waitThis:this.aoz.player,callFunction:"playerRegister", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Player Login
+@description:Login to the player engine with an account that was registered using the "Player Register" command.
+@param:email$:string:The player account email address
+@param:password$:string:The player account password
+@content:
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Print "Login": Print "====="
+EMAIL$ = "": PASSWORD$ = ""
+Input "Enter Email: "; EMAIL$
+Input "Enter Password: "; PASSWORD$
+
+If EMAIL$ <> "" and PASSWORD$ <> ""
+	Player Login email$=EMAIL$, password$=PASSWORD$
+
+	If Player ErrorCode() <> 0
+		Print Player ErrorMessage$()
+	Else
+		Print "Player is logged in"
+	End If
+End If
+~~~
+api*/
+Instruction "Player Login", email$ = "", password$ = ""
+{
+	#errors
+	#waiting
+
+	var args = {
+		Email: %email$,
+		Password: %password$
+	};
+
+	return{type:12,waitThis:this.aoz.player,callFunction:"playerLogin", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Player Update
+@description: Update the player related account data such as the player name.
+@param:playerName$:string:The player name
+@content:
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+NAME$ = ""
+Input "Enter Player Name: "; NAME$
+If NAME$ <> ""
+	Player Update playerName$=NAME$
+
+	If Player ErrorCode() <> 0
+		Print Player ErrorMessage$()
+	Else
+		Print "The player name has been updated"
+	End If
+End If
+~~~
+api*/
+Instruction "Player Update", playername$ = ""
+{
+	#errors
+	#waiting
+
+	var args = {
+		PlayerName: %playername$
+	};
+
+	return{type:12,waitThis:this.aoz.player,callFunction:"playerUpdate", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Player Name$
+@description:Returns the player name for the currently logged in player account.
+@return:string:The player name stored against the player account
+@content:
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Print Player IsGuest()
+~~~
+api*/
+Function "Player Name$"
+{
+	#errors
+}
+End Function( { this.aoz.player.getPlayerPropertyValue('playername') } )
+
+/**api
+@name:Player IsGuest
+@description:Determines if the current player account is a guest account or has been registered/linked to an email and password.
+@return:boolean:Returns true if the current player is a guest account
+@content:
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+If Player IsGuest() = true
+	Print "Player is using a guest account"
+Else
+	Print "Player is using a registered account"
+End If
+~~~
+api*/
+Function "Player IsGuest"
+{
+	#errors
+}
+End Function( { this.aoz.player.getPlayerPropertyValue('isguest') } )
+
+/**api
+@name:Player Id$
+@description:Returns the unique identifier for the current player account.
+@return:string:The unique identifier for the player
+@content:
+Each player account has a unique identifier assigned. This can be used to find the player in the leaderboard data items. (please see the Leaderboard$ function for details)
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Print Player Id$()
+~~~
+api*/
+Function "Player Id$"
+{
+	#errors
+}
+End Function( { this.aoz.player.getPlayerPropertyValue('id') } )
+
+/**api
+@name:Player ErrorCode
+@description:Returns the error code for the last Player instruction
+@return:integer:The error code
+@content:
+After each Player command you can check to see if an error occured
+
+ErrorCode() = 0 if no error occured.
+
+Example:
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+If Player ErrorCode() <> 0
+	Print Player ErrorCode()
+	Print Player ErrorMessage$()
+End If
+~~~
+api*/
+Function "Player ErrorCode"
+{
+	#errors
+}
+End Function( { this.aoz.player.getLastErrorCode() } )
+
+/**api
+@name:Player ErrorMessage$
+@description:Returns the error message for the last Player instruction
+@return:string:The error message
+@content:
+After each Player command you can check to see if an error occured.
+
+The error message provides details of the problem that was encountered.
+
+Example:
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+If Player ErrorCode() <> 0
+	Print Player ErrorCode()
+	Print Player ErrorMessage$()
+End If
+~~~
+api*/
+Function "Player ErrorMessage$"
+{
+	#errors
+}
+End Function( { this.aoz.player.getLastErrorMessage() } )
+
+/**api
+@name:Leaderboard Load
+@description:Loads and caches a leaderboards data
+@param:leaderboardName$:string:The name of the leaderboard to load.
+@param:maxItems:string:The maximum number of leaderboard items to load. If not set, 10 by default.
+@param:startPosition:string:The starting position to begin loading the leaderboard items. If not set, 0 by default
+@param:onLoaded$:string:Optional, name of an AOZ stored procedure to be called once the leaderboard data has been loaded.
+@content:
+After loading a leaderboard, the leaderboard items are cached and can be accessed using the Leaderboard$() function.
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+
+Leaderboard Load leaderboardName$="Level 1", onLoaded$="ON_LEADERBOARD_LOADED"
+
+Procedure ON_LEADERBOARD_LOADED[COUNT]
+	xpos = 1000: ypos = 250
+	Ink 1: Text xpos, ypos - 150, "Level 1"
+
+	For x = 0 to 9
+		Ink 1: LBNAME$ = ". . . . . . . . . . . . . . . . .": LBSCORE$ = "0": LBID$ = ""
+
+		If x < COUNT
+			LBNAME$ = Leaderboard$(itemIndex = x, itemName$="playerName")
+			LBSCORE$ = Leaderboard$(itemIndex = x, itemName$="value")
+			LBID$ = Leaderboard$(itemIndex = x, itemName$="id")
+
+			// Highlight the current player score
+			If Player Id$() = LBID$
+				Ink 6
+			Else
+				Ink 1
+			End If
+		End If
+
+		Text xpos + 100, ypos + x * 70, LBNAME$
+		Text xpos, ypos + x * 70, Str$(x + 1)
+		Ink 1: Text xpos + 630, ypos + x * 70, LBSCORE$
+	Next x
+End Proc
+~~~
+api*/
+Instruction "Leaderboard Load", leaderboardname$ = "", maxitems = 10, startposition = 0, onloaded$ = ""
+{
+	#errors
+	var args = {
+		LeaderboardName: %leaderboardname$,
+		MaxItems: %maxitems,
+		StartPosition: %startposition,
+		OnLoaded: %onloaded$
+	};
+
+	this.aoz.player.leaderboardLoad(args);
+}
+End Instruction
+
+/**api
+@name:Leaderboard$
+@description:Provides access to the data items in a cached leaderboard.
+@param:itemIndex:number:The index of the leaderboard item. 0 is position one.
+@param:itemName$:number:The name of the data item to return. ("playername", "value" or "id")
+@return:string:The value of the leaderboard item data.
+@exception:
+@content:
+There are 3 items of data for each leaderboard entry.
+
+itemName$="playername" - returns the name of the player
+itemName$="value" - returns the value for the leaderboard entry
+itemName$="id" - returns the unique identifier for the player
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Leaderboard Load leaderboardName$="Level 1", onLoaded$="ON_LEADERBOARD_LOADED"
+
+// Returns the player name at the first position in the leaderboard
+Print Leaderboard$(itemIndex = 0, itemName$="playerName")
+~~~
+api*/
+Function "Leaderboard$", itemindex, itemName$ = ""
+{
+	#errors
+
+	var args = {
+		Id: %itemindex,
+		ItemName: %itemName$
+	};
+}
+End Function( { this.aoz.player.getLeaderboardItem(args) } )
+
+/**api
+@name:Leaderboard Update
+@description:Updates or adds a players leaderboard entry with the given value.
+@param:leaderboardName$:string:The leaderboard name
+@param:value:integer:The value of the players leaderboard entry
+@content:
+When using the "local" engine, the leaderboard entry will only be updated if the value is greater than the players previous value in the leaderboard.
+
+For the "playfab" engine, the leaderboard behaviour can be configured in the PlayFab Developer Console.
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Leaderboard Load leaderboardName$="Level 1", onLoaded$="ON_LEADERBOARD_LOADED"
+
+SCR$ = ""
+Input "Enter New Score For Level 1"; SCR$
+Leaderboard Update leaderboardName$ = "Level 1", value = Val(SCR$)
+
+If Player ErrorCode() <> 0
+	Print Player ErrorMessage$()
+Else
+	Print "The leaderboard has been updated"
+End If
+~~~
+api*/
+Instruction "Leaderboard Update", leaderboardname$ = "", value = 0
+{
+	#errors
+	#waiting
+
+	var args = {
+		LeaderboardName: %leaderboardname$,
+		Value: %value
+	};
+
+	return{type:12,waitThis:this.aoz.player,callFunction:"leaderboardUpdate", waitFunction:"load_wait", args};
+}
+End Instruction
+
+/**api
+@name:Player Data$
+@description:Gets the value of a data item saved using the "Player Data" instruction
+@param:itemName$:string:The name of the data item
+@return:string:The value of the data item
+@content:
+Returns the value of a data item that was stored using the "Player Data" instruction.
+
+Example:
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+
+// Save an item
+Player Data itemName$="maxUnlockedLevel", itemValue$="3"
+
+// Retrieve an item
+Print Player Data$(itemName$="maxUnlockedLevel")
+~~~
+api*/
+Function "Player Data$", itemname$ = ""
+{
+	#errors
+	var args = {
+		ItemName: %itemname$
+	}
+}
+End Function( { this.aoz.player.getPlayerData(args) } )
+
+/**api
+@name:Player Data
+@description:Save an item of data against the current player account.
+@param:itemName$:string:The name of the data item
+@param:itemValue$:string:The value of the data item
+@content:
+This command is used for storing simple data items, for example, a players progress in your game, inventory items or game settings and preferences.
+
+Use the Player Data$() function to retrieve the stored data.
+
+When using the PlayFab engine, there is a size limit of 1000 bytes for the itemName$ and 300,000 bytes limit on the itemValue$
+There is also a limit to the number of times the same player data value may be updated when using PlayFab, these are 10 updates per 15 seconds, 150 updates per 5 minutes, 1,800 updates per hour
+In the PlayFab developer console, go to your Title Settings, then select the Limits tab and scroll down to Data Storage section to see the latest information.
+~~~
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+
+// Save items
+Player Data itemName$="maxUnlockedLevel", itemValue$="3"
+Player Data itemName$="gameMusicVolumn", itemValue$="0"
+
+// Retrieve items
+Print Player Data$(itemName$="maxUnlockedLevel")
+Print Player Data$(itemName$="gameMusicVolumn")
+~~~
+api*/
+Instruction "Player Data", itemname$ = "", itemvalue$ = ""
+	{
+		#errors
+		#waiting
+
+		var args = {
+			ItemName: %itemname$,
+			ItemValue: %itemvalue$
+		}
+		return{type:12,waitThis:this.aoz.player,callFunction:"savePlayerData", waitFunction:"load_wait", args};
+	}
+End Instruction
+
+/**api
+@name:Player Engine$
+@description:Gets the name of the engine that has been initialised
+@return:string:The name of the engine
+@content:
+
+Example:
+~~~
+Print Player Engine$()
+~~~
+api*/
+Function "Player Engine$"
+{
+	#errors
+}
+End Function( { this.aoz.player.getEngineName() } )

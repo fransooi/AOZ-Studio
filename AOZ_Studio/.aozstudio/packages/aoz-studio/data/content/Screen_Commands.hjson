@@ -1,0 +1,806 @@
+{
+    screen_commands:
+    { 
+        name:""  //TODO
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "screen_open":
+            [
+                To open a new screen give the SCREEN OPEN command, followed by these parameters:
+""
+Number is the identification number of the new screen, ranging from 0 to 7. If a screen with this number already
+exists, it will be completely replaced by this new screen.
+
+            ]
+            "screen_close":
+            [
+                Use the SCREEN CLOSE command to erase a screen and free the memory it was using for other programming needs. Simply specify the screen number to be deleted.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "screen_clone":
+            [
+                To create an identical copy of the current screen, and assign this new "clone" with a new screen number, use the
+SCREEN CLONE command followed by the destination screen number. Here is an example of a multi-cloned
+screen:
+                '''
+                ~~~                
+		   Screen Open 0,320,20,4,Lowres
+		   Flash Off
+		   Screen Display 0,,70,,
+		   For S=1 To 7
+			Screen Clone S
+			Screen Display S,,S*20+70,,
+		   Next S
+		   Print "Start typing";
+		   Do
+			AS=Inkey$
+			If A$<> Then Print A$;
+		   Loop
+                ~~~
+                '''
+Screen cloning is an ideal technique for two-player computer games, with each player controlling half of the visible
+display area.
+""
+The clone uses the same memory area as the original screen, and will be displayed at the same place as the original.
+Any of the usual screen operations can be used with the clone, such as SCREEN DISPLAY and SCREEN OFFSET.
+However, because there is only one copy of the original screen data in memory, it is impossible to use the SCREEN
+command with the cloned copy.
+            ]
+            "screen_hide": //Same as SHOW TODO
+            [
+                Use the SCREEN HIDE command to remove the current screen from view. It can then be restored using a SCREEN
+SHOW instruction, like this:
+                '''
+                ~~~                
+		   Cls : Print "I am the Current Screen" : Wait 100
+		   Screen Hide : Wait Key
+		   Screen Show
+                ~~~
+                '''
+Any screen can be temporarily hidden, by including its index number after the SCREEN HIDE instruction. This
+screen is revealed with a similar request to SCREEN SHOW, followed by the relevant screen number.
+""
+Screen priority
+Because screens may be of different sizes, and because they can be displayed at various positioned on the TV by
+offsets and overlaps, and because there can be up to eight electronic screens queuing up one behind the other, a
+method is needed to bring any one of these screens to the front of the display.
+            ]
+            "screen_show": //Same as HIDE TODO
+            [
+Use the SCREEN HIDE command to remove the current screen from view. It can then be restored using a SCREEN
+SHOW instruction, like this:
+                '''
+                ~~~                
+		   Cls : Print "I am the Current Screen" : Wait 100
+		   Screen Hide : Wait Key
+		   Screen Show
+                ~~~
+                '''
+Any screen can be temporarily hidden, by including its index number after the SCREEN HIDE instruction. This
+screen is revealed with a similar request to SCREEN SHOW, followed by the relevant screen number.
+""
+"Screen priority"
+Because screens may be of different sizes, and because they can be displayed at various positioned on the TV by
+offsets and overlaps, and because there can be up to eight electronic screens queuing up one behind the other, a
+method is needed to bring any one of these screens to the front of the display.
+            ]
+            "screen_swap": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "screen_display":
+            [
+                To position a screen, the SCREEN DISPLAY command is used, followed by these parameters:
+""
+Number refers to the number of the screen to be displayed, from 0 to 7. All or any of the other parameters can be
+omitted, but the relevant commas must be included.
+""
+The x,y-coordinates are given as "hardware" coordinates, which refer to physical positions on the television screen,
+not the area used by AOZ Studio screens. These set the position from which your AOZ Studio
+screen will be displayed on the TV screen.
+""
+X coordinates can range from 0 to 448, and they are automatically rounded down to the nearest 16-pixel boundary.
+Only the positions from 112 to 432 are actually visible on the TV screen, so avoid using an x-coordinate below 112.
+""
+Y coordinates can range between 0 and 312, but because every TV set displays a slightly different visible area, it is
+sensible to keep the range between 30 and 300. A small amount of experimenting will reveal what suits your own
+system.
+""
+Width sets the width of the screen in pixels. If this is different from the original setting, only a part of the image
+will be shown, starting from the top left-hand corner of the screen. It will also be rounded down to the nearest 16
+pixels.
+""
+Height is used to set the height of the screen in exactly the same way as the width.
+""
+If any of the optional parameters are left out, the default settings will be applied automatically.
+""
+For example, to display screen zero, keeping its original width and height, this line could be used:
+
+                '''
+                ~~~                
+		   Screen Display 0,112,40,,
+                ~~~
+                '''
+Only one screen at a time can be shown on each horizontal line of the display, but several screens can be placed on
+top of one another. If screens are placed next to each other, in other words if they are sewn together to make a
+continuous display, there is one line of pixels where the screens meet that becomes "dead". This effect can be seen
+by moving the mouse pointer between the Direct mode window and the Default Screen, where a line of "dead"
+pixels occurs.
+""
+One way of getting over this dead zone is to create an extra-large screen that is bigger than the TV display, and then
+move the visible area around inside its boundaries. When using extra-large screens, the area to be viewed is set with
+the SCREEN OFFSET command.
+
+            ]
+            "screen_center": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "screen_offset":
+            [
+                Look at the diagram below, where the area of the visible screen is shown as a sort of "port-hole" 320 pixels wide by
+200 pixels high, inside a larger AOZ Studio screen. Of course, the port- hole can be made smaller using the
+SCREEN DISPLAY command.
+![Screen Offset example no1](/img/screen_commands/screen_commands_ex1.png)
+
+The SCREEN OFFSET command is followed by the number of the screen to be displayed, then the x,y-coordinates
+of the "offset", which is the point where the top left-hand corner of the visible display is to start, measured from the
+top left-hand corner of the extra-large screen.
+
+            ]
+            "screen_to_front":
+            [
+                Use SCREEN TO FRONT to move the selected screen to the front of the display queue. If the screen number is
+omitted after the command, then the current screen will be brought to the front.
+            ]
+            "screen_to_back":
+            [
+                This command is used to move a screen to the background of the display. If another screen is already there, it will
+be displayed in front of the chosen screen. Again, if the screen number is omitted after a SCREEN TO BACK
+command, the current screen will be relegated to the back of the display queue. Try this example:
+                '''
+                ~~~                
+		   Centre "Hello again, Screen 0 here"
+		   Wait 100
+		   Screen Open 1,320,200,2,Lowres
+		   Centre "Excuse me, make way for Screen 1"
+		   Wait 100 : Screen To Front 0
+		   Screen 0
+		   Wait 100 : Screen To Back
+                ~~~
+                '''
+            ]
+            "screen_hotspot": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "screen_rotate": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "screen_skew": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "screen_scale": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "screen_copy":
+            [
+                SCREEN COPY is the most important screen command of all. It can be used to achieve classic screen techniques
+like "wiping" from one screen to another, as well as providing all sorts of special effects. At its simplest level, use
+this command to copy the whole contents of one screen to another screen. Simply give the number of the source
+screen that holds the image to be copied, which can be a logical or physical screen. Then determine the number of
+the destination screen, which is where you want the image copied to. For example:
+                '''
+                ~~~                
+		   Screen Copy 1 To 2
+                ~~~
+                '''
+Exact sections of screens can be copied by giving the coordinates of the top left-hand and bottom right-hand corners
+of the areas to be copied, followed by the number of the destination screen and the coordinates where the copy's top
+left-hand corner should be placed. If the destination screen number is omitted, the copied image will appear at the
+new coordinates on the current screen. For example:
+
+                '''
+                ~~~                
+		   Circle 50,50,10 : Wait 50
+		   Screen Copy 0,20,20,70,70 To 0,100,100
+                ~~~
+                '''
+                Note that there are no limits to these coordinates, and any parts of the image that fall outside of the current visible
+screen area will be clipped automatically.
+                There is also an optional parameter which selects one of 255 possible blitter modes for the copying operation. These
+modes affect how the source and destination areas are combined together on the screen, and are set using a bitpattern
+in the following format:
+                '''
+                ~~~                
+		Mode Bit 	Source Bit 	Destination Bit
+		4 		0 		0
+		5 		0 		1
+		6 		1 		0
+		7 		1 		1
+                ~~~
+                '''
+            ]
+            "screen_project": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "x_screen": //Same as Y Screen TODO
+            [ 
+                These functions transform a hardware coordinate into a screen coordinate, relative to the current screen. If the
+hardware coordinates lie outside of the screen, both functions will return relative offsets from the screen boundaries.
+An optional screen number may be included, in which case the coordinates will be returned relative to that screen.
+
+            ]
+            "y_screen": //Same as X Screen TODO
+            [
+                These functions transform a hardware coordinate into a screen coordinate, relative to the current screen. If the
+hardware coordinates lie outside of the screen, both functions will return relative offsets from the screen boundaries.
+An optional screen number may be included, in which case the coordinates will be returned relative to that screen.
+
+            ]
+            "def_scroll_to": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "def_scroll":
+            [
+                Using the AOZ Studio system, you are able to define up to 16 different scrolling screen zones, and each one
+can have an individual pattern of movement. Simply follow your DEF SCROLL command with the number from 1
+to 16 of the zone you are setting up. Then give the coordinates of the area of the zone to be scrolled, from the top
+left-hand corner to the diagonally opposite bottom right-hand corner. Finally, give this zone a scrolling pattern by
+setting the number of pixels to be shifted horizontally, and the number of pixels to be shifted vertically during each
+scrolling operation. Positive horizontal values will cause a shift to the right whereas negative values will shift the
+zone towards the left of the screen. Similarly, positive vertical values will scroll downwards and negative values
+cause an upward scroll.
+
+            ]
+            "scrollt": //TODO
+            [
+                To scroll a screen zone already specified with a DEF SCROLL setting, use SCROLL followed by the zone number you require.
+
+            ]
+            "scroll":
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "dual_playfield":
+            [
+                The DUAL PLAYFIELD mode is the equivalent of mixing together two images from separate video cameras, and is
+achieved by displaying two screens simultaneously at the same x,y- coordinates. Each of the two screens can be
+manipulated completely independently from one other, and this can be exploited to produce very smooth parallax
+scrolling. Because the sizes of the two screens can be different, a smaller screen can be scrolled against a larger
+background screen, creating the parallax effect.
+""
+The two components of this dual playfield are treated as any other AOZ Studio screen, and they can even be
+double buffered or animated with AMAL.
+""
+To create a dual playfield screen, simply give the command, followed by the two numbers of the relevant screens,
+which have already been defined using SCREEN OPEN. Both screens must have the same resolution, and there are
+some restrictions on the number of colours allowed. Here is a table of the possibilities:
+
+                '''
+                ~~~                
+		1st Screen 	2nd Screen 	Resolution of both screens
+		2 colours 	2 colours 	Lowres or Hires
+		4 colours 	2 colours 	Lowres or Hires
+		4 colours 	4 colours 	Lowres or Hires
+		8 colours 	4 colours 	Lowres only
+		8 colours 	8 colours 	Lowres only
+                ~~~
+                '''
+The colours of these screens are taken from the palette of the first screen with colour zero being IF treated as
+transparent. The first screen makes use of colours zero to 7, while the second screen uses 8 to 15. When you are
+drawing to the second screen, AOZ Studio will automatically convert the colour index to the appropriate
+number before using it. This means that colours zero to 7 of the second screen's palette will use colours 8 to 15 of
+the first screen's palette, in ascending order.
+""
+Always make the first screen the current screen when changing the colour settings.
+""
+Remember that the automatic conversion process does not apply to assignment statements such as COLOUR or
+PALETTE.
+""
+When using SCREEN OFFSET to position a dual playfield screen, always specify the first screen, and never set
+screen offsets for both dual playfield screens to zero.
+            ]
+            "dual_priority":
+            [
+                Normally, the first screen of a dual playfield is displayed directly over the second screen. To reverse this order, so
+that the second screen appears in front of the first, use the DUAL PRIORITY command. Please note that this
+instruction only changes the order of display, and has no effect on the screen organisation at all, so the first screen in
+the parameter list is still used for all colour assignments, and with the SCREEN DISPLAY command.
+
+            ]
+            "phybase":
+            [
+                PHYBASE returns the address in memory of the specified bit-plane number for the current screen. If this plane does
+not exist, a value of zero is given. For example:
+                '''
+                ~~~                
+		   Loke Phybase(0),0 : Rem Poke a thin line directly onto screen
+                ~~~
+                '''
+            ]
+            "logbase":
+            [
+                The LOGBASE function allows expert programmers to access the Amiga's screen memory directly. The current
+screen is made up of six possible bit-planes, and after LOGBASE has been called, the address of the required plane
+is returned, or zero is given if it does not exist.
+
+            ]
+            "physic":
+            [
+                The PHYSIC function returns an identification number for the current physical screen. This number allows you to
+access the physical image being displayed by the automatic DOUBLE BUFFER system, and the result of this
+function can be substituted for the screen number in ZOOM, APPEAR and SCREEN COPY commands. The
+PHYSIC identification number of the current screen will be returned, unless an optional screen number is specified.
+
+            ]
+            "logic":
+            [
+                Use the LOGIC function to get an identification number for the current logical screen, or use an optional screen
+number to specify a particular logical screen. The identification number that is returned can now be used with the
+ZOOM, APPEAR and SCREEN COPY commands, to change images off screen, without affecting the current
+display.
+
+            ]
+            "autoback":
+            [
+                There are three AUTOBACK modes, and you can toggle between them by setting the mode values as follows:
+                '''
+                ~~~                
+		   Autoback 0
+                ~~~
+                '''
+Manual mode. This mode deactivates the AUTOBACK system completely, so that graphics are drawn directly on
+the logical screen, for maximum speed. It is recommended for use with the BOB DRAW and BOB CLEAR
+commands.
+
+                AUTOBACK 0 is useful when large amounts of graphics are drawn on screens being switched manually with
+SCREEN SWAP, because it is much faster than the standard system. But remember that you must take responsibility
+for synchronising between the logical and physical screens.
+                '''
+                ~~~                
+		   Autoback 1
+                ~~~
+                '''
+                Semi-automatic. In mode 1, AUTOBACK performs all graphical operations on both the logical and physical screens.
+Although Bob updates are not taken into account, this is an ideal mode for displaying hi-score tables and control
+panels. So as long as your Bobs are kept clear of any new graphics, this mode is perfect.
+                '''
+                ~~~                
+		   Autoback 2
+                ~~~
+                '''
+            ]
+            "appear":
+            [
+                This command creates a fade between two pictures. Choose the number of the source screen where the original
+picture comes from, then the number of the destination screen whose picture it fades into. LOGIC and PHYSIC
+functions can be substituted for screen numbers, if required.
+""
+Next determine a value that will cause the desired effect, by setting the number of pixel points on the screen, ranging
+from 1 pixel all the way up to every pixel in the display.
+""
+Normally APPEAR affects the whole of your screen area, but there is an optional parameter that causes only part of
+the screen to be faded. Because screens are drawn from top to bottom, set the area to be faded by adding the range
+of the number of pixels from the top of the screen. For example:
+                '''
+                ~~~                
+		   Load "AMOSPro_Tutorial:Objects/Bobs.Abk"
+		   Flash Off : Get Bob Palette
+		   Paste Bob 100,0,1
+		   Wait 100
+		   Screen Open 1,320,90,16,Lowres
+		   Flash Off : Get Bob Palette
+		   Appear 0 To 1,1,28800
+                ~~~
+                '''
+That example fades the top part of your default screen into the newly opened Screen 1. Obviously, the appearance of
+fades will vary, depending on the screen mode being used.
+            ]
+            "zoom":
+            [
+                This one command allows you to produce a range of remarkable effects that change the size of the image in any
+rectangular area of the screen. Depending on the relative sizes of the source and destination areas, images can be
+magnified, shrunk, squashed and stretched as you wish. ZOOM is qualified by the number of the screen from where
+your source picture will be taken, followed by the coordinates of the top left-hand corner and bottom right-hand
+corner of the area to be grabbed, After the TO structure, give the, number of the destination screen and the new
+coordinates of the area which is to hold the zoomed image. AOZ Studio will automatically re-size the
+image.
+""
+The LOGIC function may be used to grab an image from the appropriate logical screen, instead of specifying a
+physical screen number. In the same way, you are allowed to deposit a zoomed image to a logical screen. This is
+explained below.
+
+            ]
+            "xgr":
+            [
+                Use these functions to find the current coordinates of the graphics cursor, which is the default location for future
+drawing operations. For example:
+                '''
+                ~~~                
+		   Cls : Circle 100,100,50
+		   Print Xgr,Ygr
+                ~~~
+                '''
+            ]
+            "reserve_zone":
+            [
+                The RESERVE ZONE instruction must be used to allocate enough memory for the exact number of zones required,
+before a SET ZONE command is given. There is no limit to the number that can be specified, apart from the amount
+of available memory.
+""
+To erase all current zone definitions and restore the allocated memory to the main program, simply give the
+RESERVE ZONE command without any number parameter.
+
+            ]
+            "scin":
+            [
+                The SCIN function (short for SCreen In) is normally used with X MOUSE and Y MOUSE to check whether the
+mouse cursor has entered a particular screen. It returns the number of the screen which is underneath the selected
+hardware coordinates. If there is no screen there, a negative number will be returned.
+
+            ]
+            "mouse_screen":
+            [
+                Use MOUSE SCREEN to return the number of the screen where the mouse pointer is currently located, like this:
+                '''
+                ~~~                
+		   X=Mouse Screen
+		   Print X
+                ~~~
+                '''
+            ]
+            "screen_colour":
+            [
+                To find the maximum number of colours in the screen that is currently active, test the SCREEN COLOUR function
+now:
+                '''
+                ~~~                
+		   Print Screen Colour
+                ~~~
+                '''
+            ]
+            "screen_base":
+            [
+                This function returns the base address of the internal table that is used to hold the number and position of AOZ Studio STUDIO screens.
+
+            ]
+            "screen_width": //Same as HEIGHT TODO
+            [
+                This pair of functions is used to return the height and the width of the current screen or a particular screen, if that
+screen number is specified. The dimensions of the current screen can be found like this:
+                '''
+                ~~~                
+		   Print Screen Height
+		   Print Screen Width
+                ~~~
+                '''
+            ]
+            "screen_height": //Same as WIDTH TODO
+            [
+                This pair of functions is used to return the height and the width of the current screen or a particular screen, if that
+screen number is specified. The dimensions of the current screen can be found like this:
+                '''
+                ~~~                
+		   Print Screen Height
+		   Print Screen Width
+                ~~~
+                '''
+            ]
+            "screen":
+            [
+                SCREEN can be used as a function to return the number of the screen which is currently active. This screen is used
+for all drawing operations, but it is not necessarily visible.
+
+            ]
+            "hires": //same as lowres TODO
+            [
+                When the default screen is automatically opened, screen 0 is the equivalent to the following setting:
+                '''
+                ~~~                
+		   Screen Open 0,320,200,16,Lowres
+                ~~~
+                '''
+                To open screen number 1 as an oversize high-resolution screen with eight colours, you would use something like
+this:
+                '''
+                ~~~                
+		   Screen Open 1,600,400,8,Hires
+                ~~~
+                '''
+                This routine opens all eight available screens and brings them into view:
+                '''
+                ~~~                
+		   Curs Off : Cls 13: Paper 13
+		   Print : Centre "Hello, I'm SCREEN 0"
+		   For S=1 To 7
+			Screen Open S,320,20,16,Lowres
+			Curs Off : Cls S+2 : Paper S+2
+			Centre "And I am SCREEN"+Str$(S)
+			Screen Display S,,50+S*25,,8
+		   Next S
+                ~~~
+                '''
+Here is a table which lists the different screen options, along with an indication of the amount of memory a standard
+size screen will consume.
+
+                '''
+                ~~~ 
+		Colours 	Resolution 	Memory 	Notes
+		2 		320x200 	8k 	PAPER=0 PEN=1 no FLASH Cursor=1
+		2 		640x200 	16k 	as above
+		4 		320x200 	16k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+		4 		640x200 	32k 	as above
+		8 		320x200 	24k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+		8 		640x200 	48k 	as above
+		16 		320x200 	32k 	default setting
+		16 		640x200 	64k
+		32 		320x200 	40k
+		64 		320x200 	48k 	Extra Half Bright mode
+		4096 		320x200 	48k 	Hold And Modify mode
+                ~~~
+                '''
+            ]
+            "lowres": //same as hires TODO
+            [
+                When the default screen is automatically opened, screen 0 is the equivalent to the following setting:
+                '''
+                ~~~                
+		   Screen Open 0,320,200,16,Lowres
+                ~~~
+                '''
+                To open screen number 1 as an oversize high-resolution screen with eight colours, you would use something like
+this:
+                '''
+                ~~~                
+		   Screen Open 1,600,400,8,Hires
+                ~~~
+                '''
+                This routine opens all eight available screens and brings them into view:
+                '''
+                ~~~                
+		   Curs Off : Cls 13: Paper 13
+		   Print : Centre "Hello, I'm SCREEN 0"
+		   For S=1 To 7
+			Screen Open S,320,20,16,Lowres
+			Curs Off : Cls S+2 : Paper S+2
+			Centre "And I am SCREEN"+Str$(S)
+			Screen Display S,,50+S*25,,8
+		   Next S
+                ~~~
+                '''
+Here is a table which lists the different screen options, along with an indication of the amount of memory a standard
+size screen will consume.
+
+                '''
+                ~~~ 
+		Colours 	Resolution 	Memory 	Notes
+		2 		320x200 	8k 	PAPER=0 PEN=1 no FLASH Cursor=1
+		2 		640x200 	16k 	as above
+		4 		320x200 	16k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+		4 		640x200 	32k 	as above
+		8 		320x200 	24k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+		8 		640x200 	48k 	as above
+		16 		320x200 	32k 	default setting
+		16 		640x200 	64k
+		32 		320x200 	40k
+		64 		320x200 	48k 	Extra Half Bright mode
+		4096 		320x200 	48k 	Hold And Modify mode
+                ~~~
+                '''
+            ]
+            "laced":
+            [
+                LACED is a reserved variable which holds the value of 4. It is used in addition to either the Hires or Lowres
+parameters when opening a screen, like this:
+                '''
+                ~~~                
+		   Screen Open 0,320,200,16,Laced+Lowres
+                ~~~
+                '''
+Interlaced screens have double the number of vertical lines, which is excellent for graphic displays. Unfortunately
+they take twice as long to update, which is no good at all for fast-action games! Interlaced screens will only give
+flicker-free results if a "multi-sync" monitor is being used. Also certain TV sets and monitors do not take kindly to
+excessive switching between interlaced and normal screens.
+""
+All of the usual operations may be used with interlaced screens, such as SCREEN DISPLAY, SCREEN OFFSET,
+and so on, but for technical reasons interlacing is not allowed during copper list calculations. As soon as the last
+interlaced screen has been closed, the entire display returns to normal mode.
+
+            ]
+            "halfbright": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "x_hard": //same as y TODO
+            [
+                These functions convert screen coordinates into hardware coordinates, relative to the current screen. As with X
+SCREEN and Y SCREEN, an optional screen number can be given, and coordinates will be returned relative to that
+screen.
+""
+With all four of the above functions, sensible values can only be returned when the relevant screen has been fully
+initialised. Both the SCREEN OPEN and SCREEN DISPLAY commands only come into effect from the next
+vertical blank, and the following examples demonstrate that the correct coordinate values (in this case 128,50) are
+only returned after a WAIT VBL command.
+                '''
+                ~~~                
+		   Screen Open 0,320,255,16,Lowres
+		   Print X Hard(0,0); Y Hard(0,0)
+                ~~~
+                '''
+Now try the correct version:
+                '''
+                ~~~                
+		   Screen Open 0,320,255,16,Lowres
+		   Wait Vbl
+		   Print X Hard(0,0); Y Hard(0,0)
+                ~~~
+                '''
+The default screen is initially located at hardware coordinates (128,50), and if you find the whole business of
+hardware coordinates and screen coordinates tiresome, you can bypass the entire conversion system.
+""
+By setting the HOT SPOT of your Sprite images to (-128,-50), the reference point for all position calculations is
+removed to the far corner of the display. Once an image has been prepared in this way, it can be assigned to a Sprite
+and moved around using normal screen coordinates. For example:
+                '''
+                ~~~                
+		   Hot Spot 1,-128,-50: Rem Set up hot spot
+		   Sprite 8,160,100,1 : Rem Sprite 8 to screen coords 160,100
+                ~~~
+                '''
+            ]
+            "y_hard": //same as x TODO
+            [
+These functions convert screen coordinates into hardware coordinates, relative to the current screen. As with X
+SCREEN and Y SCREEN, an optional screen number can be given, and coordinates will be returned relative to that
+screen.
+""
+With all four of the above functions, sensible values can only be returned when the relevant screen has been fully
+initialised. Both the SCREEN OPEN and SCREEN DISPLAY commands only come into effect from the next
+vertical blank, and the following examples demonstrate that the correct coordinate values (in this case 128,50) are
+only returned after a WAIT VBL command.
+                '''
+                ~~~                
+		   Screen Open 0,320,255,16,Lowres
+		   Print X Hard(0,0); Y Hard(0,0)
+                ~~~
+                '''
+Now try the correct version:
+                '''
+                ~~~                
+		   Screen Open 0,320,255,16,Lowres
+		   Wait Vbl
+		   Print X Hard(0,0); Y Hard(0,0)
+                ~~~
+                '''
+The default screen is initially located at hardware coordinates (128,50), and if you find the whole business of
+hardware coordinates and screen coordinates tiresome, you can bypass the entire conversion system.
+""
+By setting the HOT SPOT of your Sprite images to (-128,-50), the reference point for all position calculations is
+removed to the far corner of the display. Once an image has been prepared in this way, it can be assigned to a Sprite
+and moved around using normal screen coordinates. For example:
+                '''
+                ~~~                
+		   Hot Spot 1,-128,-50: Rem Set up hot spot
+		   Sprite 8,160,100,1 : Rem Sprite 8 to screen coords 160,100
+                ~~~
+                '''
+            ]
+            "screen_alpha": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "remap": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "screen_mode":
+            [
+                This simple function is used to report the mode of the current screen. If the screen is LACED, 4 or $8004 will be
+returned. If the screen is LOWRES, a value of $0 is given. For a HIRES screen, $8000 will be returned.
+
+            ]
+            "screen_hot_spot": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "double_buffer":
+            [
+                Throughout this Chapter, extensive reference is made to the technique known as "double buffering". The DOUBLE
+BUFFER command creates an invisible copy of the current screen and stores it as a "logical screen". All graphics
+operations, including Bob movements, are now performed directly on this logical screen, without disturbing your
+existing display at all. This is because the existing display on your television screen is taken straight from the
+original screen area, now called the "physical screen".
+""
+Once the image has been re-drawn, the logical screen and physical screen are swapped over. The old logical screen
+is flicked onto the display, and the old physical screen is hidden away to become the new logical screen. The entire
+process now cycles continuously, producing a solid, smooth display, even when dozens of Bobs are moving on the
+same screen.
+""
+Any complexities of this technique are completely automatic, so once DOUBLE BUFFER has been engaged, you
+can relax.
+
+
+            ]
+           
+        }
+    }
+}

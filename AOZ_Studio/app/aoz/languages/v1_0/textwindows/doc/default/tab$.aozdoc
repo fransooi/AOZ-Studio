@@ -1,0 +1,7 @@
+<i>Tab$</i>
+<b>Tab$</b> xxxxxxx
+=
+The TAB$ function returns a special control character called TAB, which carries the Ascii code of 9. When this
+character is printed, the text cursor is automatically moved to the next tabulated column setting (Tab) to the right.
+The default setting for this is four characters, which can be changed with the SET TAB instruction.
+

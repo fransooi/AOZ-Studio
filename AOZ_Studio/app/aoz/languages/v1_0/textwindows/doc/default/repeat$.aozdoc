@@ -1,0 +1,10 @@
+<i>Repeat$</i>
+<b>Repeat$</b> xxxxxxx
+=
+To repeat the same string of characters using a single PRINT statement, follow your string of text with the number
+of times you want the repetition. Whenever the string is printed, a
+sequence of control characters is automatically added to the r$ variable, in the following format:
+@code
+Chr$(27) + "R1" + A$ + Chr$( 13 ) + Chr$(27) + "R1" + Str$( n ) + Chr$( 13 )
+@code
+

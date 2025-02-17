@@ -1,0 +1,11 @@
+<i>function:returns the value of the Actor's Alpha</i>
+value=<b>Actor Alpha</b>(number)
+value=<b>Actor Alpha</b>(name$)
+=
+@code
+Cls 0
+Actor 1, alpha=0.5, image$="magic"
+Print Str$( Actor Alpha( 1 ) )
+@code
+Display "0.5" on the screen
+

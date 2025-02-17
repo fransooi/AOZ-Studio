@@ -1,0 +1,10 @@
+<i>function:tests if an actor is visible</i>
+value=<b>Actor IsVisible</b>(number)
+value=<b>Actor IsVisible</b>(name$)
+=
+@code
+Cls 0
+Actor 1, Image$="my_image"
+Print Str$( Actor IsVisible( 1 ) )
+@code
+

@@ -1,0 +1,6 @@
+<i>Radian</i>
+<b>Radian</b> xxxxxxx
+=
+If DEGREE has already been called, the RADIAN function returns to the default status, where all future angles are
+expected to be entered in radians.
+

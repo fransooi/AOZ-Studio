@@ -1,0 +1,7 @@
+<i>Anim Off</i>
+<b>Anim Off</b> xxxxxxx
+=
+To activate all animation sequences already created by an ANIM command, use ANIM ON. If ail individual
+sequence is specified by number, then only that sequence will be affected. Similarly, sequences started by ANIM ON
+may be turned off by the ANIM OFF command.
+

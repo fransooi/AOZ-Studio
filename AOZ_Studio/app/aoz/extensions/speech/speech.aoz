@@ -1,0 +1,603 @@
+
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Speech Recognition Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 14/10/2020
+ */
+#noWarning:"instruction_not_implemented"
+#useSounds:true
+
+{
+
+    this.aoz.speech = this;
+	this.words = new Array();
+	this.grammar = '#JSGF V1.0; grammar phrase; public <phrase> = ';
+	this.lang = 'en-EN';
+	this.speechRecognition = undefined;
+	this.speechRecognitionList = undefined;
+	this.speechResult = '';
+	this.voices = undefined;
+	this.voice = 0;
+	var synth = window.speechSynthesis;
+	var self = this;	
+	if( synth )
+	{
+
+		new Promise( function( resolve, reject )
+		{
+			let synth = window.speechSynthesis;
+			let id;
+
+			id = setInterval( () => 
+			{
+				if( synth.getVoices().length !== 0 )
+				{
+					resolve( synth.getVoices() );
+					clearInterval( id );
+				}
+			}, 100 );
+		} ).then( ( voices ) => self.setVoices( voices ) );
+	}
+	
+	this.pitch = 1.0;
+	this.rate = 1.0;
+	this.volume = 1;
+	this.speechBuffer=[];	// BJF For buffered speech output.
+	this.text='.';			// BJF Should never be empty.  (. is silent)
+
+	this.setVoices = function( voices )
+	{
+		this.voices = voices;
+		console.log( this.voices );  
+	}
+
+	this.setLang = function( lang )
+	{
+		if ( lang < 0 )
+			throw { error: 'illegal_function_call', parameter: lang };
+		this.lang = lang;
+	};
+
+	this.setVoice = function( index )
+	{
+		if ( index < 0 || index > ( voices.length - 1 ) )
+			throw { error: 'illegal_function_call', parameter: index };
+
+		if( this.voices != undefined && index > -1 && index < this.voices.length )
+		{
+			this.voice = index;
+		}
+	};
+
+	this.setPitch = function( pitch )
+	{
+		if ( pitch < 0 || pitch > 2 )
+			throw { error: 'illegal_function_call', parameter: pitch };
+		this.pitch = pitch;
+	};
+
+	this.setRate = function( rate )
+	{
+		if ( rate < 0 || rate > 10 )
+			throw { error: 'illegal_function_call', parameter: rate };
+		this.rate = rate;
+	};
+
+	this.setVolume = function( volume )
+	{
+		if ( volume < 0 || volume > 1 )
+			throw { error: 'illegal_function_call', parameter: volume };
+		this.volume = volume;
+	};
+
+	this.start = function( continuous )
+	{
+		var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+		var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
+		var SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
+		var synth = window.speechSynthesis;
+		if( this.words.length > 0 )
+		{
+			this.grammar = '#JSGF V1.0; grammar words; public <word> = ';
+			for( w = 0; w < this.words.length; w++ )
+			{
+				if( w > 0 )
+				{
+					this.grammar = this.grammar + " | "
+				}
+				this.grammar = this.grammar + this.words[ w ];
+			}
+		}
+
+		this.speechRecognitionList = new SpeechGrammarList();
+		this.speechRecognitionList.addFromString( this.grammar, 10 );
+		var self = this;
+
+		if( this.speechRecognition == undefined )
+		{
+			this.speechRecognition = new SpeechRecognition();
+			this.speechRecognition.onresult = function( event )
+			{
+				console.log( event );
+				self.speechResult = event.results[ event.results.length - 1 ][ 0 ].transcript.toLowerCase();
+			};
+
+			this.speechRecognition.onspeechend = function()
+			{
+				console.log( "ONSPEECHEND" );
+			};
+
+			this.speechRecognition.onerror = function( event )
+			{
+				console.log( "ONERROR" );
+				self.speechRecognition = null;
+			};
+
+			this.speechRecognition.onaudiostart = function( event )
+			{
+			};
+
+			this.speechRecognition.onaudioend = function( event )
+			{
+				console.log( "ONAUDIOEND" );
+			};
+
+			this.speechRecognition.onend = function( event )
+			{
+				console.log( "ONEND" );
+			};
+
+			this.speechRecognition.onnomatch = function( event )
+			{
+			};
+
+			this.speechRecognition.onsoundstart = function( event )
+			{
+			};
+			this.speechRecognition.grammars = this.speechRecognitionList;
+			this.speechRecognition.lang = this.lang;
+			this.speechRecognition.continuous = true;
+			this.speechRecognition.interimResults = false;
+			this.speechRecognition.maxAlternatives = 1;
+			this.speechRecognition.start();
+		}
+	};
+
+	this.stop = function()
+	{
+		if( this.speechRecognition )
+		{
+			this.speechRecognition.stop();
+			this.speechRecognition = null;
+		}
+	};
+
+	this.reset = function()
+	{
+		if( this.speechRecognition )
+		{
+			this.speechRecognition.stop();
+			this.speechRecognition = null;
+		}
+		this.words = new Array();
+	};
+
+	this.getSpeechResult = function()
+	{
+		var result = this.speechResult;
+		this.speechResult = "";
+		return result.trim();
+	};
+
+	this.getVoiceName = function( index )
+	{
+		if( this.voices )
+		{
+			if ( index <0 || index > ( this.voices.length - 1 ) )
+				throw { error: 'illegal_function_call', parameter: index };
+				
+			return this.voices[ index ].name;
+		}
+		return "";
+	};
+
+	this.getVoices = function()
+	{
+		console.log( this.voices );
+		if( this.voices )
+		{
+			return this.voices.length;
+		}
+		return 0;
+	};
+
+	this.getDefaultVoice = function()
+	{
+		if( this.voices )
+		{
+			for( var v = 0; v < this.voices.length; v++ )
+			{
+				var voice = this.voices[ v ];
+				if( voice.default )
+					return v;
+			}
+			return 0;
+		}
+		return 0;
+	};
+
+	this.stopSpeak = function()
+	{
+		if( window.speechSynthesis )
+			window.speechSynthesis.cancel();
+	};
+	
+	this.speak = function( args )
+	{
+		var text = args[ 0 ];
+		var wait = args[ 1 ];
+		if( window.SpeechSynthesisUtterance )
+		{
+			var self = this;
+			var utterThis = new SpeechSynthesisUtterance( text );
+			utterThis.onboundary = function( event )
+			{
+				if ( self.boundaryProc )
+				{
+					self.aoz.runProcedure( self.boundaryProc, { TEXT$: text, TIME:event.elapsedTime, POSITION:0 } )
+				}
+			}
+			utterThis.lang = this.lang;
+			if( this.voices == undefined )
+			{
+				var self = this;
+				setTimeout( function()
+				{
+					utterThis.voice = ( self.voices && self.voices[ self.voice ] ) ? self.voices[ self.voice ] : self.voice;
+					utterThis.pitch = self.pitch;
+					utterThis.rate = self.rate;
+					utterThis.volume = self.volume;				
+					var synth = window.speechSynthesis;
+					synth.speak( utterThis );
+				}, 100 );
+			}
+			else
+			{
+				utterThis.voice = ( this.voices && this.voices[ this.voice ] ) ? this.voices[ this.voice ] : this.voice;
+				utterThis.pitch = this.pitch;
+				utterThis.rate = this.rate;
+				utterThis.volume = this.volume;
+				var synth = window.speechSynthesis;
+				synth.speak( utterThis );
+			}
+
+		}
+	};
+	
+	this.speak_wait = function()
+	{
+		if ( window.SpeechSynthesisUtterance )
+		{
+			var synth = window.speechSynthesis;
+			return !( synth.pending | synth.speaking );
+		}
+		return true;
+	};
+	
+}
+
+/**doc
+@name:Sound Speech
+@description:Speak and intercept your words to interact with your AOZ Program
+@keywords:voice,speech,micro,speaker,recognition,vocal,audio,sound
+@author:Baptiste Bideaux + Francois Lionet + Brian Flanagan
+@since:1.0.0
+@last:1.0.0
+doc*/
+
+/**api
+@name:Speech Synthesis Allowed
+@description:Returns true if speech output is allowed on client.
+@author:Brian Flanagan
+@compatible: aoz
+api*/
+Function Speech Synthesis Allowed
+{
+}
+End Function ( { typeof speechSynthesis != 'undefined' } )
+
+/**api
+@name:Speech Recognition Allowed
+@description:Returns True if speech recognition is permitted.
+@author:Brian Flanagan
+@compatible: aoz
+api*/
+Function Speech Recognition Allowed
+{
+}
+End Function ( { typeof webkitSpeechRecognition != 'undefined' } )
+
+/**api
+@name:Speech Recognition Start
+@description:Enable the Speech recognition System
+@compatible: aoz
+api*/
+Instruction Speech Recognition Start
+{
+	#errors
+	aoz.extensionSpeech.start();
+}
+End Instruction
+
+/**api
+@name:Speech Recognition Stop
+@description:Disable the Speech recognition System
+@compatible: aoz
+api*/
+Instruction Speech Recognition Stop
+{
+	#errors
+	aoz.extensionSpeech.stop();
+}
+End Instruction
+
+/**api
+@name:Speech Recognition Reset
+@description:Reset the Speech recognition System
+@compatible: aoz
+api*/
+Instruction Speech Recognition Reset
+{
+	#errors
+	aoz.extensionSpeech.reset();
+}
+End Instruction
+
+/**api
+@name:Speech Recognition Value$
+@description:Retrieves the word or phrase spoken by the user as a string.
+@return:string:the word or phrase spoken by the user.
+@compatible: aoz
+api*/
+Function Speech Recognition Value$
+{
+	#errors
+}
+End Function( { aoz.extensionSpeech.getSpeechResult() } )
+
+
+/**api
+@name:Speech Recognition Add Word
+@description:Adds a word to the words array
+@param:word$:string:The word to add
+@compatible: aoz
+api*/
+Instruction Speech Recognition Add Word, word$
+{
+	#errors
+	if( aoz.extensionSpeech.words == undefined )
+	{
+		aoz.extensionSpeech.words = new Array();
+	}
+	aoz.extensionSpeech.words.push( %word$ );
+}
+End Instruction
+
+/**api
+@name:Speech Language
+@description:Sets the language for the speech module
+@param:lang$:string:The name of the language to use, default is "en"
+@compatible: aoz
+api*/
+Instruction Speech Language, lang$
+{
+	#errors
+	aoz.extensionSpeech.setLang( %lang$ );
+}
+End Instruction
+
+/**api
+@name:Voice Count
+@description:Returns the number of different voices available.
+@compatible: aoz
+api*/
+Function Voice Count
+{
+	#errors
+}
+End Function( { aoz.extensionSpeech.getVoices() } )
+
+/**api
+@name:Voice$
+@description:Returns the name of the specified voice.
+@param:voice:integer:Index of the specified voice.
+@compatible: aoz
+api*/
+Function Voice$, voice // BJF
+{
+	#errors
+}
+End Function( { aoz.extensionSpeech.getVoiceName( %voice ) } )
+
+/**api
+@name:Set Voice
+@description:sets the voice to the specified index.
+@param:voice:integer:Index of the selected voice (browser and OS dependent)
+@compatible: aoz
+api*/
+Instruction Set Voice, voice
+{
+	#errors
+	aoz.extensionSpeech.setVoice( %voice );
+}
+End Instruction
+
+/**api
+@name:Voice Pitch 
+@description:Sets the pitch of the voice
+@param:pitch#:float:Relative pitch for the synthesized voice.
+@compatible: aoz
+api*/
+Instruction Voice Pitch, pitch#
+{
+	#errors
+	aoz.extensionSpeech.setPitch( %pitch# );
+}
+End Instruction
+
+/**api
+@name:Voice Rate 
+@description:Sets the speed for speech synthesis
+@param:rate#:float:Rate at shich the synthesized voice speaks.
+@compatible: aoz
+api*/
+Instruction Voice Rate, rate# = 1
+{
+	#errors
+	aoz.moduldeSpeech.setRate( %rate# );
+}
+End Instruction
+
+/**api
+@name:Voice Volume
+@description:Sets the volume of the voice
+@param:volume#:float:How loud the synthized voice speaks.
+@compatible: aoz
+api*/
+Instruction Voice Volume, volume# = 1
+{
+	#errors
+	aoz.extensionSpeech.setVolume( %volume# );
+}
+End Instruction
+
+/**api
+@name:Say
+@description:Speak a string using the build in voice synthetizer
+@param:sentence$:string:Text to say
+@param:mode:integer:0 or undefined and the instruction will wait for the end of the voice to continue. A value different from zero, or true will return immediately.
+@examples:instructions:i_73
+@compatible: aoz
+api*/
+Instruction Say, sentence$, wait = 1
+{
+	#errors
+	#waiting
+	if (%wait)
+		return{type:12,waitThis:aoz.extensionSpeech,callFunction:"speak",waitFunction:"speak_wait",args:[%sentence$,true]};
+	else
+		aoz.speech.speak([%sentence$,false]);
+}
+End Instruction
+
+/**api
+@name:Set Talk
+@description:Set the style of the speech
+@param:sex:integer:0 for female, 1 for male
+@param:mode:integer:
+@param:pitch#:float:Pitch of the voice. In Amiga mode, the value range from 65 (deep voice) to 320 (soprano). In normal AOZ mode, value range from 0 to 2
+@param:rate:float:Rate of speach. In Amiga mode, the value range from 40 to 400, in normal mode, from 0.1 to 10
+@examples:instructions:i_73
+@compatible: aoz, amos
+api*/
+Instruction Set Talk, sex = 0, mode = 0, pitch# = 1, rate = 1
+{
+	#errors
+	var pitch = %pitch#;
+	var rate = %rate;
+	if ( aoz.platform == 'amiga' )
+	{
+		pitch = Math.max( 0, ( pitch - 65 ) / 255 );
+		rate = Math.max( 0, ( rate - 40 ) / 9.9 ) + 0.1;
+	}
+	aoz.extensionSpeech.setRate(rate);
+	aoz.extensionSpeech.setPitch(pitch);
+}
+End Instruction
+
+/**api
+@name:Talk Misc
+@description:Set volume of speech
+@param:volume#:float:From 0 (silent) to 1 (default). In Amiga mode, from 0 to 64.
+@param:frequency:integer:Not used, here for compatibility with AMOS applications.
+@compatible: aoz, amos
+api*/
+Instruction Talk Misc, volume# = 1, frequency
+{
+	#errors
+	var volume = %volume#;
+	if ( aoz.platform == 'amiga' )
+		volume /= 64;
+	aoz.extensionSpeech.setVolume(volume);
+}
+End Instruction
+
+/**api
+@name:Talk Stop
+@description:Stop Speech
+@compatible: aoz, amos
+api*/
+Instruction Talk Stop
+{
+	aoz.extensionSpeech.stopSpeak();
+}
+End Instruction
+
+/**api
+@name:Mouth Read
+@description:Not implemented in AOZ
+@return:integer:0
+@compatible: notimplemented
+api*/
+Function Mouth Read
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Mouth Width
+@description:Not implemented in AOZ
+@return:integer:0
+@compatible: notimplemented
+api*/
+Function Mouth Width
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Mouth Width
+@description:Not implemented in AOZ
+@return:integer:The height of the mouth
+@compatible: notimplemented
+api*/
+Function Mouth Height
+{
+	#notimplemented
+}
+End Function( {0} )

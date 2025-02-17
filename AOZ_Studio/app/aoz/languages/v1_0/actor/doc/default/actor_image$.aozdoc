@@ -1,0 +1,9 @@
+<i>function:returns the name of the image used by the actor</i>
+a$=<b>Actor Image$</b>(number)
+a$=<b>Actor Image$</b>(name$)
+=
+@code
+Cls 0
+Actor 1, Image$="my_image"
+Print Actor Image$( 1 )
+@code

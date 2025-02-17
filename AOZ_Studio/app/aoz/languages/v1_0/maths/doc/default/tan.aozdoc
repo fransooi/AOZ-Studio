@@ -1,0 +1,11 @@
+<i>Tan</i>
+<b>Tan</b> xxxxxxx
+=
+For any angle, the tangent is the result of when its sine is divided by its cosine. The TAN function generates the
+tangent of a given angle. For example:
+@code
+Degree : Print Tan(45)
+Radian : Print Tan(Pi#/8)
+@code
+
+

@@ -1,0 +1,27 @@
+<i>instruction:Change the mouse pointer by an image</i>
+<b>Mouse Image</b> URL$
+<b>Mouse Image</b> ""
+=
+Replaces the mouse cursor with an image of your choice. This image is defined by the URL passed in parameter URL$. The image used must not be larger than 128x128 pixels. Supported formats are CUR, GIF, SVG and PNG. If this argument is an empty string, the mouse pointer will be reinitialized. 
+=
+Using an image from the web:
+@code
+Cls 0
+Rem Change the mouse pointer with an image from web
+Mouse Image "https://d.furaffinity.net/art/pixelhoot/1464195067/1464195067.pixelhoot_rowlet_mouse_pointer_large.png"
+Wait Key
+Rem Reset the mouse pointer
+Mouse Image ""
+@code
+=
+Using an image from the images bank:
+@code                
+Cls 0
+Rem Change the mouse pointer by the image 10
+Rem Get the data URL of the image 10 
+URL$ = Image DataURL$( 10 ) 
+Mouse Image URL$
+Wait Key
+Rem Reset the mouse pointer
+Mouse Image ""
+@code

@@ -1,0 +1,15 @@
+<i>Repeat</i>
+<b>Repeat</b> xxxxxxx
+=
+Unlike that last example, instead of checking if a condition is true or false at the start of a loop, the pair of
+commands makes its check at the end of a loop. REPEAT marks the start and UNTIL the end of the loop to be
+checked.
+This means that if a condition is false at the beginning of a WHILE ... WEND structure, that loop will never be performed at all, but if it is true at the beginning of a REPEAT
+... UNTIL structure, the loop will be performed at least once. Here is an example that waits for you to press a mouse button:
+
+@code
+Repeat
+Print "I can go on forever" : Wait 25
+Until Mouse Key<>0
+@code
+

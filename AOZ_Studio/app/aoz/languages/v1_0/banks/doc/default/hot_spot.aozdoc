@@ -1,0 +1,8 @@
+<i>Hot Spot</i>
+<b>Hot Spot</b> xxxxxxx
+=
+@code
+Hot Spot 1, 16, 24
+Print Hot Spot( 1, "x" )		// Will print 16
+Print Hot Spot( 1, "y" )		// Will print 24
+

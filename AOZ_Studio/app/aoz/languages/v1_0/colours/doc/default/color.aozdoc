@@ -1,0 +1,12 @@
+<i>Color</i>
+<b>Color</b> xxxxxxx
+=
+It is not difficult to find which colours are occupying the colour index, and analyse how much Red, Green and Blue is used to make up each shade.
+The COLOR function can take an index number from 0 to 31, and returns the colour value assigned to that number. Hex$ is used for this purpose, as follows
+@code
+For C=0 To 15: Ink C
+Print Hex$(Color(C),3)
+Circle 160,75,(C+1)*4
+Next C
+@code
+

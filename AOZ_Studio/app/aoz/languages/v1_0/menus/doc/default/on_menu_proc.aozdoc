@@ -1,0 +1,9 @@
+<i>On Menu Proc</i>
+<b>On Menu Proc</b> xxxxxxx
+=
+Each title in your menu can be assigned its own procedure which will be executed automatically when that option is selected by the user.
+
+When automatic selection takes place as the result of ON MENU PROC, the procedure is executed and the program
+will be returned to the instruction immediately after the ON MENU call. Procedures can make use of the CHOICE
+function to monitor which option has been triggered, and to perform the appropriate action.
+

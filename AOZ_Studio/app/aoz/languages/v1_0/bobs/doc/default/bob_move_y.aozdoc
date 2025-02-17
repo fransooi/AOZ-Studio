@@ -1,0 +1,14 @@
+<i>Bob Move Y</i>
+<b>Bob Move Y</b> xxxxxxx
+=
+This command operates in the same way as "BOB MOVE X", and controls vertical movement.
+Positive values for the step parameter control downward movements, and a negative value will result in an upward movement.
+
+Here is an example:
+@code
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Bob 1,228,50,1
+Bob Move Y 1,"(1,1,180)(1,-1,180)L" : Rem Loop Sprite
+Bob Move On : Wait Key
+@code
+

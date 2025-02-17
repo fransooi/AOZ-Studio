@@ -1,0 +1,1047 @@
+//
+// AOZ Studio Documentation
+//
+// V0.1
+#manifest:"aoz"
+#splashScreen:False
+#fps:False
+#googleFont:"IBM Plex Sans"
+#googleFont:"Source code pro"
+#displayWidth:480
+#displayHeight:270
+#pixelPerfect:true
+
+zoomDisplay# = 0.75 : Global zoomDisplay#
+sxDisplay = 480 : Global sxDisplay
+syDisplay = 270 : Global syDisplay
+fontText$ = "IBM Plex Sans" : Global fontText$
+fontSource$ = "Source code pro" : Global fontSource$
+fontBig = 14
+fontMedium = 13
+fontSmall = 11
+fontHint = 12
+Set Font fontText$, fontBig
+Set Font fontText$, fontBig, "bold"
+Set Font fontText$, fontBig, , "italic"
+Set Font fontText$, fontBig, "bold", "italic"
+Set Font fontText$, fontMedium
+Set Font fontText$, fontMedium, "bold"
+Set Font fontText$, fontMedium, , "italic"
+Set Font fontText$, fontMedium, "bold", "italic"
+Set Font fontText$, fontSmall
+Set Font fontText$, fontSmall, "bold"
+Set Font fontText$, fontSmall, , "italic"
+Set Font fontText$, fontSmall, "bold", "italic"
+Set Font fontText$, fontHint
+Set Font fontSource$, fontSmall
+Global fontText$, fontSmall, fontMedium, fontBig, fontHint
+// Actor
+//debugger@ = ShowVariables() : Global debugger@
+// Print
+// Arrays for token information
+maxParams = 500
+
+Dim paramType$( maxParams )
+Dim paramName$( maxParams )
+Dim paramText$( maxParams )
+Dim paramOptional( maxParams )
+maxSeeAlso = 50 : Dim seeAlso$( maxSeeAlso )
+maxExamples = 100 : Dim examples$( maxExamples )
+maxTextlines = 2000 : Dim commandText$( maxTextlines )
+
+startZonesInfo = 1 : endZonesInfo = 9 : Global startZonesInfo, endZonesInfo
+bChapter = startZonesInfo
+bSeeAlso = startZonesInfo + 1
+bExamples = startZonesInfo +2
+Global bChapter, bSeeAlso, bExamples
+
+startZonesTitle = 10 : endZonesTitle = 19 : Global startZonesTitle, endZonesTitle
+startZonesPage = 20 : endZonesPage = 50 : Global startZonesPage, endZonesPage
+maxZones = endZonesPage
+bTitle = startZonesTitle
+bBack = startZonesTitle + 1
+bNext = startZonesTitle + 2
+bSearch = startZonesTitle + 3
+bWidgets = startZonesTitle + 5
+Global bTitle, bBack, bNext, bSearch, bWidgets
+
+Dim zonesTitle$( maxZones ) : Global zonesTitle$()
+Dim zonesLink$( maxZones ) : Global zonesLink$()
+Dim zonesActive( maxZones ) : Global zonesActive()
+Dim zonesY1( maxZones ) : Global zonesY1()
+Dim zonesY2( maxZones ) : Global zonesY2()
+Dim zonesHint$( maxZones ) : Global zonesHint$()
+
+posHistory = 0 : maxHistory = 1000 : topHistory = 0
+Dim history$( maxHistory ) : Global posHistory, maxHistory, topHistory, history$()
+
+//////////////////////////////////////////////////////////////////
+// Initial setup
+//////////////////////////////////////////////////////////////////
+// Screen Offset
+// Main screen
+Screen Open 0, sxDisplay, 720 * 10, 32
+Palette $eeeeee, $000000, $ffab00, $17455e, $048faf, $102d3b, $c0c0c0, $e29000
+Screen Display 0, 0, 64 * zoomDisplay#, sxDisplay, syDisplay - 48 * zoomDisplay#
+Reserve Zone maxZones
+ink0Paper = 0 : Global ink0Paper
+ink0Pen = 1 : Global ink0Pen
+ink0Active = 6 : Global ink0Active
+
+//  Instruction Title Text
+sxScreen1 = sxDisplay : Global sxScreen1
+syScreen1 = 64 * 10 * zoomDisplay# : Global syScreen1
+Screen Open 1, sxScreen1, syScreen1, 4
+Palette $112D3C, $C5C8C6, $355470, $FFFFFFF
+Reserve Zone maxZones
+ink1Paper = 0 : Global ink1Paper
+ink1Pen = 1 : Global ink1Pen
+ink1Active = 2 : Global ink1Active
+yBottom1 = 0 : Global yBottom1
+
+// Bottom
+Screen Open 2, sxDisplay, 24 * zoomDisplay#, 16
+Palette $869296, $ffffff, $feac00, $013F58, $355470, $112D3C, $355470, $2e475d, $112d3c
+Screen Display 2, 0, syDisplay - 24 * zoomDisplay#
+Reserve Zone maxZones
+ink2Paper = 5 : Global ink2Paper
+ink2Pen = 0 : Global ink2Pen
+ink2Active = 6 : Global ink2Active
+
+// Icons on top
+Screen Open 3, sxDisplay, 64 * zoomDisplay#, 4
+Palette $000000, $C5C8C6, $355470, $FFFFFFF
+Set Transparent 0
+Reserve Zone maxZones
+ink3Paper = 0 : Global ink3Paper
+ink3Pen = 1 : Global ink3Pen
+ink3Active = 2 : Global ink3Active
+ink3Input = 2 : Global ink3Input
+ink3InputPaper = 3 : Global ink3InputPaper
+
+Set_Screen_Priorities
+
+// Create the communication object with the IDE
+ide@ = IDE() : Global ide@
+
+// Search
+waitSearch = False : Global waitSearch
+
+While ide@Is Connected() = False
+	Wait Vbl
+Wend
+
+//#IDE Play Video "toto.mp4"
+// Left$
+// Screen Open
+// Set Wave
+// Data
+// For
+// Mid$
+// Cop Wait
+// Print
+// Ask for information about the current token (json)
+keyWord$ = ""
+
+onceAgain:
+	Animate Text Off
+	For z = 0 To maxZones : zonesLink$( z ) = "" : zonesHint$( z ) = "" : Next
+	For p = 0 To maxParams : paramType$( p ) = "" : paramName$( p ) = "" : paramText$( p ) = "" :  : paramOptional( p ) = False : Next
+	For p = 0 To maxSeeAlso : seeAlso$( p ) = "" : Next
+	Screen 0 : Cls ink0Paper : Screen Show
+	Screen 1 : Cls ink1Paper : Screen Show
+	Screen 2 : Cls ink2Paper : Screen Show
+
+	info$ = ide@Token Info$( keyWord$ )
+	//{ console.log( vars.info$ ) }
+	If info$ = "" Then ide@Destroy Panel "aoz_help"
+
+	// Open a channel in the JSON extension
+	JSON Open 1
+	JSON Parse 1, info$
+
+	IDECommand$ = JSON Property$( 1, "IDECommand", "missing" )
+	If IDECommand$ <> "missing"
+		//If IDECommand$ = "play_video"
+		//	path$ = JSON Property$( 1, "args[ 0 ]", "missing" )
+		//	Load Asset path$, 1000
+		//End If
+	End If
+
+	//////////////////////////////////////////////////////////////////
+	// Gather the information from the IDE
+	//////////////////////////////////////////////////////////////////
+	chapterName$ = JSON Property$( 1, "chapter.name", "missing" )
+	chapterAuthor$ = JSON Property$( 1, "chapter.author", "missing" )
+	chapterText$ = JSON Property$( 1, "chapter.descriptions[ 0 ]", "missing" )
+	// ARGH!
+	If chapterName$ = "Structure Commands" Then chapterName$ = "General Commands"
+
+	commandName$ = JSON Property$( 1, "command.name", "missing" )
+	commandIntro$ = JSON Property$( 1, "command.descriptions[ 0 ].text", 'missing' )
+	commandType$ = "instruction"
+	commandReturnType$ = ""
+	If JSON Property( 1, "command.return.length", 0 ) > 0
+		commandReturnType$ = JSON Property$( 1, "command.return[ 0 ].type", 'missing' )
+		commandReturn$ = JSON Property$( 1, "command.return[ 0 ].text", 'missing' )
+		commandType$ = "function"
+		commandName$ = "= " + commandName$
+	End If
+
+	nCommandTextLines = JSON Property( 1, "command.content.length", 0 )
+	If nCommandTextLines > 0
+		For I = 0 To nCommandTextLines - 1
+			commandText$( I ) = JSON Property$( 1, "command.content[" + str$( I ) + " ].text", "missing" )
+		Next
+	End If
+
+	numberOfParameters = JSON Property( 1, "command.parameters.length", 0 )
+	If numberOfParameters > 0
+		For count = 0 To numberOfParameters - 1
+
+			paramName$( count ) = JSON Property$( 1, "command.parameters[" + Str$( count ) + "].name", "missing" )
+			paramType$( count ) = JSON Property$( 1, "command.parameters[" + Str$( count ) + "].type", "missing" )
+			paramText$( count ) = JSON Property$( 1, "command.parameters[" + Str$( count ) + "].text", "missing" )
+			paramOptional( count ) = JSON Property( 1, "command.parameters[" + Str$( count ) + "].optional", 0 )
+
+		Next
+	End If
+
+	numberOfSeeAlso = JSON Property( 1, "command.seealso.length", 0 )
+	If numberOfSeeAlso > 0
+		For count = 0 To Min( numberOfSeeAlso - 1, maxSeeAlso )
+			seeAlso$( count ) = JSON Property$( 1, "command.seealso[" + Str$( count ) + "].text", "missing" )
+		Next
+	End If
+
+	numberOfExamples = JSON Property( 1, "command.examples.length", 0 )
+	If numberOfExamples > 0
+		For count = 0 To Min( numberOfExamples - 1, maxExamples )
+			examples$( count ) = JSON Property$( 1, "command.examples[" + Str$( count ) + "].text", "missing" )
+		Next
+	End If
+
+	////////////////////////////////////////////////////////////////////
+	// Print the text
+	////////////////////////////////////////////////////////////////////
+	// On
+	text$ = Bold$( True ) + commandName$
+	commandAscii$ = commandName$
+	If commandType$ = "function" Then text$ = text$ + "(" : commandAscii$ = commandAscii$ + "("
+	text$ = text$ + " " : commandAscii$ = commandAscii$ + " "
+	If numberOfParameters > 0
+		For count = 0 To numberOfParameters - 1
+			If count > 0 Then text$ = text$ + ", " : commandAscii$ = commandAscii$ + ", "
+			//If paramOptional( count ) Then text$ = text$ + Italic$( True )
+			text$ = text$ + paramName$( count ) : commandAscii$ = commandAscii$ + paramName$( count )
+			//If paramOptional( count ) Then text$ = text$ + Italic$( False )
+		Next
+	End If
+	If commandType$ = "function" Then text$ = text$ + " )" : : commandAscii$ = commandAscii$ + " )"
+	zonesLink$( bTitle ) = text$
+	zonesHint$( bTitle ) = "Click to copy at cursor location"
+// Left$
+
+	// Print main text
+	Screen 0 : cls ink0Paper : x = 0 : y = 11 * zoomDisplay#
+	Ink ink0Pen : Add y, Print_Text[ commandIntro$, x, y, fontText$, fontMedium, "#resetAnimate" ]
+
+	Add y, 7 * zoomDisplay#
+	If numberOfParameters > 0
+		Add y, Print_Text[ Bold$( True ) + "Parameters" + Bold$( True ), x, y, fontText$, fontMedium, "" ]
+		For count = 0 To numberOfParameters - 1
+
+			text$ = Italic$( False ) + paramName$( count ) + Italic$( True ) + " (" + paramType$( count ) + ") "
+			If paramOptional( count )
+				text$ = text$ + "(optional)"
+			End If
+			text$ = text$ + Italic$( False ) + ":"
+			Add y, Print_Text[ text$, x + 16, y, fontText$, fontMedium, ""]
+			Add y, Print_Text[ Ink$( 1 ) + paramText$( count ), x + 32, y, fontText$, fontSmall, "" ]
+
+		Next
+	End If
+	If ( commandReturnType$ <> "" )
+		Add y, 5 * zoomDisplay#
+		Add y, Print_Text[ Bold$( True ) + "Returns: " + Bold$( False ) + Italic$( True ) +  "(" + commandReturnType$ + ")" + Italic$( False ), x, y, fontText$, fontMedium, "" ]
+		Add y, Print_Text[ commandReturn$, x + 32, y, fontText$, fontSmall, "" ]
+	End If
+
+	// Left$
+	Add y, 14 * zoomDisplay#: Ink 1
+	If nCommandTextLines
+
+		md$ = ""
+		For l = 0 To nCommandTextLines - 1
+			md$ = md$ + commandText$( l )
+		Next
+
+		// Detect keywords inside the text and convert them to links
+		lastWords$ = ""
+		nWords = 0
+		debut = -1
+
+		Repeat
+			Inc debut
+			fin = Instr( md$, " ", debut + 1 )
+			Exit If fin < 0
+
+			ret = Instr( md$, Chr$( 10 ), debut + 1 )
+			If ret >= 0 And ret < fin
+			If nWords > 0
+				fin = ret
+					debut1 = Instr( lastWords$, " " )
+					lastWords$ = Mid$( lastWords$, debut1 + 1 )
+					Dec nWords
+				End If
+			End If
+
+			If nWords = 3
+				debut1 = Instr( lastWords$, " " )
+				lastWords$ = Mid$( lastWords$, debut1 + 1 )
+				Dec nWords
+			End If
+			lastWords$ = lastWords$ + ( Mid$( md$, debut, fin - debut ) - " " ) + " "
+			Inc nWords
+			token$ = ide@Find Token$( lastWords$ )
+			If token$ <> "" And Lower$( token$ ) <> Lower$( commandName$ )
+				If numberOfSeeAlso < maxSeeAlso
+					found = False
+					For i = 0 To numberOfSeeAlso
+						If Lower$( token$ ) = Lower$( seeAlso$( i ) )
+							found = True
+							Exit
+						End If
+					Next
+					If Not found
+						seeAlso$( numberOfSeeAlso ) = token$
+						Inc numberOfSeeAlso
+					End If
+				End If
+			End If
+
+			debut = fin
+		Until debut < 0
+
+		// Detect active code zones
+		pos1 = Instr( md$, "'''" )
+		If pos1 >= 0
+			count = 0
+			Repeat
+				pos2 = Instr( md$, "'''", pos1 + 3 )
+				If pos2 < 0 Then Exit
+				zz = startZonesPage + count
+				Add y, Print_Text[ Left$( md$, pos1 ), x, y, fontText$, fontSmall, "#md #animate" ]
+
+				zonesY1( zz ) = y
+				zonesLink$( zz ) = Mid$( md$, pos1, pos2 + 3 - pos1 )
+				Add y, Print_Text[ zonesLink$( zz ), x, y, fontText$, fontSmall, "#md #animate" ]
+
+				zonesY2( zz ) = y
+				zonesHint$( zz ) = "Click to copy into clipboard"
+				Set Zone zz, 0, zonesY1( zz ), Screen Width, zonesY2( zz )
+				Inc count
+
+				md$ = Mid$( md$, pos2 + 3 )
+				pos1 = Instr( md$, "'''" )
+			Until pos1 < 0
+		End If
+		If Len( md$ ) > 0
+			Add y, Print_Text[ md$, x, y, fontText$, fontSmall, "#md #animate" ]
+		End If
+	End If
+	maxHeight = y + 64 * zoomDisplay#
+
+	// Title screen links
+	zonesLink$( bBack ) = "left"
+	zonesHint$( bBack ) = "Back"
+	zonesLink$( bNext ) = "right"
+	zonesHint$( bNext ) = "Next"
+	zonesLink$( bSearch ) = "search"
+	zonesHint$( bSearch ) = "Search"
+	zonesLink$( bWidgets ) = commandType$
+	zonesHint$( bWidgets ) = getTypeString$[ commandType$ ]
+	If commandType$ = "function"
+		zonesLink$( bWidgets + 1 ) = commandReturnType$
+		zonesHint$( bWidgets + 1 ) = getTypeString$[ commandReturnType$ ]
+	End If
+	// Actor
+	// Information screen links
+	zonesTitle$( bChapter ) = "Chapter: "
+	zonesLink$( bChapter ) = chapterName$
+	zonesHint$( bChapter ) = "Click to open help on this chapter"
+
+	If numberOfSeeAlso > 0
+		zonesLink$( bSeeAlso ) = "See also"
+		zonesHint$( bSeeAlso ) = "Related instructions and functions"
+		popupMenu@ = Popup Menu( entries$ = seeAlso$, font$ = fontText$, fontHeight = fontSmall, displayZoom# = zoomDisplay#, minWidth = sxDisplay / 8, onClick$ = "OnClickMenu" )
+	End If
+	If numberOfExamples > 0
+		//zonesLink$( bExamples ) = "Examples"
+		//zonesHint$( bExamples ) = "Open the example in the editor"
+		exampleMenu@ = Popup Menu( entries$ = examples$, font$ = fontText$, fontHeight = fontSmall, displayZoom# = zoomDisplay#, minWidth = sxDisplay / 8, onClick$ = "OnClickExamples" )
+	End If
+
+	// Left$
+	// Screen Open
+	// Right$
+	// pack
+	// Print
+	// Point
+	// Make links reactive
+	//Animate Text
+	// Actor
+
+	// Handle interactivity
+	previousYScreen = -1
+	previousYScreen1 = -1
+	previousZone = -2
+	hint = 0
+	hintCount = 0
+	yScreen = 0 : Global yScreen
+	yScreen1 = 0 : Global yScreen1
+	X Mouse = -1
+	Y Mouse = -1
+	menuGoto$ = "" : Global menuGoto$
+	infoCount = 0 : Global infoCount
+	currentZone = -1 : previousZone = -2
+	dragging = False
+	history$( posHistory ) = commandName$
+	topHistory = Max( posHistory, topHistory )
+
+	Redraw_Title_Text[ true ]
+	Screen 0 : Cls ink0Paper, 0, maxHeight To Screen Width, Screen Height
+	Do
+		/*
+		Screen 0 : Cls ink0Paper
+		y = 32
+		Add y, Print_Text[ "keyWord$:" + commandName$, 16, y, fontText$, fontMedium, ""]
+		For h = 0 To topHistory
+			Add y, Print_Text[ "History(" + Str$( h ) + " ): " + history$( h ), 16, y, fontText$, fontMedium, ""]
+		Next
+		Add y, Print_Text[ "topHistory:" + str$( topHistory ), 16, y, fontText$, fontMedium, ""]
+		Add y, Print_Text[ "posHistory:" + str$( posHistory ), 16, y, fontText$, fontMedium, ""]
+		Add y, Print_Text[ "history$: " + history$( posHistory ), 16, y, fontText$, fontMedium, ""]
+		*/
+
+		sc = ScIn( X Mouse, Y Mouse )
+		If sc = 0
+			Add yScreen, Mouse Wheel * -32 * zoomDisplay#
+			If yScreen > maxHeight Then yScreen = maxHeight
+			If yScreen < 0 Then yScreen = 0
+			If yScreen <> previousYScreen
+				Screen Display 0, 0, 64 * zoomDisplay#, sxDisplay, syDisplay - 48 * zoomDisplay#
+				Screen Offset 0, 0, yScreen
+				previousYScreen = yScreen
+			End If
+		End If
+		If sc = 1
+			Add yScreen1, Mouse Wheel * -32 * zoomDisplay#
+			If yScreen1 > yBottom1 Then yScreen1 = yBottom
+			If yScreen1 < 0 Then yScreen1 = 0
+			If yScreen1 <> previousYScreen1
+				Screen Offset 1, 0, yScreen1
+				previousYScreen1 = yScreen1
+				Redraw_Title_Text[ false ]
+			End If
+		End If
+
+		// Activate zones
+		currentZone = -1
+		If sc >= 0
+			xx = X Screen( sc, X Mouse )
+			yy = Y Screen( sc, Y Mouse )
+			currentZone = Zone( sc, xx, yy )
+		End If
+
+		If currentZone <> previousZone
+			If previousZone > 0 Then zonesActive( previousZone ) = False
+			If currentZone > 0 Then zonesActive( currentZone ) = True
+			previousZone = currentZone
+			Redraw_Info_Bar
+			Redraw_Title_Icons
+			Redraw_Page_Zones
+			hintCount = 0
+		Else
+			Inc hintCount
+		End If
+
+		// Display hints
+		If hintCount = 0 And hint > 0
+			Hide_Hint
+			hint = 0
+		Else If hintCount = 25 And currentZone > 0
+			hint = currentZone
+			Show_Hint[ hint ]
+		Else If hintCount = 150 And hint > 0
+			Hide_Hint
+			hint = 0
+		End If
+
+		// Display infos
+		If infoCount > 0
+			Dec infoCount
+			If infoCount = 0
+				Hide_Info
+			End If
+		End If
+
+		// React to clicks
+		If Mouse Key = 1
+			Hide_Hint
+
+			If currentZone = bChapter
+				If Wait_Mouse_Release[ currentZone ]
+					Open Doc Chapter chapterName$
+				    ide@Destroy Panel "aoz_help"
+					End
+				End If
+			End If
+			If currentZone = bSeeAlso
+				If Wait_Mouse_Release[ currentZone ]
+					popupMenu@Open
+				End If
+			End If
+			If currentZone = bExamples
+				If Wait_Mouse_Release[ currentZone ]
+					exampleMenu@Open
+				End If
+			End If
+
+			//If currentZone = bTitle
+			//	If Wait_Mouse_Release[ currentZone ]
+			//		//ide@Insert Text Chr$( 10 ) + commandAscii$ + Chr$( 10 )
+			//		//Show_Info[ "Command inserted at cursor...", 100 ]
+			//	End If
+			//End If
+
+			If currentZone = bBack
+				If Wait_Mouse_Release[ currentZone ]
+					If posHistory > 0
+						Dec posHistory
+						keyWord$ = history$( posHistory )
+						Goto onceAgain
+					End If
+				End If
+			End If
+			If currentZone = bNext
+				If Wait_Mouse_Release[ currentZone ]
+					If posHistory < topHistory
+						Inc posHistory
+						keyWord$ = history$( posHistory )
+						Goto onceAgain
+					End If
+				End If
+			End If
+			If currentZone = bSearch
+				If Wait_Mouse_Release[ currentZone ]
+					Search[ "toto" ]
+					zonesActive( bSearch ) = False
+				End If
+			End If
+			If currentZone >= startZonesPage And currentZone < endZonesPage
+				If Wait_Mouse_Release[ currentZone ]
+					theText$ = Replace$( zonesLink$( currentZone ), "'''", "// Start Example Code", 1 )
+					theText$ = Replace$( theText$, "'''", "// End Example Code", 1 )
+					ide@Copy Text theText$
+					Show_Info[ "Example copied into clipboard...", 100 ]
+				End If
+			End If
+			If currentZone = 0
+				// TODO: fix method bugs!
+				If Not dragging
+					dragging = True
+					ide@Drag Panel Start "aoz_help"
+				End If
+			End If
+		Else
+			If dragging
+				dragging = False
+				ide@Drag Panel End "aoz_help"
+			End If
+		End If
+
+		// Choice from the popup menu?
+		If menuGoto$ <> ""
+			keyWord$ = menuGoto$
+			Inc posHistory
+			Goto onceAgain
+		End If
+
+		// Escape-> quit
+		// Screen offset
+		k$ = Inkey$
+		If k$ = Chr$( 27 ) Then  Exit
+
+		//debugger@display
+		Wait Vbl
+
+	Loop
+
+	// Close the help window
+    ide@Destroy Panel "aoz_help"
+	End
+
+Procedure getTypeString$[ text$ ]
+	Restore typeToString
+	Read n$, s$
+	Repeat
+		If n$ = Lower$( text$ )
+			Exit
+		End If
+		Read n$, s$
+	Until n$ = ""
+	If n$ = "" Then s$ = text$
+
+	typeToString:
+		Data "integer", "integer number"
+		Data "float", "floating point number"
+		Data "string", "string of characters"
+		Data "any", "number or a string"
+		Data "index", "index of an element, number or string"
+		Data "address", "magical number containing the address"
+		Data "rgb", "number containing red, green and blue"
+		Data "variable", "string, numerical or object variable"
+		Data "array", "array"
+		Data "integers", "list of integer numbers separated by a comma"
+		Data "floats", "list of floating point numbers separated by a comma"
+		Data "strings", "list of strings separated by a comma"
+		Data "rgbs", "list of rgb integer values separated by a comma"
+		Data "function", "function that returns a value"
+		Data "instruction", "instruction"
+		Data "object", "variable containing an object"
+		Data "method", "method of an object"
+		Data "property", "property of an object"
+		Data "boolean", "either True or False"
+		Data "ink", "number of a color in a palette"
+		Data "integer", "integer number"
+		Data "", ""
+
+End Proc[ s$ ]
+
+// hex$
+// Screen Open
+
+Procedure Redraw_Title_Text[ setZones ]
+
+	Screen 1 : Cls ink1Paper
+	xLeft = 32 * zoomDisplay#
+	xRight = Screen Width - 32 * zoomDisplay#
+	yTop = 16 * zoomDisplay#
+
+	If zonesLink$( bTitle ) <> ""
+		//If zonesActive( bTitle ) Then Ink ink1Active : Bar xLeft, 0 To xRight, Screen Height
+		fontHeight = fontBig + 8
+		Ink ink1Paper
+		Repeat
+			Set Font fontText$, fontHeight
+			yBottom1 = Format Text( zonesLink$( bTitle ), xLeft, 0 To xRight, Screen Height, "", fontSource$, fontSmall )
+			If yBottom1 < 48 * zoomDisplay# Then Exit
+			Dec fontHeight
+		Until fontHeight = fontBig
+		Ink ink1Pen : Set Font fontText$, fontHeight
+		yBottom1 = Format Text( zonesLink$( bTitle ), xLeft, yTop To xRight, Screen Height, "", fontSource$, fontSmall )
+		If setZones
+			Set Zone bTitle, xLeft, yTop To xRight, yBottom1
+		End If
+	End If
+
+End Proc
+
+Procedure Redraw_Title_Icons
+
+	Screen 3 : Cls 0 : Screen To Front 3
+	sx = 32 * zoomDisplay#
+	sy = 32 * zoomDisplay#
+	x = sxDisplay - sx : y = 0 : count = 0
+	For z = endZonesTitle To bWidgets Step -1
+		If zonesLink$( z ) <> ""
+			If count Mod 2 = 0
+				y = 0
+			Else
+				y = sy
+			End If
+			image$ = zonesLink$( z ) : If zonesActive( z ) Then image$ = image$ + "_active"
+			Paste Bob x, y, image$, width = sx, height = sy
+			Set Zone z, x, y To x + sx, y + sy
+			If count Mod 2 = 1
+				x = x - sx
+			End If
+			Add count, 1
+		End If
+	Next
+
+	// Back button
+	active = True : If posHistory = 0 Then active = False
+	image$ = zonesLink$( bBack ) : If zonesActive( bBack ) And active Then image$ = image$ + "_active"
+	a# = 1 : If Not active Then a# = 0.5
+	Paste Bob 0, 0, image$, width = 16 * zoomDisplay#, height = 32 * zoomDisplay#, alpha# = a#
+	Set Zone bBack, 0, 0 To 16 * zoomDisplay#, 32 * zoomDisplay#
+
+	// Next button
+	active = True : If posHistory >= topHistory Then active = False
+	image$ = zonesLink$( bNext ) : If zonesActive( bNext ) And active Then image$ = image$ + "_active"
+	a# = 1 : If Not active Then a# = 0.5
+	Paste Bob 16 * zoomDisplay#, 0, image$, width = 16 * zoomDisplay#, height = 32 * zoomDisplay#, alpha# = a#
+	Set Zone bNext, 16 * zoomDisplay#, 0 To 32 * zoomDisplay#, 32 * zoomDisplay#
+
+	// Search button
+	image$ = zonesLink$( bSearch ) : If zonesActive( bSearch ) Then image$ = image$ + "_active"
+	Paste Bob 0, 32 * zoomDisplay#, image$, width = 32 * zoomDisplay#, height = 32 * zoomDisplay#
+	Set Zone bSearch, 0, 32 * zoomDisplay# To 32 * zoomDisplay#, Screen Height
+
+End Proc
+
+Procedure OnClickMenu[ number, name$ ]
+
+	menuGoto$ = name$
+
+End Proc
+
+Procedure OnClickExamples[ number, name$ ]
+
+	ide@Load Example name$
+
+End Proc
+
+Procedure Wait_Mouse_Release[ z ]
+
+	zz = 0
+	While Mouse Key = 1
+		sc = ScIn( X Mouse, Y Mouse )
+		If sc >= 0 Then zz = Zone( sc, X Screen( sc, X Mouse ), Y Screen( sc, Y Mouse ) )
+		Wait Vbl
+	Wend
+
+End Proc[ ( z = zz ) ]
+
+Procedure Show_Hint[ z ]
+
+	Screen Open 10, sxDisplay, syDisplay, 16 : Screen Hide 10
+	Palette $E4BD68, $010101 : Cls 0
+	Set Font fontText$, fontHint
+	width = Text Length( zonesHint$( z ) ) + 16 * zoomDisplay#
+	Ink 1 : Text width / 2, 12 * zoomDisplay#, zonesHint$( z ), "#center #middle"
+	Box 1, 1 To width - 1, fontHint + 7 * zoomDisplay#
+	Get Bob 1000, 0, 0 To width, fontHint + 8 * zoomDisplay#, "#opaque"
+	Screen Close 10
+	x = X Mouse + 16 : y = Y Mouse + 16
+	If x + width > sxDisplay Then x = X Mouse - width - 16
+	If y + fontHint + 8 > syDisplay Then y = Y Mouse - fontHint - 24
+	Sprite "hint", x, y, 1000
+
+End Proc
+Procedure Hide_Hint
+
+	Sprite Off "hint"
+
+End Proc
+Procedure Show_Info[ text$, duration ]
+
+	Screen Open 100, sxDisplay, syDisplay, 16 : Screen Hide 100
+
+	//Palette $869296, $ffffff, $feac00, $013F58, $355470, $112D3C, $355470, $2e475d, $112d3c
+	Palette $2e475d, $ffff00, $000000
+	Set Font fontText$, fontBig
+	width = Text Length( text$ ) + 16 * zoomDisplay#
+	height = fontBig + 7 * zoomDisplay#
+	Ink 1 : Text width / 2, 12 * zoomDisplay#, text$, "#center #middle"
+	Ink 2 : Box 1, 1 To width - 1, fontMedium + 8 * zoomDisplay#
+	Get Bob 1000, 0, 0 To width, height, "#opaque"
+	Screen Close 100
+
+	x = sxDisplay / 2 - width / 2
+	y = syDisplay / 4 - height / 2
+	Sprite "info", x, y, 1000
+	infoCount = duration
+
+End Proc
+Procedure Hide_Info
+
+	Sprite Off "info"
+
+End Proc
+Procedure Set_Screen_Priorities
+
+	Screen To Front 1 : Screen To Front 0 : Screen To Front 2 : Screen To Front 3
+
+End Proc
+Procedure Redraw_Page_Zones
+
+	Screen 0
+	For z = startZonesPage To endZonesPage
+		If zonesLink$( z ) <> ""
+			Ink ink0Paper :	If zonesActive( z ) Then Ink ink0Active
+			Bar 0, zonesY1( z ) To Screen Width, zonesY2( z )
+			Ink ink0Pen : Print_Text[ zonesLink$( z ), 0, zonesY1( z ), fontSource$, fontSmall, "#md" ]
+		End If
+	Next
+
+End Proc
+Procedure Redraw_Info_Bar
+
+	Screen 2 : Cls ink2Paper
+	x = 0 : y = 5 * zoomDisplay#
+
+	tags$ = "" : z = bChapter : Gosub drawZone
+	tags$ = "#right" : z = bSeeAlso : Gosub drawZone
+	tags$ = "" : z = bExamples : x = Screen Width / 2 : Gosub drawZone
+	Pop Proc
+
+	drawZone:
+		linkInk = ink2Pen : If zonesActive( z ) Then linkInk = 2
+		text$ = Ink$( ink2Pen ) + zonesTitle$( z ) + Ink$( linkInk ) + Zone$( zonesLink$( z ), z )
+		Print_Text[ text$, x, y, fontText$, fontSmall, tags$ ]
+		Return
+
+End Proc
+
+Procedure CONFIRM_SEARCH[VALUE$]
+	If VALUE$ <> ""
+		json$ = ide@Token Info$( VALUE$ )
+		If json$ <> ""
+			JSON Open 2
+			JSON Parse 2, json$
+			name$ = JSON Property$( 2, "command.name", "" )
+			JSON Close 2
+			If name$ <> ""
+				menuGoto$ = name$
+			End If
+		End If
+	End If
+	waitSearch = False
+End Proc
+
+Procedure Search[ text$ ]
+
+	waitSearch = True
+	UI Prompt$ "Enter text to look for:", value$="", onConfirm$="CONFIRM_SEARCH", closeButton$="Cancel", confirmButton$="OK"
+	Repeat : Wait Vbl : Until waitSearch = False
+
+End Proc
+
+Procedure Print_Text[ theText$, x, y, theFont$, theSize, tags$ ]
+
+	Set Font theFont$, theSize
+	y = Format Text( theText$, x + 8 * zoomDisplay#, y To sxDisplay - 16 * zoomDisplay#, Screen Height, tags$, fontSource$, fontSmall )
+	//debugger@display
+
+End Proc[ y ]
+
+// Screen Open
+Object Popup Menu, font$, fontHeight = 12, colorBack = $00000000, colorBackHilight = $20202020, colorText = $c0c0c0c0, colorTextHilight = $ffffffff, displayZoom# = 1, minWidth = 0, entries$(), onClick$
+	{
+		this.set_minWidth = function( value )
+		{
+			this.vars.minWidth = value;
+		};
+		this.set_displayZoom = function( value )
+		{
+			this.vars.displayZoom_f = value;
+		};
+		this.set_entries$_array = function( value, dimensions )
+		{
+			this.vars.entries$_array.setValue( dimensions, value );
+		};
+		this.set_onClick$ = function( value )
+		{
+			this.vars.onClick$ = value;
+		};
+		this.set_font$ = function( value )
+		{
+			this.vars.font$ = value;
+		};
+		this.colorBack = function( value )
+		{
+			this.vars.colorBack = value;
+		};
+		this.colorBackHilight = function( value )
+		{
+			this.vars.colorBackHilight = value;
+		};
+		this.set_colorText = function( value )
+		{
+			this.vars.colorText = value;
+		};
+		this.set_colorTextHilight = function( value )
+		{
+			this.vars.colorTextHilight = value;
+		};
+		this.set_colorGray = function( value )
+		{
+			this.vars.colorGray = value;
+		};
+		var currentScreen, screen;
+
+		// Find width and height of screen
+		// pack
+		this.screenWidth = vars.minWidth;
+		this.screenHeight = 0;
+		this.screen = aoz.screenOpen( { index: 1000, width: 320, height: 200, numberOfColors: 4, palette: [ this.vars.colorBack, this.vars.colorBackHilight, this.vars.colorText, this.vars.colorTextHilight ] }, "#keepCurrent #findFreeIndex" );
+		this.screen.setVisible( false );
+		this.screen.setFont( [ vars.font$, vars.fontHeight ] );
+		for ( var z = 0; z < vars.entries$_array.getLength(); z++ )
+		{
+			var text = vars.entries$_array.getValue( [ z ] );
+			if ( text.length == 0 )
+				break;
+			this.screenWidth = Math.max( Math.floor( this.screen.textLength( text ) ), this.screenWidth  );
+			this.screenHeight += vars.fontHeight;
+		}
+		this.borderWidth = Math.floor( vars.fontHeight / 2 );
+		this.borderHeight = Math.floor( vars.fontHeight / 2 );
+		this.screenWidth += this.borderWidth * 2;
+		this.screenHeight = Math.max( this.screenHeight + this.borderHeight * 2, 20 );
+		this.x = 0;
+		this.y = 0;
+
+		// Define zones left$
+		this.zones = [];
+		var y = this.borderHeight;
+		for ( var z = 0; z < vars.entries$_array.getLength(); z++ )
+		{
+			var text = vars.entries$_array.getValue( [ z ] );
+			if ( text.length == 0 )
+				break;
+			this.zones[ z ] =
+			{
+				x: this.borderWidth,
+				y: y,
+				width: this.screenWidth - this.borderWidth * 2,
+				height: vars.fontHeight,
+				activated: false
+			};
+			y += vars.fontHeight;
+		};
+
+		// Set new size of screen
+		//this.screen.setVisible( false );
+		this.screen.resize( { width: this.screenWidth, height: this.screenHeight } );
+
+		// Handle routine
+		this.handle = null;
+		this.previousZone = -1;
+		this.previousMouseKey = -1;
+		this.previousMouseZone = -1;
+		this.handleMenu = function()
+		{
+			var zone = undefined;
+			var currentZone = -1;
+			if ( this.screen.isIn( { x: aoz.getXMouse(), y: aoz.getYMouse() } ) )
+			{
+				var xMouse = this.screen.xScreen( aoz.getXMouse() );
+				var yMouse = this.screen.yScreen( aoz.getYMouse() );
+				for ( var z = 0; z < this.zones.length; z++ )
+				{
+					zone = this.zones[ z ];
+					if ( xMouse >= zone.x && xMouse < zone.x + zone.width && yMouse >= zone.y && yMouse < zone.y + zone.height )
+					{
+						currentZone = z;
+						break;
+					}
+				}
+			}
+			if ( currentZone != this.previousZone )
+			{
+				if ( this.previousZone >= 0 )
+					this.zones[ this.previousZone ].activated = false;
+				if ( currentZone >= 0 )
+					this.zones[ currentZone ].activated = true;
+				this.previousZone = currentZone;
+				this.displayMenu();
+			}
+
+			// Handle clicks
+			var mouseKey = aoz.mouseButtons & 0x0001;
+			if ( this.waitForMouseUp )
+			{
+				if ( mouseKey == 0 )
+				{
+					this.waitForMouseUp = false;
+					this.previousMouseKey = 0;
+				}
+			}
+			else if ( mouseKey != this.previousMouseKey )
+			{
+				this.previousMouseKey = mouseKey;
+				if ( mouseKey > 0 )
+					this.previousMouseZone = currentZone;
+				else
+				{
+					aoz.callMethod( this, 'Close', {} );
+					if ( currentZone >= 0 && currentZone == this.previousMouseZone )
+					{
+						if ( currentZone >= 0 )
+						{
+							if ( this.vars.onClick$ != '' )
+								aoz.runProcedure( this.vars.onClick$, { number: currentZone, name$: this.vars.entries$_array.getValue( [ currentZone ] ) } );
+						}
+					}
+				}
+			}
+		};
+		this.displayMenu = function()
+		{
+			this.screen.cls( 0 );
+			this.screen.setFont( [ this.vars.font$, this.vars.fontHeight ] );
+			this.screen.setWriting( 0 );
+			for ( var n = 0; n < this.zones.length; n++ )
+			{
+				var zone = this.zones[ n ];
+				this.screen.setInk( 0 + ( zone.activated ? 1 : 0 ) );
+				this.screen.bar( { x: zone.x, y: zone.y, width: zone.width, height: zone.height } );
+				this.screen.setInk( 2 + ( zone.activated ? 1 : 0 ) );
+				this.screen.text( { x: zone.x, y: zone.y }, this.vars.entries$_array.getValue( [ n ] ), '#left, #top' );
+			}
+		};
+	}
+	Method Open, x=$80000000, y=$80000000, direction$=""
+	{
+		if ( !this.parent.handle )
+		{
+			vars.x = ( vars.x == 0x80000000 ? aoz.getXMouse() : vars.x );
+			vars.y = ( vars.y == 0x80000000 ? aoz.getYMouse() : vars.y );
+			if ( vars.direction$ == '' )
+			{
+				vars.direction$ = '#left';
+				if ( vars.x + this.parent.screenWidth > aoz.manifest.display.width )
+					vars.direction$ = '#right';
+				if ( vars.y + this.parent.screenHeight > aoz.manifest.display.height )
+					vars.direction$ += ' #bottom';
+				else
+					vars.direction$ += ' #top';
+			}
+			if ( aoz.utilities.isTag( vars.direction$, 'right' ) )
+				vars.x -= this.parent.screenWidth;
+			if ( aoz.utilities.isTag( vars.direction$, 'bottom' ) )
+				vars.y -= this.parent.screenHeight;
+			this.parent.vars.x = vars.x;
+			this.parent.vars.y = vars.y;
+
+			// Display the menu
+			this.parent.screen.setPosition( { x: vars.x, y: vars.y } );
+			this.parent.screen.setSize( { width: this.parent.screenWidth, y: this.parent.screenHeight } );
+			this.parent.screen.setVisible( true );
+			this.parent.displayMenu();
+			this.parent.waitForMouseUp = true;
+
+			var self = this;
+			this.parent.handle = setInterval( function()
+			{
+				self.parent.handleMenu.call( self.parent );
+			}, 100 );
+		}
+	}
+	End Method
+
+	Method Close
+	{
+		if ( this.parent.handle )
+		{
+			this.parent.screen.setVisible( false );
+			clearInterval( this.parent.handle );
+			this.parent.handle = null;
+		}
+	}
+	End Method
+End Object

@@ -1,0 +1,13 @@
+<i>Parent</i>
+<b>Parent</b> xxxxxxx
+=
+The effect of the PARENT command is to load the current directory with the parent of the present folder you are
+using. By using this command repeatedly, you are able to get back to the original root directory simply and quickly.
+For example:
+@code
+Dir$="AMOSPro_Examples:Objects/"
+Dir
+Parent
+Dir
+@code
+

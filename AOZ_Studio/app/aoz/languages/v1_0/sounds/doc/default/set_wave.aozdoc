@@ -1,0 +1,58 @@
+<i>Set Wave</i>
+<b>Set Wave</b> xxxxxxx
+=
+The SET WAVE command sets the wave form of an individual sound, that can then be used at various pitches to
+create music or sound effects. This command requires two parameters, the number of the wave to be set, followed
+by the shape of this pattern, held in a string.
+
+Wave numbers zero and 1 are already allocated, so these numbers should not be used. Wave zero holds a random
+noise pattern, used to generate the explosive effects of BOOM and SHOOT, while wave number 1 is a smooth
+pattern in the shape of a sine wave, which is used as the "template" for the pure tones needed by the PLAY and
+BELL commands. So when setting your new wave patterns, use the identification numbers from 2 upwards.
+
+Setting the parameter for the shape of the wave form is a little more complicated.
+
+Each one of the 256 numbers which make up the shape of the wave form sets a single level of intensity for that
+single part of the wave. Each one of these intensities can hold a possible value ranging from -128 up to 127. Look at
+the diagram below. The vertical scale represents this range of intensities (-128 to 127) and the horizontal scale
+shows the physical length of the wave form, in other words the individual moments of time as the wave is played
+(256).
+![Wave Example 1](help:img/samples/samples_ex1.png)
+
+This triangular wave pattern does not make a very exciting sound, but it serves as a simple introduction to making
+your own wave forms.
+Because AOZ Studio strings can only hold positive numbers from zero to 256, the negative values in this
+wave form need to be converted before use. This is extremely easy, and is achieved by adding 256 to the negative
+numbers in the list! In other words, a value of -50 would be entered as 206, like this:
+@code
+-50+256=206
+@code
+The following program shows how the sort of wave form in the above diagram could be created The wave form is
+then assigned to a wave and played, which is explained a little later.
+@code
+S$=" " : Rem Clear wave form string
+For W=-128 To 127
+X=W : If X<0 Then Add X,256
+S$=S$+Chr$(X)
+Next W
+Set Wave 2,S$
+Wave 2 To 15: For S=10 to 60: Play S,10: Next S
+@code
+The wave forms of musical instruments are much more complicated than the last example, but they are not too
+difficult to reproduce. By combining several sine waves together, with each sine wave having a different starting
+point, the type of pattern shown in the next diagram is achieved.
+![Wave Example 1](help:img/samples/samples_ex2.png)
+
+This sort of wave form generates smooth harmonics, which can then be used as the "templates" for musical notes,
+and the sort of routine in the next example can produce typical sine waves:
+@code
+SHAPE$=" " : Degree
+For S=0 To 255
+V=Int((Sin(S)/2+Sin(S*2+45)/4)*128)+127
+SHAPE$=SHAPE$+Chr$(V)
+Next S
+Set Wave 2,SHAPE$ : Wave 2 To 15
+For N=10 To 60: Play N,10 : Next N
+@code
+
+

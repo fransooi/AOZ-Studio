@@ -1,0 +1,16 @@
+<i>Equ</i>
+<b>Equ</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The EQU function returns any standard equate value used by the Amiga system libraries. The equate can represent anything from an offset to a structure, or even the names of various bit- masks. Provided that it is supplied in the standard Amiga include files, it will be available from AOZ Studio immediately. The only exceptions to this
+rule are the library offsets, and these should be obtained with the LVO function.
+
+The name of the equate should be specified in brackets, and refers to the name as set out in your reference manuals.
+This name is case sensitive, as explained above, so care should be taken. It is also important to remember that the
+name string must be a constant, and that expressions are not allowed! In fact, the technique is extremely simple.
+This example would send a WRITE command to a device:
+@code
+DEV D0(channel,EQU("CMD_WRITE"))
+@code
+

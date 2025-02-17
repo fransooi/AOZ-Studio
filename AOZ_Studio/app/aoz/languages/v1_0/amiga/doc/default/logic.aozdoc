@@ -1,0 +1,11 @@
+<i>Logic</i>
+<b>Logic</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+Use the LOGIC function to get an identification number for the current logical screen, or use an optional screen
+number to specify a particular logical screen. The identification number that is returned can now be used with the
+ZOOM, APPEAR and SCREEN COPY commands, to change images off screen, without affecting the current
+display.
+
+

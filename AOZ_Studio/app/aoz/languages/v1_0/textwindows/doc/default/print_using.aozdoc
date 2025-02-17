@@ -1,0 +1,55 @@
+<i>Print Using</i>
+<b>Print Using</b> xxxxxxx
+=
+PRINT USING allow you to format the data that you print. It works by using a series of special characters in the definition string.
+
+### The tilde character "~"
+Every ~ in the string variable is replaced by a single character from left to right, taken from an output string.
+
+For example:
+@code
+Print Using "This is a @code@code example";"simple"
+@code
+### The hash character: "#"
+
+Each # specifies one digit at a time, to be printed out from a given variable, with any unused digits being replaced
+by spaces. For example:
+@code
+Print Using "###";123456
+@code
+
+### The plus character: "+"
+
+This adds a plus sign to a positive number or a minus sign if the number is negative. For example:
+@code
+Print Using "+##";10 : Print Using "+##";-10
+@code
+### The minus character: "-"
+
+This gives a minus sign to negative numbers only. Positive numbers will be preceded by a space. For example:
+@code
+Print Using "-##";10:Print Using "-##";-10
+@code
+
+###The full stop character: "."
+
+When used with PRINT USING, the full stop (period) character places a decimal point in a number, and
+automatically centres it on screen. For example:
+@code
+Print Using ".###";Pi#
+@code
+
+### The semi-colon character: ";"
+
+This centres a number, but will not output a decimal point. For example:
+@code
+Print Using "Pl is #;###";Pi#
+@code
+
+### The exponential (circumflex) character: "^"
+
+This causes a number to be printed out in exponential format. For example:
+@code
+Print Using "This is an exponential number^";10000*10000.5
+@code
+

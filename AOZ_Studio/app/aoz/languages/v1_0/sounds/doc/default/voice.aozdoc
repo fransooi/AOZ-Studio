@@ -1,0 +1,33 @@
+<i>Voice</i>
+<b>Voice</b> xxxxxxx
+=
+Soundtracks are made up of one or more voices, acting independently or together. The VOICE command is used to
+activate voices by setting a bit-mask, with each bit representing the state of one of the four available channels
+through which the voices flow. To play the required voice (from 0 to 3) simply set the relevant bit to 1, otherwise a
+value of zero will keep the voice silent. Here are some example settings:
+@code
+Voice %1111 : Rem Activate all voices
+Voice %0001 : Rem Activate voice 0 only
+Voice %1001 : Rem Activate voices 3 and 0
+@code
+The volume of each voice can now be controlled by specifying voices and volumes, like this:
+@code
+Volume %0001,63
+Boom : Wait 100: Rem Channel 1 loud
+Volume %1110,5
+Boom : Wait 50: Rem Channels 2,3,4 soft
+Bell 40 : Wait 50 : Volume 60: Bell 40
+@code
+Here are some common values for voice settings, that can be used to make programming a little easier:
+@code
+Value 	Voices used 	Effect
+15 	0,1,2,3 	use all four voices
+9 	0,3 		combine output to left speaker
+6 	2,4 		combine output to right speaker
+1 	0 		use voice 0
+2 	1 		use voice 1
+4 	2 		use voice 2
+8 	3 		use voice 3
+@code
+
+

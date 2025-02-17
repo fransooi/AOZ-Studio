@@ -1,0 +1,62 @@
+{
+    collision_commands:
+    { 
+        name: "TODO"
+        intro:  "TODO"
+        conclusion: ""
+        commands:
+        {
+            "bob_col":
+            [
+                The BOB COL function checks the screen for collisions between Blitter Objects. It is invaluable in the type of arcade games that rely on hitting or avoiding moving objects. To test for a collision with BOB COL, simply specify the number of the Bob you are interested in (in brackets) and a value of -1 (true) will be returned if a collision occurs. Otherwise zero (false) is generated  
+""
+Note that the AOZ collision system uses "masks", and so it is sensitive to the physical shape of your
+objects. This means that when different objects have extremely varied appearances, the collision will only be
+detected when the objects happen to overlap on screen.'
+""
+Normally, BOB COL will check for collisions between the specified Bob and any other Blitter Object, but you can
+also monitor the movements of a particular range of Bobs using this As optional parameters, after the specified Bob
+number, you may set the range of Bobs to be checked for collision from the first to the last in your Bob list  
+
+            ]
+            "bobsprite_col":
+            [
+                This function checks for a collision between the single Bob whose number you specify, and all active Sprites on screen. The result will be -1 (true) is a collision is detected, or 0 (false) if the object remains untouched. To narrow the range of Sprites to be monitored, simply include the first to the last number in that range. As with SPRITEBOB COL, this function should only be used in low resolution  
+
+            ]
+            "sprite_col":
+            [
+                SPRITE COL provides an easy method of checking to see if two or more Sprites have collided on screen. If the test is successful, SPRITE COL returns a value of -1 (true), and if not 0 (false) is returned instead. As you would expect, the brackets contain the number of any active Sprite on screen. This can be a standard Amiga hardware Sprite, or an AOZ computed Sprite, but the image it displays must carry a mask. As a default, masks are created for Bobs only, so you must deliberately create a mask for each Sprite image at the start of your program, using MAKE MASK  
+""
+If you want to check for a selected group of Sprites, include the optional first to last parameters to set the range of the Sprite numbers you are interested in  
+""
+Note that any mixture of hardware Sprites and computed Sprites can be tested in the same SPRITE COL instruction  
+
+            ]
+            "spritebob_col":
+            [
+                As its name suggests, this function checks for a collision between the Sprite whose number you specify, and one or more Blitter Objects. If the Sprite collides with a Bob, a value of -1 (true) is returned, otherwise 0 (false) is given  
+""
+This function will test for collisions with all Bobs on screen, but the checking process can be restricted with the
+optional setting of the range of Bobs to be monitored, from the first Bob number to the last in the range. If you need to test for collisions between several Sprites and Bobs, the command should be enclosed in a loop, like this  
+                '''
+                ~~~                
+		   For FIRSTSPRITE=1 To LASTSPRITE
+		     If Spritebob Col(FIRSTSPRITE,FIRSTBOB To LASTBOB) Then Boom
+		   Next FIRSTSPRITE
+                ~~~
+                '''
+Remember that all specified Sprites must be assigned to a masked image, before collision detection can work. You
+are also warned that this function will only work with low resolution screens, and attempts to use it in high
+resolution will lead to unpredictable results. This is because your Sprites and Bobs are likely to have different sized screen points  
+            ]
+            "col":
+            [
+                One obvious problem with all of the previous detection functions is that they only report on whether an individual object has been hit. To discover information about any other objects involved in a collision, the COL function is used. This means that each object can be tested on its own, to see if it has collided with the source object ""
+Give the number of the object you wish to test, either a Bob or a Sprite, depending on the circumstances, and its status will be reported with a value of -1 (true) if it has collided, or 0 (false) if it remains untouched  
+
+            ]
+           
+        }
+    }
+}

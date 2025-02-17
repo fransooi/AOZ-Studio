@@ -1,0 +1,7 @@
+<i>On Menu Goto</i>
+<b>On Menu Goto</b> xxxxxxx
+=
+Although this command is available for use, it has been superseded by the more powerful ON MENU PROC and ON MENU GOSUB instructions.
+
+It is retained to provide compatibility with programs written in STOS Basic.
+

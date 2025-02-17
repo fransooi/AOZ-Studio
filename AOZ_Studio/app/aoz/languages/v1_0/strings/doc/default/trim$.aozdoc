@@ -1,0 +1,8 @@
+<i>Trim$</i>
+<b>Trim$</b> xxxxxxx
+=
+@code
+A$ = "     I love AOZ Studio !      "
+Print Trim$( A$ )
+@code
+

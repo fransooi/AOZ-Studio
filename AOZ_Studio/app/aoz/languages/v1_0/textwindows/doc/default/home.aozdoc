@@ -1,0 +1,10 @@
+<i>Home</i>
+<b>Home</b> xxxxxxx
+=
+Whenever you need to move the text cursor back to the top left-hand corner of the screen in a hurry, simply tell it to
+go HOME and it will automatically be relocated to coordinates 0,0 like this:
+@code
+Cls: Locate 10,10: Print "I am going"
+Wait 100: Home : Print "Home!"
+@code
+

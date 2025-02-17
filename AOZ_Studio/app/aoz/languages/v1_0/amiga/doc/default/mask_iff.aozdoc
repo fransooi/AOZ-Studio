@@ -1,0 +1,17 @@
+<i>Mask Iff</i>
+<b>Mask Iff</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The PICTURE function returns the precise format of the mask used by a picture, and it is used like this:
+@code
+Mask Iff Picture
+Load Iff "Picture_Name"
+@code
+Here are some typical settings that can be used to load masked data from an IFF file:
+@code
+Mask Iff %100 : Rem Load palette of picture only
+Mask Iff %10000 : Rem Load bitmaps only
+@code
+
+

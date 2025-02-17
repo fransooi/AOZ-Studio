@@ -1,0 +1,105 @@
+{
+    voice_synthetizer_commands:
+    { 
+        name: "Voice Synthetiser Commands"
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "say":
+            [
+                This is one of the simplest of all AOZ Studio commands to use, and it has one of the most satisfying results.
+Use the SAY instruction with a string of text, containing all the words and punctuation you want AMOS
+Professional to speak, like this:
+                '''
+                ~~~                
+		   Say "Welcome, everybody!"
+                ~~~
+                '''
+                Normally, all other instructions, music or sound effects will wait until AOZ Studio has finished speaking
+before they are executed. This default speech mode has a value of zero. By adding an optional mode value of 1,
+synthetic speech can be delivered while the rest of the program is being executed. This will necessarily slow down
+the relevant routines. To return to the default mode, use a line like this:
+                '''
+                ~~~                
+		   Say "Default mode.,0
+                ~~~
+                '''
+                Now get AOZ Studio to say anything you like, using the next simple routine, but please mind your language!
+Try experimenting with numbers and symbol characters too.
+                '''
+                ~~~                
+		   Do
+		  	Input "Please tell me what to say:;S$
+		  	S$=S$+".
+		   	Say S$
+		   Loop
+                ~~~
+                '''
+If the Narrator system appears to fumble over a particular phrase, you are free to clarify things by adding spaces at
+the end of a sentence, or using phonetic spellings. As always, you cannot do any harm by experimenting.
+            ]
+            "say_talk": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "talk_misc":
+            [
+                Existing AMOS users will find that the AOZ Studio speech facilities have been augmented and improved.
+The TALK MISC command allows you to set the volume and frequency of the narrator voice used for SAY
+instructions.
+""
+Synthetic speech can be delivered from a whisper to a shout, by setting the volume parameter between zero for
+silence, up to 64 for full volume. Frequency is directly adjusted by setting a value from 5000 to 25000, with some
+superb effects being generated at slower frequencies. Note that the higher the frequency setting, the more processor
+time will be taken in multitask mode.
+
+Try this example:
+                '''
+                ~~~                
+		   For V=16 To 64 Step 8
+		   	For F=5000 To 25000 Step 5000
+		   	   Talk Misc V,F
+			   SAY "I think therefore I AMOS!"
+			Next F
+		   Next V
+                ~~~
+                '''
+            ]
+            "talk_stop":
+            [
+                This simple command is used to terminate synthetic speech delivered by a SAY instruction, while in multitask
+mode.
+
+            ]
+            "mouth_read":
+            [
+                This function waits for a mouth movement, and then reads the new mouth values directly into the MOUTH WIDTH
+and MOUTH HEIGHT functions, as demonstrated by the usual ready- made example program.£
+            ]
+            "mouth_width":
+            [
+                MOUTH WIDTH reports the width of the mouth at any instant, in pixels. This function will return a negative value
+if the current speech has finished.
+            ]
+            "mouth_height":
+            [
+                Similarly to MOUTH WIDTH, a negative value is returned if the speech is over, otherwise the current height of the
+mouth is given in pixels.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            
+        }
+    }
+}

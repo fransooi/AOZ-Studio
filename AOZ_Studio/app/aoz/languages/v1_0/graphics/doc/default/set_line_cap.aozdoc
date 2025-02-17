@@ -1,0 +1,27 @@
+<i>Set Line Cap</i>
+<b>Set Line Cap</b> xxxxxxx
+=
+This command sets the capping style of all lines that are subsequently drawn. The different styles only become apparent on thicker lines.
+
+butt - ends the line squarely at the limits (default)
+
+round - ends the line with a semi-circle of radius half of line width
+
+square - ends the line with a square end, extending the line by half the line width
+
+eg:
+@code
+Ink 1
+// Draw Vertical White lines at limits
+Draw 50,200 to 50,800
+Draw 900,200 to 900,800
+Set Line Width 50
+Ink 4
+Set Line Cap "butt"
+Draw 50,400 to 900,400
+Set Line Cap "round"
+Draw 50,500 to 900,500
+Set Line Cap "square"
+Draw 50,600 to 900,600
+@code
+

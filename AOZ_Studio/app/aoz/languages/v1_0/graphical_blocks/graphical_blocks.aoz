@@ -1,0 +1,173 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Rainbow Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Icon Commands
+@description:Instructions and functions to handle icons
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+
+/**api
+@name:Get Block
+@description:Captures a portion of the graphics from a screen into a buffer.
+@param:index:index:Index of the block to create
+@param:x1:integer:Horizontal coordinate of the top-left corner of the rectangle to capture
+@param:y1:integer:Vertical coordinate of the top-left corner of the rectangle to capture
+@param:x2:integer:Horizontal coordinate of the bottom-right corner of the rectangle to capture
+@param:y2:integer:Vertical coordinate of the bottom-right corner of the rectangle to capture
+@param:transparent:boolean:If True, Ink 0 of the block will be transparent when pasting the block.
+@examples:instructions:i_66
+@examples:instructions:i_66
+@compatible: aoz, stos, amos
+@content:
+The GET BLOCK command is used to grab a rectangular area from the graphics on the current screen. First specify
+a Block number, then set the coordinates of the top-left hand corner of the rectangle to be
+grabbed, followed by the number of pixels making up the width and height of the Block.
+
+An optional mask code can be added after these parameters. If this code is set to zero, the Block will destroy and
+replace any graphics that used to occupy its position on screen. If the mask code is set to 1, the block is given a
+background mask, and colour zero becomes transparent.
+api*/
+Instruction Get Block, index=(index), x1, y1 To x2, y2, transparent
+{
+	#errors
+	aoz.currentScreen.getBlock(%index,{x:%x1,y:%y1,x2:%x2,y2:%y2},%transparent);
+}
+End Instruction
+
+Instruction Get Block, index=(index), x1, y1, width, height, mask
+{
+	#errors
+	aoz.currentScreen.getBlock(%index,{x:%x1,y:%y1,width:%width,height:%height},%mask);
+}
+End Instruction
+
+/**api
+@name:Set Block Alpha
+@description:Set the transparency alpha of a block, that will be applied the next time the block is drawn in one screen
+@param:index:index:Index of the block to affect
+@param:alpha:float:Value fo the transparency, from 0 to 1, 0= fully transparent, 1= fully opaque
+@examples:instructions:i_66
+@compatible: aoz
+@content:
+~~~
+Get Block 1, 100, 100 To 300, 400		// Grab a portion of the screen
+Set Block Alpha 0.5						// Set the block to be semi-transparent
+Put Block 1, 101, 101					// Make it somewhat "bold" by pasting it one pixel away...
+~~~
+api*/
+Instruction Set Block Alpha, index=(index), alpha#
+{
+	#errors
+	aoz.currentScreen.setBlockAlpha(%index,%alpha#);
+}
+End Instruction
+
+/**api
+@name:Put Block
+@description:Draw a previously captured block in the current screen.
+@param:index:index:Index of the block to draw
+@param:*x:integer:Horizontal coordinate of the top-left corner of the block in the screen
+@param:*y:integer:Vertical coordinate of the top-left corner of of the block in the screen
+@param:*bitplanes:integer:Only in Amiga mode, defines the bitplanes to draw
+@param:*billterMode:integer:Has no effect in AOZ.
+@examples:instructions:i_66
+@compatible: aoz, stos, amos
+@content:
+To re-draw a Block at its original coordinates on the current screen, simply add the Block's identification number
+after the PUT BLOCK command.
+
+If you want to draw the Block at a new position, then add the new x,y-coordinates for the It left-hand corner, after
+the Block number.
+
+If you are in Amiga emulation, the last two parameters will have an effect. The Amiga's screen is divided into segments known as "bit-planes", and Blocks are normally displayed using all the
+available screen bit-planes, which is a bit-pattern of %111111. Re-setting these bit-planes can create numerous special effects...
+api*/
+Instruction Put Block, index=(index), x, y, bitplanes, blittermode
+{
+	#errors
+	aoz.currentScreen.putBlock(%index,{x:%x,y:%y},%bitplanes,%blittermode);
+}
+End Instruction
+
+/**api
+@name:Del Block
+@description:Destroys an existing Block and free memory
+@param:*index:index:Index of the block to destroy
+@examples:instructions:i_66
+@content:
+To delete all new screen Blocks, the DEL BLOCK command is used. The memory these Blocks used is returned to
+the main program automatically. If you only want to get rid of a single Block, follow the command with that Block's
+identification number.
+api*/
+Instruction Del Block, index=(index)
+{
+	#errors
+	aoz.currentScreen.delBlock(%index);
+}
+End Instruction
+
+
+/**api
+@name:Hrev Block
+@description:Flip a block horzontally
+@sdescription:notimplemented
+@examples:instructions:i_66
+@content:
+This command reverses any block, by flipping it over its own horizontal axis.
+api*/
+Instruction Hrev Block, index=(index)
+{
+	#errors
+	aoz.currentScreen.revBlock(%index,true);
+}
+End Instruction
+
+/**api
+@name:Vrev Block
+@description:Flip a block vertically
+@compatible:notimplemented
+@examples:instructions:i_66
+@content:
+This command reverses any block, by flipping it over its own vertical axis.
+api*/
+Instruction Vrev Block, index=(%index)
+{
+	#errors
+	aoz.currentScreen.revBlock(%index,undefined,true);
+}
+End Instruction

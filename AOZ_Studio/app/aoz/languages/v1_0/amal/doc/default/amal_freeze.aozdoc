@@ -1,0 +1,6 @@
+<i>instruction: suspend AMAL programs</i>
+<b>Amal Freeze</b>
+<b>Amal Freeze</b> number
+=
+Use this command to temporarily freeze one or all AMAL programs from running. These programs may be started again at any time with an AMAL ON command. Please note that AMAL FREEZE should be used to suspend
+AMAL before a command such as DIR is executed, otherwise timing problems may happen.

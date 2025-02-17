@@ -1,0 +1,23 @@
+Load Asset "https://cdn.metroui.org.ua/v4/css/metro-all.min.css", "metro-css"
+Load Asset "https://cdn.metroui.org.ua/v4/js/metro.min.js", "metro-js"
+Load Asset "www/styles/prism.css", "prism-css"
+Load Asset "https://stackedit.io/style.css", "stackedit-css"
+Load Asset "https://unpkg.com/stackedit-js@1.0.7/docs/lib/stackedit.min.js", "stackedit-js"
+Load Asset "www/js/libs/string-utils.js", "string_utils"
+Load Asset "www/js/libs/md-parser.js", "md-parser"
+Load Asset "www/js/libs/prism.js", "prism-js"
+Load Asset "www/js/libs/languages/aoz.min.js", "aoz"
+Load Asset "www/styles/fonts/font.css", "font-css"
+Load Asset "www/styles/fonts/dyslexia/stylesheet.css", "dys-css"
+Load Asset "www/styles/global.css", "global-css"
+
+Load Asset "www/html/index.html", "index"
+Load Asset "www/js/index.js", "index-js"
+
+Include "includes/language/md-reader.aozinc"
+Include "includes/language/toast.aozinc"
+Include "includes/app.aozinc"
+
+LOCAL = False : URL_SEARCH$ = ""
+Global LOCAL, URL_SEARCH$
+Wait 2 : MAIN : Wait

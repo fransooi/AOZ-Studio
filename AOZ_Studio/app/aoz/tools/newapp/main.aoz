@@ -1,0 +1,74 @@
+#splashScreen: false
+#useAssetsResources: False
+
+Curs Off : Flash Off : Cls 0
+//
+// Variables
+//
+MZ = 0: MB = 0: MBOK = 0 : RESPONSE$ = "" : REQUEST$ = "" : REQERROR$ = "" : LANG$ = "en"
+SELPROJ = -1 : PATHPAGE$ = "" : CURPAGE= 0 : NBPAGES = 0 : COPYSOURCE$ = ""
+COMMON_PATH$ = "" : TEMPPATH$ = "" : MYAOZPATH$ = "" : DEMOS_PATH$ = "" : GAMES_PATH$ = "" : TUTORIALS_PATH$ = "" : APPS_PATH$ = ""
+CUR_TEMP = -1 :TEMP_ID$ = "" : TEMP_INFO_ID$ = "" : TEMP_TITLE$ = "" : TEMP_DESCR$ = "" : TEMP_IMAGE$ = ""
+
+PROJECT_PATH$ = "" : NBPAGE = 0 : CURPAGE=0
+PROJECT_ALREADY_EXIST$ = "A project already exists with this title."
+PROJECT_WITHOUT_TITLE$ = "The project has no title."
+V_STARTUP$ = "checked" : F_STARTUP$="Always display this panel at startup."
+CAT_ID$ = "" : CAT_TITLE_ID$ = "" : CAT_TITLE$ = "" : CUR_CAT = -1 : CAT_SELECTED$ = ""
+CTX$ = "" : JSON_ID = 0
+
+// Translation by default
+TITLE$ = "New AOZ Project" : TERM_BACK$ = "Back"
+TERM_CANCEL$ = "Cancel" : TERM_NEXT$ = "Next"
+TERM_CREATE$ = "Create" : TERM_HELP$ = "?" : NO_TEMPLATE$ = "No projects available."
+
+// Globalization
+Global RESPONSE$, REQUEST$, REQERROR$, PATHPAGE$, CURPAGE, SELPROJ, NBPAGES
+Global TEMPPATH$, MYAOZPATH$, DEMOS_PATH$, GAMES_PATH$, TUTORIALS_PATH$, COMMON_PATH$, APPS_PATH$
+Global CUR_TEMP, TEMP_ID$, TEMP_INFO_ID$, TEMP_TITLE$, TEMP_DESCR$, TEMP_IMAGE$, COPYSOURCE$
+Global CAT_ID$, CAT_TITLE_ID$, CAT_TITLE$, CUR_CAT, CAT_SELECTED$, NO_TEMPLATE$
+Global CTX$, JSON_ID, LANG$, PROJECT_ALREADY_EXIST$, PROJECT_WITHOUT_NAME$
+Global PROJECT_PATH$, NBPAGE, CURPAGE, V_STARTUP$, F_STARTUP$
+
+// Load Javascript
+Load Asset "resources/assets/js/client.js", 1
+Wait 0.5
+
+// Get AOZ paths and locale language
+JS Execute "client.getAOZPath()"
+JS Execute "client.getLang()"
+Js Execute "client.onStartup()"
+
+// Translations
+If LANG$ = "fr"
+	TITLE$ = "Nouveau projet AOZ" : TERM_BACK$ = "Retour"
+	TERM_CANCEL$ = "Annuler" : TERM_NEXT$ = "Suivant"
+	TERM_CREATE$ = "Créer" : TERM_HELP$ = "?" : NO_TEMPLATE$ = "Aucun projet disponible."
+	PROJECT_ALREADY_EXIST$ = "Un projet existe déjà avec ce titre."
+	PROJECT_WITHOUT_TITLE$ = "Le projet n'a pas de titre."
+	F_STARTUP$ = "Toujours afficher ce panneau au démarrage."
+End If
+
+If LANG$ <> "en" And LANG$ <> "fr" Then LANG$ = "en"
+
+// Load the database of the templates
+Load Asset TEMPPATH$ + "/data/json/categories.json", 1
+Load Asset TEMPPATH$ + "/data/json/templates.json", 2
+//Load Asset TEMPPATH$ + "/data/json/tutorials.json", 3
+//Load Asset TEMPPATH$ + "/data/json/games.json", 4
+//Load Asset TEMPPATH$ + "/data/json/apps.json", 5
+
+// Load CSS for this application
+Load Asset "resources/assets/www/css/global.css", "global"
+Load Asset "resources/assets/www/css/app.css", "app"
+
+// Load the HTML contents for this application
+Load Asset "resources/assets/www/home.html", "home"
+Load Asset "resources/assets/www/components/category.html", "category"
+Load Asset "resources/assets/www/components/template.html", "template"
+Load Asset "resources/assets/www/components/no_template.html", "no_template"
+
+Include "includes/root.aozinc"
+Include "includes/categories.aozinc"
+Include "includes/templates.aozinc"
+Include "includes/project.aozinc"

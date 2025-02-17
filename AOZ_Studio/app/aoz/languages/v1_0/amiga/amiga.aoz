@@ -1,0 +1,2446 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Amiga-Specific Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+//
+// Initialization
+//
+{
+}
+
+/**doc
+@name:Amiga-specific Commands
+@description:Instructions and functions related specifically to the Amiga. 
+Implementation will be done as best as possible, yet, not all will be possible to emulate. Most of the instruction will compile, yet have simply have no effect in runtime.
+@author:Francois Lionet
+doc*/
+
+/**api
+@name:Set Hardcol
+@description:Set hardware register for hardware Sprite collision detection. This instruction has This instruction has effect in AOZ.
+@param:bitmap1:integer:Enabler
+@param:bitmap2:integer:Comparison
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This command is available to experienced Amiga programmers, and it permits Sprite collision detection using the computer's hardware. SET HARDCOL cannot be used with computed Sprites, so only Sprites zero to 7 may be
+monitored for collision.
+
+The CLXCON register is set for hardware Sprite collision detection using two parameters. Bitmap1 is an enabler,
+that sets bits 12,13,14 and 15 of the CLXON register, and bitmap2 determines the comparison itself, setting bits zero
+to 5. Please refer to your hardware manual for a technical explanation of this register.
+api*/
+Instruction Set Hardcol, bitmap1, bitmap2
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Set Hardcol
+@description:Return collision status after a Set Hardcol instruction. Returns 0 in AOZ.
+@return:integer:0
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This command is available to experienced Amiga programmers, and it permits Sprite collision detection using the computer's hardware. SET HARDCOL cannot be used with computed Sprites, so only Sprites zero to 7 may be
+monitored for collision.
+
+The CLXCON register is set for hardware Sprite collision detection using two parameters. Bitmap1 is an enabler,
+that sets bits 12,13,14 and 15 of the CLXON register, and bitmap2 determines the comparison itself, setting bits zero
+to 5. Please refer to your hardware manual for a technical explanation of this register.
+
+api*/
+Function Hardcol
+{
+	#notimplemented
+}
+End Function( {0} )
+
+
+/**api
+@name:AReg
+@description:variable: Pass values to and from 68000 address register. This instruction has effect in AOZ.
+@parameter:register:integer:Number of the register
+@return:integer:0
+@compatible:notimplemented
+@examples:instructions:i_76
+@content:
+(extracted from the AMOSPro manual)
+
+AREG is a special array which is used to pass values to and from any of the 68000 processor's address registers.
+Specify the number of the register from 0 to 6, selected from either of the following two groups:
+A0, Al, A2. These registers can be read from AMOS Professional Basic, and changed at will. Whenever a machine
+code program is run, any new values will be transferred straight into the relevant address register. 
+
+For example:
+~~~
+Areg(0)=Varptr(A$) : Rem Load the address of A$ into A0
+Areg(1)=Varptr(B(0,0)) : Rem Load the address of B(0,0) into Al
+~~~
+A3, A4, A5, A6. These are read-only registers. Any attempt to change their current contents will generate an "illegal function call" error message.
+api*/
+Function AReg, register
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Copper On
+@description:Re-start automatic copper generation. This instruction may be implemented in a future version of AOZ.
+@compatible:amos
+@examples:instructions:i_62
+@content:
+(extracted from the AMOSPro manual)
+
+The COPPER ON command re-starts all standard copper calculations, and returns AOZ Studio back to
+normal. The experts (and foolhardy) may now continue.
+api*/
+Instruction Copper On
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Copper Off
+@description:Stop automatic copper generation. This instruction may be implemented in a future version of AOZ.
+@compatible:notimplemented
+@examples:instructions:i_62
+@content:
+(extracted from the AMOSPro manual)
+
+If you ignore the warning in the last paragraph and use this instruction, the automatic copper generation that forms
+the backbone of the AMOS Professional system is turned off. From now on, you are on your own!
+
+You should now understand that AMOS Professional actually holds two separate copper lists in memory, and the
+principle is very similar to the logical and physical screens of the DOUBLE BUFFER system.
+
+The logical copper list is the list being created from AMOS Professional Basic, and it is completely invisible. The
+physical list holds the copper instructions that are generating the current TV display. It cannot be accessed from
+AMOS Professional at all, as this would corrupt the display completely. As a default, these copper lists are limited
+to 12k in length, which is the equivalent to approximately six thousand instructions. This limit may be increased
+using an option from the Interpreter set-up dialogue box.
+
+Copper lists can be defined in one of three ways:
+
+- The first method is to enter the copper list using a combination of the COP MOVE and COP WAIT instructions,
+from AMOS Professional Basic.
+- The second way is to find the address of the logical copper list, using COP LOGIC. This can then be manipulated
+directly using DEEK and DOKE, allowing minor modifications to be made to the existing screen without having to
+generate a completely new copper list at all. This is perfect for the creation of rainbow effects.
+- The third alternative is for assembly language buffs. Copper lists can be generated using machine code, and as
+before, the current address is available via the COP LOGIC function. Note that this address will change during the
+course of a program, and it must be entered every time the machine code routine is called.
+
+### Recommended Procedures
+If you want to create copper lists from beginning to end, you must take personal control over the hardware Sprites,
+the display positioning, the location of screens, and their sizes. You must then ensure that the resulting screens have
+the correct amount of memory, before loading the appropriate registers with the addresses of the required bitmaps.
+This can be achieved with the LOGBASE function.
+
+Additionally, if you intend to use DOUBLE BUFFER, a separate copper list must be produced for both the logical
+and physical screens. Here is the procedure:
+
+- Define the copper list for the first screen.
+- Switch copper lists using the COP SWAP command.
+ -Swap between the logical and physical screens with SCREEN SWAP.
+- Define a copper list for the second screen.
+
+Providing that all is well, you may access your screens using -all of the normal AMOS Professional drawing
+commands, including SCREEN COPY, DRAW, PRINT and PLOT. As well as this, there should be no problems
+using Blitter Objects.
+
+However, multiple screens and Sprites are only supported by the standard AMOS Professional copper system, so
+you cannot use SCREEN OPEN, SCREEN DISPLAY, RAINBOWS or any of the SPRITE commands. If you need
+to generate such effects, you will have to program them for yourself! For those of you who wish to give up now, the
+following command may be useful.
+api*/
+Instruction Copper Off
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Cop Swap
+@description:Swap logical and physical copper lists. This instruction may be implemented in a future version of AOZ.
+@compatible:notimplemented
+@examples:instructions:i_62
+@content:
+The COP SWAP command switches over the logical and physical copper lists. The new copper list will now be flicked into place, and the results will be shown after the next vertical blank period. For example:
+~~~                
+Cop Swap : Wait Vbl
+~~~
+api*/
+Instruction Cop Swap
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Cop Reset
+@description:Re-set copper list pointer. This instruction may be implemented in a future version of AOZ.
+@compatible:notimplemented
+@examples:instructions:i_62
+@content:
+(extracted from the AMOSPro manual)
+
+This command is used to add a pair of MOVE commands, forcing the copper list to re-start from the very first instruction. This may be used to generate simple loops.
+api*/
+Instruction Cop Reset
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Cop Wait
+@description:Insert a WAIT instruction into copper list. This instruction may be implemented in a future version of AOZ.
+@compatible:amos
+@examples:instructions:i_62
+@content:
+(extracted from the AMOSPro manual)
+
+The COP WAIT command enters a WAIT instruction at the current position in the copper list. WAIT forces the copper to stop in its tracks until the screen has been drawn at the specified hardware coordinates x,y. The copper
+then continues from the next instruction in the copper list.
+
+WAIT is usually called immediately before a MOVE command, creating a pause until the display reaches a specific
+screen line. The MOVE instruction is then used to change the attributes of the screen area below this line. Rainbows
+are an excellent example of this technique, with each line of the rainbow generated with a pair of commands like
+this:
+~~~                
+Cop Wait 0,Y : Rem Y is starting coordinate of next colour shift
+Cop Move $180,$777 : Rem $180 is address of colour 0 and $777 is new colour
+~~~
+The x-coordinate is a hardware coordinate from 0 to 448. Since the Amiga is only capable of performing this test
+every four screen points, this coordinate is rounded to the nearest multiple of four.
+
+The y-coordinate can be any value from 0 to 312. Normally, coordinates from 256 to 312 require special
+programming, but AOZ Studio generates the correct instructions automatically, so there is no need for
+concern! Here are some examples:
+~~~                
+Cop Wait 0,130: Rem Wait for screen to reach hardware coords 0,100
+Cop Wait 0,300: Rem Wait for line 300
+Cop Wait 12,10: Rem Wait for coordinates 12,10 to arrive
+~~~
+The optional xmask and ymask parameters are bit-mask values which allow for a pause until the screen coordinates satisfy a specific combination of bits. The default value is $1FF. For example:
+~~~                
+Cop Wait 0,2,$1FF,%11 : Rem Await next EVEN scan line
+~~~
+
+api*/
+Instruction Cop Wait, x, y, xMask, yMask
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Cop Movel
+@description:Write a long MOVE instruction to copper list. This instruction may be implemented in a future version of AOZ.
+@param:address:Address
+@param:integer:value
+@examples:instructions:i_62
+@compatible: notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This is a special option from AOZ Studio Basic, which generates a matched pair of MOVE commands in
+the new copper list. These load a 32-bit (long word) value into the selected address, exactly like a normal LOKE
+instruction.
+api*/
+Instruction Cop Movel, address=(address), value
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Cop Move
+@description:Write a MOVE instruction to current copper list. This instruction may be implemented in a future version of AOZ.
+@param:address:Address
+@param:integer:value
+@examples:instructions:i_62
+@compatible: notimplemented
+(extracted from the AMOSPro manual)
+
+MOVE is an internal instruction used by the copper, and it is very similar to the AOZ Studio DOKE
+command. It inserts a MOVE command into the current logical copper list, by copying a value from 0 to 65535 into
+the selected register address. The address refers to a copper register from $7F to $1BE.
+api*/
+Instruction Cop Move, address=(address), value
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Cop Logic
+@description:Give address of logical copper list. This instruction may be implemented in a future version of AOZ.
+@return:integer:0 in this version.
+@compatible: notimplemented
+@examples:instructions:i_62
+@content:
+(extracted from the AMOSPro manual)
+
+This command returns the absolute address of the logical copper list in memory. It can be used to manipulate the
+copper list directly from AOZ Studio Basic. Lists can also be generated by using assembly language.
+api*/
+Function Cop Logic
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Multi Wait
+@description:Manage multi-tasking on the Amiga. This instruction may be implemented in a future version of AOZ.
+@compatible: notimplemented
+@examples:instructions:i_62
+@content:
+(extracted from the AMOSPro manual)
+
+The MULTI WAIT instruction should be used in the main loop of an AMOS Professional program. It forces a
+multi-task WAIT VBL for situations such as waiting for a menu item to be selected.
+
+This command should not be used to achieve accurate screen synchronisation, as it has been specifically provided
+for multi-tasking and may skip several vertical blank periods, depending on the number of tasks being run
+simultaneously.
+api*/
+Instruction Multi Wait
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:AMOS To Front
+@description:Bring AMOS IDE in the front of display. This instruction may be implemented in a future version of AOZ.
+@compatible: notimplemented
+@examples:instructions:i_70
+@content:
+(extracted from the AMOSPro manual)
+
+This instruction forces AMOS back onto the display, leaving the Workbench environment
+hidden.
+api*/
+Instruction AMOS To Front
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:AMOS To Back
+@description:Bring AMOS IDE in the back of display. This instruction may be implemented in a future version of AOZ.
+@compatible: notimplemented
+@examples:instructions:i_70
+@content:
+(extracted from the AMOSPro manual)
+
+This instruction allows other programs to be accessed, by bringing forward the Workbench display and hiding
+AOZ Studio from view.
+api*/
+Instruction AMOS To Back
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:AMOS Here
+@description:Detect if AMOS is running. Emulation returns TRUE
+@return:boolean:True
+@compatible: notimplemented
+@examples:instructions:i_70
+@content:
+(extracted from the AMOSPro manual)
+
+AMOS HERE is used to provide a simple report. True is returned if AOZ Studio is currently
+displayed, otherwise False indicates that the Workbench is in view.
+
+api*/
+Function AMOS Here
+{
+	#notimplemented
+}
+End Function( {true} )
+
+/**api
+@name:AMOS Lock
+@description:Blocks Amiga-A key. This instruction may be implemented in a future version of AOZ.
+@compatible: notimplemented
+@examples:instructions:i_70
+@content:
+(extracted from the AMOSPro manual)
+
+The AMOS LOCK command disables the facility to toggle between AMOS and the Workbench by
+pressing [Amiga]+[A]. This can be used to prevent other users from discovering how your program was written!
+api*/
+Instruction AMOS Lock
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Close Workbench
+@description:Cclose the Workbench. This instruction may be implemented in a future version of AOZ.
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This command closes the Workbench screen, saving about 40k of memory, and freeing it for your own programs!
+Prove this now, as follows:
+~~~                
+Print Chip Free, Fast free
+Close Workbench
+Print Chip Free, Fast Free
+~~~
+CLOSE WORKBENCH can be executed from inside an AOZ Studio program, or from Direct Mode, but it
+will not work if there is a CLI window opened. To solve this problem, ensure that AOZ Studio loads using
+the following CLI instruction:
+~~~                
+run>nil:AMOSPro
+ENDCLI
+~~~
+
+api*/
+Instruction Close Workbench
+{
+}
+End Instruction
+
+/**api
+@name:Set Buffer
+@description:Set the size of the variable area. This instruction may be implemented in a future version of AOZ.
+@compatible: notimplemented
+@examples:instructions:i_64
+@content:
+(extracted from the AMOSPro manual)
+
+The SET BUFFER command can be used inside a program to set the new size of the variable area. Simply follow the command with the number of kilobytes required, and you are recommended to increase this value by 5k at a
+time, until enough space has been reserved in the buffer area. It is important to note that the SET BUFFER
+command must be the very first instruction in your program, apart from any REM messages.
+api*/
+Instruction Set Buffer, size
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Equ
+@description:Get an equate. This instruction may be implemented in a future version of AOZ.
+@param:string:equate:The name of the equate
+@compatible:notimplemented
+@return:string:""
+@content:
+(extracted from the AMOSPro manual)
+
+The EQU function returns any standard equate value used by the Amiga system libraries. The equate can represent anything from an offset to a structure, or even the names of various bit- masks. Provided that it is supplied in the standard Amiga include files, it will be available from AOZ Studio immediately. The only exceptions to this
+rule are the library offsets, and these should be obtained with the LVO function.
+
+The name of the equate should be specified in brackets, and refers to the name as set out in your reference manuals.
+This name is case sensitive, as explained above, so care should be taken. It is also important to remember that the
+name string must be a constant, and that expressions are not allowed! In fact, the technique is extremely simple.
+This example would send a WRITE command to a device:
+~~~                
+DEV D0(channel,EQU("CMD_WRITE"))
+~~~
+api*/
+Function Equ, string$
+{
+	#return:string
+	#notimplemented
+}
+End Function( {""} )
+
+/**api
+@name:Lvo
+@description:Get the Library Vector Offset. This instruction will not be implemented in AOZ.
+@compatible:notimplemented
+@return:integer:0
+@content:
+(extracted from the AMOSPro manual)
+
+This function returns the Library Vector Offset associated with a specified function. The function name will be
+translated automatically when your program is tested for the first time, and it will be placed in a memory bank for
+future use. Set up the memory bank with a SET EQUATE BANK command first, otherwise an error message will
+be generated. If the function name does not exist, an "Equate not found error" will be given from the Editor.
+
+The function name is in standard Commodore format, and should be typed in exactly as it appears in your reference
+manuals. This is especially important regarding the way upper case letters are treated differently from their lower
+case equivalents. For example, Input, INPUT and input are separate keywords, only the first version will be
+accepted, and either of the alternatives will generate an error when the program is tested!"
+Also note that because the function is executed during the testing process, it must be a simple string rather than an
+expression. For example, if you need to call the FindTask option from Exec, you would use a line like this:
+
+Also note that because the function is executed during the testing process, it must be a simple string rather than an
+expression. For example, if you need to call the FindTask option from Exec, you would use a line like this:"
+~~~                
+TASK=Execall(Lvo("FindTask"))
+~~~
+
+api*/
+Function Lvo, string$
+{
+}
+End Function( {0} )
+
+/**api
+@name:Set Double Precision
+@description:Engage double precision accuracy. This instruction may be implemented in a future version of AOZ.
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+Double precision should be set at the start of your program, and all floating point calculations will be performed
+using the more accurate mode. Because the two modes are completely separate, single precision and double
+precision modes cannot be mixed in the same program.
+api*/
+Instruction Set Double Precision
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Request WB
+@description:Use the Workbench system requester. This instruction may be implemented in a future version of AOZ.
+@compatible:notimplemented
+@examples:instructions:i_63
+@content:
+(extracted from the AMOSPro manual)
+
+This command is used to switch to the Workbench system requester. 
+
+As soon as one of the options is selected from it, you will be returned to AOZ Studio. Please note that if the Requester Extension is deleted from the
+extension list by means of the configuration file, then the standard Workbench requester will be used for displaying
+messages. This will give the illusion that AOZ Studio has crashed when a requester appears. If this situation
+occurs, simply press [Amiga]+[A] to return to the Workbench, respond to the requester and press [Amiga]+[A] again
+to return to AOZ Studio. There should be no need to delete the Requester extension unless memory is very low.
+api*/
+Instruction Request WB
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Request ON
+@description:Use the AMOS Professional requester routine. This instruction may be implemented in a future version of AOZ.
+@dedscription:notimplemented
+@examples:instructions:i_63
+@content:
+(extracted from the AMOSPro manual)
+
+This is the default setting, and is used to make AOZ Studio employ its own requester routine.
+api*/
+Instruction Request On
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Request OFF
+@description:Used to cancel the requester. This instruction may be implemented in a future version of AOZ.
+@description:notimplemented
+@examples:instructions:i_63
+@content:
+(extracted from the AMOSPro manual)
+
+If this instruction is used, AOZ Studio will automatically select the [CANCEL] button of the requester, and the actual requester will not be displayed. This is ideal for error trapping Within a program.
+api*/
+Instruction Request Off
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:NTSC
+@description:Test if the display is emulating a NTSC TV set.
+@return:boolean:True if the application is in Amiga mode and the renderer is set to NTSC emulation.
+@compatible: amos
+@examples:instructions:i_77
+api*/
+Function NTSC
+{
+}
+End Function( {aoz.ntsc()} )
+
+/**api
+@name:Load Iff
+@description:Load an IFF image into a screen (deprecated, use "Load Image")
+@param:path$:string:Path to the image to load
+@param:index:index:Index of the screen to create. If ommited the image will be loaded in the current screen
+@param:*tags$:string:List of tags indicating how to load the image. "#left", "#center", "#right" aligns the image horizontally, "#top", "#middle", "#bottom" aligns the image vertically, "fit" resizes the image to fit the screen, "paste" does not resize the image
+@content:
+(extracted from the AMOSPro manual)
+
+With the appropriate IFF picture files ready to be loaded on disc, this command is used to load the selected filename to the current screen. 
+
+There is an optional screen number parameter, which will open that screen for the picture. If this numbered screen already exists, its contents will be erased and replaced by the IFF data.
+@compatible:amos
+api*/
+Instruction Load Iff, path$, index=(index), tags$
+{
+	#errors
+	#waiting
+	#addToFilesystem:"%path$"
+	return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"loadImage",waitFunction:"load_wait",args:[%path$,%index,%tags$, true]};
+}
+End Instruction
+
+/**api
+@name:Save Iff
+@description:Save an IFF image out of a screen (deprecated, use "Save Image")
+@param:path$:string:Path to the image to save
+@param:index:integer:Index of the screen to save. If ommited the image will be saved from the current screen
+@content:
+(extracted from the AMOSPro manual)
+
+The SAVE IFF command saves the current screen as an IFF picture file with the selected filename onto disc. Certain data is automatically added to this IFF file, which stores the present screen settings, including any SCREEN DISPLAY, SCREEN OFFSET, SCREEN HIDE and SCREEN SHOW. This will be stored and recognised by AOZ Studio whenever this file is loaded again, so that the IFF screen will be displayed exactly as it was
+saved. Please note that this data will be ignored by other graphics packages, such as Dpaint 3, also that it is not
+possible to save double buffered or dual playfield screens with this command.
+
+An optional parameter can be added after the filename, which selects whether or not the IFF file is to be compacted
+before it is saved. A value of 1 specifies that the standard AOZ Studio compression system is to be used,
+whereas a zero saves the picture without any compression.
+@compatible:notimplemented
+api*/
+Instruction Save Iff, path$, index=(index)
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:PLoad
+@description:Load machine code directly into memory. This instruction will not be implemented in AOZ.
+@param:path$:string:Path to file to load
+@param:index:integer:Index of the bank to load to.
+@examples:instructions:i_76
+@content:
+(extracted from the AMOSPro manual)
+
+The PLOAD command reserves a memory bank and loads some machine code into it from disc. Specify the
+filename that contains the machine code file on disc, followed by the number of a new memory bank to be reserved
+for the program. If the bank number is negative, the number will be multiplied by -1, and the bank will be allocated
+using Chip memory.
+
+Once machine code is loaded in this way, it is installed as a permanent memory bank, so whenever the current
+program is saved, the machine code is stored too. Also note that the machine code file can be saved onto disc as a
+standard ".Abk" file, then loaded directly into AMOS Professional Basic. After PLOAD has performed its work, the
+memory bank can be executed immediately! The following factors should be noted:
+
+- This file must consist of a standard piece of machine code, that can be run under CLI.
+- The program must be terminated by an RTS instruction.
+- Only the first CODE segment of the routine will be installed into memory.
+
+Any attempt to load a commercial program using this technique will probably crash your Amiga
+@compatible:notimplemented
+api*/
+Instruction pload, path$, index=(index)
+{
+	#notimplemented
+	#addToFilesystem:"%path$"
+	//return{type:12,waitThis:aoz.moduleFilesystem,callFunction:"saveBinary", waitFunction:"load_wait",args:[%_file$,%_tags]};
+}
+End Instruction
+
+/**api
+@name:Mask Iff
+@description:Indicate what sections of an IFF file to load the next time the Load IFF instruction is used
+@param:mask:integer:Bitmask indicating the load. Example %100: Load palette of picture only, %10000: Load bitmaps only
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+The PICTURE function returns the precise format of the mask used by a picture, and it is used like this:
+~~~                
+Mask Iff Picture
+Load Iff "Picture_Name"
+~~~
+Here are some typical settings that can be used to load masked data from an IFF file:
+~~~                
+Mask Iff %100 : Rem Load palette of picture only
+Mask Iff %10000 : Rem Load bitmaps only
+~~~
+
+api*/
+Instruction Mask Iff, mask
+{
+	#notimplemented
+}
+End Instruction
+
+
+/**api
+@name:Frame Load
+@description:Load frames of an IFF channel into memory
+@param:channel:index:The index of the IFF channel
+@param:bank:address:The number of a memory bank or it's addres
+@param:*length:integer:The number of frames to load
+@compatible: notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+Use this function to load one or more IFF frames directly into memory. The parameters in brackets are as follows:
+
+The channel number is the number of an animation file that is currently opened using the OPEN IN command.
+
+Next, specify the memory address or bank number where the frames are to be stored. If an address is specified, the
+entire file will be loaded into the chosen memory area, exactly like a BLOAD instruction. If you give a bank
+number, a new memory bank will be reserved automatically. It will hold your animation frames and be a permanent
+data bank in fast memory, called "IFF". Please note that bank numbers can range from 1 to 65535. To avoid
+overrunning your memory area and crashing the system, it is vital that enough space is reserved to hold the entire
+animation sequence in memory. The actual storage requirements may be calculated with the FRAME LENGTH
+function, which is explained later.
+
+Finally, there is an optional parameter that specifies the number of animation frames to be loaded. If this number is
+omitted, only Frame 1 will be loaded, but if your request is greater than the total number of available frames, all of
+the images will be grabbed in the current file, if memory allows. This can be exploited to load entire sequences no
+matter what their length, by setting this optional parameter to an overlarge number, as no error will be generated.
+
+FRAME LOAD returns the number of frames that have been successfully loaded into memory. This value may be
+saved into a variable once the animation has been loaded, and made use of when the sequence is to be played. For
+example:
+~~~                
+Rem Open animation file for reading
+Open In 1,"AMOSPro_Tutorial:Iff_Anim/AMOS.Anim"
+Rem Load all frames in current file
+Rem use overlarge value of 1000 to grab all available images to bank 10
+N=Frame Load (1 To 10,1000)
+Close
+Rem N now holds the number of actual frames
+Print "Number of frames in this file is ";N
+~~~
+
+api*/
+Instruction Frame Load, channel=(index) To bank, length
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Frame Play
+@description:Play IFF frameson screen
+@param:bank:integer:The number of a memory bank or it's addres
+@param:number:integer:The number of frames to play
+@param:*screen:index:The index of the screen to play to, or the current screen if not specified
+@content:
+(extracted from the AMOSPro manual)
+
+Use this function to display animations on screen at the appropriate points in your programs. Specify the memory address or bank number containing an IFF animation sequence that has already been loaded by FRAME LOAD. Please note that addresses must be even and that the first bytes must be a valid IFF Frame definition. Next specify the number of frames that you want to play.
+
+The optional screen parameter is the identifier of a new screen to be created for the animation, and it can be used to automatically define a screen as the first frame of the animation to be displayed. If this screen number is omitted, an attempt will be made to use the current screen.
+
+Please note that your new screen will not be set up for double buffering, and you should activate this directly from
+your program with the DOUBLE BUFFER command, if required. Also, the IFF animation will be displayed on the
+logical screen, and when using double buffering SCREEN SWAP must be employed, otherwise the animation will
+run invisibly in the background!
+
+Once the FRAME PLAY function has been called, the start address of the next frame in the sequence will be
+returned, and this address can be used to display the following frame of the animation.
+For example:
+~~~                
+Rem Play the first frame in Bank 10 using screen 0
+F=Frame Play(10,1,0)
+Double Buffer : Rem activate non automatic double buffer
+Rem Display next frame
+F=Frame Play(F,1)
+~~~
+When the end of the animation sequence has been reached, your F variable points to the last frame of the animation.
+Because the exact number of frames is returned to the FRAME LOAD function, FRAME PLAY can be enclosed in
+a loop for simplicity, like this:
+~~~                
+Open In 1,"AMOSPro_Tutorialiff_Anim/AMOS.Anim"
+L=Frame Load(1 To 10,1000)
+Close
+Rem Play first frame from Bank 0 and define new screen 0
+Do
+	P=Frame Play(10,1,0)
+	Double Buffer
+	For X=2 To L-1 : Rem Play sequence to the end
+		P=Frame Play(P,1) : Rem Play next frame
+		Screen Swap : Rem Make animation visible
+		Wait Vbl : Wait Vbl : Wait Vbl
+	Next X
+Loop
+~~~
+
+api*/
+Instruction Frame Play, bank=(index), number, screen=(index)
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:IFF Anim
+@description:Play IFF frameson screen
+@param:path$:string:The path to the file to play
+@param:screen:index:The index of the screen to create to play the file
+@param:*nFrames:integer:The number of times to play, once if ommited
+@content:
+(extracted from the AMOSPro manual)
+
+This function provides the most straightforward way of displaying a complete IFF animation sequence directly on
+screen. The "filename" must refer to a valid IFF animation saved in "compressed" (Mode 5) format. The screen
+number defines the screen to be created for the animation sequence. If the requested screen number already exists, it
+will be replaced by the new definition automatically. There is an optional parameter to set the number of times the
+animated sequence is to be played. If this number is omitted, the animation will be played once.
+
+Remember that frame number 1 is the background screen that serves as the basis for the entire sequence, so that your
+animation will always re-start from frame number 2.
+
+After the animation has been played the requested number of times it will stop. The memory consumed will
+automatically be released back to AOZ Studio for re-use.
+
+If you have a disc containing an IFF animation file, place it into any drive and call up the standard file selector, like this:
+~~~                
+Iff Anim Fsel$("**") To 0,10
+~~~
+When the file is requested, your animation sequence will be loaded into screen 0 and cycled through ten times.
+
+Direct IFF animation
+Because the standard AOZ Studio drawing commands may be used with IFF animations, you are provided
+with a range of functions for loading and manipulating animated sequences directly in your programs.
+
+api*/
+Instruction IFF Anim, path$ To screen, nFrames
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Frame Length
+@description:Indicates if a file or directory exists on the disc
+@param:channel:index:The index of the IFF channel
+@param:*nFrames:integer:An eventual number of frames to calculate
+@compatible:notimplemented
+@return:integer:The length in bytes of the frames in memory. 0 in this version
+@content:
+(extracted from the AMOSPro manual)
+
+This function is used to calculate the precise amount of memory needed to hold the selected frames of an IFF animation file. To find the exact size of the required data area with FRAME
+
+LENGTH, simply give the channel number of the IFF file previously opened with the OPEN IN command.
+
+You may also specify the number of frames to be taken into consideration. If this number is omitted, only the first
+frame in the animation with be checked. Alternatively, if an overlarge number is specified, the exact memory
+requirements of all the frames in the current file will be returned.
+
+FRAME LENGTH does not change the position of the file pointer, but leaves it at the start of the next animation
+frame to be loaded. So it can be used immediately before a FRAME LOAD command to check the memory
+requirement of your new animation. For example:
+~~~                
+Open In 1 ,"AMOSPro_Tutorial:Iff_Anim/AMOS.Anim"
+Rem Load first frame only into memory
+L=Frame Length(1)
+Rem Reserve space for the frame in Bank 10
+Reserve As Work 10,L
+N=Frame Load(1 To 10)
+Close
+Print "Required memory for frame 1=";L
+~~~
+api*/
+Function Frame Length, channel=(index), nFrames
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Frame Skip
+@description:Skip past an animation frame
+@param:bank:address:The index of a memory bank or an address in one
+@param:*nFrames:integer:An eventual number of frames to skip
+@return:integer:The address of the next frame. 0 in this version
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This is exactly the same as FRAME PLAY, except that no output is made to the screen. FRAME SKIP omits any selected frames and returns the address of the next frame to be played in the sequence. The bank or address number of a valid IFF animation frame is given, followed by the number of frames to be skipped over.
+
+Use FRAME SKIP carefully, because frames are stored relative to the existing screen background. This means that
+the animation will only re-commence when an identical frame is reached to the one currently being displayed.
+
+api*/
+Function Frame Skip, channel=(index), nFrames
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Frame Param
+@description:Return a parameter after playing a frame
+@return:integer:The amount of time needed to successfully display an animation on screen, measured in 50ths of a second.. 0 in this version
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This function returns the amount of time needed to successfully display an animation on screen, measured in 50ths
+of a second. It is used after FRAME PLAY or FRAME SKIP to delay the program until the screen has been totally
+re-drawn.
+
+Deluxe Paint users may need to slow down the speed of AOZ Studio animations by one fiftieth of a second,
+in order to harmonise the display, like this:
+~~~                
+Wait Form Param+1
+~~~
+This has nothing to do with the Deluxe Paint package, but takes into account the extra efficiency of the AMOS
+Professional double buffering and copper calculations, when compared to the standard Workbench routines!
+
+api*/
+Function Frame Param
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Get Fonts
+@description:Scan the system for new fonts, will scan both Google and Amiga fonts.
+@examples:instructions:i_79
+@compatible:notimplemented
+@content:
+This instruction has no effect in AOZ and is left for compatibility with AMOS applications.
+
+(extracted from the AMOSPro manual)
+
+The GET FONTS command creates an internal list of all available fonts on the System disc, and it should always be
+called at least once before any changes in settings are made. In practice, you will probably want to use this
+instruction at the beginning of a program, so that SET FONT may be used freely at any later point.
+
+It is very important to remember that if you are distributing run-only or compiled programs to be used by other
+people, and these programs make use of alternative fonts, then the required font files must be included.
+~~~                
+Get Fonts
+For F=0 To 10
+	Set Font F : T$="AOZ Studio Font: "+Str$(F)
+	Text 0,100,T$
+	Wait Key : Cls
+Next F
+~~~
+
+api*/
+Instruction Get Fonts
+{
+}
+End Instruction
+
+/**api
+@name:Get Disc Fonts
+@description:Scan the system for Amiga fonts.
+@compatible:notimplemented
+@content:
+This instruction has no effect in AOZ and is left for compatibility with AMOS applications.
+
+(extracted from the AMOSPro manual)
+
+This instruction is exactly the same as the GET FONTS command, except that it triggers a search through the Fonts" folder of your current disc only. If new fonts are to be used, then they must first be copied into this folder.
+api*/
+Instruction Get Disc Fonts
+{
+}
+End Instruction
+
+/**api
+@name:Get Rom Fonts
+@description:Scan the system for Google fonts.
+@note:This instruction has no effect in AOZ and is left for compatibility with AMOS applications.
+@content:
+This instruction has no effect in AOZ and is left for compatibility with AMOS applications.
+
+(extracted from the AMOSPro manual)
+
+As you might expect, this command produces a list of the fonts that are built into the computer's ROM chips. At time of writing, the choice is rather limited:
+~~~                
+Screen Open 0,640,200,16,Hires
+Get Rom Fonts
+For A=1 To 10
+	Set Font A : A$="Hello, I'm "+ Font$(A) : Text 0,100,A$
+	Wait Key : Cls
+Next A
+~~~
+api*/
+Instruction Get Rom Fonts
+{
+}
+End Instruction
+
+/**api
+@name:Get CBlock
+@description:Captures a portion of the graphics from a screen into a buffer. (deprecated, use Get Block)
+@param:index:index:Index of the block to create
+@param:X1:integer:Horizontal coordinate of the top-left corner of the rectangle to capture
+@param:y1:integer:Vertical coordinate of the top-left corner of the rectangle to capture
+@param:x2:integer:Horizontal coordinate of the bottom-right corner of the rectangle to capture
+@param:y2:integer:Vertical coordinate of the bottom-right corner of the rectangle to capture
+@examples:instructions:i_66
+@content:
+(extracted from the AMOSPro manual)
+
+The GET CBLOCK command is used to save and compact a rectangular area of graphics from the screen. These
+Blocks are often used to grab the area underneath dialogue boxes, so that after the dialogue has been completed, the
+screen can be rapidly restored to its original state.
+
+Specify the Block number from 1 to 65535, followed by the x,y-coordinates of its top left-hand corner. Then define
+the Block by giving its width and height, in pixels. Note that the x- coordinate, and the width of the Block will be
+rounded to the nearest multiple of eight pixels.
+api*/
+Instruction Get CBlock, index=(index), x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.getCBlock(%index,{x:%x1,y:%y1,width:(%x2)-(%x1),height:(%y2)-(%y1)});
+}
+End Instruction
+Instruction Get CBlock, index=(index), x, y, width, height
+{
+	#errors
+	aoz.currentScreen.getCBlock(%index,{x:%x,y:%y,width:%width,height:%height});
+}
+End Instruction
+
+/**api
+@name:Put CBlock
+@description:Draw a previously capture block in the current screen. (deprecated, use Put Block)
+@param:index:index:Index of the block to draw
+@param:x:integer:Horizontal coordinate of the top-left corner of the block drawn
+@param:y:integer:Vertical coordinate of the top-left corner of of the block drawn
+@examples:instructions:i_66
+@content:
+(extracted from the AMOSPro manual)
+
+This command places the Block whose number is specified at its original screen coordinates. Optional target
+coordinates can be added, in which case the Block will be unpacked and then drawn at the new position. Any new
+x-coordinate will also be rounded to the nearest 8-pixel boundary.
+api*/
+Instruction Put CBlock, index=(index), x, y
+{
+	#errors
+	aoz.currentScreen.putCBlock(%index,{x:%x,y:%y});
+}
+End Instruction
+
+/**api
+@name:Del CBlock
+@description:Destroys an existing CBlock and free memory (deprecated, use Del Block)
+@param:index:index:Index of the block to destroy
+@examples:instructions:i_66
+@content:
+(extracted from the AMOSPro manual)
+
+The DEL CBLOCK instruction erases all compacted Blocks from memory, unless an individual Block number is
+specified, in which case only that Block will be erased.
+api*/
+Instruction Del CBlock, index=(index)
+{
+	#errors
+	aoz.currentScreen.delCBlock(%index);
+}
+End Instruction
+
+
+/**api
+@name:Reserve As Chip Work
+@description:Reserve and allocates memory for a new bank in Amiga chip memory, and add it to the list of banks (deprecated)
+@param:index:index:Number of the bank to create
+@param:length:integer:Length in byte of the new bank
+@examples:instructions:i_78
+@content:
+Note: this command is equivalent to "Reserve As Work" in AOZ.
+
+(extracted from the AMOSPro manual)
+
+This command allocates the selected block of temporary memory using Chip Ram, and it is often used with the DOUBLE BUFFERED sampling system, to play samples directly from hard disc. Here are some typical examples of
+the different RESERVE AS commands:
+~~~                
+Reserve As Chip Work 10,10000: Rem 10000 bytes of chip workspace to bank 10
+Reserve As Work 11,5000: Rem 5000 bytes of fast workspace to bank 11
+Reserve As Chip Data 12,2000 : Rem 2000 bytes of permanent chip data to bank 12
+Reserve as Data 13,1000 : Rem 1000 bytes of fast data to bank 13
+~~~
+api*/
+Instruction Reserve As Chip Work, index=(index), length
+{
+    #errors
+    var bank=aoz.banks.reserve(%index,"work",%length);
+    aoz.banks.updateBank(bank,%index);
+}
+End Instruction
+
+
+/**api
+@name:Reserve As Chip Data
+@description:Reserve and allocates memory for a new bank of "Data" type in Amiga chip memory, and add it to the list of banks (deprecated)
+@param:index:index:Number of the bank to create
+@param:length:integer:Length in byte of the new bank
+@examples:instructions:i_78
+@content:
+Note: this command is equivalent to "Reserve As Data" in AOZ.
+
+(extracted from the AMOSPro manual)
+
+Use this variation of the RESERVE AS instruction to allocate a permanent area of memory using Chip Ram. If there is none available, an "Out of Memory" error will be reported. You can obtain an instant read-out of the
+remaining chip memory by calling the CHIP FREE function, as follows:
+~~~                
+CF=Chip Free
+Print "Remaining Chip memory = ";CF;" bytes."
+~~~
+Once a bank has been defined by this command, it will be saved automatically, along with your AOZ Studio
+Basic program.
+
+api*/
+Instruction Reserve As Chip Data, index=(index), length
+{
+    #errors
+    var bank=aoz.banks.reserve(%index,"data",%length);
+    aoz.banks.updateBank(bank,%index);
+}
+End Instruction
+
+
+/**api
+@name:Pack
+@description:Compress an screen into a memory bank
+@param:screen:index:Index of the screen
+@param:bank:index:Index of the bank to compress to
+@param:x1:integer:Coordinate of top-left corner of rectangle to compress (optional)
+@param:y1:integer:Coordinate of top-left corner of rectangle to compress (optional)
+@param:x2:integer:Coordinate of bottom-right corner of rectangle to compress (optional)
+@param:y2:integer:Coordinate of bottom-right corner of rectangle to compress (optional)
+@compatible:notimplemented
+@content:
+Note: this instruction will be implemented with ZIP compression in a near future.
+
+(extracted from the AMOSPro manual)
+
+The image must always be unpacked into an existing screen. Also there will be a slight flicker when the image is
+unpacked, unless the screens have been double buffered, so it is better to use single buffered screens here. Screen
+numbers, memory bank numbers and optional coordinates for smaller sections of the screen to be packed are used in
+exactly the same way as with the SPACK command, and x-coordinates are rounded to the nearest 8 pixel boundary
+too.
+
+SPACK is fully compatible with the standard AUTOBACK system explained in Chapter 7.2, so it is easy to
+combine compacted images with moving screens. Images can even be unpacked behind existing Bobs, so it is
+possible to exploit this command together with SCREEN OFFSET to create superb scrolling backgrounds.
+api*/
+Instruction Pack, screen=(index) To bank=(index), x1, y1, x2, y2 
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:SPack
+@description:Compress an screen into a memory bank
+@param:screen:index:Index of the screen
+@param:bank:index:Index of the bank to compress to
+@param:x1:integer:Coordinate of top-left corner of rectangle to compress (optional)
+@param:y1:integer:Coordinate of top-left corner of rectangle to compress (optional)
+@param:x2:integer:Coordinate of bottom-right corner of rectangle to compress (optional)
+@param:y2:integer:Coordinate of bottom-right corner of rectangle to compress (optional)
+@compatible:notimplemented
+@content:
+Note: this instruction will be implemented with ZIP compression in a near future.
+
+(extracted from the AMOSPro manual)
+
+The image must always be unpacked into an existing screen. Also there will be a slight flicker when the image is
+unpacked, unless the screens have been double buffered, so it is better to use single buffered screens here. Screen
+numbers, memory bank numbers and optional coordinates for smaller sections of the screen to be packed are used in
+exactly the same way as with the SPACK command, and x-coordinates are rounded to the nearest 8 pixel boundary
+too.
+
+SPACK is fully compatible with the standard AUTOBACK system explained in Chapter 7.2, so it is easy to
+combine compacted images with moving screens. Images can even be unpacked behind existing Bobs, so it is
+possible to exploit this command together with SCREEN OFFSET to create superb scrolling backgrounds.
+api*/
+Instruction SPack, screen=(index) To bank=(index), x1, y1, x2, y2 
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Unpack
+@description:Unpack a compacted screen
+@param:bank:index:Index of the screen
+@param:*x:integer:Coordinate of top-left corner of rectangle to unpack to
+@param:*y:integer:Coordinate of top-left corner of rectangle to unpack to
+@param:*screen:index:Index of the screen to unpack the image to
+@compatible:notimplemented
+@content:
+Note: this instruction will be implemented with ZIP compression in a near future.
+
+(extracted from the AMOSPro manual)
+
+As you might expect, this is used to unpack crunched images. Using double buffered screens will give smooth
+results, otherwise unpacking may get messy, and always make sure that the destination screen is in exactly the same
+format as the packed picture or an error will be generated.
+
+To unpack screen data at its original position, state which memory bank is to be unpacked, like this:
+~~~
+Unpack 15
+~~~
+To re-draw the packed image starting from new top left-hand corner coordinates, include them
+after the bank number. If the new image does not fit into the current screen, the appropriate error message will
+appear.
+
+The other form of the UNPACK command is open a screen and unpack the data held in the selected bank to that
+screen. For example:
+
+~~~
+Unpack 15 To 1
+~~~
+If the screen you select already exists, its image will be replaced by the newly unpacked picture within one second.
+api*/
+Instruction Unpack, bank=(index), x, y
+{
+	#notimplemented
+}
+End Instruction
+
+Instruction Unpack, bank=(index) To screen=(index)
+{
+	#notimplemented
+}
+End Instruction
+
+
+/**api
+@name:Set Tempras
+@description:Set Temporary Raster
+@param:buffer:address:Address of the buffer
+@param:integer:size:Size of the buffer
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This command allows the AOZ programmer to adjust the amount of memory used by the various
+graphics operations. You are warned that improper usage can cause your computer to crash! The address and size of
+the graphics buffer can be changed as explained below.
+
+The buffer address can be either an address or a memory bank, and the memory reserved for this buffer should
+always be Chip RAM. After allocating the buffer area at the start of your program, there is no need to keep on
+reserving and restoring it, which means that the execution of your programs can be speeded up by up to 5%!
+
+The buffer size is the number of bytes you want to reserve for the buffer area, ranging from 256 to 65536. To
+calculate the amount of memory you need for a particular object, enclose the object in a rectangular box and apply
+the following formula:
+~~~                
+Memory area = Width/8*Height
+~~~
+If you are intending to use the PAINT command, make sure that your shape is closed, otherwise additional memory
+may be called for, causing the system to crash.
+
+The buffer area can be restored to its original value by calling SET TEMPRAS with no parameters.
+
+api*/
+Instruction Set Tempras, p1, p2
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Icon Base
+@description:Returns the address of the Icon whose number is specified in brackets. Not implemented in AOZ
+@param:iconIndex:index:The index of the icon in the bank
+@return:integer:0 in this version
+@examples:instructions:i_64
+@compatible: notimplemented
+@content:
+ICON BASE returns the address of the Icon whose number is specified in brackets. The format of this information is exactly the same as for the SPRITE BASE function, explained below.
+api*/
+Function Icon Base, iconIndex=(index)
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Free
+@description:Return the amount of free memory on the machine. 
+@return:integer:The amount of free memory
+@examples:instructions:i_64
+@content:
+Warning, this instruction might not work on all platforms and maybe deprecated in the future. The original AMOS instruction reported the amount of free memory in the variable buffer area...
+
+For an example of a function in operation, the FREE function checks how many "bytes" of memory are currently
+available to hold your variables, and it can be used to make a report, like this:
+~~~                
+Print "The number of bytes available is:;Free
+~~~
+Now use the FREE function with the SET BUFFER command (which is explained earlier in this Chapter) as follows:
+~~~                
+Set Buffer 13
+Print "The number of bytes now available is:;Free		
+~~~
+
+api*/
+Function Free
+{
+}
+End Function( {aoz.free()} )
+
+/**api
+@name:Chip Free
+@description:Return the amount of free memory on the machine. Warnign, not tested and maybe deprecated in the future./ The original AMOS instruction reported the amount of free chip memory of the machine, which has no meaning tocay
+@return:integer:The amount of free memory
+@examples:instructions:i_64
+@content:
+For an example of a function in operation, the FREE function checks how many "bytes" of memory are currently
+available to hold your variables, and it can be used to make a report, like this:
+~~~                
+Print "The number of bytes available is:;Free
+~~~
+Now use the FREE function with the SET BUFFER command (which is explained earlier in this Chapter) as
+follows:
+~~~                
+Set Buffer 13
+Print "The number of bytes now available is:;Free		
+~~~
+
+api*/
+Function Chip Free
+{
+}
+End Function( {aoz.chipFree()} )
+
+/**api
+@name:Fast Free
+@description:Return the amount of free memory on the machine. Warnign, not tested and maybe deprecated in the future./ The original AMOS instruction reported the amount of free fast memory of the machine, which has no meaning tocay
+@return:integer:The amount of free memory
+@examples:instructions:i_64
+@content:
+For an example of a function in operation, the FREE function checks how many "bytes" of memory are currently
+available to hold your variables, and it can be used to make a report, like this:
+~~~                
+Print "The number of bytes available is:;Free
+~~~
+Now use the FREE function with the SET BUFFER command (which is explained earlier in this Chapter) as
+follows:
+~~~                
+Set Buffer 13
+Print "The number of bytes now available is:;Free		
+~~~
+
+api*/
+Function Fast Free
+{
+}
+End Function( {aoz.fastFree()} )
+
+
+/**api
+@name:Set Stack
+@description:Deprecated, we used to set the stack space on the Amiga
+@param:space:integer:The length opf the stack
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+When AMOS procedures call themselves, an "Out of stack space" error message will be generated
+after about fifty loops. Use the SET STACK instruction by specifying the new number of procedure calls that an be
+made.
+
+Keeping track of procedures
+To help you find the starting positions of procedures in a very long program, there is a simple short-cut that uses just
+two keys.
+
+By pressing [Alt] and [Down Arrow] together, the edit cursor automatically jumps to the next procedure definition
+in your program. To jump to the previous procedure, press [Alt] and [Up Arrow] together. This shortcut works
+equally well with labels and line numbers!
+
+If you are using several procedures on the same line, you can avoid the risk of a procedure being confused with a
+label by adding an extra space at the end of each statement. For example:
+~~~                
+HEY: HEY: HEY: Rem Perform HEY procedure three times
+HEY: HEY: HEY: Rem Define label HEY and perform HEY procedure twice
+~~~
+
+api*/
+Instruction Set Stack, space
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Set Equate Bank
+@description:Deprecated, was used on the Amiga
+@param:bank:index:Index of the bank
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This command allocates a memory bank for use by the automatic equate system. It should be called up before the
+first equate in your program, preferably near the beginning. Specify the bank number to be used for your equates,
+ranging from 1 to 65535. Any existing bank of the same number will be erased when the equates are installed in
+memory, without warning, so take care!
+
+api*/
+Instruction Set Equate Bank, space
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Call
+@description:Deprecated, was used on the Amiga
+@param:Address:integer:
+@param:parameter:integer:
+@compatible:notimplemented
+@examples:instructions:i_76
+@content:
+(extracted from the AMOSPro manual)
+
+The CALL instruction is used to run a machine code program straight from the Amiga's memory. You can specify
+either an absolute memory location or the number of a memory bank, previously installed using the PLOAD
+command.
+
+On entry to the program, registers D0 to D7 and A0 to A2 will be loaded from values stored in the DREG and
+AREG functions. The assembly language program can change any 68000 registers it chooses. At the start of the
+routine, register A3 will point to the optional parameter list, which is explained next, and A5 will contain the address
+of the AOZ Studio data zone. When the routine has completed its task, you can return to Basic with a RTS.
+
+After the memory location or bank number, a list of optional parameters may be given in the form of a list of
+values. These values will be taken from the AOZ Studio Basic program and pushed onto the A3 stack by the
+CALL command. They must be removed in reverse order, so the last value in the list will be the first on the stack.
+The format of a parameter depends on what type of variable they are, as follows:
+
+Integers. The parameter holds a long word, containing a normal AOZ Studio number. It can be grabbed with
+a line such as this:
+~~~                
+Move.l (a3)+,d0
+~~~
+Single precision numbers. These are stored in Fast Floating Point format, and are held in one long word. To load
+such a number into register d0, use the following:
+~~~                
+Move.l (a3)+,d0
+~~~
+Double precision numbers. These are stored in IEEE double precision format, and are held as two long words. To
+load a double precision variable into registers d0 and dl, you could use this:
+~~~                
+Move.l (a3)+,d0 * Top half
+Move.l (a3)+,d1 * Bottom half
+~~~
+Strings. The stack contains the Address of the string in memory. All strings begin with a single word that holds their
+length. For example:
+~~~                
+
+; Grab the string. Each string is stored at an EVEN address,
+; starting with the length of the string, and then the string itself
+Move.l (a3)+,a2 	* Address of the string
+Move.w (a2)+,d2 	* Length of the string
+
+~~~
+
+api*/
+Instruction Call, address=(address), parameter
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:ExeCall
+@description:Deprecated, was used on the Amiga
+@param:offset:integer:Offset of the call in the library
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+The EXECALL function performs a call to the Amiga's EXEC library, with the specified offset value. On entry, D0
+to D7 and A0 to A2 must be loaded with the control settings required by the function. A value is returned holding
+the contents of D0.
+
+api*/
+Instruction ExeCall, offset
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:GfxCall
+@description:Deprecated, was used on the Amiga
+@param:offset:integer:Offset of the call in the library
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This executes a function directly from the Graphics library, taking the parameters from the DREG and AREG
+arrays. The function offset parameter enters the offset to the function you wish to call, and can also be set using the
+LVO function, if required.
+
+api*/
+Instruction GfxCall, offset
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:DosCall
+@description:Deprecated, was used on the Amiga
+@param:offset:integer:Offset of the call in the library
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+DOSCALL executes a function directly from the DOS library, with the offset to the appropriate function being
+specified in brackets. The selected command is executed straight from an AOZ Studio program, without the
+need to open the DOS library in your program. This is useful for single calls to an important routine.
+
+The offset value can either be a simple number or a named function using the LVO command. As with LIB CALL,
+the control registers first need to be set up carefully. These values should be placed into D0 to D7 and A0 to A3,
+with the aid of the AREG and DREG functions. After the command has been executed, the result will be given as
+the return value in D0. Please note that the contents of the other registers will not be loaded back into AREG and
+DREG.
+
+api*/
+Instruction DosCall, offset
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:IntCall
+@description:Deprecated, was used on the Amiga
+@param:offset:integer:Offset of the call in the library
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+The INTCALL function calls a command directly from the Intuition library. Before using this function, it is vital to
+load the appropriate control parameters into the registers D0 to D7 and A0 to A3. This can be done with the AREG
+and DREG variables from an AOZ Studio program. When the function has been executed, the contents of
+D0 will be returned back to your program as the result. Please note that this function is particularly dangerous,
+unless you are familiar with the Intuition library.
+
+api*/
+Instruction IntCall, offset
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Base
+@description:Move the starting position of a menu. Amiga only, This instruction may be implemented in a future version of AOZ.
+@param:x:integer:X Position
+@param:y:integer:Y Position
+@compatible: notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+Use this command to move the starting point of the first level in your menu hierarchy to the absolute screen coordinates at x,y. All subordinate menu items will now be displayed relative to this starting point.
+api*/
+Instruction Menu Base, x, y
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Set Menu
+@description:Move a menu item. Amiga only, This instruction may be implemented in a future version of AOZ.
+@param:item:integer:Index if the item
+@param:x:integer:New horizontal position
+@param:y:integer:new vertical position
+@compatible: notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+SET MENU sets the screen position of the top left-hand corner of the menu item whose parameters are given in brackets. These coordinates are measured relative to the previous level, so the starting point for the entire menu can be set by the MENU BASE command. All levels of the menu below this single item will also be moved by your SET MENU command. The coordinates can be negative as well as positive, so you are free to position items
+anywhere on screen.
+
+api*/
+Instruction Set Menu, item To x, y
+{
+	#notimplemented
+}
+End Instruction
+
+
+/**api
+@name:Menu TLine
+@description:Display menu items as a total horizontal bar. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu item
+@compatible: notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+MENU TUNE is used to display a section of your menu as a total line, stretching from the extreme left to the extreme right of the screen. The complete line will be drawn even if the first item is centre screen. Use this instruction in the same way as MENU LINE during your menu definitions.
+
+api*/
+Instruction Menu TLine, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Movable
+@description:Activate automatic menu movement. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu item
+@compatible: notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+The default condition is that the menu items at a particular level may be moved directly by the user. Any level can be repositioned by moving the mouse pointer over the first item in the menu and holding down the left mouse button. A rectangular box will appear around the selected menu item, and it can be dragged to its new screen position. When the left mouse button is released, the menu is re-drawn at this location, along with all of its
+associated items.
+
+Use MENU MOVABLE to set the status of entire menu levels, or selected items in a menu hierarchy, but please
+note that this command does not allow you to change the status of any items below the selected level.
+
+api*/
+Instruction Menu Movable, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Static
+@description:Stop automatic menu movement. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu item
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+One characteristic of mobile menus is that the amount of memory they use changes during the course of the
+program. With large menus or programs that are on the boundary of available memory this can cause real problems.
+MENU STATIC can be used to avoid these difficulties by setting the level or item at which the entire menu
+becomes immovable by the user.
+
+api*/
+Instruction Menu Static, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Item Static
+@description:Fix items in static positions. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu item
+@content:
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This command locks one or more menu items into place, and is the default setting.
+
+api*/
+Instruction Menu Item Static, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Item Movable
+@description:Move individual menu options. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu item
+@content:
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This is similar to MENU MOVABLE, but it allows the re-arrangement of various options in a particular level. Normally it is not possible to move items outside of the current menu bar, but this can be overcome by the MENU SEPARATE command, which is explained below.
+
+To use MENU ITEM MOVABLE for changing the position of a menu item, the entire menu bar must itself be
+movable. So if MENU STATIC has been called, this command will have no effect. The first item in a menu bar can
+not be moved, because this would move the entire line. Furthermore, if the last item in a menu bar is moved, the size
+of that bar will be permanently reduced.
+
+This problem can be overcome either by setting the last item into place with a MENU ITEM STATIC command, or
+by enclosing the whole menu bar with a rectangular box, like this:
+~~~                
+Menu$(1 ,1)=,,,,"(Bar40,100)(Loc0,0)"
+~~~
+
+api*/
+Instruction Menu Item Movable, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Active
+@description:Activate a menu item. Will be implemented later.
+@param:level:integer:Level of the menu item
+@content:
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+MENU ACTIVE reverses the effect of a previous MENU INACTIVE command. An entire level or single item
+specified by its parameters can be re-activated and the original appearance of their title strings will be re-displayed.
+
+api*/
+Instruction Menu Active, level
+{
+	#notimplemented
+}
+End Instruction
+
+
+/**api
+@name:Menu Separate
+@description:Separate a list of menu items. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu item.
+@content:
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+level will be deactivated. If you define an individual item in brackets by giving its parameters, only that item will become inactive.
+
+If no inactive string has been defined when you originally set your menu up with MENU$, any menu options that
+have been made inactive will be shown in italics. Otherwise the special inactive string will appear.
+
+api*/
+Instruction Menu Separate, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Link
+@description:Link a list of menu items. Will be implemented later.
+@param:LEVEL:integer:Level of the menu item
+@content:
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+This is the exact opposite of MENU SEPARATE, and is used to link one or more items together.
+
+api*/
+Instruction Menu Link, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Called
+@description:Re-draw a menu item continually. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu item
+@content:
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+MENU CALLED engages the automatic re-drawing process. This command is normally used with a menu
+procedure to generate animated menu items, often with spectacular moving graphic effects.
+
+To use this facility, a menu procedure should first be defined, as explained above. Next, add a call to this procedure in the required title strings, using an embedded PRoc command. Finally, activate the updating process with MENU CALLED. When the user selects the chosen item, your procedure is repeatedly accessed by the menu system.
+Because menu items are not double buffered, bobs may flicker a little, but the use of computed sprites will present
+no such problems.
+
+api*/
+Instruction Menu Called, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Menu Once
+@description:Turn off automatic re-drawing. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+@content:
+MENU ONCE turns off the automatic updating system instigated by MENU CALLED. After the command is given, each menu item will only be re-drawn once when the menu is called on the screen. It is used like this:
+~~~                
+Menu Once(1,1)
+~~~
+
+api*/
+Instruction Menu Once, level
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:X Menu
+@description:Return the graphical x-coordinate of a menu item. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu tiem.
+@compatible:notimplemented
+@return:integer:The graphical coordinate
+@content:
+(extracted from the AMOSPro manual)
+
+@return:integer:The graphical x-coordinate of a menu item. 0 in this version.
+@content:
+The X MENU function allows you to get the position of a menu item, relative to the previous option on screen. This information can be used to set up very powerful menus.
+
+api*/
+Function X Menu, level
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Y Menu
+@description:Return the graphical x-coordinate of a menu item. This instruction may be implemented in a future version of AOZ.
+@param:level:integer:Level of the menu
+@return:integer:The graphical coordinate
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+@return:integer:The graphical y-coordinate of a menu item. 0 in this version.
+@content:
+Y MENU returns the y-coordinate of a menu option, measured relatively to the previous item on screen. Please refer to the demonstration program above.
+
+api*/
+Function Y Menu, level
+{
+	#notimplemented
+}
+End Function( {0} )
+
+
+/**api
+@name:Screen Swap
+@description:Swaps the physical and logical buffers of a screen. (Deprecated in AOZ, legacy instruction, has no real effect)
+@param:*index:index:The index of the screen
+@content:
+(extracted from the AMOSPro manual)
+
+This is the command that swaps over the physical and logical screens, so that the displays are instantly switched
+between the two of. them. If the DOUBLE BUFFER command has been engaged, this process is automatic.
+api*/
+Instruction Screen Swap, number = (index)
+{
+	#errors
+	aoz.renderer.screenSwap(%number);
+}
+End Instruction
+
+
+/**api
+@name:Dual Playfield
+@description:Associate the display of two screens into a parallax display. (Deprecated, use "Set Transparent" and "Screen Offset" to associate more than two screens together)
+@param:screen:integer:The index of first screen, will be on top
+@param:screen2:integer:The index of second screen, will be in the back
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+The DUAL PLAYFIELD mode is the equivalent of mixing together two images from separate video cameras, and is
+achieved by displaying two screens simultaneously at the same x,y- coordinates. Each of the two screens can be
+manipulated completely independently from one other, and this can be exploited to produce very smooth parallax
+scrolling. Because the sizes of the two screens can be different, a smaller screen can be scrolled against a larger
+background screen, creating the parallax effect.
+
+The two components of this dual playfield are treated as any other AOZ Studio screen, and they can even be
+double buffered or animated with AMAL.
+
+To create a dual playfield screen, simply give the command, followed by the two numbers of the relevant screens,
+which have already been defined using SCREEN OPEN. Both screens must have the same resolution, and there are
+some restrictions on the number of colours allowed. Here is a table of the possibilities:
+~~~                
+1st Screen 	2nd Screen 	Resolution of both screens
+2 colours 	2 colours 	Lowres or Hires
+4 colours 	2 colours 	Lowres or Hires
+4 colours 	4 colours 	Lowres or Hires
+8 colours 	4 colours 	Lowres only
+8 colours 	8 colours 	Lowres only
+~~~
+The colours of these screens are taken from the palette of the first screen with colour zero being IF treated as
+transparent. The first screen makes use of colours zero to 7, while the second screen uses 8 to 15. When you are
+drawing to the second screen, AOZ Studio will automatically convert the colour index to the appropriate
+number before using it. This means that colours zero to 7 of the second screen's palette will use colours 8 to 15 of
+the first screen's palette, in ascending order.
+
+Always make the first screen the current screen when changing the colour settings.
+
+Remember that the automatic conversion process does not apply to assignment statements such as COLOUR or
+PALETTE.
+
+When using SCREEN OFFSET to position a dual playfield screen, always specify the first screen, and never set
+screen offsets for both dual playfield screens to zero.
+
+api*/
+Instruction Dual Playfield, screen1 = (index), screen2 = (index)
+{
+	#errors
+	aoz.getScreen(%screen1).setDualPlayfield(aoz.getScreen(%screen2));
+}
+End Instruction
+
+/**api
+@name:Dual Priority
+@description:Set the display priority of two screens associate in Dual Playfield. (Deprecated, use "Set Transparent" and "Screen Offset" to associate more than two screens together, and then "Screen To Front" or "Screen To Back" to handle the display priority)
+@param:screen1:integer:The index of first screen, will be on top
+@param:screen2:integer:The index of first screen, will be in the back
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+Normally, the first screen of a dual playfield is displayed directly over the second screen. To reverse this order, so
+that the second screen appears in front of the first, use the DUAL PRIORITY command. Please note that this
+instruction only changes the order of display, and has no effect on the screen organisation at all, so the first screen in
+the parameter list is still used for all colour assignments, and with the SCREEN DISPLAY command.
+
+api*/
+Instruction Dual Priority, screen1 = (index), screen2 = (index)
+{
+	#errors
+	aoz.getScreen(%screen1).setDualPriority(aoz.getScreen(%screen2));
+}
+End Instruction
+
+/**api
+@name:Phybase
+@description:Return the address of the first pixel in the bitmap buffer of the current screen (deprecated, there is no difference between logical and physical screen buffers in AOZ)
+@param:index:index:The index of the screen
+@return:integer:A magical number representing the adress of the buffer, to be used later with "Poke" / "Doke" / "Loke" / "Peek" / "Deek" / "Leek" instructions. Not a real address in AOZ
+@compatible: notimplented
+@content:
+(extracted from the AMOSPro manual)
+
+PHYBASE returns the address in memory of the specified bit-plane number for the current screen. If this plane does
+not exist, a value of zero is given. For example:
+~~~                
+Loke Phybase(0),0 : Rem Poke a thin line directly onto screen
+~~~
+
+api*/
+Function Phybase, index = (index)
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Logbase
+@description:Return the address of the first pixel in the bitmap buffer of the current screen (deprecated, there is no difference between logical and physical screen buffers in AOZ)
+@param:index:integer:The index of the screen
+@compatible: notimplemented
+@return:integer:A magical number representing the adress of the buffer, to be used later with "Poke" / "Doke" / "Loke" / "Peek" / "Deek" / "Leek" instructions. Not a real address in AOZ
+@content:
+(extracted from the AMOSPro manual)
+
+The LOGBASE function allows expert programmers to access the Amiga's screen memory directly. The current
+screen is made up of six possible bit-planes, and after LOGBASE has been called, the address of the required plane
+is returned, or zero is given if it does not exist.
+
+api*/
+Function Logbase, index = (index)
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Physic
+@description:Return a magical number representing the physical buffer of the current screen, to be used in "Screen Copy" and all Screen instructions that necessitate a Screen Index. (deprecated, no such thing as physical or logic al screen in AOZ)
+@param:index:index:The index of the screen
+@return:integer:A magical number representing the physical buffer of the screen. To be used wherever you need a screen index
+@compatible: notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+The PHYSIC function returns an identification number for the current physical screen. This number allows you to
+access the physical image being displayed by the automatic DOUBLE BUFFER system, and the result of this
+function can be substituted for the screen number in ZOOM, APPEAR and SCREEN COPY commands. The
+PHYSIC identification number of the current screen will be returned, unless an optional screen number is specified.
+
+api*/
+Function Physic, index = (index)
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Logic
+@description:Return a magical number representing the logical buffer of the current screen, to be used in "Screen Copy" and all Screen instructions that necessitate a Screen Index. (deprecated, no such thing as physical or logic al screen in AOZ)
+@param:index:index:The index of the screen
+@return:integer:A magical number representing the logical buffer of the screen. To be used wherever you need a screen index
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+Use the LOGIC function to get an identification number for the current logical screen, or use an optional screen
+number to specify a particular logical screen. The identification number that is returned can now be used with the
+ZOOM, APPEAR and SCREEN COPY commands, to change images off screen, without affecting the current
+display.
+
+api*/
+Function Logic, index = (index)
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Autoback
+@description:Set the autoback background preservation system for graphical instruction (Deprecated, has no effect in AOZ)
+@param:index:index:The index of the screen
+@param:mode:integer:A number from 0 to 2 included representing the mode to use
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+There are three AUTOBACK modes, and you can toggle between them by setting the mode values as follows:
+~~~                
+Autoback 0
+~~~
+Manual mode. This mode deactivates the AUTOBACK system completely, so that graphics are drawn directly on
+the logical screen, for maximum speed. It is recommended for use with the BOB DRAW and BOB CLEAR
+commands.
+AUTOBACK 0 is useful when large amounts of graphics are drawn on screens being switched manually with
+SCREEN SWAP, because it is much faster than the standard system. But remember that you must take responsibility
+for synchronising between the logical and physical screens.
+~~~                
+Autoback 1
+~~~
+Semi-automatic. In mode 1, AUTOBACK performs all graphical operations on both the logical and physical screens.
+Although Bob updates are not taken into account, this is an ideal mode for displaying hi-score tables and control
+panels. So as long as your Bobs are kept clear of any new graphics, this mode is perfect.
+~~~                
+Autoback 2
+~~~
+
+api*/
+Instruction Autoback, index = (index)
+{
+	#errors
+	aoz.renderer.autoback(%index);
+}
+End Instruction
+
+
+
+/**api
+@name:Screen Base
+@description:Not implemented, deprecated, will return 0
+@compatible: notimplemented
+@examples:instructions:i_64
+@return:integer:Return 0
+@content:
+(extracted from the AMOSPro manual)
+
+This function returns the base address of the internal table that is used to hold the number and position of AOZ Studio STUDIO screens.
+
+api*/
+Function Screen Base
+{
+	#notimplemented
+}
+End Function( {0} )
+
+
+/**api
+@name:Hires
+@description:Return a magical number to be used in the "Screen Open" instruction, enforce a horizontal compression by half of the pixels
+@return:integer:1
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+When the default screen is automatically opened, screen 0 is the equivalent to the following setting:
+~~~                
+Screen Open 0,320,200,16,Lowres
+~~~
+To open screen number 1 as an oversize high-resolution screen with eight colours, you would use something like
+this:
+~~~                
+Screen Open 1,600,400,8,Hires
+~~~
+This routine opens all eight available screens and brings them into view:
+~~~                
+Curs Off : Cls 13: Paper 13
+Print : Centre "Hello, I'm SCREEN 0"
+For S=1 To 7
+	Screen Open S,320,20,16,Lowres
+	Curs Off : Cls S+2 : Paper S+2
+	Centre "And I am SCREEN"+Str$(S)
+	Screen Display S,,50+S*25,,8
+Next S
+~~~
+Here is a table which lists the different screen options, along with an indication of the amount of memory a standard
+size screen will consume.
+~~~ 
+Colours 	Resolution 	Memory 	Notes
+2 			320x200 	8k 	PAPER=0 PEN=1 no FLASH Cursor=1
+2 			640x200 	16k 	as above
+4 			320x200 	16k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+4 			640x200 	32k 	as above
+8 			320x200 	24k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+8 			640x200 	48k 	as above
+16 			320x200 	32k 	default setting
+16 			640x200 	64k
+32 			320x200 	40k
+64 			320x200 	48k 	Extra Half Bright mode
+4096 		320x200 	48k 	Hold And Modify mode
+~~~
+
+api*/
+
+/**api
+@name:Lowres
+@description:Return a magical number to be used in the "Screen Open" instruction, display pixel with their original horizontal ratio
+@return:integer:0
+@content:
+(extracted from the AMOSPro manual)
+
+When the default screen is automatically opened, screen 0 is the equivalent to the following setting:
+~~~                
+Screen Open 0,320,200,16,Lowres
+~~~
+To open screen number 1 as an oversize high-resolution screen with eight colours, you would use something like
+this:
+~~~                
+Screen Open 1,600,400,8,Hires
+~~~
+This routine opens all eight available screens and brings them into view:
+~~~                
+Curs Off : Cls 13: Paper 13
+Print : Centre "Hello, I'm SCREEN 0"
+For S=1 To 7
+	Screen Open S,320,20,16,Lowres
+	Curs Off : Cls S+2 : Paper S+2
+	Centre "And I am SCREEN"+Str$(S)
+	Screen Display S,,50+S*25,,8
+Next S
+~~~
+Here is a table which lists the different screen options, along with an indication of the amount of memory a standard
+size screen will consume.
+~~~ 
+Colours 	Resolution 	Memory 	Notes
+2    		320x200 	8k 		PAPER=0 PEN=1 no FLASH Cursor=1
+2 	    	640x200 	16k 	as above
+4 			320x200 	16k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+4 		  	640x200 	32k 	as above
+8 		 	320x200 	24k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+8 			640x200 	48k 	as above
+16 			320x200 	32k 	default setting
+16 			640x200 	64k
+32 			320x200 	40k
+64 			320x200 	48k 	Extra Half Bright mode
+4096 		320x200 	48k 	Hold And Modify mode
+~~~
+
+api*/
+
+/**api
+@name:Laced
+@description:Return a magical number to be used in the "Screen Open" instruction, enforce a vertical compression by half of the pixels
+@return:integer:2
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+LACED is a reserved variable which holds the value of 4. It is used in addition to either the Hires or Lowres
+parameters when opening a screen, like this:
+~~~                
+Screen Open 0,320,200,16,Laced+Lowres
+~~~
+Interlaced screens have double the number of vertical lines, which is excellent for graphic displays. Unfortunately
+they take twice as long to update, which is no good at all for fast-action games! Interlaced screens will only give
+flicker-free results if a "multi-sync" monitor is being used. Also certain TV sets and monitors do not take kindly to
+excessive switching between interlaced and normal screens.
+
+All of the usual operations may be used with interlaced screens, such as SCREEN DISPLAY, SCREEN OFFSET,
+and so on, but for technical reasons interlacing is not allowed during copper list calculations. As soon as the last
+interlaced screen has been closed, the entire display returns to normal mode.
+
+api*/
+
+/**api
+@name:Halfbright
+@description:Return a magical number to be used in the "Screen Open" instruction, and set the screen in Amiga-compatible Halfbright colour mode
+@compatible: amos
+@return:integer:4
+@content:
+api*/
+
+/**api
+@name:X Hard
+@description:Converts a horizontal coordinate in a given screen to its equivalent in hardware coordinates taking into account the position, scale and rotation factor of the screen
+@param:*screen:index:The index of the screen to test
+@return:integer:The hardware equivalent of the horizontal screen coordinate
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+These functions convert screen coordinates into hardware coordinates, relative to the current screen. As with X
+SCREEN and Y SCREEN, an optional screen number can be given, and coordinates will be returned relative to that
+screen.
+
+With all four of the above functions, sensible values can only be returned when the relevant screen has been fully
+initialised. Both the SCREEN OPEN and SCREEN DISPLAY commands only come into effect from the next
+vertical blank, and the following examples demonstrate that the correct coordinate values (in this case 128,50) are
+only returned after a WAIT VBL command.
+~~~                
+Screen Open 0,320,255,16,Lowres
+Print X Hard(0,0); Y Hard(0,0)
+~~~
+Now try the correct version:
+~~~                
+Screen Open 0,320,255,16,Lowres
+Wait Vbl
+Print X Hard(0,0); Y Hard(0,0)
+~~~
+The default screen is initially located at hardware coordinates (128,50), and if you find the whole business of
+hardware coordinates and screen coordinates tiresome, you can bypass the entire conversion system.
+
+By setting the HOT SPOT of your Sprite images to (-128,-50), the reference point for all position calculations is
+removed to the far corner of the display. Once an image has been prepared in this way, it can be assigned to a Sprite
+and moved around using normal screen coordinates. For example:
+~~~                
+Hot Spot 1,-128,-50: Rem Set up hot spot
+Sprite 8,160,100,1 : Rem Sprite 8 to screen coords 160,100
+~~~
+
+api*/
+Function X Hard, x
+{
+	#errors
+}
+End Function( {(%x*aoz.currentScreen.renderScale.x+aoz.currentScreen.vars.x)} )
+Function X Hard, screen = (index), x
+{
+	#errors
+	var s%COUNT%=aoz.getScreen(%screen);
+}
+End Function( {(%x*s%COUNT%.renderScale.x+s%COUNT%.vars.x)} )
+
+/**api
+@name:Y Hard
+@description:Converts a vertical coordinate in the current screen to its equivalent in hardware coordinates taking into account the position, scale and rotation factor of the screen
+@param:*screen:index:The index of the screen to test
+@return:integer:The hardware equivalent of the vertical current screen coordinate
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+These functions convert screen coordinates into hardware coordinates, relative to the current screen. As with X
+SCREEN and Y SCREEN, an optional screen number can be given, and coordinates will be returned relative to that
+screen.
+
+With all four of the above functions, sensible values can only be returned when the relevant screen has been fully
+initialised. Both the SCREEN OPEN and SCREEN DISPLAY commands only come into effect from the next
+vertical blank, and the following examples demonstrate that the correct coordinate values (in this case 128,50) are
+only returned after a WAIT VBL command.
+~~~                
+Screen Open 0,320,255,16,Lowres
+Print X Hard(0,0); Y Hard(0,0)
+~~~
+Now try the correct version:
+~~~                
+Screen Open 0,320,255,16,Lowres
+Wait Vbl
+Print X Hard(0,0); Y Hard(0,0)
+~~~
+The default screen is initially located at hardware coordinates (128,50), and if you find the whole business of
+hardware coordinates and screen coordinates tiresome, you can bypass the entire conversion system.
+
+By setting the HOT SPOT of your Sprite images to (-128,-50), the reference point for all position calculations is
+removed to the far corner of the display. Once an image has been prepared in this way, it can be assigned to a Sprite
+and moved around using normal screen coordinates. For example:
+~~~                
+Hot Spot 1,-128,-50: Rem Set up hot spot
+Sprite 8,160,100,1 : Rem Sprite 8 to screen coords 160,100
+~~~
+
+api*/
+Function Y Hard, y
+{
+	#errors
+}
+End Function( {(%y*aoz.currentScreen.renderScale.y+aoz.currentScreen.vars.y)} )
+
+Function Y Hard, screen = (index), y
+{
+	#errors
+	var s%COUNT%=aoz.getScreen(%screen);
+}
+End Function( {(%y*s%COUNT%.renderScale.y+s%COUNT%.vars.y)} )
+
+/**api
+@name:Screen Mode
+@description:Return the "mode" parameter of a screen, as used in the "Screen Open" instruction
+@return:integer:integer:The magical number generated by the combination of Lowres, Hires, Laced or Halfbright
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+This simple function is used to report the mode of the current screen. If the screen is LACED, 4 or $8004 will be
+returned. If the screen is LOWRES, a value of $0 is given. For a HIRES screen, $8000 will be returned.
+
+api*/
+Function Screen Mode
+{
+	#notimplemented
+}
+End Function( {0} )
+
+
+/**api
+@name:Double Buffer
+@description:Turns the display system into double-buffering. Deprecated: Double Buffering has no effect in AOZ
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+Throughout this Chapter, extensive reference is made to the technique known as "double buffering". The DOUBLE
+BUFFER command creates an invisible copy of the current screen and stores it as a "logical screen". All graphics
+operations, including Bob movements, are now performed directly on this logical screen, without disturbing your
+existing display at all. This is because the existing display on your television screen is taken straight from the
+original screen area, now called the "physical screen".
+
+Once the image has been re-drawn, the logical screen and physical screen are swapped over. The old logical screen
+is flicked onto the display, and the old physical screen is hidden away to become the new logical screen. The entire
+process now cycles continuously, producing a solid, smooth display, even when dozens of Bobs are moving on the
+same screen.
+
+Any complexities of this technique are completely automatic, so once DOUBLE BUFFER has been engaged, you
+can relax.
+
+api*/
+Instruction Double Buffer
+{
+	#errors
+	aoz.renderer.setDoubleBuffer();
+}
+End Instruction
+
+
+/**api
+@name:HZone
+@description:Check if a given hardware coordinate lay inside of a zone. Hardware coordinate are only different from screen coordinate for retro-machine emulation (Amiga, Atari etc.)
+@param:*index:index:The index of a screen containing the zone
+@param:x:integer:Horizontal hardware coordinate to test
+@param:y:integer:Vertical hardware coordinate to test
+@return:integer:-1 if the coordinate lay outside of every zones, index of the zone if they lay inside of one
+@compatible: amos
+@content:
+(extracted from the AMOSPro manual)
+
+The HZONE function is identical to ZONE, except for the fact that the position on screen is measured in hardware
+coordinates. This means that this function can be used to detect the presence of a hardware Sprite in one of the
+screen zones, in this format:
+~~~                
+N=Hzone(X Sprite(n),Y Sprite(n))
+~~~
+
+api*/
+Function HZone, index=(index), x, y
+{
+	#errors
+}
+End Function( {aoz.getScreen(%index).hZone({x:%x,y:%y})} )
+Function HZone, x, y
+{
+	#errors
+}
+End Function( {aoz.currentScreen.hZone({x:%x,y:%y})} )
+
+
+
+/**api
+@name:Sprite Base
+@description:Get Sprite table
+@param:*index:index:The index of a sprite
+@return:integer:0
+@examples:instructions:i_64
+@compatible:notimplemented
+@content:
+(extracted from the AMOSPro manual)
+
+SPRITE BASE provides the address of the internal data list for whichever Sprite number is specified in brackets. If
+the Sprite does not exist, then the address of the table is returned as zero. Negative values for the Sprite number will
+return the address of the optional mask associated with that Sprite, and the number that is returned can contain one
+of three possible values, as follows:
+
+- A negative number indicates that there is no mask for this Sprite.
+- Zero indicates that the specified Sprite does have a mask, but it is yet to be generated by the system.
+- A positive number indicates the address of the mask in memory. The first "long word" of this area holds the
+length of the mask, and the next gives the actual definition.
+
+api*/
+Function Sprite Base, index=(index)
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Close Editor
+@description:Close the AMOS Professional Editor Window
+@content:
+api*/
+Instruction Close Editor
+{
+	#errors
+}
+End Instruction
+
+/**api
+@name:Set Sprite Buffer
+@description:Set the height of hardware sprites
+@content:
+api*/
+Instruction Set Sprite Buffer, index=(index)
+{
+}
+End Instruction

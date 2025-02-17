@@ -1,0 +1,29 @@
+<i>Open Random</i>
+<b>Open Random</b> xxxxxxx
+=
+Random access files are extremely useful simple text files containing fornmatted data in a similar fashion to CSV files.
+
+They allow the programmer to access data stored on a disc in any random order. A random
+access file is made up of units of data called "records", and each record has its own identification number. Every
+record can be split up into as many smaller sections as required, with every section becoming a "field". Each field is
+used to hold a single item of data.
+
+The main difference between sequential files and random access files is that you must tell AOZ Studio the maximum size of a field in advance, before you can make use of it.
+
+A field can hold many forms of data, like a password, an invoice number or even a literary quotation. Supposing
+you want to create an electronic phone book. You could choose the following fields, with the following maximum
+number of characters in each:
+@code
+Field 		Max length
+SURNAME$ 	20
+F1RSTNAME$ 	15
+TEL$ 		10
+@code
+Once the fields have been planned, the structure for your electronic database can be set up using the following commands:
+Open Random, Filed, Get and Put...
+
+@code
+Open Random 1,"mydata.rnd"
+@code
+
+

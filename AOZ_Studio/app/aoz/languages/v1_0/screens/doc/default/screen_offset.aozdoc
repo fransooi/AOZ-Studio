@@ -1,0 +1,13 @@
+<i>Screen Offset</i>
+<b>Screen Offset</b> xxxxxxx
+=
+Look at the diagram below, where the area of the visible screen is shown as a sort of "port-hole" 320 pixels wide by
+200 pixels high, inside a larger AOZ Studio screen. Of course, the port- hole can be made smaller using the
+SCREEN DISPLAY command.
+
+![Screen Offset example no1](help:img/screen_commands/screen_commands_ex1.png)
+
+The SCREEN OFFSET command is followed by the number of the screen to be displayed, then the x,y-coordinates
+of the "offset", which is the point where the top left-hand corner of the visible display is to start, measured from the
+top left-hand corner of the extra-large screen.
+

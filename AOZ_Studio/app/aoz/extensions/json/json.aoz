@@ -1,0 +1,323 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ JSON extension
+ * By Francois Lionet
+ *
+ * @author FL
+ * @date first pushed on 20/05/2020
+ *
+ */
+#basicRemarks:false
+
+/**doc
+@name:JSON
+@description:Instructions and functions to load, create and manage JSON files
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+    this.aoz.JSON = this;
+	this.context = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+
+    function AJSON( aoz, tags )
+    {
+        this.aoz = aoz;
+		this.root = {};
+    };
+    AJSON.prototype.load = function( path, tags )
+	{
+        var self = this;
+		self.aoz.JSON.load_done = false;
+		self.aoz.JSON.error = null;
+		this.aoz.filesystem.loadFile( path, { responseType: 'text' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				self.root = undefined;
+				try
+				{
+					self.root = JSON.parse( data );
+				}
+				catch( e )
+				{
+					self.aoz.JSON.error = 'incorrect_json_format';
+				}
+			}
+            else
+                self.error = data;
+            self.aoz.JSON.load_done = true;
+		} );
+	};
+	AJSON.prototype.save = function( path, throwError, tags )
+	{
+        var self = this;
+		self.aoz.JSON.load_done = false;
+		self.aoz.JSON.error = null;
+		var descriptor = this.getFile( path, { mustExist: false } );
+		if ( !descriptor.error )
+		{
+			var jsonString = this.stringify( throwError );
+			if ( jsonString )
+			{
+				this.aoz.fileSystem.saveFile( descriptor, jsonString, {}, function( response, data, extra )
+				{
+					if ( !response )
+					 	self.aoz.JSON.error = throwError;
+					self.aoz.JSON.load_done = true;
+				}, extra );
+			}
+			else
+			{
+				self.aoz.JSON.load_done = true;
+			}
+		}
+	};
+	AJSON.prototype.parse = function( string$, throwError )
+	{
+		this.root = undefined;
+		try
+		{
+			this.root = JSON.parse( string$ );
+		}
+		catch( e )
+		{
+			this.aoz.throwError( throwError, string$, false );
+		}
+		return true;
+	};
+	AJSON.prototype.stringify = function( throwError )
+	{
+		var result;
+		try
+		{
+			result = JSON.stringify( this.root );
+		}
+		catch( e )
+		{
+			this.aoz.throwError( throwError, '' + e, undefined );
+		}
+		return result;
+	};
+	AJSON.prototype.getProperty = function( path, type, defaultValue, throwError )
+	{
+		if ( typeof defaultValue != 'undefined' )
+			throwError = undefined;
+		var value = this.aoz.utilities.getProperty( this.root, path, type, throwError, defaultValue );
+		if ( typeof value == 'undefined' )
+			return defaultValue;
+		return value;
+	};
+	AJSON.prototype.setProperty = function( path, value, throwError )
+	{
+		this.aoz.utilities.setProperty( this.root, path, value, throwError );
+	}
+	AJSON.prototype.reset = function()
+	{
+		this.root = {};
+	}
+
+    // Waiting function for load / set fonts
+   	this.wait = function()
+	{
+		if ( this.load_done )
+		{
+            if ( this.error )
+                throw this.error;
+			return true;
+		}
+		return false;
+	};
+
+	// Primitives
+	this.open = function( index, tags )
+	{
+        var ajson = new AJSON( this.aoz, 'json_' + index, tags );
+		this.context.setElement( this.aoz.currentContextName, ajson, index, true );
+	}
+	this.load = function( args )
+    {
+		var index = args[ 0 ];
+		var path = args[ 1 ];
+		this.context.getElement(this.aoz.currentContextName,index,'json_channel_not_defined').load( path );
+    };
+}
+
+
+/**api
+@name:JSON Open
+@description:Open a JSON channel, enabling you to load or create JSON files
+@param:index:index:Index of the channel
+@param:tags:string:Unused, for future expansion
+@compatible: aoz
+api*/
+Instruction JSON Open, index=(index), tags$
+{
+    #errors
+	aoz.JSON.open(%index,%tags$);
+}
+End Instruction
+
+/**api
+@name:JSON Close
+@description:Destroys a JSON channel and all data associated
+@param:index:index:Index of the channel
+@compatible: aoz
+api*/
+Instruction JSON Close, index=(index)
+{
+    #errors
+    aoz.JSON.context.deleteElement(aoz.currentContextName,%index,'json_channel_not_defined');
+}
+End Instruction
+
+/**api
+@name:JSON Load
+@description:Load a json file into the channel
+@param:index:index:Index of the channel
+@param:path$:string:Path to the file
+@param:tags$:string:Unused, for future expansion
+@compatible: aoz
+api*/
+Instruction JSON Load, index=(index), path$, tags$
+{
+	#waiting
+    #errors
+	return{type:12,waitThis:aoz.JSON,callFunction:"load",waitFunction:"wait",args:[%index,%path$,%tags$]};
+}
+End Instruction
+
+/**api
+@name:JSON Save
+@description:Save the resulting stringifies JSON string as a file
+@param:index:index:Index of the channel
+@param:path$:string:Path to the file
+@param:tags$:string:Unused, for future expansion
+@compatible: aoz
+api*/
+Instruction JSON Save, index=(index), path$, tags$
+{
+	#waiting
+    #errors
+	return{type:12,waitThis:aoz.JSON,callFunction:"save",waitFunction:"wait",args:[%index,%path$,%tags$]};
+}
+End Instruction
+
+/**api
+@name:JSON New
+@description:Reset the JSON channel
+@param:index:index:Index of the channel
+@compatible: aoz
+api*/
+Instruction JSON New, index=(index)
+{
+	#errors
+	aoz.JSON.context.getElement(aoz.currentContextName,%index,'json_channel_not_defined').reset();
+}
+End Instruction
+
+/**api
+@name:JSON Parse
+@description:parse a string into JSON
+@param:index:index:Index of the channel
+@param:string$:string:Path to the file
+@compatible: aoz
+api*/
+Instruction JSON Parse, index=(index), string$, tags$
+{
+    #errors
+	aoz.JSON.context.getElement(aoz.currentContextName,%index,'json_channel_not_defined').parse(%string$,%tags$);
+}
+End Instruction
+
+/**api
+@name:JSON Stringify$
+@description:parse a string into JSON
+@param:index:index:Index of the channel
+@param:string$:string:Path to the file
+@compatible: aoz
+api*/
+Function JSON Stringify$, index=(index), string$
+{
+    #errors
+}
+End Function( {aoz.JSON.context.getElement(aoz.currentContextName,%index,'json_channel_not_defined').stringify(%string$)} )
+
+/**api
+@name:JSON Property
+@description:Get a numeric value from the JSON file
+@param:index:index:Index of the channel
+@param:path$:string:Formatted string indicating the path to the property
+@param:defaultValue:number:Value to return if the property is not defined. In this case, AOZ will not generate an error.
+@return:number:The value from the property
+@compatible: aoz
+api*/
+Function JSON Property, index=(index), path$, defaultValue
+{
+    #errors
+}
+End Function( {aoz.JSON.context.getElement(aoz.currentContextName,%index,'json_channel_not_defined').getProperty(%path$,'number',%defaultValue,'property_not_defined')} )
+
+/**api
+@name:JSON Property$
+@description:Get a string value from the JSON file
+@param:index:index:Index of the channel
+@param:path$:string:Formatted string indicating the path to the property
+@param:defaultValue$:number:Value to return if the property is not defined. In this case, AOZ will not generate an error.
+@return:number:The string from the property
+@compatible: aoz
+api*/
+Function JSON Property$, index=(index), path$, defaultValue$
+{
+    #errors
+}
+End Function( {aoz.JSON.context.getElement(aoz.currentContextName,%index,'json_channel_not_defined').getProperty(%path$,'string',%defaultValue$,'property_not_defined')} )
+
+/**api
+@name:JSON Set Property$
+@description:Set a string value in the JSON file
+@param:index:index:Index of the channel
+@param:path$:string:Formatted string indicating the path to the property
+@param:value$:string:Value to set
+@compatible: aoz
+api*/
+Instruction JSON Set Property$, index=(index), path$, value$
+{
+    #errors
+	aoz.JSON.context.getElement(aoz.currentContextName,%index,'json_channel_not_defined').setProperty(%path$,%value$,'property_not_defined');
+}
+End Instruction
+
+/**api
+@name:JSON Set Property
+@description:Set a numerical value in the JSON file
+@param:index:index:Index of the channel
+@param:path$:string:Formatted string indicating the path to the property
+@param:value:number:Value to set
+@compatible: aoz
+api*/
+Instruction JSON Set Property, index=(index), path$, value
+{
+    #errors
+	aoz.JSON.context.getElement(aoz.currentContextName,%index,'json_channel_not_defined').setProperty(%path$,%value,'property_not_defined');
+}
+End Instruction

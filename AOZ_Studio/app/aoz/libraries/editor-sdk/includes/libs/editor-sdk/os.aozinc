@@ -1,0 +1,109 @@
+Load Asset "libs/editor-sdk/js/os.js", "sdk-os"
+
+_OS_NAME$ = "" : _OS_VERSION$ = "" : _OS_RELEASE$ = "" : _OS_TYPE$ = "" : _OS_ARCH$ = ""
+_OS_CPUMODEL$ = "" : _OS_CPUSPEED = 0: _OS_FREEMEM = 0 : _OS_TOTALMEM = 0
+_OS_HOMEDIR$ = "" : _OS_TEMPDIR$ = ""
+
+Global _OS_NAME$, _OS_VERSION$, _OS_RELEASE$, _OS_TYPE$, _OS_ARCH$
+Global _OS_CPUMODEL$, _OS_CPUSPEED, _OS_FREEMEM, _OS_TOTALMEM
+Global _OS_HOMEDIR$, _OS_TEMPDIR$
+
+/**
+Get the identifier of the platform and store its name in the OS_NAME$ AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_PLATFORM[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getPlatform( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the version of the platform and store it in the OS_VERSION$ AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_VERSION[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getVersion( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the type of the platform and store it in the OS_TYPE$ AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_TYPE[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getType( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the release of the platform and store it in the OS_RELEASE$ AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_RELEASE[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getRelease( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the architecture of the platform and store it in the OS_ARCH$ AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_ARCH[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getArch( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the total memory available on the platform and store it in the OS_TOTALMEM AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_TOTALMEM[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getTotalMemory( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the free memory available on the platform and store it in the OS_FREEMEM AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_FREEMEM[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getFreeMemory( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the path of the HOME directory on the platform and store it in the OS_HOMEDIR$ AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_HOMEDIR[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getHomeDir( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the path of the TEMP directory on the platform and store it in the OS_TEMPDIR$ AOZ variable
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_TEMPDIR[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getTempDir( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Get the CPU model and speed on the platform and store it in the OS_CPUMODEL$ and OS_CPUSPEED AOZ variables
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_CPU[ PROCNAME$ ]
+	JS Execute "application.editorSDK.os.getCPU( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc

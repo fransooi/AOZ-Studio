@@ -1,0 +1,9 @@
+<i>Player Id$</i>
+<b>Player Id$</b> xxxxxxx
+=
+Each player account has a unique identifier assigned. This can be used to find the player in the leaderboard data items. (please see the Leaderboard$ function for details)
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Print Player Id$()
+@code
+

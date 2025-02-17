@@ -1,0 +1,11 @@
+<i>function:returns the factor Y of the skew</i>
+value=<b>Actor SkewY</b>(number)
+value=<b>Actor SkewY</b>(name$)
+=
+@code
+Cls 0
+Actor 1, skewX=4, skewY=1, image$="magic"
+Print Str$( Actor SkewY( 1 ) )
+@code
+Display "1" on the screen
+

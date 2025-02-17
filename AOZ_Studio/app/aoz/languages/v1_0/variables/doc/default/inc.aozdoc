@@ -1,0 +1,9 @@
+<i>instruction: increment an integer variable by 1</i>
+<b>Inc</b> variable
+=
+This command adds 1 to an integer (whole number) variable, using a single instruction to perform the expression variable=variable+1 very quickly.
+=
+For example:
+@code
+V=10 : Inc V : Print V
+@code

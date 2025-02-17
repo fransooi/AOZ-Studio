@@ -1,0 +1,36 @@
+<i>function: search an array for a value</i>
+x=<b>Match</b>(array(0),value)
+x=<b>Match</b>(array#(0),value#)
+x=<b>Match</b>(array$(0),value$)
+=
+MATCH searches through an array that has already gone through the SORT process, looking for a given value. If the value is found then x is loaded with the relevant index number. However, if the search is not successful the result will be negative. If you take the absolute value of this result, the item which came closest to your original search parameter is provided. Only arrays with a single dimension can be checked in this way, and they must already be sorted before MATCH can be called.
+=
+For example:
+@code
+Read N : Dim D$(N)
+For X=0 To N-1 : Read D$(X) : Next X
+Sort D$(0)
+=
+Do
+REINPUT:
+Input A$
+If A$=" "Then End
+If A$="print all data"
+For X=1 To N: Print D$(X) : Next X: Goto REINPUT
+End If
+POS=Match(D$(0),A$)
+If POS<-N-1
+If POS>-10
+Print "Not found. Nearest to ";D$(1) : Goto JMP
+Else
+Print "Not found. Nearest to ";D$(N) : Goto JMP
+End if
+End If
+If POS>0 Then Print "Found ",DS(POS);" in record ";POS
+If POS<0 Then Inc POS : Print "Not found. Nearest to ":DS(Abs(POS))
+JMP:
+Loop
+Data 8,"Mercury","Venus","Earth","Mars","Saturn","Jupiter","Neptune","Tharg"
+@code
+=
+Test that example out by entering various inputs, including the names of planets, single characters in upper and lower case and "print all data". Obviously MATCH can be used with the INSTR function to set up a powerful parser routine, for interpreting user input in an adventure game.

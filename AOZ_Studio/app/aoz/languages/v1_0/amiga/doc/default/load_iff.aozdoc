@@ -1,0 +1,9 @@
+<i>Load Iff</i>
+<b>Load Iff</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+With the appropriate IFF picture files ready to be loaded on disc, this command is used to load the selected filename to the current screen.
+
+There is an optional screen number parameter, which will open that screen for the picture. If this numbered screen already exists, its contents will be erased and replaced by the IFF data.
+

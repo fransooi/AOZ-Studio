@@ -1,0 +1,9 @@
+<i>function:tests if an actor is horizontaly reversed</i>
+value=<b>Actor IsHRev</b>(number)
+value=<b>Actor IsHRev</b>(name$)
+=
+@code
+Cls 0
+Actor 1, HRev = True, image$="magic"
+Print Str$( Actor IsHRev( 1 ) )
+@code

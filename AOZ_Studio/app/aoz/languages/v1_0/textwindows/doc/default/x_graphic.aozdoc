@@ -1,0 +1,12 @@
+<i>X Graphic</i>
+<b>X Graphic</b> xxxxxxx
+=
+This example will display a bob at the position of the cursor...
+@code
+Load "AMOSPRo_Examples:Objects/Bobs.abk"
+Locate 0, 10
+Print "Hello AOZ! "
+Bob 1, X Graphic( X Curs ), Y Graphic( Y Curs ), 1
+Wait Key
+@code
+

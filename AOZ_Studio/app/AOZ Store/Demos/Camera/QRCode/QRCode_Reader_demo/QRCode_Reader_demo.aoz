@@ -1,0 +1,35 @@
+//
+// Demonstration of the AOZ QR Code Reader
+// By Baptiste Bideaux
+//
+// (c) AOZ Studio 2020
+//
+Flash Off : Curs Off : Cls 0
+
+Rem Defint the using of the front camera
+QRCode Scan "user"
+
+Rem Start the QR Code Reader
+QRCode Scan On
+
+Print "Waiting a QR Code..."
+
+Rem Main Loop
+Do
+	Rem Read the camera
+	Rem If a QR Code is read, the function returns the QR Code text.
+	CODE$ = QRCode Scan$
+
+	Rem If a QR Code exists
+	If CODE$ <> ""
+		Rem Print the code
+		Print CODE$
+
+		Rem Each time the camera reads a QR Code,
+		Rem it is stopped. So it must be restarted
+		Rem each time you want to read a new code.
+		QRCode Scan On
+	End If
+
+	Wait Vbl
+Loop

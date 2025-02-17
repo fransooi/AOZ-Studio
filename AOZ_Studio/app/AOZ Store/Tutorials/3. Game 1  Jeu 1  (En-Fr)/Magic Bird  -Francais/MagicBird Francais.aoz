@@ -1,0 +1,32 @@
+// Ce jeu est expliqué en détail dans le Guide utilisateur et le tutoriel MagicBird
+
+START:
+// Faisons bouger le décor de X=0 à -1920, en boucle (LoopMove), à la vitesse définie (duration) -cf le Guide utilisateur)
+Actor "decor", Image$="forest.png", X=0, EndX=-1920, LoopMove=True, Duration=20000
+
+// Créons dans cette boucle For…Next avec 50 stalactites positionnées en Y au hasard d'une amplitude progressive avec I qui augmente de rnd(I*30), chacune espacée de 320 pixels (I*320) et qui toutes vont se déplacer de droite à gauche
+//   Dans cette boucle For I = 1 to 50, I est un compteur qui augmentera de 1 à chaque passage, jusqu'à 50.
+//   Par ex pour la 1er première boucle, I=1, la ligne de code générera ainsi : Actor 1, X=720, Y=-780 + un nombre aléatoire compris entre 0 et 20
+For I= 1 to 50
+ Actor I, X=400+(I*320), Y=-780+rnd(I*20), Auto$="offsetX=-5", Image$="ice.png" //offsetX dit que la stalactite doit ensuite se déplacer automatiquement de -5 pixels en X (horyzontalement et vers la gauche donc)
+Next I
+PY=Screen Height/2 // Positionnons Magic (notre personnage) au milieu de l'écran verticalement
+
+// La boucle principale du jeu
+Do    // Début de l'instruction Do...Loop (qui execute en boucle ce qui est entre Do et Loop)
+   If Mouse Key = 0 then PY = PY+7 else PY = PY-15   // Magic descend tout seul de 7 pixels. Il remonte de 15 si un bouton de la souris est appuyé (ou l'écran du smartphone). Mouse Key est une fonction qui prend une valeur selon le bouton de la souris appuyé, 0 si aucun bouton
+   Actor "magic",Y=PY, Image$="magicfly.png"   	     // Affichons Magic (X n'est pas défini donc vaut 0 par défaut)
+   Wait Vbl	  // Oubliez cela pour le moment, cela rend l'affichage souple, à mettre dans les boucles d'affichage
+   if Actor Col("magic", image$="ice") = True Then Goto DEAD // testons si il y a collision entre magic et une stalactite (toutes utilisent l'image ice.png)
+   If PY>1000 Then Goto DEAD // magic touche le sol si il descend de plus de 1000 pixels en Y (vertical)
+Loop  // Fin de la boucle
+
+DEAD:  // Un nom suivi de : est une etiquette, un endroit du programme que l'on peut atteindre avec le Goto. Si Magic entre en collision (ligne 21), ou tombe (ligne 22) cette partie du code à partir de DEAD: est exécutée
+  Actor "magic", Image$="magicdead.png", Y=PY, ENDY=-20, Auto$="offsetY=-15"
+  Actor "gameover", X=660, Y=400, Image$="gameover.png"  // Affichons l'image de GameOver
+  Wait click  // Attendons un appui sur un bouton de la souris (ou sur l'écran pour les smartphones)
+  Actor Del "gameover" // Effacons l'image GameOver
+ Goto START // Et on retourne au début du programme.
+
+// Voila c'est un début, à vous de modifier, compléter...
+// Par exemple ajoutez des nuages qui scrollent en boucle à des vitesses différentes.

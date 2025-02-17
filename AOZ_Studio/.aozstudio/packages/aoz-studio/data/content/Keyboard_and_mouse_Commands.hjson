@@ -1,0 +1,348 @@
+{
+    keyboard_and_mouse_commands:
+    { 
+        name: "Keyboard and Mouse Commands"
+        intro: ""
+        conclusion: ""
+        commands:
+        {
+            "inkey$":
+            [
+                This function checks to see if a key has been pressed, and reports back its value in a string. For example:
+                '''
+                ~~~                
+		        Do
+		   	        K$=Inkey$
+		   	        If K$<>Then Print "You pressed a key!"
+	 	        Loop
+                ~~~
+                '''
+                Now use the INKEY$ function to move your cursor around the screen, like this:
+                '''
+                ~~~                
+		        Print "Use your cursor keys"
+		        Do
+			        K$=Inkey$
+			        If K$<>Then Print K$;
+		        Loop
+                ~~~
+                '''
+The INKEY$ function does not wait for you to input anything from the keyboard, so if a character is not entered an empty string is returned. INKEY$ can only register a key-press from one of the keys that carries its own Ascii code, and the Ascii code numbers that represent the characters which can be printed on the screen.
+""
+"It has also been explained that certain keys like [Help] and the function keys [Fl] to [F10] do not carry as Ascii code at all, and if INKEY$ detects that this type of key has been pressed, a character with a value of zero will be returned. When this happens, the internal "scan codes" of these keys can be found."
+            ]
+            "wait_key":
+            [
+                This simple command waits for a single key-press before acting on the next instruction. For example:
+                '''
+                ~~~                
+		   Print "Please press a key" : Wait key : Print "Thank you!"
+                ~~~
+                '''
+            ]
+            "key_speed":
+            [
+                During editing, a character or cursor movement is repeated for as long as its key is held down. This can be
+frustrating if it causes unwanted characters or cursor movements. KEY SPEED lets you change the repeat rate while
+a key is held down, to your own particular preference. State the time-lag you want to use between pressing a key
+and the start of the repeat sequence, measured in 50ths of a second.Follow this by the delay-speed between each character you type, also in 50ths of a second. This line will slow
+everything down:
+                '''
+                ~~~                
+		   Key Speed 50,50: Rem One second delay
+                ~~~
+                '''
+The following setting may well prevent you from editing at all!"
+                '''
+                ~~~                
+		   Key Speed 1,1: Rem Ridiculously fast
+                ~~~
+                '''
+            ]
+            "key_state":
+            [
+                Use this function to check whether or not a specific key has been pressed. The relevant scan code should be enclosed in brackets, and when the associated key is being pressed KEY STATE will return a value of TRUE (-1), otherwise the result will be given as FALSE (0). For example:
+                '''
+                ~~~                
+		   Do
+			If Key State(69)=True Then Print "ESCAPE!" : Rem Esc key pressed
+			If Key State(95)=True Then Print "HELP!": Rem Help key pressed
+		   Loop
+                ~~~
+                '''
+            ]
+            "key_shift":
+            [
+                KEY SHIFT is used to report the current status of those keys which cannot be detected by either INKEY$ or
+SCANCODE because they do not carry the relevant codes. These "control keys can kb tested individually, or a test
+can be set up for any combination of such keys pressed together. A single call to the KEY SHIFT function can test
+for all eventualities, by examining a bit map in the following format"
+                '''
+                ~~~                
+		"Bit 	Key 		Tested Notes
+		0 	left [Shift] 	Only one [Shift] key can be tested at a time
+		1 	right [Shift] 	Only one [Shift] key can be tested at a time
+		2 	[Caps Lock] 	Either ON or OFF
+		3 	[Ctrl]
+		4 	left [Alt]
+		5 	right [Alt]
+		6 	left [Amiga] 	This is the [Commodore] key on some keyboards
+		7 	right [Amiga]"
+                ~~~
+                '''
+                If the report reveals that a bit is set to 1, then the associated key has been held down by the user, otherwise a 0 is
+given. Here is a practical example:
+                '''
+                ~~~                
+		   Centre "Please press some Control keys"
+		   Curs Off
+		   Do
+		   	Locate 14,4: Print Bin$(Key Shift,8)
+		   Loop
+                ~~~
+                '''
+These keys can also be used when setting up macro definitions, using the SCAN$ and KEY$ functions, and this is
+explained below.
+            ]
+            "key": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "scancode":
+            [
+                 "SCANCODE returns the internal scan code of a key that has already been entered using the INKEY$ function. The next example may be tested by pressing the function keys, [Del] and [Help]. To interrupt the example, press [Ctrl]+[C]."
+                '''
+                ~~~                
+                Do
+                    While K$= ""
+                        K$=Inkey$
+                    Wend
+                    If Asc(K$)=0 Then Print "No Ascii Code"
+                        Print "The Scan Code is ";Scancode
+                    End If
+                   Loop
+                ~~~
+                '''
+            ]
+            "scanshift":
+            [
+                To determine if keys are pressed at the same time as either or both of the [Shift] keys, the Scanshift function returns
+the following values:
+                '''
+                ~~~                
+		Value 	Meaning
+		0 	no [Shift] key pressed
+		1 	[Left Shift] pressed
+		2 	[Right Shift] pressed
+		3 	both [Shift] keys pressed
+                ~~~
+                '''
+Try out the following example by pressing various keys, in combination with the [Shift] keys:
+                '''
+                ~~~                
+		   Do
+			A$=Inkey$
+			S=Scanshift
+			If S<>0
+			Print S
+			End If
+		   Loop
+                ~~~
+                '''
+            ]
+            "put_key":
+            [
+                This command loads a string of characters directly into the keyboard buffer, and it is most commonly used to set up
+defaults for your INPUT routines. Note that end of line returns can be included using a CHR$(13) character. In the
+next example, "NO" is assigned to the default INPUT string.
+                '''
+                ~~~                
+		   Do
+			Put Key "NO"
+			Input "Do you love me, Yes or No: ";A$
+			B$=Upper$(A$)
+			If B$="NO" Then Boom : Wait 50: Exit
+		   Loop
+                ~~~
+                '''
+            ]
+            "clear_key":
+            [
+                When an appropriate character is entered from the keyboard, its Ascii code is placed in an area of memory called
+the keyboard buffer. This buffer is then examined by the INKEY$ function in order to report on key presses.
+CLEAR KEY completely erases this buffer and re-sets the keyboard, making it a very useful command at the
+beginning of a program when the keyboard buffer may be filled with unwanted information. CLEAR KEY can also
+be called immediately before a WAIT KEY command, to make sure that the program waits for a fresh key-press
+before proceeding.
+
+            ]
+            "scan$": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "hide_on": //Same tx as HIDE
+            [
+                This instruction hides the mouse pointer by making it invisible. Although it cannot be seen, it is still active and
+sending back reports, and the position of the mouse pointer co-ordinates can still be read. AOZ Studio will
+automatically count the number of times that the HIDE instruction is used, and employ this number to SHOW the
+mouse pointer once again at your command. If you prefer to keep the mouse pointer invisible all the time and ignore
+the counting system, use the special ON version of the instruction, like this:
+                '''
+                ~~~                
+		   Hide On
+                ~~~
+                '''
+            ]
+            "hide":
+            [
+                This instruction hides the mouse pointer by making it invisible. Although it cannot be seen, it is still active and
+sending back reports, and the position of the mouse pointer co-ordinates can still be read. AOZ Studio will
+automatically count the number of times that the HIDE instruction is used, and employ this number to SHOW the
+mouse pointer once again at your command. If you prefer to keep the mouse pointer invisible all the time and ignore
+the counting system, use the special ON version of the instruction, like this:
+                '''
+                ~~~                
+		   Hide On
+                ~~~
+                '''
+            ]
+            "show":
+            [
+                This makes the mouse pointer visible again after a HIDE instruction.As a default, the system counts the number of times that the HIDE command has been used, then reveals the pointer
+on screen when the number of SHOWs equals the number of HIDEs. To bypass this counting system and reveal the
+mouse pointer immediately, use SHOW ON.
+                '''
+                ~~~                
+		   Do
+		   For N=1 To 10
+			Hide : Wait N : Show
+			Next N
+		   Loop
+                ~~~
+                '''
+            ]
+            "show_on": //Same txt as SHOW
+            [
+                This makes the mouse pointer visible again after a HIDE instruction.As a default, the system counts the number of times that the HIDE command has been used, then reveals the pointer
+on screen when the number of SHOWs equals the number of HIDEs. To bypass this counting system and reveal the
+mouse pointer immediately, use SHOW ON.
+                '''
+                ~~~                
+		   Do
+		   For N=1 To 10
+			Hide : Wait N : Show
+			Next N
+		   Loop
+                ~~~
+                '''
+            ]
+            "change_mouse":
+            [
+                To change the shape of the pointer arrow, use this command followed by the number of the required shape listed
+above. For example:
+                '''
+                ~~~                
+		   Do
+		   For N=1 To 3
+			Change Mouse N
+			Wait 25
+			Next N
+		   Loop
+                ~~~
+                '''
+There is no need to restrict your choice to these three shapes. If you select an image number greater than three,
+AOZ Studio will look at an image stored in the sprite bank, and install it as the mouse pointer. The first
+image in the bank may be called up by using Change Mouse 4, the second by specifying number 5, and so on. To
+make use of this option, sprites can feature no more than four colours, and they must be exactly 16 pixels wide,
+although any height is allowed. For such oversized sprites, the SET SPRITE BUFFER command should be used,
+which is explained in Chapter 7.1.
+            ]
+            "mouse_key":
+            [
+                The MOUSE KEY function checks whether one of the mouse buttons has been pressed and makes a report in the form of a binary pattern made up of these elements:
+                '''
+                ~~~                
+		Pattern 	Report
+		Bit 0 		Left mouse button
+		Bit 1 		Right mouse button
+		Bit 2 		Third mouse button if it exists
+                ~~~
+                '''
+As usual, the numbers zero and one make up the report, with a one displayed when the relevant button is held down,
+otherwise a zero is shown. Try this routine:
+                '''
+                ~~~  
+		   Curs Off
+		   Do
+			Locate 0,0
+			M= Mouse Key : Print "Bit Pattern ";Bin$(M,8);" Number ";M
+		   Loop
+                ~~~
+                '''
+            ]
+            "mouse_click":
+            [
+                This is similar to MOUSE KEY, but instead of checking to see whether or not a mouse button is held down,
+MOUSE CLICK is only interested in whether the user has just made a single click on a mouse button. It returns the
+familiar bit pattern of these elements:
+                '''
+                ~~~                
+		Pattern 	Report
+		Bit 1 		Single test for left mouse button
+		Bit 2 		Single test for right mouse button
+		Bit 3 		Single test for third mouse button, if available
+                ~~~
+                '''
+                These bits are automatically re-set to zero after one test has been made, so they will only check for a single key
+press at a time. Here is an example:
+                '''
+                ~~~                
+		   Curs Off
+		   Do
+			M=Mouse Click
+			If M<>0 Then Print "Bit Pattern ";Bin$(M,8);" Number";M
+		   Loop
+                ~~~
+                '''
+//Limiting the mouse pointer
+//One of the commonest screen conventions for both leisure and serious programs is the use of control panels. AMOS
+//Professional relies on them extensively for ease of use and clarity. Supposing you need to set up a control panel on
+//your screen, but you want to prevent the mouse pointer from wandering outside the area of that panel.
+            ]
+            "limit_mouse":
+            [
+                This command sets up a rectangular area for the mouse pointer to move around, and traps it inside the boundaries
+,set by hardware coordinates, from the rectangle's top-left TO bottom right-hand corner. For example:
+                '''
+                ~~~                
+		   Limit Mouse 300,100 To 350,150
+                ~~~
+                '''
+If you need to restore freedom to the mouse pointer and allow it to move around the entire screen, use the LIMIT
+MOUSE instruction on its own, without any coordinates after it. Note that SCREEN OPEN must be followed by a
+WAIT VBL command before LIMIT MOUSE can be used, otherwise no screen will be set up for screen limits to be
+set.
+            ]
+            "mouse_wheel": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            
+        }
+    }
+}

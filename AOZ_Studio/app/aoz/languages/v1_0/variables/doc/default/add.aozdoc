@@ -1,0 +1,36 @@
+<i>instruction: perform fast integer addition</i>
+<b>Add</b> variable,expression
+<b>Add</b> variable,expression,base To top
+=
+The ADD command can be used in two way:
+=
+<b>With simple variables.</b>
+The ADD command can be used to add the result of an expression to a whole number variable. immediately. It is the equivalent to variable=variable+ expression.
+=
+There is a more complex version of ADD, which is ideal for handling certain loops much more quickly than the equivalent separate instructions. When Base number and Top number parameters are included, ADD is the equivalent to the following lines:
+@code
+V=V+A
+If V&lt;BASE Then V=TOP
+If V>TOP Then V=BASE
+@code
+=
+Here is an example:
+@code
+Dim A(10)
+For X=0 To 10:A(X)=X:Next X
+V=0
+Repeat
+Add V,1,1 To 10
+Print A(V)
+Until V=11 : Rem This loop is infinite as V is always <11@code
+@code
+=
+<b>With objects</b>
+The ADD instruction applied to a variable that contains an object (variables ending with "@") add a new object to the object pointed to by the variable.
+=
+This example create a bob and adds the "Joystick Movement" object to it.
+@code
+MYBOB@ = Bob( 1, 200, 200, 1 )
+MYBOB@.Add Joystick Movement, Speed = 300
+@code
+

@@ -1,0 +1,10 @@
+<i>Even ( number )</i>
+<b>Even ( number )</b> xxxxxxx
+=
+Example
+@code
+For f=0 to 20
+if Even (f) then print f
+next f
+@code
+

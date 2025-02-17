@@ -1,0 +1,626 @@
+{
+    samples:
+    { 
+        name: "Sound Commands"
+        intro: "This Chapter explains how to exploit the superb sound capabilities of your computer. It will deal with simple sound effects and the use of music in AOZ Studio programs.\n Generally, the sound capabilities of a television set are terrible. To release the full potential of AOZ Studio stereo sound, a hi-fi system or personal stereo should first be connected to the Amiga's pair of stereo phono sockets.\n\n All AOZ Studio sound commands operate independently from games and utility routines, so that they can never interfere with your programming. On the contrary, they should enhance your work in any way that you chose, acting as markers, adding realism, soothing, shocking or providing comic relief. \n\n Ready-made sound effects \n\n Any imaginable sound effect can be used in an AOZ Studio program, whether it is natural, synthetic, prerecorded or composed by you. In fact the choice is so vast that the next two Chapters are devoted to the wonders of sound samples! A whole bank of pre-recorded effects has been prepared for your use, but there are three common sound effects that can be called up by their own commands and used for testing and punctuating your routines."        
+        conclusion: ""
+        commands:
+        {
+            "boom":
+            [
+                By making use of interrupts to simulate "white noise", the BOOM command plays a realistic explosive sound effect.
+This does not delay the program at all, so it may be necessary to use WAIT between successive explosions, or to
+create ricochet and echo effects For example:
+                '''
+                ~~~                
+		   Curs Off : Centre "Thunderbolt and Lightning"
+		   Flash 1, "(FFF,1)(000,147)(A5F,2)
+		   Boom : Wait 150: Boom : Cls
+		   Centre "Very Very Frightening"
+		   Wait 50 : Boom
+                ~~~
+                '''
+            ]
+            "shoot":
+            [
+                The SHOOT command generates a simple sound effect in exactly the same way as BOOM. For example:
+                '''
+                ~~~                
+		   Shoot : Wait 25: Shoot : Print "Ouch!"
+                ~~~
+                '''
+            ]
+            bell:
+            [
+                Unlike the built-in explosive sound effects, BELL produces a simple pure tone.
+""
+The frequency or "pitch" of this sound can be changed by adding a pitch value after the BELL command, ranging
+from 1 for a very deep ring, up to 96 for an ultra high pitched sound. You can hear the range of frequencies with
+this example:
+                '''
+                ~~~                
+		   For F=1 To 96
+			Bell F : Wait F/10+1 : Rem Vary delay
+		   Next F	
+                ~~~
+                '''
+            ]
+            "sam_play":
+            [
+                The SAM PLAY command is used to play a digital sound sample through your audio system. Simply define the
+number of the required sample held in the bank. There is no limit to the number of samples that can be stored, other
+than available memory.
+""
+There are two optional parameters that can also be given. A voice parameter can be placed immediately after the
+SAM PLAY command, in front of the sample number. This is a bitmap containing a list of the voices the sample
+will use. There is one bit for each of the four available voices, and to play a voice the relevant bit should be set to 1,
+as explained in the last Chapter. The other parameter can be given after the sample number, and this governs the
+frequency of the sound. The frequency parameter sets the speed at which the sample will be played back, and the
+setting is given in Hertz. This is a professional standard of measurement, but as a rule of thumb, a rate of 4000 is
+acceptable for simple sound effects, with 10000 for recognisable speech. By changing this playback rate, the sample
+pitch can be adjusted over a very wide range, allowing a single sample to generate many different sounds.
+""
+The following example loads up a bank of ready-made samples stored on your "AMOSPro Examples" disc, and
+allows you to play them in random order:
+                '''
+                ~~~                
+		   Load "AMOSPro_Examples:Samples/Mixture.Abk",5
+		   Sam Bank 5
+		   Curs Off : Cls 0: Paper 0
+		   Locate 0,10
+		   Centre "Press a key from A to J"
+		   Do
+			A$=Inkey$
+			A=Asc(A$)
+			If A>96 And A<107
+			   Sam Play A-96
+			End If
+		   Loop
+                ~~~
+                '''
+You can try playing the keys rapidly, like a miniature drum kit, as well as holding down the keys to get some
+hammer-drill effects! The next example demonstrates the use of two voices for a simple echo effect, and how
+frequency changes can alter the sample:
+                '''
+                ~~~                
+		   Load "AMOSPro_Examples:Samples/Mixture.Abk",10
+		   Sam Bank 10
+		   Sam Play 1,12 : Wait 5: Sam Play 2,12: Rem Simple echo effect
+		   Wait Key
+		   Sam Play 1,13,2000: Rem Lower Pitch
+		   Wait Key
+		   Sam Play 1,13,5000: Rem Higher Pitch
+                ~~~
+                '''
+            ]
+            "sam_stop":
+            [
+                This simple command is used to stop all samples playing through your loudspeaker system. If it is followed by an
+optional voice parameter, only the selected voices will be switched off. Voices are chosen using a binary bit-map,
+where any bit that is assigned to 1 will have the associated voice terminated. Otherwise it will be ignored. The voices
+are associated with the following bits:
+                '''
+                ~~~                
+		Voice 3210
+		Bitmap %1111
+                ~~~
+                '''
+For example, the next line would stop samples playing on voices 3 and 1:
+                '''
+                ~~~                
+		   Sam Stop %1010
+                ~~~
+                '''
+            ]
+            "volume":
+            [
+                The VOLUME command controls the level of sound flowing through one or more channels, ranging from zero
+(complete silence) up to 63 (ear-splitting), like this:
+                '''
+                ~~~                
+		   For L=0 To 63
+			Volume L: Bell 80 : Wait 5
+		   Next L
+                ~~~
+                '''
+Once the VOLUME level has been set, all future sound effects and music will be delivered at that level, across all
+four channels. In order to create stereo effects and perfect sound mixes, each of the voices needs to be adjusted
+independently from one another.
+            ]
+            "voice":
+            [
+                Soundtracks are made up of one or more voices, acting independently or together. The VOICE command is used to
+activate voices by setting a bit-mask, with each bit representing the state of one of the four available channels
+through which the voices flow. To play the required voice (from 0 to 3) simply set the relevant bit to 1, otherwise a
+value of zero will keep the voice silent. Here are some example settings:
+                '''
+                ~~~                
+		   Voice %1111 : Rem Activate all voices
+		   Voice %0001 : Rem Activate voice 0 only
+		   Voice %1001 : Rem Activate voices 3 and 0
+                ~~~
+                '''
+                The volume of each voice can now be controlled by specifying voices and volumes, like this:
+                '''
+                ~~~                
+		   Volume %0001,63
+		   Boom : Wait 100: Rem Channel 1 loud
+		   Volume %1110,5
+		   Boom : Wait 50: Rem Channels 2,3,4 soft
+		   Bell 40 : Wait 50 : Volume 60: Bell 40
+                ~~~
+                '''
+                Here are some common values for voice settings, that can be used to make programming a little easier:
+                '''
+                ~~~                
+		Value 	Voices used 	Effect
+		15 	0,1,2,3 	use all four voices
+		9 	0,3 		combine output to left speaker
+		6 	2,4 		combine output to right speaker
+		1 	0 		use voice 0
+		2 	1 		use voice 1
+		4 	2 		use voice 2
+		8 	3 		use voice 3
+                ~~~
+                '''
+            ]
+            "play": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "play_off":
+            [
+                Patterns of individual notes can be played, allocated to any voice, given a pitch and delayed for pause, using just one
+PLAY command.
+""
+The voice parameter is optional, allowing notes to be played through any combination of the Amiga's four voices,
+and is set by the usual bit-map format.
+""
+The pitch parameter uses the values from 1 to 96, which correspond to the notes in the table given earlier. Delay sets
+the length of any pause between this PLAY command and the next instruction in the program, with a value of zero
+starling the note and immediately going on to the next command.
+""
+The next example demonstrates this technique, including stereo harmonies:
+                '''
+                ~~~                
+		   Play 1,40,0: Play 2,50,0: Rem No delay
+		   Wait Key
+		   Play 1,40,15: Play 2,50,15: Rem Delay
+		   Rem Play a random sequence of notes
+		   Do
+			V=Rnd(1 5): P=Rnd(96): Play V,P,3
+		   Loop
+                ~~~
+                '''
+PLAY is not restricted to pure notes. It is possible to assign complex wave forms to voices, using the WAVE and
+NOISE commands, which are explained next. To stop the playing process, simply turn it off like this:
+                '''
+                ~~~                
+		   Play Off
+                ~~~
+                '''
+            ]
+            "set_wave":
+            [
+                The SET WAVE command sets the wave form of an individual sound, that can then be used at various pitches to
+create music or sound effects. This command requires two parameters, the number of the wave to be set, followed
+by the shape of this pattern, held in a string.
+""
+Wave numbers zero and 1 are already allocated, so these numbers should not be used. Wave zero holds a random
+noise pattern, used to generate the explosive effects of BOOM and SHOOT, while wave number 1 is a smooth
+pattern in the shape of a sine wave, which is used as the "template" for the pure tones needed by the PLAY and
+BELL commands. So when setting your new wave patterns, use the identification numbers from 2 upwards.
+""
+Setting the parameter for the shape of the wave form is a little more complicated.
+""
+Each one of the 256 numbers which make up the shape of the wave form sets a single level of intensity for that
+single part of the wave. Each one of these intensities can hold a possible value ranging from -128 up to 127. Look at
+the diagram below. The vertical scale represents this range of intensities (-128 to 127) and the horizontal scale
+shows the physical length of the wave form, in other words the individual moments of time as the wave is played
+(256).
+
+![Wave Example 1](/img/samples/samples_ex1.png)
+
+This triangular wave pattern does not make a very exciting sound, but it serves as a simple introduction to making
+your own wave forms.
+
+Because AOZ Studio strings can only hold positive numbers from zero to 256, the negative values in this
+wave form need to be converted before use. This is extremely easy, and is achieved by adding 256 to the negative
+numbers in the list! In other words, a value of -50 would be entered as 206, like this:
+                '''
+                ~~~                
+		   -50+256=206
+                ~~~
+                '''
+                The following program shows how the sort of wave form in the above diagram could be created The wave form is
+then assigned to a wave and played, which is explained a little later.
+                '''
+                ~~~                
+		   S$=" " : Rem Clear wave form string
+		   For W=-128 To 127
+			X=W : If X<0 Then Add X,256
+			S$=S$+Chr$(X)
+		   Next W
+		   Set Wave 2,S$
+		   Wave 2 To 15: For S=10 to 60: Play S,10: Next S
+                ~~~
+                '''
+The wave forms of musical instruments are much more complicated than the last example, but they are not too
+difficult to reproduce. By combining several sine waves together, with each sine wave having a different starting
+point, the type of pattern shown in the next diagram is achieved.
+
+![Wave Example 1](/img/samples/samples_ex2.png)
+
+                This sort of wave form generates smooth harmonics, which can then be used as the "templates" for musical notes,
+and the sort of routine in the next example can produce typical sine waves:
+                '''
+                ~~~                
+		   SHAPE$=" " : Degree
+		   For S=0 To 255
+			V=Int((Sin(S)/2+Sin(S*2+45)/4)*128)+127
+			SHAPE$=SHAPE$+Chr$(V)
+		   Next S
+		   Set Wave 2,SHAPE$ : Wave 2 To 15
+		   For N=10 To 60: Play N,10 : Next N
+                ~~~
+                '''
+            ]
+            "wave":
+            [
+                The WAVE command is used to assign the specified wave number to one or more sound channels.
+""
+The voice parameter contains a bit-map in the standard format, and if a bit pattern is set to 1 then the appropriate
+voice is used to PLY the sound. Remember that wave number zero is already reserved for the NOISE channel, and
+wave number 1 contains a smooth sine wave for pure tone. Here are some examples:
+
+                '''
+                ~~~                
+		   Wave 1 To %1111 : Rem Play pure tone through all voices
+		   Play 60,0
+		   Wave 0 To %0001 : Rem Use voice 0 for noise
+		   Play 20,10
+                ~~~
+                '''
+            ]
+            "noise_to":
+            [
+                This command has the same effect as assigning the white noise wave form number zero to the selected voices, and it
+is used to form the foundations for a whole range of special effects, such as explosions and percussion drumming.
+The bit-pattern used to set one or more voices has already been explained above. Here is an example:
+                '''
+                ~~~                
+		   Noise To 15 Rem All four voices
+		   Play 60,50
+		   Play 30,0
+                ~~~
+                '''
+            ]
+            "sample":
+            [
+                This is the most powerful of the wave commands. SAMPLE is used to assign the specified sound sample number, which is already stored in the Sample Bank, directly to the current wave form. The voices to be used are set in the usual way. When PLAY is used, this sample will be taken from the Sample Bank and used as the "musical
+instrument" to be played. Try this example:
+                '''
+                ~~~                
+		   Load "AMOSPro_Examples:Samples/Mixture.Abk",6
+		   Sam Bank 6
+		   Sample 5 To 15
+		   For S=20 To 50
+			Play S,50
+		   Next S
+                ~~~
+                '''
+The pitch values that can be applied to any particular sample will vary, but normally anything between 10 and 50 is
+satisfactory.
+            ]
+            "del_wave":
+            [
+                To delete a wave that has been set up with a SET WAVE instruction, simply use this command followed by the number of the wave to be erased.
+""
+When this has been done, all deleted voices will be set to the standard default sine wave. The pre-set wave numbers
+zero and 1 can be manipulated, but they cannot be eradicated.
+""
+Making audio envelopes
+An "envelope" is audio jargon for how a sound is manipulated during the brief period of tin that it is played. In other
+words, whether it bursts into life or makes a more subtle entry (attack), whether it fades away with dignity or lives
+life to the full (decay), how long it hangs on for (sustain) and finally, the manner in which it meets its end (release).
+All of this is achieved simply by changing the volume of individual sections of the wave form.
+
+            ]
+            "set_envel":
+            [
+                AOZ Studio uses envelopes to change your original wave forms according to a set pattern. The parameters
+are as follows:
+""
+The wave number sets the wave form to be affected, and any number can be used including the pre-set wave
+numbers zero and 1.
+""
+The phase number refers to one of seven individual sections of the original wave form that is to be defined, ranging
+from 0 to 6.
+""
+The duration controls the length of this particular segment (phase number) of the wave form, and is expressed in
+units of one 50th of a second. This is how the speed of a volume change in any phase of the wave form is
+controlled.
+""
+Volume specifies the volume to be reached by the end of this phase, ranging from zero for silence up to 63 for full
+blast.
+""
+In the next example, an envelope for wave form number one is set, so that segment zero (its first phase) lasts for
+four seconds, ramping up to full volume by its end, no matter what the original volume was at the start of this phase.
+                '''
+                ~~~                
+		   Set Envel 1,0 To 200,63
+                ~~~
+                '''
+            ]
+            "led_on": //Same as LED OFF
+            [
+                Most tape recorders and hi-fl systems have some sort of filtering system to "clean" up sound by eliminating the high
+frequencies that generate unwanted hiss. When filters are used, there is always a trade off between overall sound
+quality and clear definition.
+""
+For example, although some distortion may be eliminated, certain percussion sounds will be robbed of their
+characteristics. The LED filter changes the way these high frequencies are treated by the system, but by using the
+LED OFF command, you can recapture the essential quality of many instrumental sounds.
+""
+The difference made by the LED filter can be clearly heard in the following example:
+                '''
+                ~~~                
+		   Load "AMOSPro_Examples:Music/Music.Abk"
+		   Music 1
+		   Do
+			If Mouse Key=1 Then Led On: Print "LED ON!"
+			If Mouse Key=2 The Led Off : Print "LED OFF"
+		   Loop
+                ~~~
+                '''
+Audio quality is very much an individual choice, and the LED filter will sound more pleasing with certain
+sequences, but distorted with others. Warbling the filter on and off can also give some interesting effects.
+The name LED derives from the light-emitting diode that activates the power light on your Amiga. When the LED
+filter is toggled off and on, this light is also turned off and on to indicate the status of the filter.
+            ]
+"led_off": //Same as LED ON
+            [
+                Most tape recorders and hi-fl systems have some sort of filtering system to "clean" up sound by eliminating the high
+frequencies that generate unwanted hiss. When filters are used, there is always a trade off between overall sound
+quality and clear definition.
+""
+For example, although some distortion may be eliminated, certain percussion sounds will be robbed of their
+characteristics. The LED filter changes the way these high frequencies are treated by the system, but by using the
+LED OFF command, you can recapture the essential quality of many instrumental sounds.
+""
+The difference made by the LED filter can be clearly heard in the following example:
+                '''
+                ~~~                
+		   Load "AMOSPro_Examples:Music/Music.Abk"
+		   Music 1
+		   Do
+			If Mouse Key=1 Then Led On: Print "LED ON!"
+			If Mouse Key=2 The Led Off : Print "LED OFF"
+		   Loop
+                ~~~
+                '''
+Audio quality is very much an individual choice, and the LED filter will sound more pleasing with certain
+sequences, but distorted with others. Warbling the filter on and off can also give some interesting effects.
+The name LED derives from the light-emitting diode that activates the power light on your Amiga. When the LED
+filter is toggled off and on, this light is also turned off and on to indicate the status of the filter.
+            ]
+            "vumeter":
+            [
+                Volume meters (Vu-meters) are a familiar sight on the control panels of audio equipment. AOZ Studio is not
+only able to monitor the volume level of any selected voice number from 0 to 3, it can also use the value of the
+volume intensity to make graphics dance around in response to the intensity of a soundtrack!"
+""
+The value returned is given as the volume intensity, ranging from silence (0) up to full volume (63).
+""
+The best way to understand the effect of all the commands in this Chapter is to hear them working. Be sure to try out
+all of the demonstration programs that are available via the HELP feature.
+""
+Playing music
+The AOZ Studio music system allows backing tracks to be added to any program. Music can be created
+from a variety of sources, including original samples and compositions, which are explained in the following two
+Chapters. These backing tracks are converted into the AOZ Studio format, and held in the Music Bank.
+""
+Music tracks are loaded with the MUSIC command, volume is controlled by MVOLUME, and speed by
+MVOLUME. Individual music passages can be halted using the MUSIC STOP instruction, and all music is halted
+by MUSIC OFF.
+""
+For a taster of these techniques in action, load this ready-made example:
+                '''
+                ~~~                
+		   Load "AMOSPro_Examples:Music/Music.Abk"
+		   Music 1: Mvolume 63 : Tempo 35
+                ~~~
+                '''
+            ]
+            "sam_bank":
+            [
+                The SAM BANK instruction dictates that all future SAM PLAY commands will take samples from the newly
+specified memory bank. If several parallel banks are set up, AOZ Studio can swap between them with a
+simple call to the SAM BANK command. To hear all of the samples used in one of the AOZ Studio
+example games, load the following file and listen to what is stored in the memory bank, using this routine:
+                '''
+                ~~~                
+		   Load "AMOSPro_Productivity:Wonderland/Wonderland Samples.Abk"
+		   Sam Bank 6
+		   For A=1 To 5
+			Print "Sample number ";A
+			For B=1 To 3
+		 	   Sam Play A
+		  	   Wait 20
+			Next B
+		   Next A
+                ~~~
+                '''
+"Playing a sample from memory"
+Samples do not have to be held in a special bank. In fact, a "raw" sound sample can be stored anywhere in the
+computer's memory using BLOAD, and then played with the following command:
+            ]
+            "sam_raw":
+            [
+                SAM RAW plays a raw sample, and can be used to scan through any program or sound library discs, searching for a
+sample that matches the given parameters.
+""
+The voice parameter has already been explained. Address refers to the location address of the sound sample, which
+is normally inside an AOZ Studio memory bank, but can be anywhere. The length parameter confirms the
+length in bytes of the sample to be played. Finally, frequency dictates the playback speed of the original sample,
+given in Hertz.
+""
+A typical raw sample command looks like this:
+
+                '''
+                ~~~                
+		Reserve as work 10,21480
+		R$="AMOSPro_Examples:Samples/Mixture.Abk"
+		Bload R$,Start(10)
+		Sam Raw 15,Start(10),length(10),3000
+                ~~~
+                '''
+            ]
+            "sam_loop_on": //Same as LOOP OFF
+            [
+There are many instances where a single sample needs to be repeated over and over again. SAM LOOP ON ensures
+that all sound samples which follow this instruction will be looped continuously. To turn off the looping facility,
+simply call the SAM LOOP OFF command. Add a SAM LOOP ON instruction to the last example, before the SAM
+RAW command, and hear the result.
+
+            ]
+            "sam_loop_off":
+            [
+There are many instances where a single sample needs to be repeated over and over again. SAM LOOP ON ensures
+that all sound samples which follow this instruction will be looped continuously. To turn off the looping facility,
+simply call the SAM LOOP OFF command. Add a SAM LOOP ON instruction to the last example, before the SAM
+RAW command, and hear the result.
+            ]
+            "sload":
+            [
+                The SLOAD instruction is an extended version of the BLOAD command, and it is designed to load selected parts of a file into memory, one section at a time.
+""
+First give the channel number of a sample file stored on disc, which has been previously opened with an OPEN IN
+instruction. This is followed by the destination address of the data in memory. This will normally be the start address
+of an AOZ Studio memory bank. Finally, the length of the sample section is given, in the form of the
+number of bytes to be loaded into memory. These bytes will be loaded directly from the current position of the file
+pointer, and this pointer may be moved anywhere in the file, using the POF function. This means that you have
+complete control over the starting point of the loading operation. Obviously, if the requested position lies outside of
+the current file, an error will be reported. If the length is larger than the actual file, AOZ Studio will read all
+of the remaining bytes up to the end of the file.
+""
+After the data has been successfully loaded, the file pointer will be moved to the next byte in the sample
+automatically.
+
+
+            ]
+            "ssave":
+            [
+                This command is the reverse of SLOAD. It allows you to save a chunk of memory data into a file opened with
+OPEN OUT or APPEND. Use the LOF, POF and EOF functions to control where you want to position the data
+within the file.
+
+            ]
+            "sam_swap":
+            [
+                The SAM SWAP command activates the automatic sound-swapping system. It specifies the location and size of a
+logical sample which has been loaded previously with the SLOAD instruction. The sample will be played through
+loudspeakers the instant that the current physical sample runs out of data.
+""
+The voices parameter is a bit-pattern that defines which voices are to be used for playing the sample. Each bit in this
+pattern sets the swapping on a particular voice, according to the following format:
+
+                '''
+                ~~~                
+		Voice 3210
+		Bitmap %1111
+                ~~~
+                '''
+The address parameter gives the address of the next logical sample in memory. This address must be in CHIP Ram.
+Length is simply the number of bytes to be played of the new section of sample.
+""
+It is essential to note that SAM SWAP only works with an existing sample. It does not actually play a sample
+through a loudspeaker. Therefore, it has to be initialised by a SAM RAW command before it can be used, which
+will start off the physical sample and set up the playback speed for the entire sample of sound. For example:
+                '''
+                ~~~                
+		   Sam Raw %0011,Start(5),20000,12000 : Rem 12000 is the playback speed
+		   Rem Swap the samples assigned to voices 0 and 1 using data in bank 6
+		   Sam Swap %0011,Start(6),20000 : Rem 20000 is the length of logical sample
+                ~~~
+                '''
+            ]
+            "sam_swap":
+            [
+                The SAM SWAP command activates the automatic sound-swapping system. It specifies the location and size of a
+logical sample which has been loaded previously with the SLOAD instruction. The sample will be played through
+loudspeakers the instant that the current physical sample runs out of data.
+""
+The voices parameter is a bit-pattern that defines which voices are to be used for playing the sample. Each bit in this
+pattern sets the swapping on a particular voice, according to the following format:
+
+                '''
+                ~~~                
+		Voice 3210
+		Bitmap %1111
+                ~~~
+                '''
+The address parameter gives the address of the next logical sample in memory. This address must be in CHIP Ram.
+Length is simply the number of bytes to be played of the new section of sample.
+""
+                It is essential to note that SAM SWAP only works with an existing sample. It does not actually play a sample
+through a loudspeaker. Therefore, it has to be initialised by a SAM RAW command before it can be used, which
+will start off the physical sample and set up the playback speed for the entire sample of sound. For example:
+                '''
+                ~~~                
+		   Sam Raw %0011,Start(5),20000,12000 : Rem 12000 is the playback speed
+		   Rem Swap the samples assigned to voices 0 and 1 using data in bank 6
+		   Sam Swap %0011,Start(6),20000 : Rem 20000 is the length of logical sample
+                ~~~
+                '''
+            ]
+            "music":
+            [
+                The MUSIC command is used to start playing the specified melody. Up to three different melodies can be started at
+the same time, but each new MUSIC instruction will halt the current melody and hold its status in a stack. When the
+new song has ended, the original music will start again exactly where it left off. Here is a ready-made melody to
+load and play:
+                '''
+                ~~~                
+		    Load "AMOSPro_Examples:Music/Music.Abk"
+		    Music 1
+                ~~~
+                '''
+            ]
+            "music_stop":
+            [
+                This instruction brings the current single passage of music to a halt. If there is any other active music held in the
+stack and waiting to be played, that music will begin to play at once.
+            ]
+            "mvolume":
+            [
+                To set the volume of a piece of music, or to change its current volume, this command is followed by a number
+ranging from zero for complete silence, up to 63 for as loud as possible.
+
+Obviously, by setting up a simple loop, you can fade your music up or down.
+
+            ]
+            "tempo":
+            [
+                command is used to modify the speed of the current melody, and must be followed by a number ranging from 1 for
+as slow as possible, up to 100 for incredibly fast. Here is an example of music mood changing:
+                '''
+                ~~~                
+		   Load "AMOSPro_Examples:Music/Music.Abk"
+		   Music 1
+		   Do
+			For X=0 To 63
+			   Tempo X: Mvolume X
+			Wait 10: Next X
+		   Loop
+                ~~~
+                '''
+            ]
+        }
+    }
+}

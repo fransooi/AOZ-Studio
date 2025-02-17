@@ -1,0 +1,27 @@
+<i>instruction: sort all elements in an array</i>
+<b>Sort</b> a(0)
+<b>Sort</b> a#(0)
+<b>Sort</b> a$(0)
+=
+The SORT instruction arranges the contents of any array into ascending order, and the array may contain integers, floating point numbers or strings.
+=
+The starting point of your table is specified by the a$(0) parameter, and it must always be set to the first item in the array, which is item number zero. For example:
+@code
+N=5 : P=0
+Dim A(N)
+Print "Type in ";N," numbers, or enter 0"
+Print "to stop entry and begin sort"
+Repeat
+	Input A(P)
+	If A(P)=0
+		Dec P
+		Exit
+	End If
+	If P=N-1 Then Exit
+	Inc P
+Until False
+Sort A(0)
+For X=N-P To N
+	Print A(X)
+Next X
+@code

@@ -1,0 +1,11 @@
+<i>Lib Close</i>
+<b>Lib Close</b> xxxxxxx
+=
+Used on its own, the LIB CLOSE command closes all open libraries in a single operation. If an optional Channel
+number is included, an individual library may be closed. Please note that if a selected library does not exist, no error
+will be reported!"
+@code
+
+@code
+
+

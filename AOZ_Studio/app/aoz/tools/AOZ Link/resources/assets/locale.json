@@ -1,0 +1,29 @@
+{
+	"terms":
+	{
+		"default":
+		[
+			{ "f": "TITLE$", "v": "AOZ LINK" },
+			{ "f": "TXT_ETAPE1$", "v": "We are checking your application!" },
+			{ "f": "ERR_ETAPE1$", "v": "Cancel" },
+			{ "f": "TXT_ETAPE2$", "v": "We are generating a link to your application" },
+			{ "f": "ERR_ETAPE2$", "v": "Update" },
+			{ "f": "TXT_ETAPE3$", "v": "Your application is online and ready to be shared" },
+			{ "f": "TXT_ETAPE4$", "v": "Here the link to open in your browser" },
+			{ "f": "TXT_ETAPE5$", "v": "The link was copied to the clipboard" }
+
+		],
+
+		"fr":
+		[
+			{ "f": "TITLE$", "v": "AOZ LINK" },
+			{ "f": "TXT_ETAPE1$", "v": "Nous vérifions votre application !" },
+			{ "f": "ERR_ETAPE1$", "v": "Une erreur a été détecté lors de la vérification de votre application." },
+			{ "f": "TXT_ETAPE2$", "v": "Nous générons un lien pour votre application" },
+			{ "f": "ERR_ETAPE2$", "v": "Une erreur a été détecté lors de la création du lien." },
+			{ "f": "TXT_ETAPE3$", "v": "Votre application est en ligne et prête à être partagée." },
+			{ "f": "TXT_ETAPE4$", "v": "Ici le lien à ouvrir dans votre navigateur." },
+			{ "f": "TXT_ETAPE5$", "v": "Le lien a été copié dans le presse-papier." }
+		]
+	}
+}

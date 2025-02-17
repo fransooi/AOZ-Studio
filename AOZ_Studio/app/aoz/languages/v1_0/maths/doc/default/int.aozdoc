@@ -1,0 +1,10 @@
+<i>Int</i>
+<b>Int</b> xxxxxxx
+=
+The INT function rounds down a floating point number to the nearest whole number (integer), so that the result of
+the following two example lines is 3 and -2, respectively:
+@code
+Print Int(3.9999)
+Print Int(-1.1)
+@code
+

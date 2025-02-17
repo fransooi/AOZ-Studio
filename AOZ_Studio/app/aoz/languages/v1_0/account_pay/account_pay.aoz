@@ -1,0 +1,140 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝   ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗    ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║    ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Account Pay features
+ * By Francois Lionet
+ *
+ * @author Baptiste Pillot
+ * @date first pushed on 2022-28-11
+ */
+
+// MODULE IMPLEMENTATION
+
+{
+	this.aoz.moduleAccountPay = this
+	this.job_done = false
+
+	const DEBUG = false
+
+	const messageListener = (event) =>
+	{
+		if (DEBUG) console.log('stripe-card event', event)
+		if (event.data === 'stripe-card:loaded') this.pay_done = true
+	}
+
+	this.accountItems = function(family)
+	{
+		this.job_done = false
+		//const url     = 'http://localhost/aoz-app/Aoz/Account/API/getItems?family=' + family
+		const url     = 'https://account.aoz.studio/app/Aoz/Account/API/getItems?family=' + family
+		const xhr     = new XMLHttpRequest()
+		xhr.open('GET', url, false)
+		xhr.onload = () => {
+			this.job_done = true
+		}
+		xhr.send()
+	}
+
+	this.accountItems_wait = function()
+	{
+		return this.job_done
+	}
+
+	this.accountPay = function(args)
+	{
+		const url = 'https://shop.aoz.studio/stripe/'
+		let [email, caption, amount, currency, items, language, left, top] =
+			[args.email, args.caption, args.amount, args.currency, args.items, args.language, args.left, args.top]
+		if (DEBUG) console.log('accountPay', email, caption, amount, currency, items, language, left, top, this)
+		this.job_done = false
+		language      = language.toLowerCase()
+		const suffix  = (language === 'fr') ? '' : '-' + language
+		let   src     = url + 'payment' + suffix
+			+ '?email=' + email + '&currency=' + currency + '&items=' + items + '&language=' + language
+		if (caption) {
+			src += '&product=' + caption
+		}
+		const iframe = document.createElement('iframe')
+		iframe.setAttribute('allowtransparency', 'true')
+		iframe.setAttribute('id', 'aoz-payment')
+		iframe.setAttribute('src', src)
+		iframe.style.background = ''
+		iframe.style.left       = left + 'px'
+		iframe.style.position   = 'absolute'
+		iframe.style.top        = top + 'px'
+		iframe.style.width      = '100%'
+		iframe.style.height     = '100%'
+		document.getElementsByTagName('body')[0].append(iframe)
+		addEventListener('message', messageListener)
+	}
+
+	this.accountPay_wait = function()
+	{
+		if (this.job_done) {
+			document.getElementById('aoz-payment').remove()
+			removeEventListener('message', messageListener)
+		}
+		return this.job_done
+	}
+
+}
+
+/**api
+@name:Account Items
+@description:List account available items
+@param:Family$:string:The family code of the items to list
+@content:
+TODO
+api*/
+Instruction Account Items, Family$
+{
+	#errors
+	return { type: 12, waitThis: aoz.moduleAccountPay, callFunction: 'accountItems', waitFunction: 'accountItems_wait', args: %Family$ }
+}
+End Instruction
+
+/**api
+@name:Account Pay
+@description:Opens a pay popup for a given client email, cart caption, amount, and item codes
+@param:Email$:string:The payee email address
+@param:Caption$:string:The title for the payment popup
+@param:Amount#:float:The amount of the intended payment
+@param:Currency$:string:Accepted currency codes are EUR, GBP, USD
+@param:Items$:string:A list of item codes for buying, separated by a comma
+@param:Left:integer:The position of the popup
+@param:Top:integer:The position of the popup
+@content:
+TODO
+api*/
+Instruction Account Pay, Email$, Caption$, Amount#, Currency$, Items$, Language$ = "en", Left = 0, Top = 0
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleAccountPay, callFunction: 'accountPay', waitFunction: 'accountPay_wait', args: {
+		amount:   %Amount#,
+		caption:  %Caption$,
+		currency: %Currency$,
+		email:    %Email$,
+		items:    %Items$,
+		language: %Language$,
+		left:     %Left,
+		top:      %Top
+	}}
+}
+End Instruction

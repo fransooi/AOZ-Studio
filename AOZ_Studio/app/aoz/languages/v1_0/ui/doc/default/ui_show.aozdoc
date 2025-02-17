@@ -1,0 +1,12 @@
+<i>UI Show</i>
+<b>UI Show</b> xxxxxxx
+=
+The UI Show instruction is used to show a UI element if it was hidden.
+@code
+// Add a text box that we will delete
+UI TextBox "MyTextBlock"
+UI Hide "MyTextBlock"
+Wait Key
+UI Show "MyTextBlock"
+@code
+

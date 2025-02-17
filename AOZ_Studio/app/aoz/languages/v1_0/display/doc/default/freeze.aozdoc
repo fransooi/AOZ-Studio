@@ -1,0 +1,7 @@
+<i>Freeze</i>
+<b>Freeze</b> xxxxxxx
+=
+This instruction completely removes the call to the renderer at the end of the loop of your application.
+It will continue to run in the back with the display staying what it was when this instruction was called.
+
+

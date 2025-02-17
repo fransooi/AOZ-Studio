@@ -1,0 +1,16 @@
+<i>Wave</i>
+<b>Wave</b> xxxxxxx
+=
+The WAVE command is used to assign the specified wave number to one or more sound channels.
+
+The voice parameter contains a bit-map in the standard format, and if a bit pattern is set to 1 then the appropriate
+voice is used to PLY the sound. Remember that wave number zero is already reserved for the NOISE channel, and
+wave number 1 contains a smooth sine wave for pure tone. Here are some examples:
+@code
+Wave 1 To %1111 : Rem Play pure tone through all voices
+Play 60,0
+Wave 0 To %0001 : Rem Use voice 0 for noise
+Play 20,10
+@code
+
+

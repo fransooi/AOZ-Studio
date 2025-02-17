@@ -1,0 +1,6 @@
+<i>Med Cont</i>
+<b>Med Cont</b> xxxxxxx
+=
+This simple instruction halts the current Med song being played. The song can now be started from the beginning
+with a new call to MED PLAY, or continued using a MED CONT command.
+

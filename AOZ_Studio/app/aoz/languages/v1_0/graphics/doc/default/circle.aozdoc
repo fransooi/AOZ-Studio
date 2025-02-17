@@ -1,0 +1,17 @@
+<i>Circle</i>
+<b>Circle</b> xxxxxxx
+=
+To draw circles, a pair of coordinates sets the position of the centre point around which the shape is to be drawn,
+followed by the radius of the circle (the distance between the centre point and the circumference or rim of the
+circle.) If the x,y-coordinates are omitted, the circle will be drawn from the current graphic cursor position.For example:
+@code
+Cls : Curs Off : Ink 3
+Gr Locate 160,100
+Circle ,,45 : Wait 100: Flash Off
+Do
+Ink Rnd(15) : X=Rnd(250) : Y=Rnd(150) : R=Rnd(90)+1
+Circle X,Y,R
+Loop
+@code
+
+

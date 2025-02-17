@@ -1,0 +1,32 @@
+<i>Redraw View</i>
+<b>Redraw View</b> xxxxxxx
+=
+This instruction might be the most fundamental of all the map instruction: it displays the content of the map.
+
+It will only work after all the paremeters have been defined: the map is loaded, the view opened and it's display area set...
+
+You can call it safely without checking first for any change in position or offset: it will not take any processor time or do any change if nothing has changed since the last time it was called.
+
+If you want to *force* this instruction display even if nothing has change, you can simulate a change by doing a non-visible change in the view, like setting the value of a tile to it's value, thus seting the "Redraw" flag to true.
+
+@code
+// Joystick controlled scrolling
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+XOFFSET = 0
+YOFFSET = 0
+Do
+If JLeft( 1 ) Then XOFFSET = XOFFSET - 1
+If JRight( 1 ) Then XOFFSET = XOFFSET + 1
+If JUp( 1 ) Then YOFFSET = YOFFSET - 1
+If JDown( 1 ) Then YOFFSET = YOFFSET + 1
+Offset View "MapView", XOFFSET, YOFFSET
+Redraw View "MapView"
+Wait Vbl
+Loop
+@code
+

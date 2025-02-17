@@ -1,0 +1,6 @@
+<i>Reset Zone</i>
+<b>Reset Zone</b> xxxxxxx
+=
+This command is used to nullify a zone created by the SET ZONE instruction. On its own, RESET ZONE
+permanently de-activates all zone settings, but if it is qualified by a zone number, only that zone will be erased.
+

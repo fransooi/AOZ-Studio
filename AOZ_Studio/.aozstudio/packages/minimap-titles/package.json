@@ -1,0 +1,53 @@
+{
+  "_from": "https://www.atom.io/api/packages/minimap-titles/versions/1.15.0/tarball",
+  "_id": "minimap-titles@1.15.0",
+  "_inBundle": false,
+  "_integrity": "sha512-DWCOVc5rqCrcfUij+FU7rls2NGvGjksXt5nGIU6auNXHWNmXNNL1PCr0HM1g1fwsIlEaTX9xYzNNRmZNRcvXVw==",
+  "_location": "/minimap-titles",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "remote",
+    "raw": "https://www.atom.io/api/packages/minimap-titles/versions/1.15.0/tarball",
+    "rawSpec": "https://www.atom.io/api/packages/minimap-titles/versions/1.15.0/tarball",
+    "saveSpec": "https://www.atom.io/api/packages/minimap-titles/versions/1.15.0/tarball",
+    "fetchSpec": "https://www.atom.io/api/packages/minimap-titles/versions/1.15.0/tarball"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://www.atom.io/api/packages/minimap-titles/versions/1.15.0/tarball",
+  "_shasum": "4ba00e2fb4bd3e7d5fa9d338d1976ba4bf0b03d9",
+  "_spec": "https://www.atom.io/api/packages/minimap-titles/versions/1.15.0/tarball",
+  "_where": "/tmp/apm-install-dir-2020516-22295-16nqbs7.x6jg",
+  "activationCommands": {
+    "atom-workspace": "minimap-titles:convert"
+  },
+  "bugs": {
+    "url": "https://github.com/masavini/atom-minimap-titles/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "figlet": "1.1.1"
+  },
+  "deprecated": false,
+  "description": "Atom package to convert the selected text to ASCII art using FIGlet and then comment it.",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "homepage": "https://github.com/masavini/atom-minimap-titles#readme",
+  "keywords": [
+    "figlet",
+    "ascii art",
+    "figfont",
+    "comment"
+  ],
+  "license": "MIT",
+  "main": "./lib/minimap-titles",
+  "name": "minimap-titles",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masavini/atom-minimap-titles.git"
+  },
+  "version": "1.15.0"
+}

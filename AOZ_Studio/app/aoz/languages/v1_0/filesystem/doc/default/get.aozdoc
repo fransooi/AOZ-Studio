@@ -1,0 +1,22 @@
+<i>Get</i>
+<b>Get</b> xxxxxxx
+=
+This instruction reads a record stored in a random access file, after being told which channel to use and the number of the record to read. To read the first record you would use this:
+@code
+Get 1,1
+@code
+GET then loads this record into your field strings, and these strings may be manipulated as you like. Obviously you can only GET record numbers that have been PUT onto the disc.
+
+Now try this example:
+@code
+Open Random 1,"ADDRESSES.rnd"
+Field 1,25 As NAME$,12 As TEL$
+Do
+Input "Enter Record Number: ";INDEX
+If INDEX=0 Then Exit
+Get 1,INDEX
+Print NAME$ : Print TEL$
+Loop
+Close 1
+@code
+

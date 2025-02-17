@@ -1,0 +1,91 @@
+.built-in-ui {
+	margin-top: 200px;
+}
+
+body {
+	background-color: #000;
+}
+
+.layer2 {
+	z-index: 10
+}
+
+.layer3 {
+	z-index: 20
+}
+
+.priority-badge {
+	overflow: hidden !important;
+}
+
+.tooltip .tooltip-inner {
+	background-color: #FFAD00;
+	color: black;
+	font-size: 12px;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #FFAD00;
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color: #FFAD00;
+}
+
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+  border-left-color: #FFAD00;
+}
+
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+  border-right-color: #FFAD00;
+}
+
+.user-profile-image {
+   border-radius: 50%;
+}
+
+.fade-in-text {
+  background-color: rgba(0, 0, 0, 0.3);
+  animation: fadeIn ease-in 1s;
+  -webkit-animation: fadeIn ease-in 1s;
+  -moz-animation: fadeIn ease-in 1s;
+  -o-animation: fadeIn ease-in 1s;
+  -ms-animation: fadeIn ease-in 1s;
+}
+
+@keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+@-moz-keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+@-webkit-keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+@-o-keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+@-ms-keyframes fadeIn {
+  0% {opacity:0;}
+  100% {opacity:1;}
+}
+
+.frame-view {
+	background-color: #000;
+	border: 2px solid #FFF;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.fade-background {
+	background-color: rgba(0, 0, 0, 0.85);
+}

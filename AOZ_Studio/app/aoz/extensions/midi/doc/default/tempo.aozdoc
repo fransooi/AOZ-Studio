@@ -1,0 +1,8 @@
+<i>Tempo</i>
+<b>Tempo</b> xxxxxxx
+=
+To set the volume of a piece of music, or to change its current volume, this command is followed by a number
+ranging from zero for complete silence, up to 63 for as loud as possible.
+Obviously, by setting up a simple loop, you can fade your music up or down.
+
+

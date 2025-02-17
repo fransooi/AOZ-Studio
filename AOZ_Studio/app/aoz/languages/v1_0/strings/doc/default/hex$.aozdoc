@@ -1,0 +1,34 @@
+<i>Hex$</i>
+<b>Hex$</b> xxxxxxx
+=
+HEX$ converts numbers from the decimal system into a string of hexadecimal (Hex) digits. The decimal value to be
+converted is specified in brackets. The hex number that is returned will automatically have a leading $ (dollar)
+character added to it.
+
+This character acts as an introduction sign, to indicate that the number which follows it is in hexadecimal notation,
+rather than the standard decimal system.
+
+After the decimal value that is to be converted, an optional number can be added which sets the number of digits to
+be returned in the hex string. If this parameter is omitted, AMOS Professional will return the value in the fewest
+possible digits needed to express the hex number.
+
+For example:
+@code
+Print Hex$(100)
+Print Hex$(100,3)
+@code
+HEX$ is often used with the COLOR function to display the precise mixture of Red, Green and Blue components
+in a particular colour, as follows:
+@code
+Print Hex$(Color(2))
+@code
+Hexadecimal notation is ideal for handling large numbers such as addresses, and it may be entered directly in any
+AOZ expression. The $ (dollar) character must be placed in front of hex numbers, and they will
+be converted into standard decimal notation automatically. For example:
+@code
+Print $64
+Print $A
+@code
+Do not confuse the use of the leading $ character for a hex number with the use of a trailing $ character for a
+string. $A is a hexadecimal number, but A$ is a variable!
+

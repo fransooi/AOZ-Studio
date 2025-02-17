@@ -1,0 +1,43 @@
+<i>Hires</i>
+<b>Hires</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+When the default screen is automatically opened, screen 0 is the equivalent to the following setting:
+@code
+Screen Open 0,320,200,16,Lowres
+@code
+To open screen number 1 as an oversize high-resolution screen with eight colours, you would use something like
+this:
+@code
+Screen Open 1,600,400,8,Hires
+@code
+This routine opens all eight available screens and brings them into view:
+@code
+Curs Off : Cls 13: Paper 13
+Print : Centre "Hello, I'm SCREEN 0"
+For S=1 To 7
+Screen Open S,320,20,16,Lowres
+Curs Off : Cls S+2 : Paper S+2
+Centre "And I am SCREEN"+Str$(S)
+Screen Display S,,50+S*25,,8
+Next S
+@code
+Here is a table which lists the different screen options, along with an indication of the amount of memory a standard
+size screen will consume.
+@code
+Colours 	Resolution 	Memory 	Notes
+2 			320x200 	8k 	PAPER=0 PEN=1 no FLASH Cursor=1
+2 			640x200 	16k 	as above
+4 			320x200 	16k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+4 			640x200 	32k 	as above
+8 			320x200 	24k 	PAPER=1 PEN=2 FLASH=3 Cursor=3
+8 			640x200 	48k 	as above
+16 			320x200 	32k 	default setting
+16 			640x200 	64k
+32 			320x200 	40k
+64 			320x200 	48k 	Extra Half Bright mode
+4096 		320x200 	48k 	Hold And Modify mode
+@code
+
+

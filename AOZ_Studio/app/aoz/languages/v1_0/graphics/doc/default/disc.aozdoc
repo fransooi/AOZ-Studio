@@ -1,0 +1,17 @@
+<i>Disc</i>
+<b>Disc</b> xxxxxxx
+=
+To draw discs, a pair of coordinates sets the position of the centre point around which the shape is to be drawn,
+followed by the radius of the circle (the distance between the centre point and the circumference or rim of the
+circle.) If the x,y-coordinates are omitted, the circle will be drawn from the current graphic cursor position.For example:
+@code
+Cls : Curs Off : Ink 3, 0 : Set Paint True
+Gr Locate 160,100
+Disc ,,45 : Wait 100: Flash Off
+Do
+Ink Rnd(15) : X=Rnd(250) : Y=Rnd(150) : R=Rnd(90)+1
+Disc X,Y,R
+Loop
+@code
+
+

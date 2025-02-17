@@ -1,0 +1,14 @@
+<i>End</i>
+<b>End</b> xxxxxxx
+=
+As soon as the END command is recognised, it stops the program. You can either press the [Esc] key to go to Direct
+Mode, or use the [Spacebar] to get to the Edit Screen.
+
+Try this example now:
+@code
+Print "I am the first instruction."
+Wait 150
+End
+Print "This instruction will never be executed!"
+@code
+

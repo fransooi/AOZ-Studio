@@ -1,0 +1,17 @@
+<i>Get Sprite</i>
+<b>Get Sprite</b> xxxxxxx
+=
+Use this command to grab images directly from the screen and transform them into Sprites. Simply define the new
+image number, then give the coordinates, from top left-hand to bottom right-hand corner, of the rectangular area to
+be loaded into the Sprite Bank. The image will be grabbed from the current screen unless an optional screen number
+is specified.
+
+Provided that the given coordinates lie inside of existing screen borders, there are no limitations to the area that can
+be grabbed in this way.
+
+If there is no existing Sprite with the selected number, it will be created automatically. Similarly, the Sprite Bank
+will be reserved by AOZ Studio, if it is not already defined.
+
+It should be noted that the GET BOB instruction is identical to GET SPRITE, making them interchangeable.
+
+

@@ -1,0 +1,10 @@
+<i>function:returns the number of the frame of the Actor's Animation</i>
+frame=<b>Actor Anim Frame</b>(number)
+frame=<b>Actor Anim Frame</b>(name$)
+=
+@code
+Cls 0
+Load Asset "hero.sprite", "my_hero"
+Actor 1, SpriteSheet$="my_hero", Anim$="run"
+Print Actor Anim Frame( 1 ) // Return "run"
+@code

@@ -1,0 +1,13 @@
+<i>Rnd</i>
+<b>Rnd</b> xxxxxxx
+=
+The RND function generates integers at random, between zero and any number specified in brackets. If your
+specified number is greater than zero, random numbers will be generated up to that maximum number. If
+you specify 0, then RND will return the last random value it generated whereas if you completely ommit the *ceiling* parameter, it will return a floating point number between 0 and 1.
+@code
+Do
+C=Rnd(15) : X=Rnd(320) : Y=Rnd(200)
+Ink C : Text X,Y,"AMOS Professional at RANDOM"
+Loop
+@code
+

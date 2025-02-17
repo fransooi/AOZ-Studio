@@ -1,0 +1,37 @@
+<i>instruction: image manipulation on the screen.</i>
+<b>Actor</b> number, list
+<b>Actor</b> name$, list
+=
+This command allows you to manipulate the actors in the manner of a director, transforming them into real actors. The Actor command makes it easy to movement (moving, zooming, rotation...), control (keyboard, joystick, mouse) and animation.
+=
+Exemple 1:
+@code
+Actor 1, Image$="ship"
+@code
+This code displays the Actor 1 at the top left of the screen. This Actor uses the "ship" image. 
+=
+But Actor allows you to do much more. It is a very complete instruction that allows:
+- animate an image.
+- create motion and transformation interpolations.
+- associate a control (keyboard, mouse or gamepad) to the Actor.
+- to associate events like mouse click, drag and drop.
+- associate events to AOZ procedures (collision, end of move...).
+=
+And all this is managed by AOZ in an autonomous way, without slowing down your program.
+=
+<b>Interpolations</b>
+An interpolation is the transition made between 2 states of an image. It can be a displacement from one point to another, or a change of shape. Actor manages this interpolation system.
+=
+<b>Motion Interpolation</b>
+Let's take our simple example above and modify it:
+@code
+Actor 1, StartX=0, EndX=1280, Image$="ship"
+@code
+Actor 1 moves very quickly to the right of the screen. The <i>StartX</i> and <i>EndX</i> properties are used to define the X position of the starting point of the motion interpolation, and the X position of the ending point.
+=
+The interpolation is played automatically. However, it is too fast to be appreciated. Let's modify our code again:
+@code
+Actor 1, StartX=0, EndX=1280, Image$="ship", Duration=5000
+@code
+This time Actor 1 moves more slowly. The Duration property that we added to our code indicates the duration of the interpolation, in milliseconds (here 5000, or 5 seconds).
+If this duration is not specified, it is set to 1000 (1 sec) by default.

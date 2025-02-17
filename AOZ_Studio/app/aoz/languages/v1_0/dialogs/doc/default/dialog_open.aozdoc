@@ -1,0 +1,21 @@
+<i>Dialog Open</i>
+<b>Dialog Open</b> xxxxxxx
+=
+The DIALOG OPEN command opens a "communication channel" to the new program, and loads it with a list of
+Interface commands. If there are any problems, an appropriate error message will appear, and mistakes can be
+located using a simple call to the error function EDIALOG, which is explained below
+
+The parameters for a DIALOG OPEN instruction are given as follows: firstly, the number of the channel to be
+opened, starting from 1. Providing that there is enough memory, you may open as many channels as you wish. A
+string should be specified next, containing one or more Interface programs to be initialised. If this string contains
+several programs, each routine should begin with a LAbel instruction and end with an EXit command
+
+Normally AOZ Studio provides enough space to hold up to 17 different values in every Interface channel (0
+VA to 16 VA). If more channels are needed, this array can be expanded via an optional nvar parameter, and each
+extra variable will take up four bytes of memory. There is a final optional parameter that allocates bytes for an
+internal memory buffer used by Interface programs. This array holds all of the information that is required to display dialogue boxes and selectors on screen. As a default, 1k is reserved for each channel that has been defined, but if the requirements are very complex, this value may have to increase. An error message will appear automatically if the current allocation is too small
+
+Note that the DIALOG OPEN command only initialises the communication channel, and it does not start the
+program running or generate any graphics on the screen. To accomplish this, the following function is used
+
+

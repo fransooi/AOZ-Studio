@@ -1,0 +1,36 @@
+<i>Save Bank</i>
+<b>Save Bank</b> xxxxxxx
+=
+If a bank has been created using RESERVE, or some screen Objects have been defined with a command such as GET BOB, the new data can be saved onto a suitable disc in one of two ways.
+
+When the SAVE command is followed by a string containing a filename, all current memory banks will be saved
+into a single large file, bearing that name. The filename can be anything at all, but it is common practice to add the ".Abk" extension at the end, to remind yourself that this is an AOZ Studio memory bank. Similarly, an
+.Abs extension is used to indicate a file containing a group of several memory banks.
+
+By adding an optional bank number after the filename, only that selected bank will be stored in the named file onto disc.
+
+Here is an example of an instant image-bank generator:
+@code
+N=1 : Rem Set number of first new image to create
+S=1 : Rem Set size of image*16
+Rem Create images in bank one
+For G=0 To 4
+Rem Draw the images
+Ink G+1 : Circle S*7,S*7,S*7 : Paint S*8,S*8
+Ink 0: Ellipse S*4,S*5,S*1,5*2 : Paint S*4,S*5
+Ellipse S*1 0,S*5,S,S*2 : Paint S*10,S*5
+Ellipse S*7,S*10,S*5,S*3 : Ellipse S*7,S*9,S*4,S : Paint S*1 1,S*1
+Ink G+1 : Bar S*3,S*7 To S*13,S*9
+Rem Now grab them as Objects
+Get Bob G+N,0,0 To S*16-1 ,S*16-1
+Rem Clear them from the screen
+Cls 0,0,0 To S*16,S*16
+Next G
+F$=Fsel$("*.Abk"," ","Save your images")
+Rem Save Objects in bank 1
+If F$<>0
+Save Bank F$,1
+End If
+@code
+
+

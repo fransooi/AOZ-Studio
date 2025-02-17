@@ -1,0 +1,23 @@
+<i>Exec</i>
+<b>Exec</b> xxxxxxx
+=
+The EXEC instruction executes the specified CLI command, via the named output. Output refers to the name of an
+AmigaDos device, and is held in inverted commas. If these are empty , NIL: will be used, otherwise the name of
+the output device must end with a colon.
+
+CUR: specifies that the current CLI window is to be used. If this window does not exist, because AMOS
+Professional was booted from the Workbench, then the EXEC command cannot operate. If "CON: is used, then a
+CLI window is opened under the Workbench screen, if possible. Any other Amiga device can be specified, as long
+as it is interactive, and it will be opened before the CLI command is sent, and closed again after the command has
+been sent, unless it is the current CLI window.
+
+For example, to execute an external program copied into the C: directory of AOZ Studio, and wait for its
+completion, this could be used:
+@code
+Amos To Back : Rem Reveal the Workbench
+Rem Now launch the program in a small CLI window
+Exec "Program Name","CON:0/0/160/48/Program Name"
+Amos To Front : Rem Return to AMOS Pro after the program
+@code
+
+

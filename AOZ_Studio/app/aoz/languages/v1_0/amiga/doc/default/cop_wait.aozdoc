@@ -1,0 +1,33 @@
+<i>Cop Wait</i>
+<b>Cop Wait</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The COP WAIT command enters a WAIT instruction at the current position in the copper list. WAIT forces the copper to stop in its tracks until the screen has been drawn at the specified hardware coordinates x,y. The copper
+then continues from the next instruction in the copper list.
+
+WAIT is usually called immediately before a MOVE command, creating a pause until the display reaches a specific
+screen line. The MOVE instruction is then used to change the attributes of the screen area below this line. Rainbows
+are an excellent example of this technique, with each line of the rainbow generated with a pair of commands like
+this:
+@code
+Cop Wait 0,Y : Rem Y is starting coordinate of next colour shift
+Cop Move $180,$777 : Rem $180 is address of colour 0 and $777 is new colour
+@code
+The x-coordinate is a hardware coordinate from 0 to 448. Since the Amiga is only capable of performing this test
+every four screen points, this coordinate is rounded to the nearest multiple of four.
+
+The y-coordinate can be any value from 0 to 312. Normally, coordinates from 256 to 312 require special
+programming, but AOZ Studio generates the correct instructions automatically, so there is no need for
+concern! Here are some examples:
+@code
+Cop Wait 0,130: Rem Wait for screen to reach hardware coords 0,100
+Cop Wait 0,300: Rem Wait for line 300
+Cop Wait 12,10: Rem Wait for coordinates 12,10 to arrive
+@code
+The optional xmask and ymask parameters are bit-mask values which allow for a pause until the screen coordinates satisfy a specific combination of bits. The default value is $1FF. For example:
+@code
+Cop Wait 0,2,$1FF,%11 : Rem Await next EVEN scan line
+@code
+
+

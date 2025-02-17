@@ -1,0 +1,23 @@
+<i>End proc</i>
+<b>End proc</b> xxxxxxx
+=
+A procedure is created in exactly the same way as a normal variable, by giving it a name. The name is then followed
+by a list of parameters and the procedure must be ended with an END PROC command. PROCEDURE and END
+PROC commands must be placed on their own individual lines.
+
+For example:
+@code
+HELLO
+Procedure HELLO
+Print "Hello, I am a procedure!"
+End Proc
+@code
+
+AOZ also allow you to return values from a procedure, like this:
+@code
+Print "1 + 2 = "; ADDITION[ 1, 2 ]
+
+Procedure ADDITION[ a, b ]
+result = a + b
+End Proc[ result ]
+

@@ -1,0 +1,705 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Mathematical Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Mathematics
+@description:Mathmatical and calculation instructions and functions
+@author:Francois Lionet
+doc*/
+
+
+//
+// Initialization
+//
+{
+}
+
+// Instructions
+////////////////////////////////////////////////////////////////
+
+/**api
+@name:Fix
+@description:Set the number of decimal of floating point numbers to ASCII conversion (used in both Print and =Str$())
+@param:number:integer:The number of decimals
+@compatible: aoz, stos, amos
+@examples:instructions:i_24
+@content:
+The FIX command changes the way floating point numbers are displayed on screen, or output to a printer. The
+precision of these floating point numbers is determined by a number (n) that is specified in brackets, and there can
+be four possibilities, as follows:
+
+- If (n) is greater than 0 and less than 16, the number of figures shown after the decimal point will be n.
+- If (n) equals 16 then the format is returned to normal.
+- If (n) is greater than 16, any trailing zeros will be removed and the display will be proportional.
+- If (n) is less than 0, the absolute value ABS(n) will determine the number of digits after the decimal point, and
+all floating point numbers will be displayed in exponential format.
+
+Here are some examples:
+~~~
+Fix (2) : Print Pi# : Rem Two digits after decimal point
+Fix(-4) : Print Pi# : Rem Exponential with four digits after decimal point
+Fix(16) : Print Pi# : Rem Revert to normal mode
+~~~
+
+api*/
+Instruction Fix, number
+{
+	aoz.fix=%number;
+}
+End Instruction
+
+/**api
+@name:Radian
+@description:Set the default angle representation in AOZ to Radians.
+@compatible: aoz, stos, amos
+@content:
+If DEGREE has already been called, the RADIAN function returns to the default status, where all future angles are
+expected to be entered in radians.
+api*/
+Instruction Radian
+{
+	aoz.degreeRadian=1.0;
+	aoz.isDegree=false; // BJF
+}
+End Instruction
+
+/**api
+@name:Degree
+@description:Set the default angle representation in AOZ to degrees.
+@compatible: aoz, stos, amos
+@content:
+If, for any reason, you are unhappy with the complexities of radians, AOZ is happy to accept your
+trigonometric instructions in degrees. Once the DEGREE command has been activated, all subsequent calls to the
+trigonometric functions will expect degrees to be used.
+~~~
+Degree
+Print Sin(45)
+~~~
+
+api*/
+Instruction Degree
+{
+	aoz.degreeRadian=Math.PI/180.0;
+	aoz.isDegree=true; // BJF
+}
+End Instruction
+
+
+/**api
+@name:Is Degree
+@Author:Brian Flanagan
+@description:Function that returns true If Degree is on.
+@compatible: aoz, stos, amos
+@content:
+.
+~~~
+If Is Degree Then Print "Degrees set."
+~~~
+
+api*/
+Function Is Degree
+{
+}
+End Function( { aoz.isDegree } )
+
+/**api
+@name:Is Radian
+@author:Brian Flanagan
+@description:Function that returns true If Radian is on.
+@compatible: aoz, stos, amos
+@content:
+.
+~~~
+If Is Radian Then Print "Radians set."
+~~~
+api*/
+Function Is Radian
+{
+}
+End Function( { !aoz.isDegree } )
+/**api
+@name:Rad
+@description:Function that converts an angle in radians to degrees.
+@param:angle
+@compatible: aoz, stos, amos
+@content:
+.
+~~~
+Print Rad(pi#)
+~~~
+api*/
+Function Rad, angle
+{
+}
+End Function( { %angle * 180 / Math.PI } )
+/**api
+@name:Rnd
+@name:Rnd (*ceiling*)
+@name:Rnd (*floor* to *ceiling*)
+@description:Return a random number
+@param:*ceiling:integer:An optional value indicating to generate the value as an integer betwwen 0 and CEILING. If not specified the function will return a floating point value between 0 and 1
+@param:*floor:integer:An optional value used in conjuction with *ceiling* to generate a value between *floor* and *ceiling*
+@return:integer:A value between 0 and ceiling (excluded) if the parameter is specified
+@return:float:A floating point number between 0 and 1 (excluded) if no parameter is specified
+@examples:instructions:i_24
+@compatible: aoz, stos, amos
+@content:
+The RND function generates integers at random, between zero and any number specified in brackets. If your
+ specified number is greater than zero, random numbers will be generated up to that maximum number. If
+ you specify 0, then RND will return the last random value it generated whereas if you completely ommit the *ceiling* parameter, it will return a floating point number between 0 and 1.
+~~~
+Do
+	C=Rnd(15) : X=Rnd(320) : Y=Rnd(200)
+	Ink C : Text X,Y,"AMOS Professional at RANDOM"
+Loop
+~~~
+api*/
+Function Rnd, ceiling
+{
+}
+End Function( {aoz.rnd(%ceiling)} )
+Function Rnd, floor, ceiling
+{
+}
+End Function( {aoz.rnd(%ceiling, %floor)} )
+Function Rnd, floor to ceiling
+{
+}
+End Function( {aoz.rnd(%ceiling, %floor, true)} )
+
+/**api
+@name:Randomize
+@description:Switch the random number generator to Mersenne Twist and generate a new seed.
+@param:seed:integer:An optional seed to initiate the generation of random numbers. If not specified a value callated out of the TIMER will be used.
+@examples:instructions:i_24
+@compatible: aoz, stos, amos
+@content:
+In practice, the numbers produced by the RND function are not genuinely random at all. They are computed by an
+internal mathematical formula, whose starting point is taken from a number known as a "seed". This seed is set to a
+standard value whenever AOZ is loaded into your Amiga, and that means that the sequence of
+numbers generated by the RND function will be exactly the same each time your program is run.
+
+This may well be acceptable for arcade games, where pre-set random patterns generated by RND can be used to
+advantage, but it is a useless system for more serious applications.
+
+The RANDOMIZE command solves this problem by setting the value of the seed directly. This seed can be any
+value you choose, and each seed will generate an individual sequence of numbers. RANDOMIZE can also be used
+in conjunction with the TIMER variable, to generate genuine random numbers.
+
+api*/
+Instruction Randomize, seed
+{
+	aoz.randomize(%seed);
+}
+End Instruction
+
+/**api
+@name:Sgn
+@description:Return the sign of a number
+@param:number:number:The value to get the sign of
+@return:integer:-1 if the number is negative, 1 if it is greater than 0, 0 if it is equal to zero
+@examples:instructions:i_60
+@compatible: aoz, stos, amos
+@content:
+The SGN function returns a value representing the sign of a number. The three possible results are these:
+~~~
+-1 : the value is negative
+ 1 : the value is positive
+ 0 : if the value is zero
+api*/
+Function Sgn, number
+{
+}
+End Function( {(%number==0?0:(%number<0?-1:1))} )
+
+/**api
+@name:Abs
+@description:Return the absolute value of a number
+@param:number:number:The number to get the absolute value from
+@return:positiveNumber:The given number if it is positive, it's oppostive if it is negative.
+@compatible: aoz, stos, amos
+@examples:instructions:i_60
+@content:
+This function is used to convert arguments into a positive number. ABS returns an absolute value of an integer or
+fractional number, paying no attention to whether that number is positive or negative, in other words, ignoring its
+sign.
+
+For example:
+~~~
+Print Abs(-1),Abs(1)
+~~~
+api*/
+Function Abs, number#
+{
+}
+End Function( {Math.abs(%number#)} )
+
+/**api
+@name:Int
+@description:Return the integer portion of the number
+@param:floatNumber:float:The number to get the integral part from
+@return:integer:If floatNumner is greater than zero, return the integral part, if negative, return integral( FLOATNUMBER ) - 1
+@compatible: aoz, stos, amos
+@examples:instructions:i_60
+@content:
+The INT function rounds down a floating point number to the nearest whole number (integer), so that the result of
+the following two example lines is 3 and -2, respectively:
+~~~
+Print Int(3.9999)
+Print Int(-1.1)
+~~~
+api*/
+Function Int, floatNumber#
+{
+}
+End Function( { aoz.fp2Int(%floatNumber#) } )
+
+/**api
+@name:PI#
+@description:Return the value of PI
+@return:float:the value of PI up to the 16th decimal, 3.141592653589793238
+@compatible: aoz, stos, amos
+@content:
+Pi is the Greek letter it that is used to summon up a number which begins 3.141592653 and on for ever.
+
+This number is the ratio of the circumference of a circle to its diameter, and it is used in trigonometry as the tool for calculating
+aspects of circles and spheres. Note that in order to avoid clashes with your own variable names, a # character is part
+of the token name. The PI# function gives a constant value of Pi in your calculations.
+
+In the following diagram of a circle, a point is moved from the right hand side of the x-axis up along the perimeter
+for a distance a, stopping at position b.
+![PI](help:img/pi.png)
+
+In conventional trigonometry, a circle is divided into 360 degrees, so a defines the number of degrees in the angle
+between the x-axis and the line from the centre of the circle to point b. However, your Amiga uses a default by
+which it expects all angles to be given in "radians" and not degrees.
+api*/
+
+/**api
+@name:Min
+@description:Return the minimal value of two numbers
+@param:value1:any:The first value to test
+@param:value2:any:The second value to test
+@return:any:The minimal value of the two numbers
+@examples:instructions:i_24
+@compatible: aoz, stos, amos
+@content:
+The MIN function returns the smaller value of two expressions. Expressions can consist of strings, integers
+or real numbers, but only compare like with like, as follows:
+~~~
+A=Min(99,1) : Print A
+Print Min("AOZ","AOZ")
+~~~
+api*/
+Function Min, value1=(any), value2=(any)
+{
+}
+End Function( {(%value1<%value2?%value1:%value2)} )
+
+/**api
+@name:Max
+@description:Return the maximal value of two numbers
+@param:value1:any:The first value to test
+@param:value2:any:The second value to test
+@return:any:The maximal value of the two numbers
+@examples:instructions:i_24
+@compatible: aoz, stos, amos
+@content:
+MAX compares two expressions and returns the largest. Different types of expressions cannot be compared in one
+instruction, so they must not be mixed.
+
+Here are some examples:
+~~~
+Print Max(99,1)
+Print Max("AOZ","AOZ")
+~~~
+api*/
+Function Max, value1=(any), value2=(any)
+{
+}
+End Function( {(%value1>%value2?%value1:%value2)} )
+
+/**api
+@name:Sin
+@description:Return the Sine of an angle
+@param:angle:angle:The angle to calculate the Sine from, in Radian by default and degrees after the "Degree" instruction has been used
+@return:float:The value of the Sine of the angle
+@compatible: aoz, stos, amos
+@content:
+The SIN function calculates how far point b is above the x-axis, known as the sine of the angle a.
+![PI](help:img/pi.png)
+
+Note that SIN always returns a floating point number.
+
+For example:
+~~~
+Degree
+	For X=0 To 319
+	Y#=Sin(X)
+	Plot X,Y#*50+100
+Next X
+~~~
+
+api*/
+Function Sin, angle#
+{
+}
+End Function( {Math.sin((%angle#)*aoz.degreeRadian)} )
+
+/**api
+@name:Cos
+@description:Return the Cosine of an angle
+@param:angle:angle:The angle to calculate the Cosine from, in Radian by default and degrees after the "Degree" instruction has been used
+@return:float:The value of the Cosine of the angle
+@compatible: aoz, stos, amos
+@content:
+In the above diagram, the distance that point b is to the right of the y-axis is known as the cosine. If b goes to the
+left of the y-axis, its cosine value becomes negative. (Similarly, if it drops below the x-axis, its sine value is
+negative.) The COS function gives the cosine of a given angle.
+![PI](help:img/pi.png)
+
+~~~
+Y#=Cos(X)
+Plot X,Y#*50+100
+~~~
+
+api*/
+Function Cos, angle#
+{
+}
+End Function( {Math.cos((%angle#)*aoz.degreeRadian)} )
+
+/**api
+@name:Tan
+@description:Return the Tangent of an angle
+@param:angle:angle:The angle to calculate the Tangent from, in Radian by default and degrees after the "Degree" instruction has been used
+@return:float:The value of the Tangent of the angle
+@compatible: aoz, stos, amos
+@content:
+For any angle, the tangent is the result of when its sine is divided by its cosine. The TAN function generates the
+tangent of a given angle. For example:
+~~~
+Degree : Print Tan(45)
+Radian : Print Tan(Pi#/8)
+~~~
+
+api*/
+Function Tan, angle#
+{
+	#errors
+}
+End Function( {aoz.checkNumber(Math.tan((%angle#)*aoz.degreeRadian))} )
+
+/**api
+@name:ASin
+@description:Return the Arc Sine of a number
+@param:number:number:The number from which to extract the Arc Sine from
+@return:angle:The value of the Arc Sine, an angle expressed in Radian by default or degree after the "Degree" instruction has been used
+@compatible: aoz, stos, amos
+@content:
+The ASIN function takes a number between -1 and +1, and calculates the angle which would be needed to generate this value with SIN. For example:
+~~~
+A#=Sin(45)
+Print Asin(A#)
+~~~
+
+api*/
+Function ASin, number#
+{
+}
+End Function( {aoz.checkNumber(Math.asin(%number#)/aoz.degreeRadian)} )
+
+/**api
+@name:ACos
+@description:Return the Arc Cosine of a number
+@param:number:number:The number from which to extract the Arc Cosine from
+@return:angle:The value of the Arc Cosine, an angle expressed in Radian by default or degree after the "Degree" instruction has been used
+@compatible: aoz, stos, amos
+@content:
+The ACOS function takes a number between -1 and +1, and calculates the angle which would be needed to generate this value with COS. For example:
+~~~
+A#=Cos(45)
+Print Acos(A#)
+~~~
+
+api*/
+Function ACos, number
+{
+}
+End Function( {aoz.checkNumber(Math.acos(%number)/aoz.degreeRadian)} )
+
+/**api
+@name:ATan
+@description:Return the Arc Tangent of a number
+@param:number:number:The number from which to extract the Arc Tangent from
+@return:angle:The value of the Arc Tangent, an angle expressed in Radian by default or degree after the "Degree" instruction has been used
+@compatible: aoz, stos, amos
+@content:
+ATAN returns the arctan of a given number, like this:
+~~~
+Degree : Print Tan(2)
+Degree : Print Atan(0.03492082)
+~~~
+A hyperbola is a conical section, formed by a plane that cuts both bases of a cone. In other words, an asymmetrical
+curve. Wave forms and trajectories are much more likely to follow this sort of eccentric curve, than perfect arcs of
+circles. The hyperbolic functions express the relationship between various distances of a point on the hyperbolic
+curve and the coordinate axes.
+
+api*/
+Function ATan, number#
+{
+}
+End Function( {aoz.checkNumber(Math.atan(%number#)/aoz.degreeRadian)} )
+
+/**api
+@name:HSin
+@description:Return the Hyperbolic Sine of a number
+@param:angle:angle:The angle to calculate the Hyperbolic Sine from, in Radian by default and degrees after the "Degree" instruction has been used
+@return:float:The value of the Hyperbolic Sine of the angle
+@compatible: aoz, stos, amos
+@content:
+The HSIN function calculates the hyperbolic sine of a given angle.
+
+api*/
+Function HSin, angle#
+{
+}
+End Function( {aoz.checkNumber(Math.sinh((%angle#)*aoz.degreeRadian))} )
+
+/**api
+@name:HCos
+@description:Return the Hyperbolic Cosine of a number
+@param:angle:angle:The angle to calculate the Hyperbolic Cosine from, in Radian by default and degrees after the "Degree" instruction has been used
+@return:float:The value of the Hyperbolic Cosine of the angle
+@compatible: aoz, stos, amos
+@content:
+Use this function to find the hyperbolic cosine of an angle.
+api*/
+Function HCos, angle#
+{
+}
+End Function( {aoz.checkNumber(Math.cosh((%angle#)*aoz.degreeRadian))} )
+
+/**api
+@name:HTan
+@description:Return the Hyperbolic Tangent of a number
+@param:angle:angle:The angle to calculate the Hyperbolic Tangent from, in Radian by default and degrees after the "Degree" instruction has been used
+@return:float:The value of the Tangent of the angle
+@compatible: aoz, stos, amos
+@content:
+HTAN returns the hyperbolic tangent of the given angle.
+api*/
+Function HTan, angle#
+{
+	#errors
+}
+End Function( {aoz.checkNumber(Math.tanh((%angle#)*aoz.degreeRadian))} )
+
+/**api
+@name:Sqr
+@description:Return the square root of a number
+@param:number:number:The positive number out of which to calculate the square root
+@return:float:The value of the Square Root of the number
+@compatible: aoz, stos, amos
+@examples:instructions:i_60
+@content:
+This function calculates the square root of a positive number, that is to say, it returns a number that must be
+multiplied by itself to give the specified value.
+
+For example:
+~~~
+Print Sqr(25)
+Print Sqr(11.1111)
+~~~
+api*/
+Function Sqr, number#
+{
+	#errors
+}
+End Function( {aoz.checkNumber(Math.sqrt(%number#))} )
+
+/**api
+@name:Log
+@description:Return the base 10 logarythm of a number
+@param:number:number:The number out of which to calculate the base 10 logarythm
+@return:float:The value of the base 10 logarythm
+@examples:instructions:i_49
+@compatible: aoz, stos, amos
+@content:
+LOG returns the logarithm in base 10 (log 10) of the given value. For example:
+~~~
+Print Log(10)
+A#=Log(100)
+~~~
+api*/
+Function Log, number#
+{
+	#errors
+}
+End Function( {(aoz.checkNumber(Math.log(%number#)*0.434294481903251))} )
+
+/**api
+@name:Ln
+@description:Return the Neperian Logarythm of a number
+@param:number:number:The number out of which to calculate the Neperian Logarythm
+@return:float:The value of the Neperian Logarythm
+@compatible: aoz, stos, amos
+@examples:instructions:i_60
+@content:
+The LN Function calculates the natural logarithm (Naperian logarithm) of the given value. For example:
+~~~
+Print Ln(10)
+A#=Ln(100) : Print A#
+~~~
+
+api*/
+Function Ln, number#
+{
+	#errors
+}
+End Function( {aoz.checkNumber(Math.log(%number#))} )
+
+/**api
+@name:Exp
+@description:Return the exponantial of a number
+@param:number:number:The number out of which to calculate the Exponantial
+@return:float:The value of the Exponantial
+@compatible: aoz, stos, amos
+@examples:instructions:i_60
+@content:
+Use the EXP function to return the exponential of a specified value. For example:
+~~~
+Print Exp(1)
+~~~
+api*/
+Function Exp, number#
+{
+	#errors
+}
+End Function( {aoz.checkNumber(Math.exp(%number#))} )
+
+
+/**api
+@name:Get Angle
+@description:Return the angle of the line between two points measured clockwise from horizontal-right
+@param:x1:number:The horizontal coordinate of the first point
+@param:y1:number:The vertical coordinate of the first point
+@param:x2:number:The horizontal coordinate of the second point
+@param:y2:number:The vertical coordinate of the second point
+@return:float:The value of the angle
+@compatible: aoz
+@content:
+api*/
+Function Get Angle, x1, y1, x2, y2
+{
+}
+End Function( {aoz.utilities.getAngle({x1:%x1,y1:%y1,x2:%x2,y2:%y2})})
+/**api
+@name:Get Distance
+@description:Measures the distance between two points in pixels
+@param:x1:number:The horizontal coordinate of the first point
+@param:y1:number:The vertical coordinate of the first point
+@param:x2:number:The horizontal coordinate of the second point
+@param:y2:number:The vertical coordinate of the second point
+@return:float:The distance between the two points, always positive.
+@compatible: aoz
+@content:
+api*/
+Function Get Distance, x1, y1, x2, y2
+{
+}
+End Function( {aoz.utilities.getDistance({x1:%x1,y1:%y1,x2:%x2,y2:%y2})} )
+/**api
+@name:Odd ( number )
+@description:Returns True if variable or expression is evaluated as an Odd number.
+@param:number:Variable or expression representing the number to be tested.
+@return:boolean:True if variable or expression is an Odd number.
+@compatible: aoz
+@content:
+Example
+~~~
+For f=0 to 20
+	if Odd (f) then print f
+next f
+~~~
+api*/
+Function Odd, expression
+{
+}
+End Function( {this.aoz.platformTrue * !((%expression) % 2) == 0} )
+/**api
+@name:Even ( number )
+@description:Returns True if variable or expression  is evaluated as an Even number.
+@param:number:Variable or expression representing the number to be tested.
+@return:boolean:True if variable or expression is an Even number.
+@compatible: aoz
+@content:
+Example
+~~~
+For f=0 to 20
+	if Even (f) then print f
+next f
+~~~
+api*/
+Function Even, expression
+{
+}
+End Function( {this.aoz.platformTrue * ((%expression) % 2) == 0} )
+/**api
+@name:Mod
+@description:Operator. Calculates the modulo of two numbers
+@content:
+This example will only print numbers between 0 and 2...
+~~~
+For X = 0 To 100
+	Print X Mod 3
+Next
+~~~
+api*/
+
+/**api
+@name:Not
+@description:Operator or function. Logical NOT, equivalent to ! in other languages
+@content:
+If used in a test, NOT will convert True to False...
+~~~
+A$ = "AOZ"
+If Not A$ = "AOZ"
+	Print "this will not be printed!"
+Else
+	Print "Hey AOZ! :)"
+End If
+~~~
+
+If not used in a expression, it will swap over every digit in a binary number from a 0 to a 1, and vice versa. For example:
+~~~
+Print Bin$(Not%11110000, 8)
+~~~
+api*/

@@ -1,0 +1,6 @@
+<i>Menu Mouse Off</i>
+<b>Menu Mouse Off</b> xxxxxxx
+=
+Use these commands to toggle the display of all menus starting from the current position of the mouse cursor.
+The mouse coordinates are added to the MENU BASE to calculate the menu position, so it is possible to lace a menu at a fixed distance from the mouse pointer.
+

@@ -1,0 +1,5 @@
+<i>Display Width</i>
+<b>Display Width</b> xxxxxxx
+=
+The width of the display is defined in the manifest of the application. You can also use the #displayWidth tag at the beginning of your application to set the size of the canvas without editing the manifest.
+

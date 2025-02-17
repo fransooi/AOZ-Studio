@@ -1,0 +1,6 @@
+Rem The following 2 lines must be kept
+Rem If your program is intended to run
+Rem also on a REAL Amiga.
+Rem
+Include "includes/libs/amiga/amiga.aozinc"
+_CHECK_PLATFORM

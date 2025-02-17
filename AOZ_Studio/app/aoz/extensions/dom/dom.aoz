@@ -1,0 +1,1041 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * The AOZ DOM Elements Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 24/12/2019
+ */
+//
+// Initialization
+//
+{
+	this.aoz.DOM = this;
+    this.elements = {};
+    this.mouseevent = undefined;
+    this.keyboardevent = undefined;
+
+    this.aozShow = function( onOff ){
+
+        var tag = onOff ? 'block' : 'none';
+        if( document.getElementById( 'bg' ) )
+        {
+            document.getElementById( 'bg' ).style.display = tag;
+        }
+
+        if( document.getElementById( 'AOZCanvas' ) )
+        {
+            document.getElementById( 'AOZCanvas' ).style.display = tag;
+        }
+
+        var elems = document.getElementsByTagName( 'h1' );
+        if( elems && elems[ 0 ] )
+        {
+            elems[ 0 ].style.display = tag;
+        }
+
+        var elems = document.getElementsByTagName( 'p' );
+        if( elems && elems[ 0 ] )
+        {
+            elems[ 0 ].style.display = tag;
+        }
+    }
+
+    this.element = function(type, id)
+    {
+
+        if(typeof (type) == 'undefined' || type == '')
+        {
+            throw "type_missing";
+        }
+
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            throw "element_already_exists";
+        }
+
+        var elm = document.createElement(type);
+        elm.setAttribute('id', id);
+        elm.setAttribute('name', id);
+        elm.parent = undefined;
+        this.elements[id] = elm;
+    };
+
+    this.setAttribute = function(id, attribute, value)
+    {
+
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (attribute) == 'undefined' || attribute == '')
+        {
+            throw "attribute_missing";
+        }
+
+        if(typeof (value) == 'undefined' || value == '')
+        {
+            throw "value_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            this.elements[id].setAttribute(attribute, value);
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+
+    };
+
+    this.getAttribute = function(id, attribute)
+    {
+
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (attribute) == 'undefined' || attribute == '')
+        {
+            throw "attribute_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            var value = this.elements[id].getAttribute(attribute);
+            if(value)
+            {
+                return value;
+            }else
+            {
+                return "";
+            }
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.append = function(childId, parentId)
+    {
+        if(typeof (parentId) == 'undefined' || parentId == '')
+        {
+            throw "parentid_missing";
+        }
+
+        if(typeof (childId) == 'undefined' || childId == '')
+        {
+            throw "childid_missing";
+        }
+
+        if(this.elements && this.elements[childId])
+        {
+
+            switch(parentId)
+            {
+                case 'body':
+                case 'BODY':
+                    document.body.appendChild(this.elements[childId]);
+                    break;
+                default:
+                    if(this.elements[parentId])
+                    {
+                        this.elements[parentId].appendChild(this.elements[childId]);
+                    }
+                    else
+                    {
+                        throw "element_not_found";
+                    }
+                    break;
+            }
+
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.setContent = function(id, html)
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (html) == 'undefined' || html == '')
+        {
+            throw "html_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            this.elements[id].innerHTML = html;
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.getContent = function(id)
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            return this.elements[id].innerHTML;
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.setValue = function(id, value)
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (value) == 'undefined' || value == '')
+        {
+            throw "value_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            this.elements[id].value = value;
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.getContent = function(id)
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            return this.elements[id].innerHTML;
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.className = function(id, className)
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (className) == 'undefined' || className == '')
+        {
+            throw "classname_missing.";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            this.elements[id].setAttribute('class', className);
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.action = function(aozObject, id, action, procName)
+    {
+        if(typeof (aozObject) == 'undefined')
+        {
+            throw "aozobj_missing";
+        }
+
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (action) == 'undefined' || action == '')
+        {
+            throw "action_missing";
+        }
+
+        if(typeof (procName) == 'undefined' || procName == '')
+        {
+            throw "procname_missing";
+        }
+
+        var self = aozObject;
+        if( id == "document" )
+        {
+            document.addEventListener( action, function( event )
+            {
+                event.preventDefault();
+                self.aoz.callProcedure( procName, {} );
+            });
+        }
+        else
+        {
+
+            if(this.elements && this.elements[id])
+            {
+                this.elements[id].addEventListener(action, function(event)
+                {
+                    event.preventDefault();
+
+                    var args = {};
+                    switch(event.type)
+                    {
+                        // Mouse Events
+                        case 'mousedown':
+                        case 'mouseup':
+                        case 'click':
+                        case 'mousemove':
+                        case 'dblclick':
+                        case 'mouseover':
+                        case 'mouseout':
+                        case 'mousenter':
+                        case 'mouseleave':
+                            args.X = event.clientX;
+                            args.Y = event.clientY;
+                            args.BUTTON = event.button;
+                            args.ALTKEY = event.altKey;
+                            args.CTRLKEY = event.ctrlKey;
+                            args.SHIFTKEY = event.shiftKey;
+                            break;
+
+                        // Keyboard Events
+                        case 'keydown':
+                        case 'keyup':
+                        case 'keypress':
+                            args.KEYCODE = event.keyCode;
+                            args.ALTKEY = event.altKey;
+                            args.CTRLKEY = event.ctrlKey;
+                            args.SHIFTKEY = event.shiftKey;
+                            break;
+
+                        // Touch Screen Events
+                        case 'touchstart':
+                        case 'touchend':
+                        case 'touchmove':
+                        case 'touchleave':
+                        case 'touchcancel':
+                            args = undefined;
+                            var touches = event.changedTouches;
+                            if(touches)
+                            {
+                                for( t=0; t < touches.length; t++ )
+                                {
+                                    self.aoz.runProcedure( procName, 
+                                    {
+                                        INDEX: t,
+                                        X: touches[0].pageX,
+                                        Y: touches[0].pageY
+                                    } );
+                                }
+                            }
+                            break;
+
+                        // Orientation device (portrait / landscape)
+                        case 'orientationchange':
+                            if(window.orientation)
+                            {
+                                args.ANGLE = window.orientation;
+                            }
+                            else
+                            {
+                                args.ANGLE = -1;
+                            }
+                            break;
+
+                        // Rotation device (X, Y & Z)
+                        case 'deviceorientation':
+                            if(window.DeviceOrientationEvent)
+                            {
+                                args.ANGLE_X = event.beta;
+                                args.ANGLE_Y = event.gamma;
+                                args.ANGLE_Z = event.alpha;
+                            }
+                            else
+                            {
+                                args.ANGLE_X = 0.0;
+                                args.ANGLE_Y = 0.0;
+                                args.ANGLE_Z = 0.0;
+                            }
+                            break;
+
+                        // Acceleration and Gravity device (X, Y & Z)
+                        case 'devicemotion':
+                            if(window.DeviceMotionEvent)
+                            {
+                                args.ACCELERATION_X = event.ACCELERATION.x;
+                                args.ACCELERATION_Y = event.ACCELERATION.y;
+                                args.ACCELERATION_Z = event.ACCELERATION.z;
+                                args.GRAVITY_X = event.ACCELERATIONIncludingGRAVITY.x;
+                                args.GRAVITY_Y = event.ACCELERATIONIncludingGRAVITY.y;
+                                args.GRAVITY_Z = event.ACCELERATIONIncludingGRAVITY.z;
+                            }
+                            else
+                            {
+                                args.ACCELERATION_X = 0.0;
+                                args.ACCELERATION_Y = 0.0;
+                                args.ACCELERATION_Z = 0.0;
+                                args.GRAVITY_X = 0.0;
+                                args.GRAVITY_Y = 0.0;
+                                args.GRAVITY_Z = 0.0;
+                            }
+                            break;
+                        }
+
+                    if( args )
+                    {
+                        self.aoz.runProcedure( procName, args );
+                    }
+                });
+            }else{
+                throw "element_not_found";
+            }
+        }
+    };
+
+    this.loadCSS = function(url, media)
+    {
+        if( typeof( url ) == 'undefined' )
+        {
+            throw "url_missing";
+        }
+
+        if( typeof( media ) == 'undefined' || media == '' )
+        {
+            media = '';
+        }
+
+        var css = document.createElement("link");
+        css.setAttribute("rel", "stylesheet");
+        css.setAttribute("type", "text/css");
+        css.setAttribute("href", url);
+        css.setAttribute("media", media)
+        document.head.appendChild(css);
+    };
+
+	this.addCSSRule = function( cssrule )
+	{
+		var style = document.createElement( "style" );
+        style.setAttribute("type", "text/css");
+		style.innerHTML = cssrule;
+        document.head.appendChild( style );
+	};
+
+    this.loadJS = function(url)
+    {
+        if( typeof( url ) == 'undefined' )
+        {
+            throw "url_missing";
+        }
+        var js = document.createElement("script");
+        js.setAttribute("type", "text/javascript");
+        js.setAttribute("src", url);
+        document.body.appendChild(js);
+    };
+
+	this.addJSCode = function( code )
+	{
+        if( typeof( code ) == 'undefined' )
+        {
+            throw "code_js_missing";
+        }
+        var js = document.createElement("script");
+        js.setAttribute("type", "text/javascript");
+        js.innerHTML = code;
+        document.body.appendChild(js);
+	};
+
+    this.visible = function ( id, visible )
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (visible) == 'undefined')
+        {
+            throw "visible_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            if( visible )
+            {
+                this.elements[id].style.display = 'none';
+            }
+            else
+            {
+                this.elements[id].style.display = 'block';
+            }
+
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.move = function ( id, x, y, unitMeasure )
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (x) == 'undefined' || isNaN( x ))
+        {
+            throw "x_missing";
+        }
+
+        if(typeof (y) == 'undefined' || isNaN( y ))
+        {
+            throw "y_missing";
+        }
+
+        if(typeof (unitMeasure) == 'undefined' || unitMeasure == '')
+        {
+            uniteMeasure = 'px';
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            this.elements[id].style.left =  x + unitMeasure;
+            this.elements[id].style.top =  y + unitMeasure;
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.resize = function ( id, width, height, unitMeasure )
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (width) == 'undefined' || isNaN( width ))
+        {
+            throw "width_missing";
+        }
+
+        if(typeof (height) == 'undefined' || isNaN( height ))
+        {
+            throw "height_missing";
+        }
+
+        if(typeof (unitMeasure) == 'undefined' || unitMeasure == '')
+        {
+            uniteMeasure = 'px';
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            this.elements[id].style.width =  width + unitMeasure;
+            this.elements[id].style.height =  height + unitMeasure;
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+
+    this.enabled = function ( id, enabled )
+    {
+        if(typeof (id) == 'undefined' || id == '')
+        {
+            throw "id_missing";
+        }
+
+        if(typeof (enabled) == 'undefined')
+        {
+            throw "enabled_missing";
+        }
+
+        if(this.elements && this.elements[id])
+        {
+            if( enabled )
+            {
+                this.elements[id].disabled = false;
+            }
+            else
+            {
+                this.elements[id].disabled = true;
+            }
+
+        }
+        else
+        {
+            throw "element_not_found";
+        }
+    };
+	
+	this.executeJS = function( jsCode )
+	{
+		var script = document.createElement( 'script' );
+		script.innerHTML = jsCode
+		document.body.appendChild( script );
+	};
+}
+
+/**doc
+@name:HTML manipulation commands
+@description:Put any DOM elements in your AOZ program to create your web application NOTE! Many commands are deprecated. It is recommended to wait for a future update of these commands before using them. 
+@author:Baptiste Bideaux
+@intro:
+@conclusion:
+@since:0.9.4
+doc*/
+
+/**api
+@name:AOZ Hide
+@description:Hide the AOZ display canvas
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Instruction AOZ Hide
+    {
+        #errors
+        aoz.DOM.aozShow(false);
+    }
+End Instruction
+
+/**api
+@name:AOZ Show
+@description:Show the AOZ display canvas
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Instruction AOZ Show
+    {
+        #errors
+        aoz.DOM.aozShow(true);
+    }
+End Instruction
+
+/**api
+@name:Dom Element
+@description:Create a HTML Element
+@param:elementType$:string:Name of the DOM element to create. May be "img", "div", "canvas", "textarea", "button"...
+@param:elementId$:string:ID of this element.
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Instruction Dom Element, elementType$, elementId$
+    {
+        #errors
+        aoz.DOM.element( %elementType$, %elementId$ );
+    }
+End Instruction
+
+/**api
+@name:Dom Attribute
+@description:Set an attribute of a HTML Element
+@param:elementId$:string:ID of this element.
+@param:attribute$:string:Name of the attribute. May be "class", "src", "style"...
+@param:value$:string:Value of the attribute to assign
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Instruction Dom Attribute, elementId$, attribute$, value$
+    {
+        #errors
+        aoz.DOM.setAttribute( %elementId$, %attribute$, %value$ );
+    }
+End Instruction
+
+/**api
+@name:Dom Attribute
+@description:Get the value of a attribute of a HTML Element
+@param:elementId$:string:ID of this element.
+@param:attribute$:string:Name of the attribute. May be "class", "src", "style"...
+@deprecated:This instruction will no longer be supported in a future version.
+@return:string:The value of the attribute
+@compatible: aoz
+api*/
+Function Dom Attribute, elementId$, attribute$
+    {
+        #errors
+    }
+End Function( {aoz.DOM.getAttribute( %elementId$, %attribute$ )} )
+
+/**api
+@name:Dom Add
+@description:Add an HTML element create with "Dom Create" command into an other HTML Element
+@param:childId$:string:ID of the element to add.
+@deprecated:This instruction will no longer be supported in a future version.
+@param:parentId$:string:ID of the HTML element container.
+@compatible: aoz
+api*/
+Instruction Dom Add, childId$, parentId$
+    {
+        #errors
+        aoz.DOM.append( %childId$, %parentId$ );
+    }
+End Instruction
+
+/**api
+@name:Dom Content
+@description:Set the content of a HTML Element
+@param:elementId$:string:ID of this element.
+@param:html$:string:HTML code to insert into the HTML element.
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Instruction Dom Content, elementId$, html$
+    {
+        #errors
+        aoz.DOM.setContent( %elementId$, %html$ );
+    }
+End Instruction
+
+/**api
+@name:Dom Content
+@description:Return the code HTML contains in a HTML Element
+@param:elementId$:string:ID of this element.
+@return:string:The HTML code into the HTML element.
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Function Dom Content, elementId$
+    {
+        #errors
+    }
+End Function( {aoz.DOM.getContent( %elementId$ )} )
+
+/**api
+@name:Dom Value
+@description:If the HTML Element is a element of form (input, list, radio, option...), you can to set the value of this element (text, selected...)
+@param:elementId$:string:ID of this element.
+@param:value$:string:Value to assign at this element.
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Instruction Dom Value, elementId$, value$
+    {
+        #errors
+        aoz.DOM.setValue( %elementId$, %value$ );
+    }
+End Instruction
+
+/**api
+@name:Dom Value
+@description:If the HTML Element is a element of form (input, list, radio, option...), return this value (text, selected...)
+@param:elementId$:string:ID of this element.
+@deprecated:This instruction will no longer be supported in a future version.
+@return:string:Value of this element.
+@compatible: aoz
+api*/
+Function Dom Value, elementId$
+    {
+        #errors
+    }
+End Function( {aoz.DOM.getContent( %elementId$ )} )
+
+/**api
+@name:Dom Event
+@description:Link an Event Listener on a HTML Element with a AOZ Procedure
+@param:elementId$:string:ID of this element.
+@param:eventName$:string:Name of the event ("click", "keydown", "mousedown", "mousemove"...).
+@param:procName$:string:Name of the AOZ procedure receiving the result of the event.
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Instruction Dom Event, elementId$, eventName$, procName$
+    {
+        #errors
+        aoz.DOM.action( this, %elementId$, %eventName$, %procName$ );
+    }
+End Instruction
+
+/**api
+@name:Load CSS
+@description:Load a file CSS to add styles rules
+@param:url$:string:Name of file CSS to load.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@seealso:Load Asset
+@compatible: aoz
+api*/
+Instruction Load CSS, url$
+    {
+    	#waiting
+        #errors
+        aoz.DOM.loadCSS( %url$, undefined );
+    	return{type:12,waitThis:aoz,callFunction:"wait",waitFunction:"wait_wait",args:[aoz.platform=='amiga'?20:0.25]};
+    }
+End Instruction
+
+/**api
+@name:Load CSS
+@description:Load a file CSS to add styles rules for a specific media ("screen", "print"...)
+@param:url$:string:Name of the CSS file to load.
+@param:media$:string:Name of the media.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@seealso:Load Asset
+@compatible: aoz
+api*/
+Instruction Load CSS, url$, media$
+    {
+        #errors
+		#waiting
+        aoz.DOM.loadCSS( %url$, %media$ );
+    	return{type:12,waitThis:aoz,callFunction:"wait",waitFunction:"wait_wait",args:[aoz.platform=='amiga'?20:0.25]};
+    }
+End Instruction
+
+/**api
+@name:Add CSS Rule
+@description:Add a CSS Rule directly in AOZ code
+@param:cssRule$:string:CSS Code of the rule.
+@deprecated:This instruction will no longer be supported in a future version.
+@compatible: aoz
+api*/
+Instruction Add CSS Rule, cssRule$
+    {
+        #errors
+        aoz.DOM.addCSSRule( %cssRule$ );
+    }
+End Instruction
+
+/**api
+@name:Load JS
+@description:Load a Javascript file
+@param:url$:string:Url of the Javascript file to load.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@seealso:Load Asset
+@compatible: aoz
+api*/
+Instruction Load JS, url$
+    {
+        #errors
+		#waiting
+        aoz.DOM.loadJS( %url$ );
+    	return{type:12,waitThis:aoz,callFunction:"wait",waitFunction:"wait_wait",args:[aoz.platform=='amiga'?20:0.25]};
+    }
+End Instruction
+
+/**api
+@name:Dom Visible
+@description:Show/Hide a HTML Element
+@param:elementId$:string:ID of this element.
+@param:visible:boolean:State of the visibility (true or false).
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Visible, elementId$, visible
+    {
+        #errors
+        aoz.DOM.visible( %elementId$, %visible );
+    }
+End Instruction
+
+/**api
+@name:Dom Position
+@description:Set the Position of a HTML element
+@param:elementId$:string:ID of this element.
+@param:x:integer:Horizontal position in pixel of the HTML element.
+@param:y:integer:Horizontal position in pixel of the HTML element.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Position, elementId$, x, y
+    {
+        #errors
+        aoz.DOM.move(%elementId$, %X, %Y, undefined)
+    }
+End Instruction
+
+/**api
+@name:Dom Position
+@description:Set the Position of a HTML element with a specific measeure unit ('px', 'pt', 'em', '%'...)
+@param:elementId$:string:ID of this element.
+@param:X:integer:Horizontal position of the HTML element.
+@param:Y:integer:Vertical position of the HTML element.
+@param:unitMeasure$:string:Code of the unit measure.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Position, elementId$, X, Y, unitMeasure$
+    {
+        #errors
+        aoz.DOM.move(%elementId$, %X, %Y, %UNITMEASURE$)
+    }
+End Instruction
+
+/**api
+@name:Dom Size
+@description:Resize a HTML element
+@param:elementId$:string:ID of this element.
+@param:width:integer:Width of the HTML element in pixel.
+@param:height:integer:Height of the HTML element in pixel.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Size, elementId$, width, height
+    {
+        #errors
+        aoz.DOM.size(%elementId$, %width, %height, undefined)
+    }
+End Instruction
+
+/**api
+@name:Dom Size
+@description:Resize a HTML element with a specific measeure unit ('px', 'pt', 'em', '%'...)
+@param:elementId$:string:ID of this element.
+@param:width:integer:Width of the HTML element.
+@param:height:integer:Height of the HTML element.
+@param:unitMeasure$:string:Code of the unit measure.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Size, elementId$, width, height, unitMeasure$
+    {
+        #errors
+        aoz.DOM.size(%elementId$, %width, %height, %unitMeasure$)
+    }
+End Instruction
+
+/**api
+@name:Dom Enabled
+@description:Show/Hide a HTML Element
+@param:elementId$:string:ID of this element.
+@param:enabled:boolean:State of the element (true or false).
+@compatible: aoz
+api*/
+Instruction Dom Enabled, elementId$, enabled
+    {
+        #errors
+        aoz.DOM.enabled( %elementId$, %enabled )
+    }
+End Instruction
+
+/**api
+@name:Dom Button
+@description:Create a HTML Button
+@param:elementId$:string:ID of this element.
+@param:label$:string:Label of the button.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Button, elementId$, label$
+    {
+        #errors
+        aoz.DOM.element( "BUTTON", %elementId$ );
+        aoz.DOM.setContent( %elementId$, %label$ );
+    }
+End Instruction
+
+/**api
+@name:Dom Button
+@description:Create a HTML Button with CSS Rules
+@param:elementId$:string:ID of this element.
+@param:label$:string:Label of the button.
+@param:className$:string:Names of CSS rules to this element
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Button, elementId$, label$, className$
+    {
+        #errors
+        aoz.DOM.element( "BUTTON", %elementId$ );
+        aoz.DOM.setAttribute( %elementId$, "class", %className$ );
+        aoz.DOM.setContent( %elementId$, %label$ );
+    }
+End Instruction
+
+/**api
+@name:Dom Layer
+@description:Create a HTML Layer (div)
+@param:elementId$:string:ID of this element.
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Layer, elementId$
+    {
+        #errors
+        aoz.DOM.element( "DIV", %elementId$ );
+    }
+End Instruction
+
+/**api
+@name:Dom Button
+@description:Create a HTML Button with CSS Rules
+@param:elementId$:string:ID of this element.
+@param:className$:string:Names of CSS rules to this element
+@deprecated:This instruction will no longer be supported in a future version. It is recommended to use the instruction Load Asset
+@compatible: aoz
+api*/
+Instruction Dom Layer, elementId$, className$
+    {
+        #errors
+        aoz.DOM.element( "DIV", %elementId$ );
+        aoz.DOM.setAttribute( %elementId$, "class", %className$ );
+    }
+End Instruction
+
+/**api
+@name:JS Execute
+@description:Executes the Javascript code defined in the parameter string..
+@param:javascript$:string:Content of the Javascript code.
+@compatible: aoz
+@content:
+This instruction uses the Javascript Eval function to run the code contained in the string.
+
+Here is an example of use:
+~~~
+Rem Creation of the "helloWorld" JS function
+CODE$ = "function helloWorld(){ this.application.vars.A$ = 'Hello world!'; }"
+
+JS Execute( CODE$ ) // Adds the JS function to the AOZ program
+JS Execute( "helloWorld();" ) // Calls the JS function
+ 
+Pen 2 : Print A$ // Display of the variable A$ created by the "helloWorld" JS function
+~~~
+api*/
+Instruction JS Execute, javascript$
+{
+	#errors
+	aoz.DOM.executeJS( %javascript$ );
+}
+End Instruction

@@ -1,0 +1,202 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The Locale/Session Storage Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 02/11/2022
+ */
+#need_javascript_file:"aozjs/storage/storage.api.js"
+#need_javascript_file:"aozjs/storage/storage.back.js"
+
+#noWarning:"instruction_not_implemented"
+{
+	storage_initialize( this );
+}
+
+/**doc
+@name: Local/Session Storage Commands
+@description:Instructions and functions to read/write the Local/Session Storage database.
+@author:Baptiste Bideaux
+doc*/
+
+/**api
+@name: Write Local
+@description: Writes a value in the local storage
+@syntax: Write Local Name$="<name of the value>, Value=255
+@syntax: Write Local Name$="<name of the value>, Value$="John"
+@param:Name$:string:Name of the value
+@param:*Value$:string:Value as a string
+@param:*Value:string:Value as a number
+api*/
+Instruction Write Local, Name$, Value$="-1000.001", Value=-1000.001
+{
+	#errors
+	writeLocalStorage( %Name$, %Value$, %Value );
+} 
+End Instruction
+
+/**api
+@name: Write Session
+@description: Writes a value in the session storage
+@syntax: Write Session Name$="<name of the value>, Value=255
+@syntax: Write Session Name$="<name of the value>, Value$="John"
+@param:Name$:string:Name of the value
+@param:*Value$:string:Value as a string
+@param:*Value:string:Value as a number
+api*/
+Instruction Write Session, Name$, Value$="-1000.001", Value=-1000.001
+{
+	#errors
+	writeSessionStorage( %Name$, %Value$, %Value );
+} 
+End Instruction
+
+/**api
+@name: Read Local
+@description: Reads and returns a value as a number from the local storage
+@syntax: A = Read Local( Name$="<name of the value>" )
+@param:Name$:string:Name of the value
+@return:integer:Value as a number
+api*/
+Function Read Local, Name$
+{
+	#errors
+} 
+End Function( { readLocalStorage( %Name$ ) } )
+
+/**api
+@name: Read Local$
+@description: Reads and returns a value as a string from the local storage
+@syntax: A$ = Read Locale$( Name$="<name of the value>" )
+@param:Name$:string:Name of the value
+@return:string:Value as a string
+api*/
+Function Read Local$, Name$
+{
+	#errors
+} 
+End Function( { readLocalStorage( %Name$ ) } )
+
+/**api
+@name: Read Session
+@description: Reads and returns a value as a number from the session storage
+@syntax: A = Read Session() Name$="<name of the value>" )
+@param:Name$:string:Name of the value
+@return:integer:Value as a number
+api*/
+Function Read Session, Name$
+{
+	#errors
+} 
+End Function( { readSessionStorage( %Name$ ) } )
+
+/**api
+@name: Read Session$
+@description: Reads and returns a value as a string from the session storage
+@syntax: A$ = Read Session$() Name$="<name of the value>" )
+@param:Name$:string:Name of the value
+@return:string:Value as a string
+api*/
+Function Read Session$, Name$
+{
+	#errors
+} 
+End Function( { readSessionStorage( %Name$ ) } )
+
+/**api
+@name: Local Exists
+@description: Returns True if a value exists in the local storage, or False
+@syntax: A = Local Exists( Name$="<name of the value>" )
+@param:Name$:string:Name of the value
+@return:bool:Returns True if a value exists in the session storage, or False
+api*/
+Function Local Exists, Name$
+{
+	#errors
+} 
+End Function( { localExists( %Name$ ) } )
+
+/**api
+@name: Session Exists
+@description: Returns True if a value exists in the session storage, or False
+@syntax: A = Session Exists( Name$="<name of the value>" )
+@param:Name$:string:Name of the value
+@return:bool:Returns True if a value exists in the session storage, or False
+api*/
+Function Session Exists, Name$
+{
+	#errors
+} 
+End Function( { sessionExists( %Name$ ) } )
+
+
+/**api
+@name: Delete Local
+@description: Delete a value from the local storage
+@syntax: Delete Local Name$="<name of the value>
+@param:Name$:string:Name of the value
+api*/
+Instruction Delete Local, Name$
+{
+	#errors
+	deleteLocalStorage( %Name$ );
+}
+End Instruction
+
+/**api
+@name: Delete Session
+@description: Delete a value from the session storage
+@syntax: Delete Session Name$="<name of the value>
+@param:Name$:string:Name of the value
+api*/
+Instruction Delete Session, Name$
+{
+	#errors
+	deleteSessionStorage( %Name$ );
+}
+End Instruction
+
+/**api
+@name: Clear Local
+@description: Clear all values from the local storage
+@syntax: Clear Local
+api*/
+Instruction Clear Local
+{
+	#errors
+	clearLocalStorage();
+}
+End Instruction
+
+/**api
+@name: Clear Session
+@description: Clear all values from the session storage
+@syntax: Clear Session
+api*/
+Instruction Clear Session
+{
+	#errors
+	clearSessionStorage();
+}
+End Instruction

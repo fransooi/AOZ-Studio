@@ -1,0 +1,14 @@
+<i>Key State</i>
+<b>Key State</b> xxxxxxx
+=
+Use this function to check whether or not a specific key has been pressed.
+The relevant scan code should be enclosed in brackets, and when the associated key is being pressed KEY STATE will return a value of TRUE, otherwise the result will be given as FALSE.
+
+For example:
+@code
+Do
+If Key State(69)=True Then Print "ESCAPE!" : Rem Esc key pressed
+If Key State(95)=True Then Print "HELP!": Rem Help key pressed
+Loop
+@code
+

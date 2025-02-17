@@ -1,0 +1,10 @@
+<i>function:tests if an actor is verticaly reversed</i>
+value=<b>Actor IsVRev</b>(number)
+value=<b>Actor IsVRev</b>(name$)
+=
+@code
+Cls 0
+Actor 1, VRev = True, image$="magic"
+Print Str$( Actor IsVRev( 1 ) )
+@code
+

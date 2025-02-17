@@ -1,0 +1,11 @@
+<i>Is Sprite</i>
+<b>Is Sprite</b> xxxxxxx
+=
+Use this function to check if a sprite exists before modifying it...
+@code
+Load "AMOSPro_Tutorial:Objects/Sprites.abk"
+Sprite 1, 100, 100, 1
+If Is Sprite( 2 ) Then Print "This should not be printed!"
+If Is Sprite( 1 ) Then Print "This should be printed!"
+@code
+

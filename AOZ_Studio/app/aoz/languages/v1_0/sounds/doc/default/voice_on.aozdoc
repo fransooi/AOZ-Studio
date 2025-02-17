@@ -1,0 +1,7 @@
+<i>Voice On</i>
+<b>Voice On</b> xxxxxxx
+=
+If used without any parameter, this instruction will mute the master volumte of the audio context.
+
+If specified, only the specified voice will be unmuted.
+

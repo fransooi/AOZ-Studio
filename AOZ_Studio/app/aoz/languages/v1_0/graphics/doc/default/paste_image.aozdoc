@@ -1,0 +1,23 @@
+<i>Paste Image</i>
+<b>Paste Image</b> xxxxxxx
+=
+PASTE IMAGE takes an image held in the Image Bank, and draws it straight onto the current screen.
+proceeding.
+
+It is important to note that the coordinates for the given image number are measured from the top left-hand corner of the image, and take no account of the current hot spot setting!"
+
+@code
+Cls 0
+Rem The following Palette values go on one line
+For C=1 To 15
+Ink C : Disc 16,16,15
+Next C
+Do
+Rem Choose a random circle and choose its position
+N=Rnd(14)+1 : X=Rnd(1280) : Y=Rnd(720)
+Rem Paste image on screen at new coordinates
+Paste Image X,Y,N
+Loop
+@code
+
+

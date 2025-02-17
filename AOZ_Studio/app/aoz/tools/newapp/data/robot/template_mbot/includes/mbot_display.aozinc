@@ -1,0 +1,3 @@
+// Set-up the display, no console.
+NOCONSOLE = 1
+Include "tools/bot_simulator/bot_simulator.aoz"

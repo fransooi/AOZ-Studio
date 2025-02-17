@@ -1,0 +1,64 @@
+{
+    information_commands:
+    { 
+        name: "Information Commands" //TODO
+        intro:"Functions for returning application and system information."
+        conclusion:""
+        commands:
+        {
+
+
+            "manifest$":
+            [
+                "TODO" 
+
+            ]
+            "browser_name$":
+            [
+                "TODO" 
+
+            ]
+            "browser_language$":
+            [
+                "TODO" 
+            ]
+            "browser_version$":
+            [
+                "TODO" 
+            ]
+            "browser_agent$":
+            [
+                "TODO" 
+            ]
+            "browser_engine$":
+            [
+                "TODO" 
+            ]
+            "browser_ancestor$":
+            [
+                "TODO" 
+            ]
+            "browser_codename$":
+            [
+                "TODO" 
+            ]
+            "browser_online":
+            [
+                "TODO" 
+            ]
+            "browser_platform$":
+            [
+                "TODO" 
+            ]
+            "Geo Latitude":
+            [
+                "TODO" 
+            ]
+            "Geo Longitude":
+            [
+                "TODO" 
+            ]
+            
+        }
+    }
+}

@@ -1,0 +1,138 @@
+{
+    developing_for_mobile_devices:
+    { 
+        name: "TODO"
+        intro:""
+        conclusion:""
+        commands:
+        {
+            "touch_screen":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "touch_count":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "touch_x":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "touch_y":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "touch_state":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "touch_on_change":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "orientation_x":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "orientation_y":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "orientation_z":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "accelerometer":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "acceleration_x":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "acceleration_y":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "acceleration_z":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "lock_orientation":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+          
+        }
+    }
+}

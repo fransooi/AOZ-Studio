@@ -1,0 +1,17 @@
+<i>Lib Open</i>
+<b>Lib Open</b> xxxxxxx
+=
+The LIB OPEN command calls the OPEN LIBRARY function from EXEC. If the library is external, it will be
+loaded into memory from the "Libs: folder of your current start-up disc. If a problem is encountered, you will be
+helped by the relevant error message from AOZ, and the error can easily be intercepted using a
+TRAP command.
+
+After the library has been initialised successfully, it remains open until the program is run again from the Editor, or
+your variables are re-set using a CLEAR command, or a LIB CLOSE command is called.
+
+Three parameters are needed for a LIB OPEN instruction. The number of a new AOZ channel, to be
+used to refer to this library throughout the AOZ program. Then the name of the library that is to be
+opened, given in standard Commodore format. Lastly, the minimum version number of the library that is to be
+installed in memory should be specified. If you are unsure of this parameter, use a value of zero.
+
+

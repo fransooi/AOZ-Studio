@@ -1,0 +1,28 @@
+<i>Dialog</i>
+<b>Dialog</b> xxxxxxx
+=
+This function provides a simple method of testing whether or not an option from a control panel has been selected.
+Simply specify the number of the open channel that is to be tested.
+After this function has been performed, one of the following values for the tested button will be returned:
+- <0 A negative value means that the current channel is inactive, either because it has not been
+assigned to a dialogue box, or because the user has left the box via an exit button.
+- =0 A value of zero indicates that there has been no user-input since the previous test.
+- >0 If a positive value is returned, it indicates the number of the last button that was
+selected by
+the user. In the case of edit zones, a value will only be returned when the [Return] key is
+pressed.
+
+Once the value of the contents held by the DIALOG function has been checked, it will be re-set to zero.
+Here is an example of a simple check:
+@code
+Do
+D=Dialog(1)
+Exit If D<0
+If D > 0
+On D Gosub BUTTON1,BUTTON2
+End If
+Wait Vbl
+Loop
+@code
+
+

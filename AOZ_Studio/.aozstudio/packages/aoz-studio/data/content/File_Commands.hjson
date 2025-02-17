@@ -1,0 +1,698 @@
+{
+    file_commands:
+    { 
+        name: ""  //TODO
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "load_image":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "save_image":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "load_iff":
+            [
+                With the appropriate IFF picture files ready to be loaded on disc, this command is used to load the selected filename to the current screen. There is an optional screen number parameter, which will open that screen for the picture. If this numbered screen already exists, its contents will be erased and replaced by the IFF data.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "save_iff":
+            [
+                The SAVE IFF command saves the current screen as an IFF picture file with the selected filename onto disc. Certain data is automatically added to this IFF file, which stores the present screen settings, including any SCREEN DISPLAY, SCREEN OFFSET, SCREEN HIDE and SCREEN SHOW. This will be stored and recognised by AOZ Studio whenever this file is loaded again, so that the IFF screen will be displayed exactly as it was
+saved. Please note that this data will be ignored by other graphics packages, such as Dpaint 3, also that it is not
+possible to save double buffered or dual playfield screens with this command.
+""
+An optional parameter can be added after the filename, which selects whether or not the IFF file is to be compacted
+before it is saved. A value of 1 specifies that the standard AOZ Studio compression system is to be used,
+whereas a zero saves the picture without any compression.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "load":
+            [
+                Remember it has been suggested that memory bank filenames should have the following extensions, acting as reminders for human eyes, and identification flags for computer searches:
+
+- "filename.Abk" to indicate a single AOZ Studio memory bank
+- "filename.Abs" for a file containing a group of several memory banks.
+
+These identifiers can be very useful when employed with certain instructions, as follows:
+
+                '''
+                ~~~                
+		   Rem Load an Object bank from current disc
+		   Load Fsel$("*.Abk"," ","Load an Object bank")
+		   List Bank : Rem List bank details on screen
+                ~~~
+                '''
+As can be seen, the LOAD command will load the selected memory bank directly from the appropriate disc file. An
+optional destination bank number can be added after the filename to be loaded, but if it is omitted, or given the
+number zero, data will be re-loaded into the same bank numbers from which it was originally saved. Any current
+information in these existing banks will be completely lost!"
+Object and Icon files are treated slightly differently. If the bank number is greater than zero, any additional images will be added to the end of the existing bank of images.
+            ]
+            "bload":
+            [
+                The BLOAD instruction loads a file of binary data into memory. It does not alter the data in any way. To load this data into a memory bank, the bank must first be reserved, otherwise an error will be generated. Also note that files to be loaded must not be any larger than the reserved bank, or other areas of memory will be corrupted.
+""
+The file of data can also be loaded from disc into a specified address, using BLOAD.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bsave":
+            [
+                A block of memory between a specified start and end location can be saved into a specified file on disc. For example:
+                '''
+                ~~~                
+		Bsave "Test",Start(5) To Start(5)+Length(5) : Rem Save memory bank 5
+                ~~~
+                '''
+The above example would save the data in memory bank number 5 to a suitable disc. The difference between this
+file and a file saved as a normal memory bank is that while SAVE causes a special bank header to be written,
+containing information about the bank, this header is not written for a file when BSAVE is used. This means that
+LOAD cannot be used for this type of file. It is also not suitable for Object banks.
+            ]
+            "pload":
+            [
+                The PLOAD command reserves a memory bank and loads some machine code into it from disc. Specify the
+filename that contains the machine code file on disc, followed by the number of a new memory bank to be reserved
+for the program. If the bank number is negative, the number will be multiplied by -1, and the bank will be allocated
+using Chip memory.
+""
+Once machine code is loaded in this way, it is installed as a permanent memory bank, so whenever the current
+program is saved, the machine code is stored too. Also note that the machine code file can be saved onto disc as a
+standard ".Abk" file, then loaded directly into AOZ Studio Basic. After PLOAD has performed its work, the
+memory bank can be executed immediately! The following factors should be noted:
+
+- This file must consist of a standard piece of machine code, that can be run under CLI.
+- The program must be terminated by an RTS instruction.
+- Only the first CODE segment of the routine will be installed into memory.
+- Any attempt to load a commercial program using this technique will probably crash your Amiga"
+
+            ]
+            "save":
+            [
+                If a bank has been created using RESERVE, or some screen Objects have been defined with a command such as GET BOB, the new data can be saved onto a suitable disc in one of two ways.
+""
+When the SAVE command is followed by a string containing a filename, all current memory banks will be saved
+into a single large file, bearing that name. The filename can be anything at all, but it is common practice to add the ".Abk" extension at the end, to remind yourself that this is an AOZ Studio memory bank. Similarly, an
+".Abs" extension is used to indicate a file containing a group of several memory banks.
+""
+By adding an optional bank number after the filename, only that selected bank will be stored in the named file onto
+disc.
+""
+Here is an example of an instant image-bank generator:
+                '''
+                ~~~                
+		   N=1 : Rem Set number of first new image to create
+		   S=1 : Rem Set size of image*16
+		   Rem Create images in bank one
+		   For G=0 To 4
+			Rem Draw the images
+			Ink G+1 : Circle S*7,S*7,S*7 : Paint S*8,S*8
+			Ink 0: Ellipse S*4,S*5,S*1,5*2 : Paint S*4,S*5
+			Ellipse S*1 0,S*5,S,S*2 : Paint S*10,S*5
+			Ellipse S*7,S*10,S*5,S*3 : Ellipse S*7,S*9,S*4,S : Paint S*1 1,S*1
+			Ink G+1 : Bar S*3,S*7 To S*13,S*9
+			Rem Now grab them as Objects
+			Get Bob G+N,0,0 To S*16-1 ,S*16-1
+			Rem Clear them from the screen
+			Cls 0,0,0 To S*16,S*16
+		   Next G
+		   F$=Fsel$("*.Abk"," ","Save your images")
+		   Rem Save Objects in bank 1
+		   If F$<>0
+			Save F$,1
+		   End If
+                ~~~
+                '''
+            ]
+            "save_bank":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "dfree":
+            [
+                This simple function returns the amount of free space remaining on the current disc, measured in bytes.
+
+            ]
+            "mkdir":
+            [
+                This makes a new folder on the current disc, and gives it the filename of your choice. For example:
+                '''
+                ~~~                
+		   Mkdir "Df0:MARATHONMAN"
+		   Dir
+                ~~~
+                '''
+            ]
+            "open_random":
+            [
+                This command is used to open a channel to a random access file, like this:
+                '''
+                ~~~                
+		   Open Random 1,"ADDRESS"	
+                ~~~
+                '''
+            ]
+            "open_out":
+            [
+                Use this command to open a sequential file, ready for data to be added to its end. Give the channel number and filename, as explained above. If the file already exists, it will be erased.
+
+            ]
+            "append":
+            [
+                This works like OPEN OUT, but it allows you to add to your files at any time after they have been defined. If the filename already exists, your new data will be appended to it, in other words it will be added to the end of that file.
+
+            ]
+            "assign":
+            [
+                Supposing that you have an extensive library of fonts installed on a hard disc, as part of your development system,
+but you are writing programs for users who only have use of the internal floppy drive. You will need to test your
+programs with a reduced number of fonts, and employ the internal drive instead of your hard disc. This is easily
+achieved with the following line:
+                '''
+                ~~~                
+		   Assign "Fonts: To "Df0:Fonts"
+                ~~~
+                '''
+Now, every time that GET FONTS or GET DISC FONTS is called, the internal drive will be used instead of your
+hard disc.
+            ]
+            "put":
+            [
+                Once a record has been placed in a string, it can be moved from the computer's memory into a record number of your random access file. If you were still using channel 1, your first record would be put into the random access file like this:
+                '''
+                ~~~                
+		   Put 1,1
+                ~~~
+                '''
+                The next record will become number 2, and so on until you fill up your telephone book. Here is a simple working example. When you have created enough records, type in "exit" when prompted to enter another name.
+                '''
+                ~~~                
+		   Open Random 1,"ADDRESS"
+		   Field 1,25 As NAME$,12 As TEL$
+		   INDEX=1
+		   Do
+			Input "Enter a name:;NAME$
+			If NAME$="exit" Then Exit
+			Input "Enter the phone number:;TEL$
+			Put 1,INDEX
+			Inc INDEX	
+		   Loop
+		   Close 1
+                ~~~
+                '''
+Having created your phone book, you will want to use it.
+            ]
+            "get":
+            [
+                This instruction reads a record stored in a random access file, after being told which channel to use and the number of the record to read. To read the first record you would use this:
+                '''
+                ~~~                
+		   Get 1,1
+                ~~~
+                '''
+                GET then loads this record into your field strings, and these strings may be manipulated as you like. Obviously you can only GET record numbers that have been PUT onto the disc.
+""
+Now try this example:
+                '''
+                ~~~                
+		   Open Random 1,"ADDRESS"
+		   Field 1,25 As NAME$,12 As TEL$
+		   Do
+			Input "Enter Record Number: ";INDEX
+			If INDEX=0 Then Exit
+			Get 1,INDEX
+			Print NAME$ : Print TEL$
+		   Loop
+		   Close 1
+                ~~~
+                '''
+            ]
+            "lof":
+            [
+                LOF returns the length of an open file, and it would be pointless to use this function with devices other than the current disc.
+            ]
+            "eof":
+            [
+                This tests to see if the end of a file has been reached at the current reading position, returning -1 for yes and 0 if this has not happened.
+
+            ]
+            "pof":
+            [
+                This changes the current reading or writing position of an open file. For example, the following line sets the read/write position to 1,000 characters past the start of the file:
+                '''
+                ~~~                
+		   Pof(1)=1000
+                ~~~
+                '''
+Because disc drives are inherently random, this may be used to provide a crude form of random access with
+sequential files.
+            ]
+            "close":
+            [
+                You must remember to always CLOSE a file after you have finished with it. If you forget to do this, any changes that have been made to the file will be lost.
+
+            ]
+            "parent":
+            [
+                Because directories can be "nested" inside one another, files can be organised according to a range of categories.
+Although this is very convenient, it is not difficult to get lost in a maze of nested files. In the following example, the
+folder named FOLDERA is stored in the main directory (the "root" directory) and can be regarded as the "parent" of
+FOLDERB and FOLDERD. Similarly, FOLDERB is the parent of FOLDERC:
+                '''
+                ~~~                
+		FOLDERA/
+		  FOLDER B/
+		    FOLDERC/
+		  FOLDERD/
+                ~~~
+                '''
+The effect of the PARENT command is to load the current directory with the parent of the present folder you are
+using. By using this command repeatedly, you are able to get back to the original root directory simply and quickly.
+For example:
+                '''
+                ~~~                
+		   Dir$="AMOSPro_Examples:Objects/"
+		   Dir
+		   Parent
+		   Dir
+                ~~~
+                '''
+            ]
+            "rename":
+            [
+                This command is used to change the name of an existing file. If your choice of new filename is already in use by another file, the appropriate error message will be given.
+                '''
+                ~~~                
+		   Rename "Ancient" To "Modern"
+                ~~~
+                '''
+            ]
+            "kill":
+            [
+                Be extremely careful with this command. It obliterates the named file from the current disc, once and for all. The file that is erased with this command cannot be retrieved. Kill "Permanently"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "open_port":
+            [
+                The three versions of the OPEN PORT command are shown above, and they are used to open a channel to the
+Parallel Interface, or the RS232 Port, or the printer chosen in your preferences settings. All standard sequential file
+commands can be performed as usual, except for commands that are specific to disc operations, such as LOF and
+POF.
+""
+This example would print out ten lines via the device connected to the Amiga's RS232 port:
+                '''
+                ~~~                
+		   Open Port 1,"SER:
+		   For X=0 To 10
+			Print #1 ,"Greetings from AOZ Studio!"
+		   Next X
+		   Close 1
+                ~~~
+                '''
+            ]
+            "port":
+            [
+                The PORT function is used to test the status of readiness of the specified channel. If the device is waiting to be read a value of -1 (True) is returned, otherwise zero (False) is given.
+
+            ]
+            "drive":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "fsel$":
+            [
+                This file selection function allows you to choose the files you need directly from a disc, using the standard AOZ Studio file selector. In its simplest form, it operates like this:
+                '''
+                ~~~                
+		   Print Fsel$("*.IFF")
+                ~~~
+                '''
+The string held within the brackets is a path that sets the searching pattern, in that case an IFF file. The following optional parameters may also be included:
+""
+The optional default string is used to choose a filename that will be automatically selected if you press [Return] and abort the process.
+""
+Title$ and title2$ are optional text strings that set up a title to be displayed at the top of your file selector. For example:
+                '''
+                ~~~                
+		   F$=Fsel$("AMOSPro_Examples:Objects/*.Abk")
+		   If F$= Then Edit : Rem Return to editor if no file selected
+		   Load F$: Rem Load file and display first Bob
+		   Flash Off : Bob 1,100,100,1 : Get Bob Palette : Wait Vbl
+                ~~~
+                '''
+
+            ]
+            "dir$":
+            [
+                As explained in Chapter 10.2, DIR$ can hold the directory name that is to be used as the starting point for further disc operations, like this:
+                '''
+                ~~~                
+		   Dir$="Df0:Sounds/"
+		   Print Dir$
+                ~~~
+                '''
+            ]
+            "exist":
+            [
+                EXIST looks through the current directory of filenames and checks it against the filename in your given string. If the names match, then the file does exist and a value of -1 (true) will be reported, otherwise 0 (false) will be returned.
+""
+As well as checking for individual filenames, even if an idiotic name is given, EXIST will search for discs and
+devices as well. For example:
+                '''
+                ~~~                
+		   Print Exist("An idiotic name")
+		   Print Exist("DEMO:) : Rem Is a disc named DEMO available
+		   Print Exist("Df1:) : Rem Is the second floppy drive connected
+                ~~~
+                '''
+It is advisable to test for empty strings () separately, like this:
+                '''
+                ~~~                
+		   F$=Fsel$("*.IFF"," ","Load an IFF file")
+		   If F$= Then Edit : Rem return to editor if no file chosen
+		   If Exist(F$) Then Load Iff F$,0
+                ~~~
+                '''
+            ]
+            "file":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "file_length":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "dir":
+            [
+                The DIR command is used to examine the directory of the current disc and list all of its files on screen, like this:
+                '''
+                ~~~                
+		   Dir
+                ~~~
+                '''
+Any folders in the listing will be distinguished by a leading asterisk character *. The listing can be stopped at any time by pressing the [Space-bar] and then started again in the same way. Note that if you change discs without
+informing AOZ Studio and then try to get a directory listing, you may be presented with a system requester.
+The simple solution is to re-insert the requested disc and try again.
+            ]
+            "disc":
+            [
+                This function is used to return the amount of free space in the specified device. The string that is returned contains the name of the disc, followed by the amount of free space. Here is an example which splits the string:
+                '''
+                ~~~                
+		   A$=Disc Info$("Df0:)
+		   C=Instr(A$,":)
+		   N$=Left$(A$,C)
+		   A$=A$-N$
+		   D=Val(A$)
+	    	   Print "Name of the disc=";N$
+		   Print "Free space=";D
+                ~~~
+                '''
+            ]
+            "ldir":
+            [
+                These two commands are used in exactly the same way as DIR and DIR/W, as explained above, and they list the directory of the current disc to a printer.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "mask_iff":
+            [
+                The PICTURE function returns the precise format of the mask used by a picture, and it is used like this:
+                '''
+                ~~~                
+		   Mask Iff Picture
+		   Load Iff "Picture_Name"
+                ~~~
+                '''
+Here are some typical settings that can be used to load masked data from an IFF file:
+                '''
+                ~~~                
+		   Mask Iff %100 : Rem Load palette of picture only
+		   Mask Iff %10000 : Rem Load bitmaps only
+                ~~~
+                '''
+            ]
+            "command_line":
+            [
+		"TODO"
+            ]
+            "command_line$":
+            [
+                Data for hi-scores, messages, names and so on can be carried through to the next level of computer game by the following method.
+                ""
+Type in the next example program:
+                '''
+                ~~~                
+		   Rem Program 1
+		   Screen Open 0,640,200,4.Hires
+		   Rem greetings sent by previous program
+		   Print "Greetings from Program 2:;Command Line$
+		   Input "Please type in a greeting!";A$
+		   Command Line$=A$
+		   Print "Running Program 2!" : Wait 100
+		   Run "Program2.AMOS"
+                ~~~
+                '''
+Now save that example on a suitable disc, and name it "Program1.AMOS". Next, change that example program as
+follows:
+                '''
+                ~~~                
+		   Rem Program 2
+		   Screen Open 0.320,200,4,Lowres
+		   Rem Greetings sent by previous program
+		   Print "Greetings from Program 1:;Command Line$
+	   	   Input "Please type in a greeting!";A$
+		   Command Line$=A$
+		   Print "Running Program 1!"
+		   Wait 100
+		   Run "Program1.AMOS"
+                ~~~
+                '''
+            ]
+            "set_input":
+            [
+                SET INPUT is used to set which characters you want to input to end a line of data. Many computers need both a [Return] and [line feed] character at the end of each line, but the Amiga only needs a [line feed]. This means that if you wanted to import files from an ST via the serial cable, for example, unwanted [Return] characters would litter your input.
+                ""
+                SET INPUT solves this problem by allowing you to select two Ascii values as your end-of-line characters. If you prefer to use a single character only, make the second value a negative number. For example:
+                '''
+                ~~~                
+		   Set Input 10,-1 : Rem Standard Amiga format
+		   Set Input 13,10: Rem ST compatible format
+                ~~~
+                '''
+            ]
+            "frame_load":
+            [
+                Use this function to load one or more IFF frames directly into memory. The parameters in brackets are as follows:
+""
+The channel number is the number of an animation file that is currently opened using the OPEN IN command.
+""
+Next, specify the memory address or bank number where the frames are to be stored. If an address is specified, the
+entire file will be loaded into the chosen memory area, exactly like a BLOAD instruction. If you give a bank
+number, a new memory bank will be reserved automatically. It will hold your animation frames and be a permanent
+data bank in fast memory, called "IFF". Please note that bank numbers can range from 1 to 65535. To avoid
+overrunning your memory area and crashing the system, it is vital that enough space is reserved to hold the entire
+animation sequence in memory. The actual storage requirements may be calculated with the FRAME LENGTH
+function, which is explained later.
+""
+Finally, there is an optional parameter that specifies the number of animation frames to be loaded. If this number is
+omitted, only Frame 1 will be loaded, but if your request is greater than the total number of available frames, all of
+the images will be grabbed in the current file, if memory allows. This can be exploited to load entire sequences no
+matter what their length, by setting this optional parameter to an overlarge number, as no error will be generated.
+""
+FRAME LOAD returns the number of frames that have been successfully loaded into memory. This value may be
+saved into a variable once the animation has been loaded, and made use of when the sequence is to be played. For
+example:
+                '''
+                ~~~                
+		   Rem Open animation file for reading
+		   Open In 1,"AMOSPro_Tutorial:Iff_Anim/AMOS.Anim"
+		   Rem Load all frames in current file
+	   	   Rem use overlarge value of 1000 to grab all available images to bank 10
+	   	   N=Frame Load (1 To 10,1000)
+ 	 	   Close
+		   Rem N now holds the number of actual frames
+		   Print "Number of frames in this file is ";N
+                ~~~
+                '''
+            ]
+            "frame_play":
+            [
+                Use this function to display animations on screen at the appropriate points in your programs. Specify the memory address or bank number containing an IFF animation sequence that has already been loaded by FRAME LOAD. Please note that addresses must be even and that the first bytes must be a valid IFF Frame definition. Next specify the number of frames that you want to play.
+""
+The optional screen parameter is the identifier of a new screen to be created for the animation, and it can be used to automatically define a screen as the first frame of the animation to be displayed. If this screen number is omitted, an attempt will be made to use the current screen.
+""
+Please note that your new screen will not be set up for double buffering, and you should activate this directly from
+your program with the DOUBLE BUFFER command, if required. Also, the IFF animation will be displayed on the
+logical screen, and when using double buffering SCREEN SWAP must be employed, otherwise the animation will
+run invisibly in the background!
+""
+Once the FRAME PLAY function has been called, the start address of the next frame in the sequence will be
+returned, and this address can be used to display the following frame of the animation.
+For example:
+
+                '''
+                ~~~                
+		   Rem Play the first frame in Bank 10 using screen 0
+		   F=Frame Play(10,1,0)
+		   Double Buffer : Rem activate non automatic double buffer
+		   Rem Display next frame
+		   F=Frame Play(F,1)
+                ~~~
+                '''
+When the end of the animation sequence has been reached, your F variable points to the last frame of the animation.
+Because the exact number of frames is returned to the FRAME LOAD function, FRAME PLAY can be enclosed in
+a loop for simplicity, like this:
+
+                '''
+                ~~~                
+		   Open In 1,"AMOSPro_Tutorialiff_Anim/AMOS.Anim"
+		   L=Frame Load(1 To 10,1000)
+		   Close
+		   Rem Play first frame from Bank 0 and define new screen 0
+		   Do
+			P=Frame Play(10,1,0)
+			Double Buffer
+			For X=2 To L-1 : Rem Play sequence to the end
+		 	   P=Frame Play(P,1) : Rem Play next frame
+			   Screen Swap : Rem Make animation visible
+			   Wait Vbl : Wait Vbl : Wait Vbl
+		   	Next X
+		   Loop
+                ~~~
+                '''
+            ]
+            "iff_anim":
+            [
+               This function provides the most straightforward way of displaying a complete IFF animation sequence directly on
+screen. The "filename" must refer to a valid IFF animation saved in "compressed" (Mode 5) format. The screen
+number defines the screen to be created for the animation sequence. If the requested screen number already exists, it
+will be replaced by the new definition automatically. There is an optional parameter to set the number of times the
+animated sequence is to be played. If this number is omitted, the animation will be played once.
+""
+Remember that frame number 1 is the background screen that serves as the basis for the entire sequence, so that your
+animation will always re-start from frame number 2.
+""
+After the animation has been played the requested number of times it will stop. The memory consumed will
+automatically be released back to AOZ Studio for re-use.
+""
+If you have a disc containing an IFF animation file, place it into any drive and call up the standard file selector, like this:
+                '''
+                ~~~                
+		   Iff Anim Fsel$("**") To 0,10
+                ~~~
+                '''
+When the file is requested, your animation sequence will be loaded into screen 0 and cycled through ten times.
+""
+Direct IFF animation
+Because the standard AOZ Studio drawing commands may be used with IFF animations, you are provided
+with a range of functions for loading and manipulating animated sequences directly in your programs.
+            ]
+            "frame_length":
+            [
+                This function is used to calculate the precise amount of memory needed to hold the selected frames of an IFF animation file. To find the exact size of the required data area with FRAME
+""
+LENGTH, simply give the channel number of the IFF file previously opened with the OPEN IN command.
+""
+You may also specify the number of frames to be taken into consideration. If this number is omitted, only the first
+frame in the animation with be checked. Alternatively, if an overlarge number is specified, the exact memory
+requirements of all the frames in the current file will be returned.
+""
+FRAME LENGTH does not change the position of the file pointer, but leaves it at the start of the next animation
+frame to be loaded. So it can be used immediately before a FRAME LOAD command to check the memory
+requirement of your new animation. For example:
+
+                '''
+                ~~~                
+		   Open In 1 ,"AMOSPro_Tutorial:Iff_Anim/AMOS.Anim"
+		   Rem Load first frame only into memory
+		   L=Frame Length(1)
+		   Rem Reserve space for the frame in Bank 10
+		   Reserve As Work 10,L
+		   N=Frame Load(1 To 10)
+		   Close
+		   Print "Required memory for frame 1=";L
+                ~~~
+                '''
+            ]
+            "frame_skip":
+            [
+                This is exactly the same as FRAME PLAY, except that no output is made to the screen. FRAME SKIP omits any selected frames and returns the address of the next frame to be played in the sequence. The bank or address number of a valid IFF animation frame is given, followed by the number of frames to be skipped over.
+""
+Use FRAME SKIP carefully, because frames are stored relative to the existing screen background. This means that
+the animation will only re-commence when an identical frame is reached to the one currently being displayed.
+            ]
+            "frame_param":
+            [
+                This function returns the amount of time needed to successfully display an animation on screen, measured in 50ths
+of a second. It is used after FRAME PLAY or FRAME SKIP to delay the program until the screen has been totally
+re-drawn.
+""
+Deluxe Paint users may need to slow down the speed of AOZ Studio animations by one fiftieth of a second,
+in order to harmonise the display, like this:
+
+                '''
+                ~~~                
+		   Wait Form Param+1
+                ~~~
+                '''
+This has nothing to do with the Deluxe Paint package, but takes into account the extra efficiency of the AMOS
+Professional double buffering and copper calculations, when compared to the standard Workbench routines!
+            ]
+        }
+    }
+}

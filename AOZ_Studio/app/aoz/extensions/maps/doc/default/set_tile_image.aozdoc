@@ -1,0 +1,25 @@
+<i>Set Tile Image</i>
+<b>Set Tile Image</b> xxxxxxx
+=
+When you load a map and open a view, there is a direct reference between the *value* of the tile and the image taken out of the image bank and displayed.
+
+This instruction allows you to change the image assigned to the tiles of a specific value. AOZ keeps an internal reference table to perform the indirection.
+It does not affect the original map, just the view.
+
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Change the image of the tile the user is clicking on
+Do
+If Mouse Click
+I = Tile Test( "MapView", X Mouse, Y Mouse )
+If I >= 0 Then Set Tile Image "MapView", I, 1111
+End If
+Redraw View"MapView"
+Wait Vbl
+Loop
+@code
+

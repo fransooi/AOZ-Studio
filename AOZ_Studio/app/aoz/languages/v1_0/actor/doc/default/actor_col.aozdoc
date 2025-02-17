@@ -1,0 +1,40 @@
+<i>function:tests the collision between 2 actors</i>
+value=<b>Actor Col</b>(actor1, actor2)
+value=<b>Actor Col</b>(actor1$, actor2)
+value=<b>Actor Col</b>(actor1, actor2$)
+value=<b>Actor Col</b>(actor1$, actor2$)
+value=<b>Actor Col</b>(actor1, image$=name$)
+value=<b>Actor Col</b>(actor1$, image$=name$)
+value=<b>Actor Col</b>(actor1$, group$=name$)
+=
+Returns True if the actor1 is in collision with an other actor or an image, else False.
+=
+Example 1:
+@code
+Actor 1, StartX=0, EndX=1280, Duration=6000, Image$="ship.png"
+Actor 2, X=500,Image$="ship.png"
+Do
+If Actor Col( 1, 2 ) Then Boom : End // End of program on the collision between Actor 1 and Actor 2 
+Wait Vbl
+Loop
+@code
+=
+Example 2:
+@code
+Actor 1, StartX=0, EndX=1280, Duration=6000, Image$="magic.png"
+Actor 2, X=500, Image$="ship.png"
+Do
+If Actor Col( 1, Image$="ship" ) Then Boom : End // End of program on the collision between Actor 1 and an Actor with the "ship" image. 
+Wait Vbl
+Loop
+=
+Example 3:
+@code
+Actor 1, StartX=0, EndX=1280, Duration=6000, Image$="magic.png"
+Actor 2, X=500, Image$="monster1.png", Group$="badguy"
+Actor 3, X=200, Y = 200, Image$="monster2.png", Group$="badguy"
+Do
+If Actor Col( 1, Group$="badguy" ) Then Boom : End // End of program on the collision between Actor 1 and an Actor of the "badguy" group. 
+Wait Vbl
+Loop
+@code

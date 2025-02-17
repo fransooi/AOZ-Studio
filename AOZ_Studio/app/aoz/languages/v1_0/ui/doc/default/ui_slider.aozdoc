@@ -1,0 +1,24 @@
+<i>UI Slider</i>
+<b>UI Slider</b> xxxxxxx
+=
+The UI Slider lets the user swiftly slide through possible values spread over a desired range.
+@code
+// Display a default slider
+UI Slider "MySlider"
+
+// To get the selected slider value you can use the UI Value$ function
+Print UI Value$("MySlider")
+
+// You can update the slider value by setting its value parameter
+UI Slider "MySlider", value=30
+
+// You can also use the UI Value command to update the slider value
+UI Value "MySlider", value$="50"
+
+// Example range between 10 and 40 in 0.5 steps
+UI Slider "MySlider", y=400, onChange$="SLIDERCHANGE", min=10, max=40, step=0.5, width=600
+Procedure SLIDERCHANGE[ID$, VALUE]
+Print "Slider (min=10 max=40 step=0.5) Value:" + Str$(VALUE)
+End Proc
+@code
+

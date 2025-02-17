@@ -1,0 +1,19 @@
+<i>Set View Layer</i>
+<b>Set View Layer</b> xxxxxxx
+=
+Map files create by Titled contain several "layers" of tiles. It is a good idea to separate the layer in a game in different sections, like the ground, the obstacles or the ennemies.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 720		// Set the map display
+Redraw View "MapView"						// Display it
+Print View Layer( "MapView" )				// Will print "0"
+Wait Key
+
+Set View Layer "MapView", 1					// Change layer
+Redraw View "MapView"						// Display it
+Print View Layer( "MapView" )				// Will print "1"
+@code
+

@@ -1,0 +1,48 @@
+{
+  "name": "flex-tool-bar",
+  "main": "./lib/flex-tool-bar",
+  "version": "2.2.7",
+  "description": "Easily Customizable ToolBar for Atom",
+  "repository": "https://github.com/cakecatz/flex-toolbar",
+  "license": "MIT",
+  "keywords": [
+    "toolbar",
+    "tool-bar"
+  ],
+  "engines": {
+    "atom": ">=1.27.0 <2.0.0"
+  },
+  "dependencies": {
+    "atom-package-deps": "^7.2.3",
+    "change-case": "^4.1.2",
+    "cson": "^7.20.0",
+    "fs-plus": "^3.1.1",
+    "glob-to-regexp": "0.4.1",
+    "json5": "^2.2.0"
+  },
+  "package-deps": [
+    {
+      "name": "tool-bar"
+    }
+  ],
+  "consumedServices": {
+    "tool-bar": {
+      "versions": {
+        "^0 || ^1": "consumeToolBar"
+      }
+    }
+  },
+  "atomTestRunner": "./spec/runner",
+  "scripts": {
+    "test": "atom --test ./spec && npm run lint",
+    "lint": "remark . & eslint ."
+  },
+  "devDependencies": {
+    "@semantic-release/apm-config": "^8.0.0",
+    "atom-jasmine3-test-runner": "^5.2.2",
+    "eslint": "^7.22.0",
+    "remark-cli": "^9.0.0",
+    "remark-preset-lint-recommended": "^5.0.0",
+    "semantic-release": "^17.4.2"
+  }
+}

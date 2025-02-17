@@ -1,0 +1,215 @@
+// ############################################################################
+// AOZ Chat App V1.0
+// By Phil Bell
+// Created April 2022
+// phil@aozwithphil.com
+// ############################################################################
+// Uses The Google Firebase Platform for authentication and data storage
+// The Google Firestore Database is a NoSQL cloud database
+//
+// Login to your Firebase console here (you can create a free account)
+// https://console.firebase.google.com/
+//
+// Check out the Firebase documentation here:
+// https://firebase.google.com/docs/firestore
+//
+// Download the following guide for help with setting up a Firebase project
+// https://aozwithphil.com/download/AOZFirebaseQuickStartGuide.pdf
+// ############################################################################
+
+#useAssetsResources:False
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#fps:false
+#clean:true
+
+Curs Off: Flash Off
+Load Asset "resources/assets/css/main.css"
+Load Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+
+DEFAULT_PROFILE_IMAGE$ = "data:image/png;base64,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"
+Global DEFAULT_PROFILE_IMAGE$
+
+// Initialise Firebase
+// *********************************************************************
+// ** IMPORTANT !! DO NOT USE THESE CREDENTIALS IN YOUR OWN PROJECTS  **
+// *********************************************************************
+Firebase Init apiKey$ = "AIzaSyBxzrTj8lQhe1cwrtE9G5KtML0xLuDjeds", authDomain$ = "aoz-chat-app.firebaseapp.com", projectId$ = "aoz-chat-app", storageBucket$ = "aoz-chat-app.appspot.com", messagingSenderId$ = "192919215097", appId$ = "1:192919215097:web:a7de8aa22cb3d94c2a3b28"
+
+BUSY_STATE = false
+
+If FirebaseAuth AuthState() = false
+	// User is not signed in
+	Goto SIGN_IN
+End If
+
+MAIN:
+	UI Cls
+	MainScreen
+	DisplayUserDetails
+	HTML Element "txtChatText", OnKeyDown$ = "ON_CHAT_TEXT_KEY_DOWN"
+
+	SubscribeToChatMessageCollection
+
+	Do
+		If FirebaseAuth AuthState() = false
+			// User is not signed in or has signed out
+			Goto SIGN_IN
+		End If
+
+		// Show an overlay when Firebase is busy
+		If Firebase IsBusy() = true And BUSY_STATE = false
+			BUSY_STATE = true
+			UI TextBlock "txtBusyBackground", x=0, y=0, width=1920, height=1080, content$=""
+			UI Image "imgBusy", x=1920/2+25, y=30, width=50, height=50, src$="resources/assets/loading.gif"
+		End If
+
+		// Hide the overlay
+		If Firebase IsBusy() = false And BUSY_STATE = true
+			BUSY_STATE = false
+			UI Delete "txtBusyBackground"
+			UI Delete "imgBusy"
+		End If
+
+		Wait Vbl
+	Loop
+
+SIGN_IN:
+	UI Cls
+	UI TextBlock "txtSigninTitle", x=280, y=0, width=1318, height=129, fontSize=74, content$="Welcome to AOZ Chat", class$="text-light text-center"
+	UI TextBlock "txtSigninSubTitle", x=280, y=150, width=1318, height=60, fontSize=30, content$="Please sign in", class$="text-light text-center"
+	// Uses a built in user interface to sign in and also registers new users
+	// Additional configuration is required in the Authentication section in the Firebase console for the specified providers
+	// signInFlow$ is optional, remove if you dont want to signin flow to be displayed in a popup window
+	FirebaseAuth SignInWithBuiltInUI signInFlow$="popup", provider$="google,email", class$="built-in-ui"
+
+	// Wait here until the user is signed in
+	Do
+		If FirebaseAuth AuthState() = true
+			Goto MAIN
+		End If
+
+		Wait Vbl
+	Loop
+
+
+Procedure ON_CHAT_TEXT_KEY_DOWN[KEYCODE]
+	// Enter key pressed
+	If KEYCODE = 13
+
+		// Create a new Firebase document (held in memory) and return a reference to it, this can then be used to access the document fields
+		docRef$ = Firebase NewDocument$()
+
+		// Set the document field values
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "userId", value$ = FirebaseAuth UserID$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "message", value$ = UI Value$("txtChatText")
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "displayName", value$ = FirebaseAuth UserDisplayName$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "photoUrl", value$ = FirebaseAuth UserPhotoUrl$()
+		Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+
+		// Add the document to the Firebase 'chatMessage' collection, the collection is created if it doesnt already exist
+		Firebase DocumentAdd collection$ = "chatMessage", docRef$ = docRef$
+
+		// Remove the document from memory
+		Firebase DocumentDispose docRef$
+
+		UI Value "txtChatText", ""
+	End If
+End Proc
+
+Procedure SubscribeToChatMessageCollection
+	// Get a reference to a new query for the "chatMessage" Firestore database collection
+	queryRef$ = Firebase NewQuery$ (collection$ = "chatMessage", onData$="ON_CHAT_DATA_RECEIVED")
+
+	// Order the documents by created date in decending order
+	Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "created", direction$ = "desc"
+
+	// Listen to the results of the query, the onData$ event will be called each time
+	// the query results change (that is, when a document is added, removed, or modified)
+	// !! Important
+	// You should use "Firebase QueryDispose" to stop listening to the collection query
+	// when it is no longer needed. Use "Firebase QueryGet" if you only need to get the results one time
+
+	// We can limit the query results to 10 documents by setting the optional limit parameter
+	Firebase QuerySubscribe queryRef$, limit = 10
+End Proc
+
+Procedure ON_CHAT_DATA_RECEIVED[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	// Procedure is called when changes are detected in the collection query
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Delete only the UI Components that have the group$ param set as "messages"
+		UI Cls group$ = "messages"
+		UI Focus "txtChatText"
+
+		If DOCUMENT_COUNT > 0
+
+			yOffset = 0
+
+			For row = DOCUMENT_COUNT -1 to 0 Step -1
+				// Get the Firebase document ID for a specific row in the query results
+				// We then use the document ID to access the document fields
+				docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+				// Read the document fields using the Firebase document ID as a reference
+				displayName$ = Firebase QueryGetString$(QUERY_REF$, docId$, "displayName")
+				photoUrl$ = Firebase QueryGetString$(QUERY_REF$, docId$, "photoUrl")
+				userId$ = Firebase QueryGetString$(QUERY_REF$, docId$, "userId")
+				message$ = Firebase QueryGetString$(QUERY_REF$, docId$, "message")
+
+				// By default, ServerTimeStamp fields are returned as "yyyy-mm-ddTHH:mm:ss"
+				// we can use the format$ param to reformat the date
+				created$ = displayName$ + " " + "<span class='text-muted'>" + Firebase QueryGetDate$(QUERY_REF$, docId$, "created", format$="dddd [at] HH:mm") + "</span>"
+
+				// Set a default photo if not available
+				If photoUrl$ = ""
+					photoUrl$ = DEFAULT_PROFILE_IMAGE$
+				End If
+
+				// Display the data, we add each UI component setting the group$ param to "messages"
+				// We can then delete only the "messages" UI components using - UI Cls group$="messages"
+				UI Image "photoUrl" + docId$, x=180, y=210 + yOffset * 75, width=50, height=50, src$=photoUrl$, group$="messages", class$="user-image"
+
+				UI TextBlock "created" + docId$, x=240, y=205 + yOffset * 75, width=1500, height=33, fontSize=15, content$=created$, class$="text-light", group$="messages"
+				UI TextBlock "message" + docId$, x=240, y=228 + yOffset * 75, width=1500, content$=message$, class$="chat-text", group$="messages"
+
+				// Only show the delete button for messages that belong to the signed in user
+				If userId$ = FirebaseAuth UserID$()
+					// Use the Document ID for the button ID - we can then use the button ID to delete the document
+					UI Button docId$, x=1750, y=200 + yOffset * 75, width=50, height=70, content$="", fontSize=40, iconClass$="bi bi-trash-fill", class$="btn text-danger", onClick$="ON_DELETE_CLICK", group$="messages"
+				End If
+
+				Add yOffset, 1
+			Next row
+		End If
+
+	End If
+End Proc
+
+Procedure ON_DELETE_CLICK[ID$]
+	// The ID$ of the button is the Document ID of the chatMessage document
+	Firebase DocumentDelete collection$ = "chatMessage", docId$ = ID$
+End Proc
+
+Procedure ON_SIGN_OUT_CLICK[ID$]
+    FirebaseAuth SignOut
+End Proc
+
+Procedure DisplayUserDetails
+	UI TextBlock "txtWelcome", x=1660, y=50, width=250, content$="Welcome, " + FirebaseAuth UserDisplayName$(), class$="text-light"
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure MainScreen
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtChatText", x=180, y=980, width=1614, class$="form-control"
+UI Button "btnSignOut", x=1660, y=100, width=150, height=50, content$="Sign Out", class$="btn btn-danger", onClick$="ON_SIGN_OUT_CLICK"
+UI TextBlock "txtTitle", x=320, y=0, width=1318, height=129, fontSize=74, content$="AOZ Chat", class$="text-light text-center"
+End Proc

@@ -1,0 +1,19 @@
+<i>Set View Map</i>
+<b>Set View Map</b> xxxxxxx
+=
+For complex games, you may need to change the map affected to each view. This function allows you to recover which tileset is used in which view...
+@code
+Load Map "mymap.json"
+Load Map "mysecondmap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 720		// Set the map display
+Redraw View "MapView"						// Display it
+Wait Key
+
+// Replace the tileset with the other one, changing all graphics on screen
+Set View Map "MapView", "mysecondmap"		// Change the map
+Redraw View "MapView"
+
+

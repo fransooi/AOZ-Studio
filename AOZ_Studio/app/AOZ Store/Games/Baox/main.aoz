@@ -1,0 +1,473 @@
+' *****************************************************************************
+' *
+' *   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+' *  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+' *  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+' *  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+' *  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+' *  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+' *
+' *****************************************************************************
+' *  BAOX v1.0
+' *  Example of using maps in AOZ
+' *
+' *  AOZ Code, Graphics and Musics by Baptiste BIDEAUX and Francois Lionet - January/December 2020
+' *
+' *  Levels by François Marques, Eric F Tchong, Dries de Clercq & Péter Asztalos
+' *  For more levels, visit: https://www.sourcecode.se/sokoban/levels
+' *
+' *  Tips !: To skip a level, press SPACE Bar
+
+#useAssetsResources:False   //keep compatibility with the AOZ Drive behavior
+#googleFont: "Graduate"
+#clean:true
+
+Curs Off: Flash Off : Cls 0
+Set Font 1, 40
+Palette $000000, $FFFFFF, $FDB82B
+Rem Loading musics mod
+
+Load Asset "resources/assets/mods/suspect_groove.xm", "title"
+Track Load "resources/assets/mods/inlive.mod", "game"
+Track Loop On
+
+GAME_TITLE:
+Cls 0
+Track Stop
+
+Rem Variables
+LVL$ = "" : M = 0 : PX = 0 : PY = 0 : PT = 0 : X = 0 : Y = 0 : KPRESS = 1
+ZONEFREE = 0 : PIMG = 10 : T = -1 : T2 = -1 : TX = 0 : TY = 0 : TV$ = "" : TV2$ = "" : OKMOVE = 0
+
+Rem Gamepads connection
+CONNECTED = Gamepad Connected( 0 )
+
+Rem Lecture de la musique de présentation
+Track Play "title", 0
+
+Rem
+Rem Presentation
+Rem
+
+Rem Image de fond
+Paste Bob 0, 0, 25
+
+Rem Attente de l'appui d'une touche (1 ou 2)
+While LVL$ = ""
+	A$ = Inkey$
+	If A$ = "1" Or Gamepad Button( 0, 0 ) And KPRESS = 0 Then KPRESS = 1 : LVLNAME$ = "AKK_Informatika" : LVL$ = "maps/AKK_Informatika.aozmap" // BJF
+	If A$ = "2" Or Gamepad Button( 0, 1 ) And KPRESS = 0 Then KPRESS = 1 : LVLNAME$ = "demo" : LVL$ = "maps/demo.tmx" // BJF
+	If A$ = "" And Gamepad Button( 0, 0 ) = False And Gamepad Button( 0, 1 ) = False Then KPRESS = 0
+	Wait Vbl
+Wend
+
+Rem Efface l'écran et arrête la musique en cours
+Cls 0 : Track Stop
+
+Rem Chargement des données des niveaux choisi par le joueur
+Load Map LVL$
+If LVLNAME$ = "demo" Then Create Tileset LVLNAME$, 64, 64, 1, 25
+Open View "view1", LVLNAME$, LVLNAME$, 0
+
+Rem
+Rem Configuration des tuiles pour la demo TILED
+Rem
+If LVL$ = "maps/demo.tmx"
+	Rem Valeurs des tuiles pour TILED
+	EMPTY = 0 : GROUND = 6 : DEPOT = 3 : ONDEPOT = 2 : FAKEB = 4 : PLY = 7 : BOOX = 5 : WALL = 1
+
+	Rem Taille des tuiles
+	Resize Tiles "view1", 64, 64
+
+	Rem Assocation tuile/ numéro image
+	Set Tile Image "view1", GROUND, 6
+	Set Tile Image "view1", DEPOT, 3
+	Set Tile Image "view1", ONDEPOT, 2
+	Set Tile Image "view1", FAKEB, 4
+	Set Tile Image "view1", PLY, 6
+	Set Tile Image "view1", BOOX, 5
+	Set Tile Image "view1", WALL, 1
+	Set Tile Image "view1", EMPTY, 11
+Else
+	Rem Valeurs des tuiles par défaut
+	GROUND = Asc( "0" ) : DEPOT = Asc( "." ) : ONDEPOT = Asc( "*" ) : FAKEB = Asc( "+" ) : PLY = Asc( "@" ) : BOOX = Asc( "$" ) : WALL = Asc( "#" ): EMPTY = Asc( "-" )
+	Set Tile Image "view1", GROUND, 6
+End If
+
+Rem Lecture la musique du jeu
+Track Play "game",0
+
+GAME_START:
+	Rem Zone d'affichage des maps
+	Open View "view1", LVLNAME$, LVLNAME$, 0
+	W = Map Width( "view1" ) * Tile Width( "view1" )
+	H = Map Height( "view1" ) * Tile Height( "view1" )
+	Display View "view1", Screen Width / 2 - W / 2, Screen Height / 2 - H / 2, W, H
+
+	Rem Affiche la première map
+	Gosub CHANGE_MAP
+	GPRESET = True
+
+GAME_LOOP:
+	A$ = ""
+	Do
+		Rem Récupère l'état du clavier
+		Rem Retrieves keyboard status
+		A$ = Inkey$
+		K = ScanCode()
+		{
+	//		if(this.vars.K > 0) { console.log( this.vars.K ); }
+		}
+		Rem Récupère les axes du gamepad 0
+		Rem Retrieves the axes of gamepad 0
+		Rem When in a neutral position, the Gamepad Axis(n,n) function may NOT return 0.
+		Rem Often the neutral value is something like 5% or less.
+		Rem Since we're only using digital values anyway Int() works great here.
+		VALUEV =  Int( Gamepad Axis( 0, 1 ) )
+		VALUEH =  Int( Gamepad Axis( 0, 0 ) )
+
+		Rem Gestion des contrôles
+		Rem Control Management
+		If GPRESET // BJF added "j" functions
+			If K = 38 Or JUp( 0 ) And KPRESS = 0 Then KPRESS = 1 : Gosub PLY_UP ' Up
+			If K = 40 Or JDown( 0 ) And KPRESS = 0 Then KPRESS = 1 : Gosub PLY_DOWN ' Down
+			If K = 37 Or JLeft( 0 ) And KPRESS = 0 Then KPRESS = 1 : Gosub PLY_LEFT ' Left
+			If K = 39 Or JRight( 0 ) And KPRESS = 0 Then KPRESS = 1 : Gosub PLY_RIGHT ' Right
+			' X to quit (restart)
+		/*
+			if K=38 or jUp(0) VALUEV < 0 then Gosub PLY_UP: ' Up
+			if K=40  or VALUEV > 0 then Gosub PLY_DOWN: ' Down
+
+			if K=37 or VALUEH < 0 then Gosub PLY_LEFT: ' Left
+			if K=39 or VALUEH > 0 then Gosub PLY_RIGHT: ' Right */
+		End If
+		If A$ = "" And K = 0 And Gamepad Button( 0, 0 ) = False And Gamepad Button( 0, 1 ) = False And JUp( 0 ) = False And JDown( 0 ) = False And JLeft( 0 ) = False And JRight( 0 ) = False Then KPRESS = 0
+
+		Rem On autorise un autre déplacement si aucune touche ou gamepad n'est actionné
+		Rem Cette routine gère le déplacament coup à coup du joueur
+		Rem Another move is allowed if no key or gamepad is pressed.
+		Rem This routine manages the player's move from move to move.
+		Rem This makes it awkward if using a jostick vs. a digital pad.
+		If K = 0 And VALUEV = 0 And VALUEH = 0
+			If GPRESET = False Then GPRESET = True
+		Else
+			GPRESET = False
+		End If
+
+		Rem Si "X" est appuyé, quitte la partie et retour au titre
+		Rem X exits the game
+		If Lower$(A$)="x" // BJF
+			Rem Cache le Bob du joueur
+			Rem Hide the player's Bob
+			Bob 1, -100, -100, PIMG
+
+			Rem Ferme la zone d'affiche des maps
+			Rem Close the map display area.
+			Close View "view1"
+
+			Goto GAME_TITLE
+		End If
+
+		Rem Si "R" est appuyé, recommence le
+		Rem If "R" is pressed, restarts the level.
+		If A$="r"
+			Gosub CHANGE_MAP
+			Goto GAME_LOOP
+		End If
+
+		Rem ASTUCE: Si la barre d'espace est appuyée, passe au niveau supérieur
+		Rem TIP: If the space bar is pressed, move to the next level.
+		If A$=" "
+			M=M+1
+			Gosub CHANGE_MAP
+		End If
+
+		Rem Affichage du joueur à l'écran
+		Rem Player on-screen display.
+		Redraw View "view1"
+		Bob 1, PX, PY, PIMG
+
+		Rem Vérifie si toutes les caisses ont été placé sur les zones
+		Rem Si oui, écran de fin de niveau
+		Rem Checks if all crates have been placed on the zones.
+		Rem If yes, end of level screen.
+		If ZONEFREE = 0 Then Goto LEVEL_COMPLETED
+
+		Wait Vbl
+	Loop
+
+PLY_UP:
+	Rem
+	Rem Déplacement du joueur vers le haut
+	Rem Moving the player up.
+	Rem
+	If PIMG <> 10
+		PIMG = 10
+	Else
+		Rem On teste les 2 tuiles de décor au dessus du joueur
+		Rem We test the 2 decoration tiles on top of the player.
+		T = Tile Test( "view1", PX, PY - Tile Height( "view1" ) )
+		T2 = Tile Test( "view1", PX, PY - ( Tile Height( "view1" ) * 2 ) )
+		Rem Teste si le joueur peut se déplacer
+		Rem Tests if the player can move.
+		OKMOVE = 0 : Gosub TEST_MOVE
+		If OKMOVE Then PY = PY - Tile Height( "view1" )
+	End If
+	Return
+
+PLY_DOWN:
+	Rem
+	Rem Déplacement du joueur vers le bas
+	Rem Moving the player down.
+	Rem
+	If PIMG <> 8
+		PIMG = 8
+	Else
+		Rem On teste les 2 tuiles de décor en dessous du joueur
+		Rem On test the 2 docoration tiles under the player.
+		T = Tile Test( "view1", PX, PY + Tile Height( "view1" ) )
+		T2 = Tile Test( "view1", PX, PY + ( Tile Height( "view1" ) * 2 ) )
+
+		Rem Teste si le joueur peut se déplacer
+		Rem Tests if the player can move.
+		OKMOVE = 0 : Gosub TEST_MOVE
+		If OKMOVE Then PY = PY + Tile Height( "view1" )
+	End If
+	Return
+
+PLY_LEFT:
+	Rem
+	Rem Déplacement du joueur vers la gauche
+	Rem Moving the player to the left.
+	Rem
+	If PIMG <> 9
+		PIMG = 9
+	Else
+		Rem On teste les 2 tuiles de décor à gauche du joueur
+		Rem We test the 2 decoration tiles to the left of the player.
+		T = Tile Test( "view1", PX - Tile Width( "view1" ), PY )
+		T2 = Tile Test( "view1", PX - ( Tile Width( "view1" ) * 2 ), PY )
+
+		Rem Teste si le joueur peut se déplacer
+		Rem Tests if the player can move.
+		OKMOVE = 0 : Gosub TEST_MOVE
+		If OKMOVE Then PX = PX - Tile Width( "view1" )
+	End If
+	Return
+
+PLY_RIGHT:
+	Rem
+	Rem Déplacement du joueur vers la droite
+	Rem Moving the player to the right.
+	Rem
+	If PIMG <> 7
+		PIMG = 7
+	Else
+		Rem On teste les 2 tuiles de décor à droite du joueur
+		T = Tile Test( "view1", PX + Tile Width( "view1" ), PY )
+		T2 = Tile Test( "view1", PX + ( Tile Width( "view1" ) * 2 ), PY )
+
+		Rem Teste si le joueur peut se déplacer
+		OKMOVE = 0 : Gosub TEST_MOVE
+		If OKMOVE Then PX = PX + Tile Width( "view1" )
+	End If
+	Return
+
+TEST_MOVE:
+
+	Rem Si on est pas au bord de la map
+	Rem If we are not at the edge of the map.
+	If T <> -1
+		Rem On récupère la valeur de la tuile
+		Rem We recover the value of the tile.
+		TV = Tile Value( "view1", T )
+
+		Rem Quel est ce décor ?
+		Rem What is this decor?
+		If TV = GROUND Or TV = DEPOT Or TV = PLY Or TV = FAKEB
+			Rem Le joueur peut se déplacer (sol, zone de dépot ou départ du joueur
+			Rem The player can move (ground, drop zone or player's start)
+			OKMOVE = 1
+		Else
+			Rem Il y a un obstacle sur le chemin à tester (mur, caisse...)
+			Rem There is an obstacle on the path to be tested (wall, box, etc.).
+			If TV <> WALL And T2 <> -1
+				TV2 = Tile Value( "view1", T2 )
+
+				Rem Quel est cet obstacle ?
+				Rem What is this obstacle?
+				If TV2 = GROUND Or TV2 = DEPOT Or TV2 = PLY Or TV2 = FAKEB
+					Gosub MOVE_TILES
+					OKMOVE = 1
+				End If
+			End If
+		End If
+	End If
+	Return
+
+MOVE_TILES:
+	Rem
+	Rem Le joueur pousse une caisse
+	Rem
+
+	Rem Pousse une caisse normale
+	If TV = BOOX
+
+		Rem Si la caisse est poussée vers une zone de dépot.
+		If TV2 = DEPOT Or TV2 = FAKEB Then TV = GROUND: TV2 = ONDEPOT : ZONEFREE = ZONEFREE - 1
+
+		Rem Si la caisse est poussée sur le sol.
+		If TV2 = GROUND Or TV2 = PLY Then TV = GROUND : TV2 = BOOX
+
+		Rem Mise à jour de la map
+		Set Tile Value "view1", T, TV
+		Set Tile Value "view1", T2, TV2
+		Return
+	End If
+
+	Rem Pousse une caisse placée sur une zone de dépôt
+	If TV = ONDEPOT
+
+		Rem Si la caisse est poussée vers une zone de dépot...
+		If TV2 = DEPOT Or TV2 = FAKEB Then TV = DEPOT : TV2 = ONDEPOT
+
+		Rem Si la caisse est poussée sur le sol.
+		If TV2 = GROUND Or TV2 = PLY Then TV = DEPOT: TV2 = BOOX : ZONEFREE = ZONEFREE + 1
+
+		Rem Mise à jour de la map
+		Set Tile Value "view1", T, TV
+		Set Tile Value "view1", T2, TV2
+		Return
+	End If
+	Return
+
+Rem
+Rem Affiche la map courante
+Rem
+CHANGE_MAP:
+
+	Rem Remise à zéro des variables de base
+	X = 0 : Y = 0 : PIMG = 10 : ZONEFREE = 0
+
+	Rem Cache le Bob du joueur et le panneau "You Did It!"
+	Bob 1, -1280, -720, PIMG
+	Bob 2, -1280, -720, 24
+
+	Rem Branchement sur l'écran de fin
+	Rem Si on a parcouru tous les tableaux
+	If M = Layer Count( "view1" ) Then Goto GAME_END
+
+	Rem Ecran N° du niveau
+	Cls 0 : Paper 0
+	Ink 2 : Text 640, 350, "LEVEL" + Str$( M + 1 ) + " /" + Str$( Layer Count( "view1" ) ), "#center"
+	Ink 1 : Text 640, 480, "<< Controls >>", "#center"
+
+	Rem Message en fonction de la connection du gamepad
+	If Gamepad Connected( 0 )
+		Text 640, 550, "Gamepad or Arrows keys to move.", "#center"
+		Text 640, 600, "Press FIRE button or SPACE to play", "#center"
+	Else
+		Text 640, 550, "Arrows keys to move.", "#center"
+		Text 640, 600, "Press SPACE to play", "#center"
+	End If
+
+	Text 640, 650, "R to restart. X to quit game.", "#center"
+	DOWN = False
+
+	Rem attente d'une action du joueur
+	Do
+		A$ = Inkey$
+		K = ScanCode()
+
+		If A$ = "" And K = 0 And Gamepad Button( 0, 0 ) = False And Gamepad Button( 0, 1 ) = False And JUp( 0 ) = False And JDown( 0 ) = False And JLeft( 0 ) = False And JRight( 0 ) = False Then KPRESS = 0
+		If ( A$ <> "" Or Gamepad Button( 0, 0 ) Or Gamepad Button( 0, 1 ) ) And KPRESS = 0 Then KPRESS = 1 : Goto SUITE
+		Wait Vbl
+	Loop
+	SUITE:
+	Cls
+
+	Rem Branchement de la map M à la zone d'affichage
+	Set View Layer "view1", M
+	Cls
+
+	Rem Récupère le nombre de zone de dépot pour les caisses
+	Rem restants à combler sur le tableau
+	ZONEFREE = Tile Count( "view1", DEPOT )
+	ZONEFREE = ZONEFREE + Tile Count( "view1", FAKEB )
+
+	Rem Recherche la position du joueur sur la map
+	PT = Tile First( "view1", PLY )
+
+	Rem Position du joueur sur la Map
+	If PT <> -1
+		PX = Tile X( "view1", PT )
+		PY = Tile Y( "view1", PT )
+	Else
+		PT = Tile First( "view1", FAKEB )
+		If PT <> -1
+			PX = Tile X( "view1", PT )
+			PY = Tile Y( "view1", PT )
+		Else
+			{
+				alert( 'Aucun joueur installé dans le niveau ' + ( this.vars.M + 1 ) + '.' );
+			}
+			End
+		End If
+	End If
+
+	Rem Positionne l'offset de la map à son origine
+	Offset View "view1", 0, 0
+
+	Rem Affiche le Bob du joueur
+	Bob 1, PX, PY, PIMG
+	Return
+
+LEVEL_COMPLETED:
+	Rem
+	Rem Niveau terminé
+	Rem
+	Wait 0.5
+	Bob 1, PX, PY, PIMG
+	Bob 2, 343, 163, 24
+	DOWN = False
+
+	Rem Attente d'une action du joueur
+	Do
+		A$ = Inkey$
+		K = ScanCode()
+
+		If A$ = "" And K = 0 And Gamepad Button( 0, 0 ) = False And Gamepad Button( 0, 1 ) = False And JUp( 0 ) = False And JDown( 0 ) = False And JLeft( 0 ) = False And JRight( 0 ) = False Then KPRESS = 0
+		If A$ <> "" Or Gamepad Button( 0, 0 ) Or Gamepad Button( 0, 1 ) And KPRESS = 0
+			KPRESS = 1
+			M = M + 1
+			Gosub CHANGE_MAP
+			Goto GAME_LOOP
+		End If
+		Wait Vbl
+	Loop
+
+GAME_END:
+	Rem
+	Rem Ecran de fin
+	Rem
+
+	Rem Cache le Bob du joueur et le message de fin de niveau "You Did It!"
+	Bob 1, -1280, -720, PIMG
+	Bob 2, -1280, -720, 24
+
+	Rem Ferme la zone d'affiche des maps
+	Close View "view1"
+
+	Rem
+	Rem Textes de fin
+	Rem
+	Cls 0 : Paper 0
+	Ink 2 : Text 640, 300, "CONGRATULATIONS!","#center"
+	Text 640, 350, "================","#center"
+	Ink 1 :	Text 640, 450, "You have completed all levels.","#center"
+	Text 640, 550, "Press a key to replay","#center"
+
+	Rem Retour à la présentation
+	Repeat Until Key State <> 0 Or Fire( 0 )
+	// Wait Key
+	Goto GAME_TITLE

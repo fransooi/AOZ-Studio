@@ -1,0 +1,80 @@
+.aoz.auth-ui {
+  background-color: #235f7e;
+  color: white;
+  width: 508px; }
+  .aoz.auth-ui::after {
+    background-color: white;
+    mask: url(lucie.svg) bottom right no-repeat, url(stars.svg) 20px 160px no-repeat;
+    -webkit-mask: url(lucie.svg) bottom right no-repeat, url(stars.svg) 20px 160px no-repeat;
+    mask-size: 50%, 10%;
+    -webkit-mask-size: 50%, 10%;
+    color: white;
+    content: '';
+    display: inline-block;
+    height: 100%;
+    opacity: .22;
+    position: absolute;
+    right: 10px;
+    bottom: 30px;
+    pointer-events: none;
+    width: 100%; }
+  .aoz.auth-ui > h2 {
+    background: url(aoz-studio.svg) center 12px no-repeat;
+    background-size: auto 80px;
+    padding-top: 110px; }
+  .aoz.auth-ui > ul.fieldset > li:not(.remember-me) {
+    margin: 12px 103px 12px 58px; }
+    .aoz.auth-ui > ul.fieldset > li:not(.remember-me) > input {
+      color: white;
+      padding: 0 10px 0 55px; }
+      .aoz.auth-ui > ul.fieldset > li:not(.remember-me) > input::placeholder {
+        color: #ffdd99; }
+    .aoz.auth-ui > ul.fieldset > li:not(.remember-me) > label {
+      background: #ffab00;
+      border: 20px solid #ffab00;
+      border-radius: 20px;
+      position: relative; }
+      .aoz.auth-ui > ul.fieldset > li:not(.remember-me) > label::after {
+        background-color: white;
+        mask-position: 12px center;
+        -webkit-mask-position: 12px center;
+        mask-repeat: no-repeat;
+        -webkit-mask-repeat: no-repeat;
+        mask-size: 26px auto;
+        -webkit-mask-size: 26px auto;
+        content: '';
+        height: calc(100% + 40px);
+        left: -20px;
+        position: absolute;
+        top: -20px;
+        width: calc(100% + 40px); }
+  .aoz.auth-ui > ul.fieldset > .email > label::after {
+    mask-image: url(username.svg);
+    -webkit-mask-image: url(username.svg); }
+  .aoz.auth-ui > ul.fieldset > .confirm-email > label::after {
+    mask-image: url(email.svg);
+    -webkit-mask-image: url(email.svg); }
+  .aoz.auth-ui > ul.fieldset > .password > label::after {
+    mask-image: url(password.svg);
+    -webkit-mask-image: url(password.svg); }
+  .aoz.auth-ui > ul.fieldset > .confirm-password > label::after {
+    mask-image: url(confirm-password.svg);
+    -webkit-mask-image: url(confirm-password.svg); }
+  .aoz.auth-ui > ul.actions > li > button {
+    color: white; }
+  .aoz.auth-ui > ul .close > button,
+  .aoz.auth-ui > ul .remember-me > input {
+    background-color: #8da4b0;
+    border-color: #ffab00; }
+    .aoz.auth-ui > ul .close > button::before,
+    .aoz.auth-ui > ul .remember-me > input::before {
+      background-color: #17455e; }
+  .aoz.auth-ui > .messages > li {
+    border-radius: 20px;
+    border: 1px solid; }
+    .aoz.auth-ui > .messages > li.error {
+      background-color: #f40;
+      border-color: #620; }
+    .aoz.auth-ui > .messages > li.information {
+      background-color: #4b0;
+      border-color: #150; }

@@ -1,0 +1,121 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Timer and Time Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Interval
+@description:Instructions and functions to manage the interval in AOZ
+@author:Baptiste Bideaux
+doc*/
+
+//
+// Initialization
+//
+{
+	this.aoz.INTERVAL = this;
+	this.aoz.INTERVAL.utilities = aoz.utilities;
+	this.aoz.INTERVAL.banks = aoz.banks;
+	
+	this.setAOZInterval = function( delay, procName )
+	{
+		var self = this;
+		var id = setInterval( function()
+		{
+			self.callAOZProc( procName, id );			
+		}, delay );
+		return id;
+	};
+	
+	this.callAOZProc = function( procName, id )
+	{
+		this.aoz.runProcedure( procName, { ID: id } );	
+	};
+	
+	this.clearAOZInterval = function( id )
+	{
+		clearInterval( id );
+	}	
+}
+
+/**api
+@name:Set Interval
+@description:Call a procedure all the N milliseconds, and return its ID
+@syntax:=Set Interval( delay in milliseconds, name of the AOZ procedure )
+@param:delay:integer:Delay in milliseconds to call the procedure
+@param:procName$:string:Name of the AOZ procedure to call
+@return:integer:ID of the interval
+@compatible: aoz, stos, amos
+@content:
+This example displays a "Hello World" message all the seconds...
+
+~~~
+A = Set Interval( 1000, "HELLO" )
+
+Procedure HELLO[ ID ]
+	Print "Hello World!"
+End Proc
+
+~~~
+api*/
+Function Set Interval, delay, procName$
+{
+	#errors
+}
+End Function( { this.aoz.INTERVAL.setAOZInterval( %delay, %procName$ ) } )
+
+/**api
+@name:Clear Interval
+@description:Delete a process setted with the Set Interval function. The AOZ procedure associated will not called any more. 
+@syntax:Clear Interval id
+@param:id:integer:The ID returned by the Set Interval Function
+@compatible: aoz, stos, amos
+@content:
+This example displays a "Hello World" message during 5 seconds and delete the process...
+
+~~~
+A = Set Interval( 1000, "HELLO" )
+TM = 0 : Global TM
+Do
+	Wait Vbl
+Loop
+
+Procedure HELLO[ ID ]
+	Print "Hello World!"
+	TM = TM + 1
+	If TM = 5 Then Clear Interval ID : Print "Interval deleted"
+End Proc
+
+~~~
+api*/
+Instruction Clear Interval, id
+{
+	#errors
+	this.aoz.INTERVAL.clearAOZInterval( %id );
+}
+End Instruction

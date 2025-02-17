@@ -1,0 +1,7 @@
+<i>On Menu On</i>
+<b>On Menu On</b> xxxxxxx
+=
+To activate the automatic menu system created by the ON MENU PROC, GOSUB or GOTO commands, simply
+give the ON MENU ON command. After a subroutine has been accessed in this way, the system is automatically
+disabled. Therefore you must reactivate the system with ON MENU ON before returning to the main program.
+

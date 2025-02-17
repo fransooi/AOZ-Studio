@@ -1,0 +1,21 @@
+<i>Leaderboard Update</i>
+<b>Leaderboard Update</b> xxxxxxx
+=
+When using the "local" engine, the leaderboard entry will only be updated if the value is greater than the players previous value in the leaderboard.
+
+For the "playfab" engine, the leaderboard behaviour can be configured in the PlayFab Developer Console.
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Leaderboard Load leaderboardName$="Level 1", onLoaded$="ON_LEADERBOARD_LOADED"
+
+SCR$ = ""
+Input "Enter New Score For Level 1"; SCR$
+Leaderboard Update leaderboardName$ = "Level 1", value = Val(SCR$)
+
+If Player ErrorCode() <> 0
+Print Player ErrorMessage$()
+Else
+Print "The leaderboard has been updated"
+End If
+@code
+

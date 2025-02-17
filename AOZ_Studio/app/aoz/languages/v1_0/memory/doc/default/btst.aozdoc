@@ -1,0 +1,16 @@
+<i>BTst</i>
+<b>BTst</b> xxxxxxx
+=
+The BTST function tests a single binary bit in a given value. Specify the number of the bit to be tested, from 0 to 31,
+then give the chosen variable or expression. If the given value is an expression, it will be used as an address, so the
+bit will then be checked at LEEK(value) instead. Note that only bits 0 to 7 can be tested by this system, and that
+AOZ Studio will take your bit number and perform an automatic AND operation with 7, to ensure that it lies
+in the correct range.
+
+If the test is successful, True is returned, otherwise False is given. For example:
+@code
+B=%1010
+Print Btst(3,B)
+Print Btst(2,B)
+@code
+

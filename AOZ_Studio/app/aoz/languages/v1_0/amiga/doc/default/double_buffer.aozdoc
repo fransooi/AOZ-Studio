@@ -1,0 +1,20 @@
+<i>Double Buffer</i>
+<b>Double Buffer</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+Throughout this Chapter, extensive reference is made to the technique known as "double buffering". The DOUBLE
+BUFFER command creates an invisible copy of the current screen and stores it as a "logical screen". All graphics
+operations, including Bob movements, are now performed directly on this logical screen, without disturbing your
+existing display at all. This is because the existing display on your television screen is taken straight from the
+original screen area, now called the "physical screen".
+
+Once the image has been re-drawn, the logical screen and physical screen are swapped over. The old logical screen
+is flicked onto the display, and the old physical screen is hidden away to become the new logical screen. The entire
+process now cycles continuously, producing a solid, smooth display, even when dozens of Bobs are moving on the
+same screen.
+
+Any complexities of this technique are completely automatic, so once DOUBLE BUFFER has been engaged, you
+can relax.
+
+

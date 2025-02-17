@@ -1,0 +1,29 @@
+<i>Resource$</i>
+<b>Resource$</b> xxxxxxx
+=
+The RESOURCE$ function returns one of the messages from the current Resource Bank, to be used by an AOZ Studio program. If the bank has not been defined, the standard Editor messages will be made available from
+the Configuration file
+
+Each national grouping is provided with its own set of messages in the appropriate language, and these messages can
+be used to generate multi-language programs. The message number parameter enters the number of the message.
+Here is an example
+@code
+For A=1 To 7
+Print Resource$(A)
+Next A
+@code
+The following list shows the strings related to the various numbers
+@code
+Number 			Message
+>0 			String from the Resource bank
+0 			Full pathname of APSystem folder
+<0 			Configuration system strings, as follows:
+-1 to -9 		Default file names
+-10 to -36 		All 26 extensions
+38, -38 		Communication ports
+-40 			Default cursor flashing
+2001 to -2044 		Miscellaneous strings used by Editor
+-2045 to -2049 		Editor system files
+@code
+
+

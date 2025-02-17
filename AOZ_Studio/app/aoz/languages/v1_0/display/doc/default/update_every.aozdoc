@@ -1,0 +1,12 @@
+<i>Update Every</i>
+<b>Update Every</b> xxxxxxx
+=
+The UPDATE EVERY command slows down the updating process, so that even the largest Object can be re-drawn during a single screen update.
+The animation system is regulated by this process, once again providing smooth movement. After the UPDATE EVERY command, simply specify the number of vertical blank periods between
+each screen update, in 50ths of a second. Begin your timing changes with a value of two, and increase the value by
+one unit at a time until the animation becomes smooth.
+
+One useful effect of using UPDATE EVERY is to reserve more time for AOZ to execute the main
+program. In fact, with careful use of this instruction, it is possible to speed up programs by as much as one third,
+and still maintain excellent animation.
+

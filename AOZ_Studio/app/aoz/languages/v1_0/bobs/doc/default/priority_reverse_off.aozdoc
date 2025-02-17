@@ -1,0 +1,8 @@
+<i>Priority Reverse Off</i>
+<b>Priority Reverse Off</b> xxxxxxx
+=
+The PRIORITY REVERSE ON command changes around the entire priority table based on Bob numbers. Not only does it give a lower Bob number priority over a higher Bob number, when used with PRIORITY ON it also gives
+priority to a Bob with the lowest y-coordinate. As you would expect, PRIORITY REVERSE OFF sets the priority
+system back to normal.
+
+

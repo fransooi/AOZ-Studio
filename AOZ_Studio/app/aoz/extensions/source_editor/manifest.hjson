@@ -1,0 +1,53 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Extensions Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"				// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "The Source Editor Extension"
+		author: "By Francois Lionet"
+		version: "Version 1"
+		date: "14/08/2021"
+		copyright: "(c) AOZ Studio 2021 - Open Source"
+		start: "sourceeditor.aoz"
+		name: "sourceditor"
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+				'editor_already_opened: Editor already opened (index: %1)',
+				'editor_not_found: Editor not found (index: %1)',
+				'console_not_found: Console not found (index: %1)',
+				'editor_not_console: Editor is not a console (index: %1)',
+			]
+			fr:
+			[
+				'editor_already_opened: L'editeur est deja ouvert (index: %1)',
+				'editor_not_found: Editeur non trouve (index: %1)',
+				'console_not_found: Console non trouvee (index: %1)',
+				'editor_not_console: Cet editeur n'est pas une console (index: %1)',
+			]
+		}
+	}
+}

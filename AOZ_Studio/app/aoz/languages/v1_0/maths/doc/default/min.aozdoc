@@ -1,0 +1,10 @@
+<i>Min</i>
+<b>Min</b> xxxxxxx
+=
+The MIN function returns the smaller value of two expressions. Expressions can consist of strings, integers
+or real numbers, but only compare like with like, as follows:
+@code
+A=Min(99,1) : Print A
+Print Min("AOZ","AOZ")
+@code
+

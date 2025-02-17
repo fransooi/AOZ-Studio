@@ -1,0 +1,15 @@
+<i>function: give position of an AMAL error</i>
+position=<b>Amalerr</b>
+=
+The AMALERR function returns the position in the current animation string where an error has been found. It has been provided to allow the AOZ Studio programmer to locate and correct AMAL mistakes as quickly as possible. Type the following example exactly as it appears:
+@code
+Load "AMOSPro Tutorial:Objects/Sprites.Abk" : Get Sprite Palette
+Sprite 8,100,100,1
+A$="L: IF X=300 Jump L; Pause; Let X=X+1; Jump L"
+Amal 8,A$ : Amal On : Direct
+@code
+That example will generate an error, because IF will not be interpreted as an "If" structure, but as the two AMAL instructions I and F. To find the position in the animation string of this error, type the following line from Direct Mode:
+@code
+Print Mid$(A$,Amalerr,Amalerr+5)
+@code
+

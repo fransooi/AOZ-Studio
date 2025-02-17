@@ -1,0 +1,59 @@
+<i>Menu Key</i>
+<b>Menu Key</b> xxxxxxx
+=
+Any key can be assigned to an item in a previously defined menu, provided that the item specified is at the bottom level of the menu.
+In other words, keyboard shortcuts cannot be used to select sub-menus because each command must correspond to a single option in the menu.
+
+In its simplest form, define the single item parameters as usual, by giving their hierarchy numbers in brackets after MENU KEY.
+
+Then assign the item TO a string containing a single character. Any additional characters in this string will be ignored.
+Because each key on the Amiga keyboard is assigned its own scancode, this code can be made use of for those keys
+that have no Ascii equivalents, the so-called control keys. Here is a simple routine to print out scancodes:
+@code
+Do
+Repeat
+A$=inkey$
+Until A$<>
+Z=Scancode
+Print Z
+Loop
+@code
+The following scancodes can also be used with the MENU KEY command, instead of a character string:
+@code
+Scancode 	Keys
+80 to 89 	Function keys [Fl] to [F10]
+95 			[Help]
+69 			[Esc]
+@code
+An optional bitmap can also be added, to check for control key combinations such as [Ctrl] + [A]. Here are the
+alternatives:
+@code
+Bit 	Key Tested 	Notes
+0 		left [Shift]) 	only one [Shift] key can be tested at a time
+1 		right [Shift] 	only one [Shift] key can be tested at a time
+2 		[Caps Lock] 	either ON or OFF
+3 		[Ctrl]
+4 		left [Alt]
+5 		right [Alt] 	this is the Windows key under windwos, the Apple key on macOS and Commodore key on Amiga keyboards
+6 		left [Platform]
+7 		right [Platform]
+@code
+If more than a single bit is set in this pattern, several keys must be pressed at the same time in order to call up the associated menu item.
+Any of these keyboard shortcuts can be erased by using MENU KEY with no parameters. For example:
+@code
+Menu Key(1,10) : Rem Erase shortcut assigned to item (1,10)
+@code
+Here is an example that checks for key presses of the Amiga's ten function keys:
+@code
+Menu$(1)="Function Keys"
+For A=1 To 10
+OPT$="F"+Str$(A)+" "
+Menu$(1,A)=OPT$
+Menu Key(1,A) To 79+A
+Next A
+Menu On
+Do
+If Choice Then Print "You have pressed Function Key ";Choice(2)
+Loop
+@code
+

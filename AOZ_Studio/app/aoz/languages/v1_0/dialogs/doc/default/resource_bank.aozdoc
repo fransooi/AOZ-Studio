@@ -1,0 +1,10 @@
+<i>Resource Bank</i>
+<b>Resource Bank</b> xxxxxxx
+=
+This command is used to tell AOZ Studio in which bank the resources to be used by Interface programs are kept. The number parameter holds the number of the memory bank to be allocated. If this bank does not exist, the Editor's internal resource bank will be used as a default. This means that after this command has been called, you can return to the Editor resources by employing a dummy value, such as zero. Here is an example:
+@code
+Load "Resource.Abk",16 : Rem This can be any filename
+Resource Bank 16: Rem Set resources to Bank 16
+@code
+
+

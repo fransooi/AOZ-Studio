@@ -1,0 +1,832 @@
+' *****************************************************************************
+' *
+' *   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+' *  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+' *  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+' *  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+' *  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+' *  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+' *
+' *****************************************************************************
+' *  Captain Max Score v1.1
+' *  Example of Casual Game for mobile
+' *  coded in 10 hours with AOZ Studio.
+' *
+' *  AOZ Code & Graphics by Baptiste BIDEAUX - August 2020
+' *
+' *  Musics by Manuel Bolaños Gómez : https://opengameart.org/users/codemanu
+' *
+' *  Additionals GFX
+' *  DontMind8 : http://dontmind8.blogspot.com/
+' *  Jetrel : https://opengameart.org/users/jetrel
+' *
+' *  TRY IT ON YOUR MOBILE DEVICE!!: https://app.aoz.studio/21h46hua
+#appTitle: "Captain Max Score"
+#googleFont:"Graduate"
+#useAssetsResources: False   //For compatibility with the new AOZ Drive behavior
+
+Rem Initializes the random engine
+Randomize Timer
+
+TS = 0
+Global TS
+
+Rem Opens a screen in portrait mode (720x1280)
+Screen Open 0, 720, 1280, 32, Lowres : Curs Off : Flash Off
+Palette $000000, $FFFFFF, $00FF00, $FFFF00, $FF0000
+
+Cls 0
+Rem If the screen is not touch-sensitive
+If Touch Screen = False
+	Boom
+	Rem Warning message
+	Set Font 1, 40
+	Ink 1 : Text 360, 500, "A touch screen is required!", "#center"
+
+	Rem Exit the program
+	End
+
+End If
+
+Cls 0
+
+Rem Loading Sounds and Musics
+Load Asset "resources/audio/music_title.mp3", 1
+Load Asset "resources/audio/insertcoin.mp3", 2
+Load Asset "resources/audio/music_game.mp3", 3
+Load Asset "resources/audio/shoot.mp3", 4
+Load Asset "resources/audio/explosion.mp3", 5
+Load Asset "resources/audio/theend.mp3", 6
+
+Rem
+Rem We define the AOZ procedure to be called each time
+Rem that there is an action on the touch screen
+Rem
+Touch On Change "TOUCH_CHANGE"
+
+Rem Here the procedure that receives the information
+Rem each time a touch on the screen changes
+Procedure TOUCH_CHANGE [ X, Y, LASTX, LASTY, STATE ]
+	Rem the global variable TS takes the state of the touch (1=START, 2=MOVE, 3=END)
+	TS = STATE
+End Proc
+
+Rem Best score variable
+BEST = 0
+
+Rem Start
+Goto TITLE
+Wait Key
+End
+
+Rem
+Rem Subprogram for the title screen
+Rem
+TITLE:
+	Cls 0
+
+	Rem Plays the music in a loop
+	Audio Loop On 1
+	Play Audio 1
+
+	Rem Variables for title animation
+	AC = 33 : ADELAY = 0 : AY = 1024 : AVELO = 0 : ASENS = 0 : TY = 1280
+
+	Rem Displays background, AOZ Studio logo and copyright
+	Paste Bob 0, 0, 59
+	Paste Bob 108, 1213, 2
+	Paste Bob 200, 31, 3
+
+	Rem Main Title Loop
+	Do
+		Rem Title Image
+		Bob 1, 35, TY, 1
+
+		Rem The screen was touched...
+		If TS > 0 And TS < 3 And ASENS = 0 And TY < 180
+
+			Rem We initialize the Variables
+			Rem for the animation of the coin
+			ASENS = 1 : AVELO = 64
+
+			Rem Let's stop the music
+			Rem and we play the sound of the coin
+			Stop Audio 1
+			Play Audio 2
+		End If
+
+		Rem Display of the "INSERT COIN" label and the coin.
+		If TY < 180 Then Bob 2, 209, 834, 39 : Bob 3, 296, AY, AC
+
+		Rem Animation of the jumping coin.
+		If ASENS = 1 Then AVELO = AVELO - 4 : AY = AY - AVELO : Bob Off 2
+
+		Rem Animation of the rotation of the coin
+		ADELAY = ADELAY + 1
+		If ADELAY > 5 Then AC = AC + 1 : ADELAY = 0
+		If AC > 38 Then AC = 33
+
+		Rem Moving the title image upwards
+		If TY > 178 Or ASENS = 1 Then TY = TY - 16
+
+		Rem The coin came off the screen after it jumped out.
+		Rem Game on
+		If TY < -530 Then Goto GAME
+
+		Wait Vbl
+	Loop
+Rem
+Rem Subprogram for the game screen
+Rem
+GAME:
+
+	Rem We initialize the variables of the game
+	Cls 0 : VX = 315 : VY = 1280 : VA = 40 : VDELAY = 0 : VANIM = 0 : 	MOK = 0
+	Dim MX(50) : Dim MY(50) : Dim MT(50) : Dim MV(50) : Dim MS(50) :  NMINE = 1 : MAXMINE = 15 : MAN = 0 : MDELAY = 0
+	Dim DEBRIX(100) : Dim DEBRIY(100) : Dim DEBRIT(100) : NDEBRIS = 0 : VSTORE = -1
+	TX = VX + 26 : TY = 1060 : TOK = 0 : Dim EXPX(50) : Dim EXPY(50) : Dim EXPA(50) : NEXP = 0 : EXPDELAY = 0
+	SCORE = 0 : MISSILES = 20
+
+	Rem The Mine Initiation Sub-Program is called the Mine Initiation Sub-Program.
+	Gosub INIT_MINES
+
+	Rem We play the game music
+	Audio Loop On 3
+	Play Audio 3
+
+	Rem Displaying the background image
+	Paste Bob 0, 0, 43
+	Paste Bob 0, 0, 44
+	Paste Bob 0, 1218, 45
+
+	Rem Display of the best score
+	If BEST > 0 Then Paste Bob 0, 1160, 61
+
+	Rem
+	Rem Main loop of the game
+	Do
+		Rem If the ship is in place at the bottom of the screen,
+		Rem then we update the elements of the game.
+		If VANIM > 1 Then Gosub ANIM_MINES : Gosub ANIM_EXPLOSION : Gosub ANIM_DEBRIS
+
+		Rem Ship display
+		Rem and his missile
+		Bob 1, VX, VY, 31
+		Bob 4, TX, TY, 32
+
+		Rem Hide the missile if it's not fired.
+		If TOK = 0 Then Bob Off 4
+
+		Rem Reactor animation
+		If VANIM = 0 Then Bob 2, 315 + 21, VY + 56, VA : Bob 3, 315 + 45, VY + 56, VA
+
+		Rem Animation of the beginning (ship up, then down)
+		If VANIM = 0 Then VY = VY - 6
+		If VANIM = 1 Then VY = VY + 4
+
+		Rem Touch screen control
+		Rem
+		Rem Go to the following information bubble
+		If TS > 0 And TS < 3 And VANIM > 1 And VANIM < 6 And MOK = 0 Then MOK = 1 : VANIM = VANIM + 1
+
+		Rem To force the player to release the mouse button
+		Rem or lifting your finger from the touch screen
+		If TS = 3 And MOK = 1 Then MOK = 0
+
+		Rem Firing a missile
+		If TS > 0 And TS < 3 And VANIM > 5 And TOK = 0 And MISSILES > 0 Then TX = VX + 26 : TY = 1060 : Play Audio 4 : TOK = 1 : MISSILES = MISSILES - 1
+
+		Rem Restart the game (GAME OVER bubble)
+		If TS > 0 And TS < 3 And VANIM = 7
+
+			Rem Memorizes the best score if needed
+			If BEST = -1 Then BEST = SCORE
+
+			Rem Reset the game
+			SCORE = 0 : MISSILES = 20
+			VANIM=5
+			NMINE=1
+			Gosub INIT_MINES
+			Play Audio 3
+			MOK = 1
+
+		End If
+
+		Rem If the missile is fired,
+		Rem the collision subroutine is called
+		If TOK = 1 Then TY = TY - 32 : Gosub TEST_COLL
+
+		Rem No missiles!
+		If MISSILES = 0 And TOK=0 And VANIM < 7
+
+			Rem We're testing that all the debris
+			Rem have disappeared
+			EXPAGAIN = False
+			For D3=0 To 20
+				If DEBRIT(D3) > -1 Then EXPAGAIN=True
+			Next D3
+
+			Rem If there is no more debris
+			Rem Let's get the "GAME OVER" sign ready to go up.
+			If EXPAGAIN = False Then Stop Audio 3 : Play Audio 6 : VANIM = 7
+		End If
+
+		Rem If the missile is off the screen
+		Rem We're preparing a new shot.
+		If TY < 0 Then TOK = 0
+
+		Rem Displaying tooltips
+		Rem at the beginning of the game
+		If VANIM = 2 Then Bob 91, 50, 594, 56
+		If VANIM = 3 Then Bob 91, 50, 594, 57
+		If VANIM = 4 Then Bob 91, 50, 594, 58
+
+		Rem Displaying the "GAME OVER" panel
+		If VANIM = 7 Then Bob 91, 50, 594, 60
+
+		Rem We hide the image of the bubble of information
+		If VANIM = 5 Then Bob Off 91
+
+		Rem Management of the animation of the ship at the beginning of the game
+		If VY < 80 Then Bob Off 2: Bob Off 3 : VANIM = 1
+		If VY > 1120 And VANIM = 1 Then VANIM = 2
+
+		Rem Reactor animation
+		VDELAY = VDELAY + 1
+		If VDELAY = 5
+			VDELAY = 0
+			VA = VA + 1
+			If VA = 42 Then VA = 40
+		End If
+
+		Rem Updates the number of mines destroyed
+		Rem and the number of missiles remaining
+		Gosub UPDATE_INFOS
+
+		Wait Vbl
+	Loop
+
+Rem
+Rem Minefield initialisation subprogram
+Rem
+INIT_MINES:
+
+	Rem For explosions
+	For E = 0 To 9
+		EXPX(E)=-720 : EXPY(E)=-720 : EXPA(E)=10
+	Next E
+
+	Rem For debris
+	For D = 0 To 20
+		DEBRIX(D)=-720 : DEBRIY(D)=-720 : DEBRIT(D)=-1
+	Next D
+
+	Rem For mines
+	If NMINE > MAXMINE Then NMINE = MAXMINE
+	For M=0 To MAXMINE
+
+		Rem For the first mine only
+		If M = 0
+			Rem Random value for the direction of its movement
+			A = Int(Rnd(10))
+			If A < 6 Then MS(M) = 0 Else MS(M)=1
+
+			Rem Horizontal starting position of the mine
+			Rem depending on its direction
+			If MS(M) = 0
+				MX(M) = -90
+			Else
+				MX(M) = 720
+			End If
+			Rem Y-position, Type and moving speed
+			MY(M) = Int(Rnd(3))
+			MT(M) = Int(Rnd(5))
+			MV(M) = Int(Rnd(8))
+
+			If MV(M) < 2 Then MV(M)=2
+		Else
+			Rem For other mines
+			MX(M) = -720 : MY(M) = -720 : MT(M)=0:MV(M)=2
+		End If
+
+		Rem Mine display
+		Bob 10 + M, MX(M) + 22, ( 48 + MY(M) * 120 ) + 22, 15 + MAN
+		Bob 30 + M, MX(M), 48 + MY(M) * 120 , MT(M) + 17
+	Next M
+Return
+
+Rem
+Rem Minefield animation subprogram
+Rem
+ANIM_MINES:
+
+	Rem Mine blinking animation
+	MDELAY = MDELAY + 1
+	If MDELAY > 18
+		MAN = MAN + 1
+		MDELAY = 0
+		If MAN > 1 Then MAN = 0
+	End If
+
+	Rem Update mines
+	For M=0 To NMINE
+
+		Rem Displays mines
+		Bob 10 + M, MX(M) + 22, ( 48 + MY(M) * 120 ) + 22, 15 + MAN
+		Bob 30 + M, MX(M), 48 + MY(M) * 120 , MT(M) + 17
+
+		If MS(M) = 0
+			Rem Moving at Right
+			MX(M) = MX(M) + MV(M)
+
+			Rem Out of screen
+			If MX(M) > 720
+
+				Rem initialize a new moving for this mine
+				A = Int(Rnd(10))
+				If A < 6 Then MS(M) = 0 Else MS(M)=1
+
+				If MS(M) = 0
+					MX(M) = 0 - Rnd(720)
+				Else
+					MX(M) = 720 + Rnd(720)
+				End If
+				MY(M) = Int(Rnd(7))
+				MT(M) = Int(Rnd(5))
+				MV(M) = Int(Rnd(8))
+				If MV(M) < 2 Then MV(M) = 2
+			End If
+
+		Else
+			Rem Moving at Left
+			MX(M) = MX(M) - MV(M)
+
+			Rem Out of screen
+			If MX(M) < -90
+
+				Rem initialize a new moving for this mine
+				A = Int(Rnd(10))
+				If A < 6 Then MS(M) = 0 Else MS(M)=1
+
+				If MS(M) = 0
+					MX(M) = 0 - Rnd(720)
+				Else
+					MX(M) = 720 + Rnd(720)
+				End If
+				MY(M) = Int(Rnd(7))
+				MT(M) = Int(Rnd(5))
+				MV(M) = Int(Rnd(8))
+				If MV(M) < 2 Then MV(M) = 2
+			End If
+
+		End If
+
+	Next M
+
+Return
+
+Rem
+Rem Subprogram of collision bitween missile and mines
+Rem
+TEST_COLL:
+
+	Rem Variable to add a new mine
+	ADDMINE=False
+
+	Rem Test on each mine
+	For M=0 To NMINE
+
+		Rem Store the current mine index
+		VSTORE = M
+
+		Rem The missile hits this mine
+		If TX > MX(M) And TX < (MX(M) + 89) And TY > (48+(MY(M) * 120)) And TY < (48+(MY(M) * 120)) + 89
+
+			Rem Play SFX
+			Play Audio 5
+
+			Rem To add a new mine
+			ADDMINE=True
+
+			Rem Add 1 to score
+			SCORE = SCORE + 1
+
+			Rem Reset the missile
+			TOK = 0
+			TX = VX + 26 : TY = 1070
+
+			Rem
+			Rem Add debris for each type of mine
+			Rem
+
+			Rem Debris NORTH and SOUTH
+			If MT(M) = 0
+				Gosub ADD_N
+				Gosub ADD_S
+			End If
+
+			Rem Debris WEST and EAST
+			If MT(M) = 1
+				Gosub ADD_W
+				Gosub ADD_E
+			End If
+
+			Rem Debris NORTH and SOUTH
+			Rem Debris WEST and EAST
+			If MT(M) = 2
+				Gosub ADD_N
+				Gosub ADD_E
+				Gosub ADD_S
+				Gosub ADD_W
+			End If
+
+			Rem Debris NORTH WEST and NORTH EAST
+			If MT(M) = 3
+				Gosub ADD_NW
+				Gosub ADD_SE
+			End If
+
+			Rem Debris SOUTH WEST and SOUTH EAST
+			If MT(M) = 4
+				Gosub ADD_NE
+				Gosub ADD_SW
+			End If
+
+			Rem Debris NORTH WEST and NORTH EAST
+			Rem Debris SOUTH WEST and SOUTH EAST
+			If MT(M) = 5
+				Gosub ADD_NW
+				Gosub ADD_NE
+				Gosub ADD_SE
+				Gosub ADD_SW
+			End If
+
+			Rem Initialise explosion animation
+			EXPX(NEXP)=MX(M) : EXPY(NEXP)=48+(MY(M)*120) : EXPA(NEXP)=0
+			NEXP = NEXP + 1
+			If NEXP > 9 Then NEXP = 0
+
+			Rem Reset the moving of this mine
+			A = Int(Rnd(10))
+			If A < 6 Then MS(M) = 0 Else MS(M)=1
+
+			If MS(M) = 0
+				MX(M) = 0 - Rnd(720)
+			Else
+				MX(M) = 720 + Rnd(720)
+			End If
+			MY(M) = Int(Rnd(7))
+			MT(M) = Int(Rnd(5))
+			MV(M) = Int(Rnd(8))
+			If MV(M) < 2 Then MV(M)=2
+		End If
+
+	Next M
+
+	Rem Add a mine to the minefield
+	If ADDMINE And VANIM> 5 And NMINE < MAXMINE
+		NMINE = NMINE + 1
+
+		Rem Initialise the moving of the new mine
+		A = Int(Rnd(10))
+		If A < 6 Then MS(M) = 0 Else MS(M)=1
+
+		If MS(M) = 0
+			MX(M) = 0 - Rnd(720)
+		Else
+			MX(M) = 720 + Rnd(720)
+		End If
+		MY(M) = Int(Rnd(7))
+		MT(M) = Int(Rnd(5))
+		MV(M) = Int(Rnd(8))
+		If MV(M) < 2 Then MV(M) = 2
+	End If
+Return
+
+Rem
+Rem Subprogram for the debris animation
+Rem
+TEST_COLL_DEBRIS:
+
+	Rem Variable to add a new mine
+	ADDMINE = False
+
+	Rem Test on each mine
+	For M = 0 To NMINE
+
+		Rem Store the current mine index
+		VSTORE = M
+
+		Rem For each debris
+		For D2=0 To 20
+
+			Rem The debris hits this mine
+			If DEBRIX(D2) > MX(M) And DEBRIX(D2) < (MX(M) + 120) And DEBRIY(D2) > (48+(MY(M) * 120)) And DEBRIY(D2) < (48+(MY(M) * 120)) + 89
+				Rem Play SFX
+				Play Audio 5
+
+				Rem To add a new mine
+				ADDMINE=True
+
+				Rem Add 1 to score
+				SCORE = SCORE + 1
+
+				Rem Disable this debris
+				DEBRIX(D2) = -720
+				DEBRIY(D2) = -720
+				DEBRIT(D2) = -1
+
+				Rem
+				Rem Add debris for each type of mine
+				Rem
+
+				Rem Debris NORTH and SOUTH
+				If MT(M) = 0
+					Gosub ADD_N
+					Gosub ADD_S
+				End If
+
+				Rem Debris WEST and EAST
+				If MT(M) = 1
+					Gosub ADD_W
+					Gosub ADD_E
+				End If
+
+				Rem Debris NORTH and SOUTH
+				Rem Debris WEST and EAST
+				If MT(M) = 2
+					Gosub ADD_N
+					Gosub ADD_E
+					Gosub ADD_S
+					Gosub ADD_W
+				End If
+
+				Rem Debris NORTH WEST and NORTH EAST
+				If MT(M) = 3
+					Gosub ADD_NW
+					Gosub ADD_SE
+				End If
+
+				Rem Debris SOUTH WEST and SOUTH EAST
+				If MT(M) = 4
+					Gosub ADD_NE
+					Gosub ADD_SW
+				End If
+
+				Rem Debris NORTH WEST and NORTH EAST
+				Rem Debris SOUTH WEST and SOUTH EAST
+				If MT(M) = 5
+					Gosub ADD_NW
+					Gosub ADD_NE
+					Gosub ADD_SE
+					Gosub ADD_SW
+				End If
+
+				Rem Initialise explosion animation
+				EXPX(NEXP)=MX(M) : EXPY(NEXP)=48+(MY(M)*120) : EXPA(NEXP)=0
+				NEXP = NEXP + 1
+				If NEXP > 9 Then NEXP = 0
+
+				Rem Reset the moving of this mine
+				A = Int(Rnd(10))
+				If A < 6 Then MS(M) = 0 Else MS(M)=1
+
+				If MS(M) = 0
+					MX(M) = 0 - Rnd(720)
+				Else
+					MX(M) = 720 + Rnd(720)
+				End If
+				MY(M) = Int(Rnd(7))
+				MT(M) = Int(Rnd(5))
+				MV(M) = Int(Rnd(8))
+				If MV(M) < 2 Then MV(M)=2
+
+			End If
+		Next D2
+	Next M
+
+	Rem Add a mine to the minefield
+	If ADDMINE And VANIM > 5 And NMINE < MAXMINE
+		NMINE = NMINE + 1
+
+		Rem Initialise the moving of the new mine
+		A = Int(Rnd(10))
+		If A < 6 Then MS(M) = 0 Else MS(M) = 1
+
+		If MS(M) = 0
+			MX(M) = 0 - Rnd(720)
+		Else
+			MX(M) = 720 + Rnd(720)
+		End If
+
+		MY(M) = Int(Rnd(7))
+		MT(M) = Int(Rnd(5))
+		MV(M) = Int(Rnd(8))
+
+		If MV(M) < 2 Then MV(M) = 2
+	End If
+Return
+
+Rem
+Rem Subprogram for explosion animation
+Rem
+ANIM_EXPLOSION:
+
+	Rem Tempo
+	EXPDELAY = EXPDELAY + 1
+
+	Rem For each explosion
+	For E = 0 To 9
+		If EXPDELAY > 3 And EXPA(E) < 10 Then EXPA(E) = EXPA(E) + 1
+
+		Rem Displays explosion
+		If EXPA(E) = 10
+			Rem Disable explosion
+			Bob 50 + E, -720, -720, 4
+		Else
+			Bob 50 + E, EXPX(E)+22, EXPY(E)+22, EXPA(E)+4
+		End If
+	Next E
+
+	Rem End tempo
+	If EXPDELAY > 3 Then EXPDELAY = 0
+Return
+
+Rem
+Rem Subprogram for the debris animation
+Rem
+ANIM_DEBRIS:
+
+	Rem For each debris
+	For D = 0 To 20
+
+		Rem Displays debris
+		Bob 70 + D, DEBRIX(D), DEBRIY(D), 23 + DEBRIT(D)
+
+		Rem Moving debris
+		If DEBRIT(D) > -1
+			If DEBRIT(D)=0 Or DEBRIT(D)=6 Or DEBRIT(D)=7 Then DEBRIX(D) = DEBRIX(D) - 8
+			If DEBRIT(D)=0 Or DEBRIT(D)=1 Or DEBRIT(D)=2 Then DEBRIY(D) = DEBRIY(D) - 8
+			If DEBRIT(D)=2 Or DEBRIT(D)=3 Or DEBRIT(D)=4 Then DEBRIX(D) = DEBRIX(D) + 8
+			If DEBRIT(D)=4 Or DEBRIT(D)=5 Or DEBRIT(D)=6 Then DEBRIY(D) = DEBRIY(D) + 8
+
+			Rem Test collision with mines
+			Gosub TEST_COLL_DEBRIS
+		Else
+			Rem Disable debris
+			DEBRIX(D) = -720
+			DEBRIY(D) = -720
+			DEBRIT(D) = -1
+		End If
+
+		Rem Out of screen
+		If DEBRIX(D) < 0 Or DEBRIX(D) > 720 Or DEBRIY(D) < 0 Or DEBRIY(D) > 1280
+			Rem Disable debris
+			DEBRIX(D) = -720
+			DEBRIY(D) = -720
+			DEBRIT(D) = -1
+		End If
+	Next D
+Return
+
+Rem
+Rem Add debris at NORTH WEST
+Rem
+ADD_NW:
+	DEBRIX(NDEBRIS) = MX(VSTORE)
+	DEBRIY(NDEBRIS) =  48 + ( MY( VSTORE ) * 120)
+	DEBRIT(NDEBRIS) = 0
+
+	NDEBRIS = NDEBRIS + 1
+	If NDEBRIS > 20 Then NDEBRIS = 0
+Return
+
+Rem
+Rem Add debris at NORTH
+Rem
+ADD_N:
+	DEBRIX(NDEBRIS) = MX(VSTORE) + 42
+	DEBRIY(NDEBRIS) = 48+(MY(VSTORE)*120)
+	DEBRIT(NDEBRIS) = 1
+
+	NDEBRIS = NDEBRIS + 1
+	If NDEBRIS > 20 Then NDEBRIS = 0
+Return
+
+Rem
+Rem Add debris at NORTH EAST
+Rem
+ADD_NE:
+	DEBRIX(NDEBRIS) = MX(VSTORE) + 88
+	DEBRIY(NDEBRIS) = 48+(MY(VSTORE)*120)
+	DEBRIT(NDEBRIS) = 2
+
+	NDEBRIS = NDEBRIS + 1
+	If NDEBRIS > 20 Then NDEBRIS = 0
+Return
+
+Rem
+Rem Add debris at EAST
+Rem
+ADD_E:
+	DEBRIX(NDEBRIS) = MX(VSTORE) + 88
+	DEBRIY(NDEBRIS) = 48 + ( MY( VSTORE ) * 120 ) + 42
+	DEBRIT(NDEBRIS) = 3
+
+	NDEBRIS = NDEBRIS + 1
+	If NDEBRIS > 20 Then NDEBRIS = 0
+Return
+
+Rem
+Rem Add debris at SOUTH EAST
+Rem
+ADD_SE:
+	DEBRIX(NDEBRIS) = MX(VSTORE) + 88
+	DEBRIY(NDEBRIS) = 48 + ( MY( VSTORE ) * 120 ) + 88
+	DEBRIT(NDEBRIS) = 4
+
+	NDEBRIS = NDEBRIS + 1
+	If NDEBRIS > 20 Then NDEBRIS = 0
+Return
+
+Rem
+Rem Add debris at SOUTH
+Rem
+ADD_S:
+	DEBRIX(NDEBRIS) = MX(VSTORE) + 42
+	DEBRIY(NDEBRIS) = 48 + ( MY( VSTORE ) * 120 ) + 88
+	DEBRIT(NDEBRIS) = 5
+
+	NDEBRIS = NDEBRIS + 1
+	If NDEBRIS > 20 Then NDEBRIS = 0
+Return
+
+Rem
+Rem Add debris at SOUTH WEST
+Rem
+ADD_SW:
+	DEBRIX(NDEBRIS) = MX(VSTORE)
+	DEBRIY(NDEBRIS) = 48 + ( MY( VSTORE ) * 120 ) + 88
+	DEBRIT(NDEBRIS) = 6
+
+	NDEBRIS = NDEBRIS + 1
+	If NDEBRIS > 20 Then NDEBRIS = 0
+Return
+
+Rem
+Rem Add debris at WEST
+Rem
+ADD_W:
+	DEBRIX(NDEBRIS) = MX(VSTORE)
+	DEBRIY(NDEBRIS) = 48 + ( MY( VSTORE ) * 120 ) + 42
+	DEBRIT(NDEBRIS) = 7
+
+	NDEBRIS = NDEBRIS + 1
+	If NDEBRIS > 20 Then NDEBRIS = 0
+Return
+
+Rem
+Rem Update SCORE and missiles number
+Rem
+UPDATE_INFOS:
+
+	Rem Missiles
+	TXT$ = Mid$( Str$(MISSILES), 2, Len(Str$(MISSILES)) )
+	If MISSILES < 10 Then TXT$="0"+TXT$
+	XT = 170
+	For T=0 To Len(TXT$)-1
+		C=Asc( Mid$( TXT$, T, 1) )-48
+		Bob 110 + T, XT, 1230, 46 + C
+		XT = XT + 24
+	Next T
+
+	Rem Score
+	TXT$ = Mid$( Str$(SCORE), 1, Len(Str$(SCORE)) )
+	If SCORE < 10 Then TXT$="000"+TXT$
+	If SCORE > 9 And SCORE < 100 Then TXT$="00"+TXT$
+	If SCORE > 99 And SCORE < 1000 Then TXT$="0"+TXT$
+	XT = 200
+	For T=0 To Len(TXT$)-1
+		C=Asc( Mid$( TXT$, T, 1) )-48
+		Bob 113 + T, XT, 15, 46 + C
+		XT = XT + 24
+	Next T
+
+	Rem Best Score
+	If BEST > 0
+		If SCORE > BEST Then BEST = SCORE
+		TXT$ = Mid$( Str$(BEST), 1, Len(Str$(BEST)) )
+		If BEST < 10 Then TXT$="000"+TXT$
+		If BEST > 9 And BEST < 100 Then TXT$="00"+TXT$
+		If BEST > 99 And BEST < 1000 Then TXT$="0"+TXT$
+		XT = 170
+		For T=0 To Len(TXT$)-1
+			C=Asc( Mid$( TXT$, T, 1) )-48
+			Bob 123 + T, XT, 1174, 46 + C
+			XT = XT + 24
+		Next T
+	End If
+
+	Rem Score is higher than best score, so best score is score
+	If BEST = 0 And SCORE > 0 Then BEST = SCORE : Paste Bob 0, 1160, 61
+Return

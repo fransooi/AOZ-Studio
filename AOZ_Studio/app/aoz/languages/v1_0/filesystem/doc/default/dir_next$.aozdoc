@@ -1,0 +1,15 @@
+<i>Dir Next$</i>
+<b>Dir Next$</b> xxxxxxx
+=
+Use this to return the filename that comes after the file or folder found by the previous DIR FIRST$ search. If there
+are no more files to come, an empty string will be returned, "". Once the last filename has been found, AMOS
+Professional will automatically grab back the memory used by the directory array, and release it for the rest of your
+program to use. The next example prints every file in the current directory.
+@code
+F$=Dir First$("*.*")
+While F$<>""
+Print F$ : Wait 50
+F$=Dir Next$
+Wend
+@code
+

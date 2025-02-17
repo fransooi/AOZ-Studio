@@ -1,0 +1,15 @@
+<i>IsBob</i>
+<b>IsBob</b> xxxxxxx
+=
+Use this function if you are not sure a bob exists and want to avoid "Bob not defined" errors...
+@code
+Bob 1, 100, 100, 1
+If IsBob( 1 )
+Print "Bob 1 exists!"
+End If
+If IsBob( 2 )
+Print "Bob 2 does not exist, this will will never be printed!"
+End If
+@code
+
+

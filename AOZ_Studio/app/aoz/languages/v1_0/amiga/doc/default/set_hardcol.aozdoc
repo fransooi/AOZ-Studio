@@ -1,0 +1,13 @@
+<i>Set Hardcol</i>
+<b>Set Hardcol</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This command is available to experienced Amiga programmers, and it permits Sprite collision detection using the computer's hardware. SET HARDCOL cannot be used with computed Sprites, so only Sprites zero to 7 may be
+monitored for collision.
+
+The CLXCON register is set for hardware Sprite collision detection using two parameters. Bitmap1 is an enabler,
+that sets bits 12,13,14 and 15 of the CLXON register, and bitmap2 determines the comparison itself, setting bits zero
+to 5. Please refer to your hardware manual for a technical explanation of this register.
+
+

@@ -1,0 +1,8 @@
+<i>UI HideTooltip</i>
+<b>UI HideTooltip</b> xxxxxxx
+=
+In some scenarios you may find that a button tooltip stays visible when the component loses focus, you can programmatically hide the tooltip with this instruction.
+@code
+UI HideTooltip "MyButton"
+@code
+

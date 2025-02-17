@@ -1,0 +1,47 @@
+<i>On Error Goto</i>
+<b>On Error Goto</b> xxxxxxx
+=
+By this method, when an error occurs in your Basic program, a jump is made to whatever label has been defined.
+This label acts as the starting point for your own error correction routine, and after the mistake has been corrected
+you can return to your main program without the need to go via the editor window.
+
+Try this simple routine:
+@code
+Do
+Input "Type in two numbers";A,B
+Print A;" divided by ";B;" is ";A/B
+Loop
+@code
+This will work perfectly until you try to enter a value of zero for B and it is discovered that division by zero is
+impossible. Such unforeseen problems can be catered for by setting an error trap like this:
+@code
+On Error Goto HELP
+AGAIN:
+Do
+Input "Type in two numbers";A,B
+Print A;" divided by ";B;" is ";A/B
+Loop
+
+Rem Error Handler
+HELP:
+Print
+Print "Sorry, you have tried to divide"
+Print "your number by zero."
+Resume AGAIN : Rem Go back to input
+@code
+If you are unfortunate enough to write an error inside your own error trapping routine, AMOS Professional will
+grind to a halt! There are two ways to deliberately disable ON ERROR GOTO.
+@code
+On Error : Rem disable error trap
+@code
+Call ON ERROR without any parameters like that, or force it to go to zero, like this:
+@code
+On Error Goto 0
+@code
+To get back to your program after ON ERROR has been called, you must use RESUME. Never use GOTO for this
+purpose.
+
+Warning! Due to the nature of Javascript, ON ERROR GOTO will *significantly* slow down your application.
+
+We highly suggest to use TRAP instead.
+

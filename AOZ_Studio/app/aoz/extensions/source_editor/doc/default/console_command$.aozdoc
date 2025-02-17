@@ -1,0 +1,6 @@
+<i>Console Command$</i>
+<b>Console Command$</b> xxxxxxx
+=
+This function will always return an empty string, unless the user has pressed <ENTER> with
+some text in the entry line of the console. Please note that it will only return the text once: the return value will be empty at the next loop.
+

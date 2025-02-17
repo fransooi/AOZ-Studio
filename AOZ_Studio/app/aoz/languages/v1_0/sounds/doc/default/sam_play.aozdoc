@@ -1,0 +1,47 @@
+<i>Sam Play</i>
+<b>Sam Play</b> xxxxxxx
+=
+The Sam Play command is used to play a digital sound sample through your audio system. Simply define the
+number of the required sample held in the bank. There is no limit to the number of samples that can be stored, other
+than available memory.
+
+There are two optional parameters that can also be given. A voice parameter can be placed immediately after the
+SAM PLAY command, in front of the sample number. This is a bitmap containing a list of the voices the sample
+will use. There is one bit for each of the four available voices, and to play a voice the relevant bit should be set to 1.
+
+The other parameter can be given after the sample number, and this governs the
+frequency of the sound. The frequency parameter sets the speed at which the sample will be played back, and the
+setting is given in Hertz. This is a professional standard of measurement, but as a rule of thumb, a rate of 4000 is
+acceptable for simple sound effects, with 10000 for recognisable speech. By changing this playback rate, the sample
+pitch can be adjusted over a very wide range, allowing a single sample to generate many different sounds.
+
+The following example loads up a bank of ready-made samples stored in the "AOZ Resources Drive/AMOSPro Examples" folder, and
+allows you to play them in random order:
+@code
+Load "AMOSPro_Examples:Samples/Mixture.Abk",5
+Sam Bank 5
+Curs Off : Cls 0: Paper 0
+Locate 0,10
+Centre "Press a key from A to J"
+Do
+A$=Inkey$
+A=Asc(A$)
+If A>96 And A<107
+Sam Play A-96
+End If
+Loop
+@code
+You can try playing the keys rapidly, like a miniature drum kit, as well as holding down the keys to get some
+hammer-drill effects! The next example demonstrates the use of two voices for a simple echo effect, and how
+frequency changes can alter the sample:
+@code
+Load "AMOSPro_Examples:Samples/Mixture.Abk",10
+Sam Bank 10
+Sam Play 1,12 : Wait 5: Sam Play 2,12: Rem Simple echo effect
+Wait Key
+Sam Play 1,13,2000: Rem Lower Pitch
+Wait Key
+Sam Play 1,13,5000: Rem Higher Pitch
+@code
+
+

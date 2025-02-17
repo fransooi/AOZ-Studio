@@ -1,0 +1,5 @@
+<i>Tile Height</i>
+<b>Tile Height</b> xxxxxxx
+=
+This function returns the height of each tile of the tileset affected to the view.
+

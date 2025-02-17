@@ -1,0 +1,168 @@
+#splashScreen:False
+
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+//
+// Welcome to your AOZ Studio Lesson Create a HangMan 1 - Arrays - Neil Ives
+//
+// You see these two slash (//) -> that means that anything afterwards (all marked in green) is a Rem(ark).
+// After the // you can put remarks, notes, explanations, not program instructions
+//
+// So we are ready, let's start!
+
+
+// In this tutorial we will learn about:
+// Arrays
+// Dimensioning an array
+// Array types
+// Input
+// Upper$()
+// Len()
+// Mid$(), Left$(), Right$()
+
+////////////
+// PART 1 //
+////////////
+
+////////////////////
+// Hip Hip Array! //
+////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
+// Arrays provide a way of storing multiple values and accessing them later.          //
+// We might think of an array as a set of pigeon-holes that can hold mail.            //
+// We can go to any of the slots and read the message or change it for another one.   //
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
+// Example of loading and displaying the contents of a numeric array named MyNumbers  //
+////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////
+// Dim(ension) //
+/////////////////
+
+Dim MyNumbers(10)//Create and dimension the array to a suitable maximum size, 10 in this case.
+
+//In this example, use a For/Next loop to load the array elements with random numbers, (in the range 0 to 100)
+For n = 1 to 10
+    MyNumbers(n)=Rnd(100)//Note how the value of n points to the array element, (pigeon-hole) to access.
+Next
+
+Print "Printing the contents of a 10 element array"
+Print "loaded with random numbers in the range 0 to 100"
+Print ""
+
+// Use a For/Next loop to print the array values
+For n = 1 to 10
+    Print MyNumbers(n) // Again see how n points to the array element
+Next
+
+//End // When above is understood, delete or Rem (//) this 'End' instruction so the following will be executed
+
+////////////
+// Part 2 //
+////////////
+
+Cls //Clear the screen
+
+///////////////////////////////////////////////////////////////////////////////////
+// The following code shows one method of creating the core of the game Hangman. //
+// In the game, the player must try to guess a hidden word by entering letters.  //
+///////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////
+// If an array is going to hold strings, (words & letters) it //
+// must have a dollar sign added, just like a string variable //
+////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////
+// (Dim)ension a String array to hold 20 characters                            //
+// This need to be done before using a array, so AOZ prepare the memory for it //
+/////////////////////////////////////////////////////////////////////////////////
+
+Dim MYWORD$(20) // It's not anticipated that any guess-word will be longer than 20 characters.
+
+// At the moment we will provide a hidden guess word. Please experiment by changing it to other words.
+// In later tutorials we will deal with loading words from a list.
+
+HIDDENWORD$="elephant"// Guess word
+
+HIDDENWORD$=Upper$(HIDDENWORD$)// Convert to upper case
+
+//////////////
+// Len(gth) //
+//////////////
+
+// LETTERCOUNT is a numeric variable representing the length (nb of characters) of the word string, using Len().
+LETTERCOUNT=Len(HIDDENWORD$)
+
+// Load array with dashes (-) to the same length as the searchable word.
+For n = 1 to LETTERCOUNT
+    MYWORD$(n)="-" // Here we are loading the array with dashes in each element to represent the letters of HIDDENWORD$.
+    // When the player will enter a correct guess the dash at that position will be changed to the correct letter.
+    Locate ,5: Print MYWORD$(n); // Show the array contents to represent the hidden word. The semicolon forces the results to print on one line.
+next
+
+///////////////
+// Main loop //
+///////////////
+
+Do
+
+    Locate 1,1: Input "Enter a guess: ";MYGUESS$ // User 'Inputs' a letter guess
+
+    MYGUESS$=Upper$(MYGUESS$) // Convert to upper case. This is becuase we do not know if the player is entering capitals or lower case
+
+    For n = 1 to LETTERCOUNT // Set the For/Next loop steps to the length of HIDDENWORD$.
+
+        ////////////////////////////
+        // Was the guess correct? //
+        ////////////////////////////
+        If MYGUESS$=Mid$(HIDDENWORD$,n,1) // If the guess character is found. Mid$(), see note below.
+            // NOTE: Mid$ (see below) is using the values of n to search for 1 character.
+            // If the letter ib MYGUESS$ is matched in HIDDENWORD$ the following code is executed
+            MYWORD$(n) = MYGUESS$ // Replace the dash in the array with the correctly guessed character at the
+            // same position that it occurs in the guess-word.
+        End if
+
+    Next
+
+//////////
+// Mid$ //
+//////////
+
+//The function Mid$ seeks for a match in the middle of a string.
+//In this case n, incremented by the For/Next loop is used to step through the string. The last value sets how many characters to seek. In this case just 1.
+//Print Mid$("AOZ IS COOL",3,6)//would print "Z IS C"
+//That's 6 characters, (including spaces) starting from letter 3.
+
+////////////////////////////////////////////
+// Build a string from the array elements //
+////////////////////////////////////////////
+
+    CORRECT$=""//Clear before each attempt. See note below:
+
+    For n = 1 to LETTERCOUNT
+        CORRECT$=CORRECT$+MYWORD$(n)
+        //To begin with CORRECT$ is empty. It then has the first value in the array appended to it...
+        //Now CORRECT$ has a string value. the next value in the array is appended to it. This continues until the For/Next loop finishes.
+    Next
+
+    Locate ,5: Print CORRECT$// This new string is used to display the current state of play and decide if the game has been won
+
+    If CORRECT$=HIDDENWORD$ //If the word created from the array is equal to the hidden word the player has won!
+        CLS
+        Locate ,5: Print "Well done!"
+        Wait 3
+        End
+    End If
+
+Loop

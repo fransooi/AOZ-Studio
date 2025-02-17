@@ -1,0 +1,25 @@
+<i>If</i>
+<b>If</b> xxxxxxx
+=
+The IF instruction only work when associated with THEN, ELSE, ELSE IF or END IF.
+
+You can perform test on one-line with THEN, like in this example:
+@code
+If NIGHT=DAY And NIGHT<>12 Then Goto BED
+If NIGHT<DAY Or NIGHT=12 Then Edit
+@code
+An IF ... THEN statement is limited to a single line, of a listing, which is not very satisfactory to an AOZ programmer. This technique has been superseded by a "structured test", where IF is used to trigger off
+a whole range of instructions, depending on the outcome of a single decision.
+
+@code
+Input "Type values A,B and C: ";A,B,C
+If A=B
+Print "A equals B";
+Else
+Print "A is not equal to B";
+If A<>B And A<>C
+Print "or to C"
+End If
+End If
+@code
+

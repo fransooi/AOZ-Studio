@@ -1,0 +1,7 @@
+<i>Synchro</i>
+<b>Synchro</b> xxxxxxx
+=
+All animation and movements programs can be run by a single call to the SYNCHRO command.
+
+Prior to calling SYNCHRO, the automatic movement and animation system must be turned off with a SYNCHRO OFF instruction.
+

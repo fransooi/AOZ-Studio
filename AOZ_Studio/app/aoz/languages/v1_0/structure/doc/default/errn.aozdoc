@@ -1,0 +1,7 @@
+<i>ErrN</i>
+<b>ErrN</b> xxxxxxx
+=
+When you use ON ERROR to create error handling routines, you will want to know exactly what sort of error has
+happened in the main program. Errors discovered while your program is running each have a specific error code
+number, and the number of the last error to be isolated can be returned by using the ERRN function.
+

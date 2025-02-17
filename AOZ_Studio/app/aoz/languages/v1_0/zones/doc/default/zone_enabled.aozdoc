@@ -1,0 +1,12 @@
+<i>Zone Enabled</i>
+<b>Zone Enabled</b> xxxxxxx
+=
+@code
+Reserve Zone 10
+Print "Hello" + Zone$( "AOZ", 1 )
+Print Zone Enabled( 1 )			// Will print "True"
+Wait Key
+Zone Off 1
+Print Zone Enabled( 1 )			// Will print "False"
+@code
+

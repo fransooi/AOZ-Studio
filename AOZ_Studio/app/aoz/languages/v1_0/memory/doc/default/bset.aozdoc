@@ -1,0 +1,6 @@
+<i>BSet</i>
+<b>BSet</b> xxxxxxx
+=
+The BSET command sets a bit to 1. Specify the bit by giving its position in a variable or an expression. If an
+expression is used instead of a variable, it will be treated as an address only if AOZ can detect the "magical number" that indicate a memory bank.
+

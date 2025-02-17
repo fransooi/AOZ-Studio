@@ -1,0 +1,693 @@
+{
+	"templates": [
+		{
+			"name": "Computers",
+			"path": "template_pc",
+			"description": "Create an AOZ Application for Computers.",
+			"default": "true",
+			"tutorialId": "",
+			"pages": [
+				{
+					"title": "Application parameters",
+					"items": [
+						{
+							"id": "APP_TITLE",
+							"name": "Title",
+							"component": "textfield",
+							"value": "Application Name",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28 }"
+						},
+						{
+							"id": "APP_VERSION",
+							"name": "Version",
+							"component": "textfield",
+							"value": "1.0.0",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28 }"
+						},
+						{
+							"id": "APP_COPYRIGHT",
+							"name": "Copyright",
+							"component": "textfield",
+							"value": "(c)2020 My Company.",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"id": "APP_AUTHOR",
+							"name": "Author",
+							"component": "textfield",
+							"value": "Your name",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"component": "separator"
+						},
+						{
+							"id": "APP_FOLDER_ICON",
+							"name": "Folder & Icon",
+							"component": "label",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"id": "APP_FOLDER",
+							"name": "Folder",
+							"component": "pathselector",
+							"value": "%MY_AOZ_APPS%",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"defaultValue": "%MY_AOZ_APPS%",
+							"params": "{ \"width\": 472,\"height\": 28 }"
+						},
+						{
+							"id": "APP_ICON",
+							"name": "Icon File",
+							"component": "fileselector",
+							"value": "",
+							"target": "icon",
+							"type": "string",
+							"params": "{ \"width\": 472,\"height\": 28 }"
+						}
+					]
+				},
+				{
+					"title": "Display parameters",
+					"items": [
+						{
+							"id": "APP_WIDTH",
+							"name": "Width",
+							"component": "textfield",
+							"value": "1920",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "int",
+							"params": "{ \"x\": 200, \"width\": 200,\"height\": 28 }"
+						},
+						{
+							"id": "APP_HEIGHT",
+							"name": "Height",
+							"component": "textfield",
+							"value": "1080",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "int",
+							"params": "{ \"x\": 200, \"width\": 200,\"height\": 28 }"
+						},
+						{
+							"id": "APP_KEEP_PROPORTIONS",
+							"name": "Keep Proportions",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "SMOOTH_ON",
+							"name": "Smoothing Image",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"component": "separator"
+						},
+						{
+							"id": "APP_SCREEN_PARAMS",
+							"name": "Screen Parameters",
+							"component": "label",
+							"params": "{ \"width\": 620}"
+						},
+						{
+							"id": "APP_FPS",
+							"name": "Show the FPS",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						}
+					]
+				},
+				{
+					"title": "Others options",
+					"items": [
+						{
+							"id": "APP_ASSETS_FOLDER",
+							"name": "Use the \"assets\" folder by default.",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 560 }"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Smartphones",
+			"path": "template_smartphone",
+			"description": "Create an AOZ Application for Smartphones and Tablets.",
+			"default": "true",
+			"tutorialId": "",
+			"pages": [
+				{
+					"title": "Application parameters",
+					"items": [
+						{
+							"id": "APP_TITLE",
+							"name": "Title",
+							"component": "textfield",
+							"value": "Application Name",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28 }"
+						},
+						{
+							"id": "APP_VERSION",
+							"name": "Version",
+							"component": "textfield",
+							"value": "1.0.0",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28 }"
+						},
+						{
+							"id": "APP_COPYRIGHT",
+							"name": "Copyright",
+							"component": "textfield",
+							"value": "(c)2020 My Company.",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"id": "APP_AUTHOR",
+							"name": "Author",
+							"component": "textfield",
+							"value": "Your name",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"component": "separator"
+						},
+						{
+							"id": "APP_FOLDER_ICON",
+							"name": "Folder & Icon",
+							"component": "label",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"id": "APP_FOLDER",
+							"name": "Folder",
+							"component": "pathselector",
+							"value": "%MY_AOZ_APPS%",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"defaultValue": "%MY_AOZ_APPS%",
+							"params": "{ \"width\": 472,\"height\": 28 }"
+						},
+						{
+							"id": "APP_ICON",
+							"name": "Icon File",
+							"component": "fileselector",
+							"value": "",
+							"target": "icon",
+							"type": "string",
+							"params": "{ \"width\": 472,\"height\": 28 }"
+						}
+					]
+				},
+				{
+					"title": "Display parameters",
+					"items": [
+						{
+							"id": "APP_ORIENTATION",
+							"name": "Orientation",
+							"component": "combobox",
+							"options": "Portrait:portrait,Landscape:landscape,Both:both",
+							"value": "portrait",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"x\": 200, \"width\": 320,\"height\": 28 }"
+						},
+						{
+							"id": "APP_DEVICE",
+							"name": "Target",
+							"component": "combobox",
+							"options": "720p (1280x720):720p,1080p (1920x1080):1080p,2K (2560 x 1440):2k,4K Ultra HD (3840 x 2160):4kultrahd,True 4K (4096x2160):true4k,--------------------------------------------:-1,iPhone XR:iphonexr,iPhone XS:iphonexs,iPhone XS Max:iphonexsmax,iPhone X:iphonex,iPhone 8 Plus:iphone8plus,iPhone 8:iphone8,iPhone 7 Plus:iphone7plus,iPhone6 Plus/6S Plus:iphone6plus,iPhone 6/6S:iphone6,iPhone 5:iphone5,iPod Touch:ipodtouch,iPad Pro:ipadpro,iPad Third & Fourth Generation:ipad34,iPad Air 1 & 2:ipadair12,iPad Mini 2 & 3:ipadmini23,iPad Mini:ipadmini,--------------------------------------------:-1,Nexus 6P:nexus6p,Nexus 5x:nexus5x,Google Pixel 4 XL:googlepixel4xl,Google Pixel 4:googlepixel4,Google Pixel 3a XL:googlepixel3axl,Google Pixel 3a:googlepixel3a,Google Pixel 3:googlepixel3,Google Pixel 2 XL:googlepixel2xl,Google Pixel 2:googlepixel2,--------------------------------------------:-1,Samsung Galaxy Note 10+:galaxynote10plus,Samsung Galaxy Note 10:galaxynote10,Samsung Galaxy Note 9:galaxynote9,Samsung Galaxy Note 5:galaxynote5, LG G5:lgg5,One Plus 3:oneplus3,Samsung Galaxy S9+:galaxys9plus,Samsung Galaxy S9:galaxys9,Samsung Galaxy S8+:galaxys8plus,Samsung Galaxy S8:galaxys8,Samsung Galaxy S7 Edge:galaxys7edge,Samsung Galaxy S7:galaxys7,Nexus 9:nexus9,Nexus 7(2013):nexus7,Samsung Galaxy Tab 10:galaxytab10,Chromebook Pixel:chromebookpixel",
+							"value": "720p",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"x\": 200, \"width\": 520,\"height\": 28 }"
+						},						
+						{
+							"id": "APP_KEEP_PROPORTIONS",
+							"name": "Keep Proportions",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "SMOOTH_ON",
+							"name": "Smoothing Image",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},						
+						{
+							"id": "CURS_ON",
+							"name": "Cursor On",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},						
+						{
+							"id": "APP_SCREEN_PARAMS",
+							"name": "Screen Parameters",
+							"component": "label",
+							"params": "{ \"width\": 620}"
+						},
+						{
+							"id": "APP_FULLSCREEN",
+							"name": "Allows full screen",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "APP_FULLPAGE",
+							"name": "Allows full page",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "APP_FPS",
+							"name": "Show the FPS",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						}
+					]
+				},
+				{
+					"title": "Others options",
+					"items": [
+						{
+							"id": "APP_ASSETS_FOLDER",
+							"name": "Use the \"assets\" folder by default.",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 560 }"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Web Sites",
+			"path": "template_www",
+			"description": "Create a Web Site with AOZ.",
+			"default": "true",
+			"tutorialId": "",
+			"pages": [
+				{
+					"title": "Web Site parameters",
+					"items": [
+						{
+							"id": "APP_TITLE",
+							"name": "Title",
+							"component": "textfield",
+							"value": "WebSite Name",
+							"mandatory": 1,
+							"target": "all",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28 }"
+						},
+						{
+							"id": "APP_VERSION",
+							"name": "Version",
+							"component": "textfield",
+							"value": "1.0.0",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28 }"
+						},
+						{
+							"id": "APP_COPYRIGHT",
+							"name": "Copyright",
+							"component": "textfield",
+							"value": "(c)2020 My Company.",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"id": "APP_AUTHOR",
+							"name": "Author",
+							"component": "textfield",
+							"value": "Your name",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"component": "separator"
+						},
+						{
+							"id": "APP_FOLDER_ICON",
+							"name": "Folder & Icon",
+							"component": "label",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"id": "APP_FOLDER",
+							"name": "Folder",
+							"component": "pathselector",
+							"value": "%MY_AOZ_APPS%",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"defaultValue": "%MY_AOZ_APPS%",
+							"params": "{ \"width\": 472,\"height\": 28 }"
+						},
+						{
+							"id": "APP_ICON",
+							"name": "Icon File",
+							"component": "fileselector",
+							"value": "",
+							"target": "icon",
+							"type": "string",
+							"params": "{ \"width\": 472,\"height\": 28 }"
+						}
+					]
+				},
+				{
+					"title": "Display parameters",
+					"items": [
+						{
+							"id": "APP_WIDTH",
+							"name": "Width",
+							"component": "textfield",
+							"value": "1920",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "int",
+							"params": "{ \"x\": 200, \"width\": 200,\"height\": 28 }"
+						},
+						{
+							"id": "APP_HEIGHT",
+							"name": "Height",
+							"component": "textfield",
+							"value": "1080",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "int",
+							"params": "{ \"x\": 200, \"width\": 200,\"height\": 28 }"
+						},
+						{
+							"id": "APP_HTML_PARAMS",
+							"name": "HTML Parameters",
+							"component": "label",
+							"params": "{ \"width\": 620}"
+						},
+						{
+							"id": "APP_HTML_VIEW",
+							"name": "HTML View",
+							"component": "combobox",
+							"options": "Window:window,AOZ Screen:aoz-screen",
+							"value": "window",
+							"mandatory": 1,
+							"target": "aoz",
+							"type": "string",
+							"params": "{ \"x\": 200, \"width\": 520,\"height\": 28 }"
+						},
+						{
+							"component": "separator"
+						},
+						{
+							"id": "APP_SCREEN_PARAMS",
+							"name": "Screen Parameters",
+							"component": "label",
+							"params": "{ \"width\": 620}"
+						},
+						{
+							"id": "APP_FULLSCREEN",
+							"name": "Allows full screen",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "APP_FULLPAGE",
+							"name": "Allows full page",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "APP_FPS",
+							"name": "Show the FPS",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						}
+					]
+				},
+				{
+					"title": "Others options",
+					"items": [
+						{
+							"id": "APP_ASSETS_FOLDER",
+							"name": "Use the \"assets\" folder by default.",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 560 }"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Amiga",
+			"path": "template_amiga",
+			"description": "Create an AOZ Application with a Retro Style.",
+			"default": "true",
+			"tutorialId": "",
+			"pages": [
+				{
+					"title": "Application parameters",
+					"items": [
+						{
+							"id": "APP_TITLE",
+							"name": "Title",
+							"component": "textfield",
+							"value": "Application Name",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28 }"
+						},
+						{
+							"id": "APP_VERSION",
+							"name": "Version",
+							"component": "textfield",
+							"value": "1.0.0",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28 }"
+						},
+						{
+							"id": "APP_COPYRIGHT",
+							"name": "Copyright",
+							"component": "textfield",
+							"value": "(c)2020 My Company.",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"id": "APP_AUTHOR",
+							"name": "Author",
+							"component": "textfield",
+							"value": "Your name",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"component": "separator"
+						},
+						{
+							"id": "APP_FOLDER_ICON",
+							"name": "Folder & Icon",
+							"component": "label",
+							"params": "{ \"width\": 620,\"height\": 28}"
+						},
+						{
+							"id": "APP_FOLDER",
+							"name": "Folder",
+							"component": "pathselector",
+							"value": "%MY_AOZ_APPS%",
+							"mandatory": 1,
+							"target": "manifest",
+							"defaultValue": "%MY_AOZ_APPS%",
+							"type": "string",
+							"params": "{ \"width\": 472,\"height\": 28 }"
+						},
+						{
+							"id": "APP_ICON",
+							"name": "Icon File",
+							"component": "fileselector",
+							"value": "",
+							"target": "icon",
+							"type": "string",
+							"params": "{ \"width\": 472,\"height\": 28 }"
+						}
+					]
+				},
+				{
+					"title": "Display parameters",
+					"items": [
+						{
+							"id": "APP_TV",
+							"name": "TV Standard",
+							"component": "combobox",
+							"options": "PAL:pal,NTSC:ntsc",
+							"value": "pal",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"x\": 200, \"width\": 520,\"height\": 28 }"
+						},
+						{
+							"id": "APP_PIXEL_MODE",
+							"name": "Resolution",
+							"component": "combobox",
+							"options": "Lowres:lowres,Hires:hires,Lowres+Laced:lowres+laced,Hires+Laced:hires+laced",
+							"value": "lowres",
+							"mandatory": 1,
+							"target": "manifest",
+							"type": "string",
+							"params": "{ \"x\": 200, \"width\": 520,\"height\": 28 }"
+						},
+						{
+							"id": "APP_KEEP_PROPORTIONS",
+							"name": "Keep Proportions",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "CURS_ON",
+							"name": "Cursor On",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},						
+						{
+							"id": "APP_SCREEN_PARAMS",
+							"name": "Screen Parameters",
+							"component": "label",
+							"params": "{ \"width\": 620}"
+						},
+						{
+							"id": "APP_FULLSCREEN",
+							"name": "Allows full screen",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "APP_FULLPAGE",
+							"name": "Allows full page",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"params": "{ \"width\": 400 }"
+						},
+						{
+							"id": "APP_FPS",
+							"name": "Show the FPS",
+							"component": "checkbox",
+							"value": "false",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 400 }"
+						}
+					]
+				},
+				{
+					"title": "Others options",
+					"items": [
+						{
+							"id": "APP_ASSETS_FOLDER",
+							"name": "Use the \"assets\" folder by default.",
+							"component": "checkbox",
+							"value": "true",
+							"target": "manifest",
+							"type": "bool",
+							"params": "{ \"width\": 560 }"
+						}
+					]
+				}
+			]
+		}
+	]
+}

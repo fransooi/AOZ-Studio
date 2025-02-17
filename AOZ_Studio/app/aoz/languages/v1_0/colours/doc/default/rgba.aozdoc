@@ -1,0 +1,8 @@
+<i>RGBA</i>
+<b>RGBA</b> xxxxxxx
+=
+@code
+Print RGBA( 28, 127, 89, 128 )
+> 1867609
+@code
+

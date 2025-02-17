@@ -1,0 +1,18 @@
+<i>Sin</i>
+<b>Sin</b> xxxxxxx
+=
+The SIN function calculates how far point b is above the x-axis, known as the sine of the angle a.
+![PI](help:img/pi.png)
+
+Note that SIN always returns a floating point number.
+
+For example:
+@code
+Degree
+For X=0 To 319
+Y#=Sin(X)
+Plot X,Y#*50+100
+Next X
+@code
+
+

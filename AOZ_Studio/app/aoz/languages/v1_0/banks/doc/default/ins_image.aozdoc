@@ -1,0 +1,6 @@
+<i>Ins Image</i>
+<b>Ins Image</b> xxxxxxx
+=
+This version of the INS IMAGE instruction works like the version with only one parameter but inserts a series of blank image after the numbered position in the current image Bank and not only one.
+All of the images after this numbered position will then be moved down one place in the numerical order.
+

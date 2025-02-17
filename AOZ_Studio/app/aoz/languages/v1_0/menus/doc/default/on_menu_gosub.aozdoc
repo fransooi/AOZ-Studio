@@ -1,0 +1,7 @@
+<i>On Menu Gosub</i>
+<b>On Menu Gosub</b> xxxxxxx
+=
+Depending on which option has been selected by the user, ON MENU GOSUB goes to the appropriate subroutine.
+
+After using this instruction, ON MENU should be used to activate the menu system before jumping back to the main program with a RETURN.
+

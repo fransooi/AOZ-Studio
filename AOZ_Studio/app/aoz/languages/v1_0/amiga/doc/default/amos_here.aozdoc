@@ -1,0 +1,9 @@
+<i>AMOS Here</i>
+<b>AMOS Here</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+AMOS HERE is used to provide a simple report. True is returned if AOZ Studio is currently
+displayed, otherwise False indicates that the Workbench is in view.
+
+

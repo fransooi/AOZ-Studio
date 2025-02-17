@@ -1,0 +1,9 @@
+<i>Line Input</i>
+<b>Line Input</b> xxxxxxx
+=
+LINE INPUT is identical in usage to "INPUT", except that is uses a press of the [Return] key to separate each value you enter via the keyboard instead of a comma. Try this:
+@code
+Line Input "Type in three numbers";A,B,C
+Print A,B,C
+@code
+

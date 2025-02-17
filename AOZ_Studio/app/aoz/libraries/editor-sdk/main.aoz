@@ -1,0 +1,19 @@
+/**
+     EDITOR SDK - version 1.0-1 - June 2022
+            By Baptiste Bideaux
+*/
+
+// CORE
+Include "includes/libs/editor-sdk/editor-sdk.aozinc"
+Include "includes/libs/editor-sdk/archiver.aozinc"
+Include "includes/libs/editor-sdk/banks.aozinc"
+Include "includes/libs/editor-sdk/filesystem.aozinc"
+Include "includes/libs/editor-sdk/net.aozinc"
+Include "includes/libs/editor-sdk/project.aozinc"
+Include "includes/libs/editor-sdk/dialogs.aozinc"
+Include "includes/libs/editor-sdk/shell.aozinc"
+Include "includes/libs/editor-sdk/os.aozinc"
+
+// ARDUINO
+Include "includes/libs/editor-sdk/arduino/arduino.aozinc"
+Include "includes/libs/editor-sdk/arduin/arduino.leds.aozinc"

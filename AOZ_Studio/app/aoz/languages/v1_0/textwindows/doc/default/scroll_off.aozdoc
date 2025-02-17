@@ -1,0 +1,8 @@
+<i>Scroll Off</i>
+<b>Scroll Off</b> xxxxxxx
+=
+The SCROLL commands are used to control the scrolling of the current window. SCROLL OFF turns off the
+scrolling, and whenever the cursor passes beyond the bottom of the window it will reappear from the top. SCROLL
+ON starts the scrolling process again, so that a new line is inserted when the cursor tries to pass beyond the bottom
+of the window.
+

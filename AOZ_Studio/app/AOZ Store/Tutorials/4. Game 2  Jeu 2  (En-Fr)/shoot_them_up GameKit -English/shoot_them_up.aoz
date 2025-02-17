@@ -1,0 +1,129 @@
+#splashscreen: False
+
+/*
+ Shoot-em-up GAME KIT
+  Have fun modifying, improving,
+  and if you want to share or ask for help on Discord: https://discord.com/invite/JmFyFRA
+*/
+
+SCORE = 0
+
+START:			// Label to return to this part of the program for each game
+
+// Variables declaration
+NBMISSILE = 0 	// Nb of Missile fired
+KDELAY = 0 		// Time remaining between 2 shots
+KMAX = 10 		// Waiting time between 2 shots
+NBEXPLOS = 0 	// Explosion Nb
+SPEED = 0		// Gradual speed of enemy descent
+ENDGAME = 0
+Global NBEXPLOS // We globalize this variable to use it in and outside the procedure
+Global ENDGAME 	// Ditto for this variable which will indicate if the player has lost, to restart the game
+Global SCORE 	// Ditto for this variable which will count the player's score
+Global SPEED 	// Ditto for this variable which is the speed of enemies
+
+Locate 15,15 : Print "SCORE: ";SCORE; : SCORE = 0
+Wait Input // Wait for you to click on any device. For Keyboard only you may use Clear Key : Wait Key (Clear Key erase the keyboard buffer)
+
+// Installation of the Actors (the graphic elements of the game)
+// The desert scenery
+Actor "decor_desert", Image$="desert", X = 0, StartY = -304, EndY = 0, Duration=25000, LoopMove=True, Enable = False
+// The clouds (yes in the desert)
+Actor "decor_clouds", Image$="clouds", X = 0, StartY = -200, EndY = 600, Duration=15000, LoopMove=True, Enable = False
+
+// We load the graphics for the sprite animations
+Load Asset "sprites/graphics.sprite", "graphics"
+
+// We set up the player's ship parameters
+Actor "player", X = 160, Y = 260, SpriteSheet$="graphics", Anim$="idle", LoopAnim = True, LeftLimit = 0, RightLimit = 256
+// More parameters are added depending on the device: Smartphone or PC
+  If Touch Screen = True	// For touch screens we use the mouse/finger, only horizontally (honly)
+	 Actor "player", Control$ = "mouse:honly=true"
+  Else   // For PC you can use the joystick and the keyboard. We create a variable C$ for the control of the Actor:
+	C$ = "joystick0:offsetx=2,offsety=2;"	// The 1st Joystick (0) moves the Actor by 2 pixels (offsetx and y) in both X and Y, so in all directions
+	C$ = C$ + "joyleft0:anim=left1,offsetx=-2;"  // Specifically the Joystick to the left takes the animation "left1" define in resources/Assets/sprites/graphics.sprite
+	C$ = C$ + "joyright0:anim=right1,offsetx=+2;"  // Ditto to the right
+	C$ = C$ + "keyboard:offsetx=2,offsety=2;"  // The keyboard moves the Actor by 2 pixels, by default this only affects the arrow keys and the a-s / w-d keys
+	C$ = C$ + "ArrowLeft:anim=left1,offsetx=-2;"  // Specifically the left key takes the animation "left1" define in resources/Assets/sprites/graphics.sprite
+	C$ = C$ + "ArrowRight:anim=right1,offsetx=2;"  // Ditto to the right
+	C$ = C$ + "none:anim=idle"	// If there is no keyboard or joystick action, we take the "idle" animation (of the ship with the sparkling reactor)
+	Actor "player", Control$ = C$  // We Assign all these controls parameters to the Actor
+	// Note: Instead of concatenating C$ it is also possible to write all this in 1 line directly after the = of Control$
+  End If
+
+// We set 3 enemies (there are 3 different: "small", "medium" and "big")
+// The Group$ property is used to group Actors together to then process, test, ... them all together, for example in the management of collisions
+Actor "Enemy1", X = 40,  Y = -600, SpriteSheet$="graphics", Anim$="small",  Group$="enemy", LoopAnim = True, OnChange$ = "ENEMY_CHANGE"
+Actor "Enemy2", X = 250, Y = -700, SpriteSheet$="graphics", Anim$="medium", Group$="enemy", LoopAnim = True, OnChange$ = "ENEMY_CHANGE"
+Actor "Enemy3", X = 160, Y = -500, SpriteSheet$="graphics", Anim$="big",    Group$="enemy", LoopAnim = True, OnChange$ = "ENEMY_CHANGE"
+SETSPEED  // Call the SETSPEED procedure (below) to set the initial speed of enemies
+
+
+// Main game loop (Do...Loop)
+Do
+	// If the SPACE bar (keyState (32)) or the FIRE button on the gamepad (Gamepad Button) or the mouse button (Mouse Key) is pressed
+	// AND if the waiting time between 2 missiles has elapsed, then we fire a missile
+	If ( Key State(32) Or Gamepad Button(0,0) Or Mouse Key <> 0 ) And KDELAY = 0
+		// Creation of a new missile
+		Actor "MISSILE" + Str$(NBMISSILE), Group$ = "player-missile", X=Actor X("player"), Y=Actor Y("player") - 32, Auto$="offsety=-12", SpriteSheet$="graphics", Anim$="missile", LoopAnim = True, OnCollision$="MISSILE_COL", OnChange$ = "MISSILE_CHANGE"
+		NBMISSILE = NBMISSILE + 1 			// Next missile
+		Play Audio "missile" 				// Play missile sound
+		If NBMISSILE > 10 Then NBMISSILE = 0// If the number of missiles exceeds 10, we return to 0
+		KDELAY = KMAX 						// Wait before firing another missile
+	Else // (no key was pressed) the wait for the next shot decreases
+		If KDELAY > 0 Then KDELAY = KDELAY - 1
+	End If
+	Wait Vbl  								// Synchronize display
+	If ENDGAME = 1 Then Actor Del "*" : Goto START // if the ENEMY_CHANGE procedure informed of the end of the game (by ENDGAME = 1) we delete all the actors and we start again the game by jumping at the START label
+Loop
+
+// Collision procedure between a missile and an enemy
+Procedure MISSILE_COL[ INDEX1$, INDEX2$, ANIM2$, GROUP2$ ]
+	// If the actor missile is hit by an "enemy" type then we explode the ennemy!
+	If GROUP2$ = "enemy"
+		// We remove the missile
+		Actor Del INDEX1$
+		// An Actor animated with an explosion is displayed at the position of the enemy hit
+		Actor "explosion" + Str$( NBEXPLOS ), X=Actor X( INDEX2$ ), Y=Actor Y( INDEX2$ ), SpriteSheet$="graphics", Anim$="explosion", OnAnimChange$ = "EXPLOSION_ANIM"
+		// We reposition an enemy at the top (off the screen: Y-600) to a random X position
+		Actor INDEX2$, X = Rnd( Screen Width ), Y = -600
+		// Next explosion
+		NBEXPLOS = NBEXPLOS + 1
+		// Every 5 hits we increase the speed of descent of enemies (therefore the difficulty of the game)
+		If NBEXPLOS = 5 Then NBEXPLOS = 0 : Inc SPEED : SETSPEED
+		// We play the explosion sound effect of the enemy (small, medium, big)
+		Play Audio ANIM2$ + "_explosion"
+		// We increase the SCORE, to be used at the beginning of the program
+		SCORE = SCORE +100
+	End If
+End Proc
+
+// Procedure which tests the position of the missile (called by the OnChange$ of the Missile Actors).
+// The procedure provides all the information about the Actor,
+// here we get INDEX$ (the name of the Actor) and Y (its vertical position)
+Procedure MISSILE_CHANGE[ INDEX$, Y ]
+	// So we test if the missile exit the screen at the top (Y<0) and we delete it (Actor Del)
+	// if we do not test this case the collision with an enemy will still run outside of the screen.
+	If Y < 0 Then Actor DEL INDEX$
+End Proc
+
+// Procedure that tests the position of an enemy (called by the OnChange$ of enemie's Actors).
+// Here we get INDEX$ and Y
+Procedure ENEMY_CHANGE[ INDEX$, Y ]
+	// If the enemy leaves at the bottom of the screen (Y>304) -> end of the game as per the last line of the main Do...Loop
+	If Y > 304 Then	Boom : ENDGAME = 1
+End Proc
+
+// Procedure for testing the animation state of each explosion (called by OnAnimChange$ of the explosion).
+// Here we get EVENT$ and INDEX$
+Procedure EXPLOSION_ANIM[ EVENT$, INDEX$ ]
+	// "onanimcomplete" is returned by EVENT$ if the last frame of the animation has been played.
+	// If this is the case, we remove the Actor of that explosion.
+	If EVENT$ = "onanimcomplete" Then Actor Del INDEX$
+End Proc
+
+Procedure SETSPEED //Procedure for increasing the speed of descent of enemies according to the SPEED variable (see procedure MISSILE_COL)
+ Actor "Enemy1", Auto$ = "offsety=" + Str$(3+SPEED)
+ Actor "Enemy2", Auto$ = "offsety=" + Str$(1+SPEED)
+ Actor "Enemy3", Auto$ = "offsety=" + Str$(0+SPEED)
+End Procedure

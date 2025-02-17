@@ -1,0 +1,9 @@
+<i>Draw Shadow</i>
+<b>Draw Shadow</b> xxxxxxx
+=
+This instruction allows you to add a shadow to any graphics with AOZ's graphics drawing instructions. With a bit of imagination, shadow can be used to create other effects, such as add a glow to an image.
+Once the shadow is set, it will be used for all subsequent text operations until it is turned off, by using 'Draw Shadow Off'.
+Also, once set, individual elements of the shadow definition can be changed, such as the blur.
+
+
+

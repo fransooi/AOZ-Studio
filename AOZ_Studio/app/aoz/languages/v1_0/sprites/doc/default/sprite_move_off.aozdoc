@@ -1,0 +1,6 @@
+<i>Sprite Move Off</i>
+<b>Sprite Move Off</b> xxxxxxx
+=
+This command suspends the movement of all or the specified Bobs on screen. Frozen Objects may be re-animated using the
+"SPRITE MOVE ON" command.
+

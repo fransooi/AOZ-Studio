@@ -1,0 +1,23 @@
+<i>Dev Open</i>
+<b>Dev Open</b> xxxxxxx
+=
+The DEV OPEN command opens a communication port and prepares the device for use by AOZ
+programs. If this device is not already installed, it will be loaded from the "DEVS" folder of your current start-up
+disc automatically. Floppy disc users may be requested to swap discs at this point.
+
+The selected device will now remain active during the course of the program, and will only be closed if a DEV
+CLOSE command is called, or a RUN command is used to clear the variable area, or a CLEAR operation is
+undertaken.
+
+The specified channel number should be from zero to 4, the "name.device" parameter enters the name of the device
+to be initialised in normal AmigaDOS format, and IOlength specified the length of the IO structure to be created for
+the device. If in doubt, use a value of 256, which should be sufficient for most devices. The final flags parameter
+sets the status of the device flags if applicable. Please refer to your system documentation for details.
+
+DEV OPEN performs the following operations:
+
+- Firstly, a communication port is created and initialised.
+- Next, an IO Ext structure is opened, ready for communication.
+- Lastly, the OPEN DEVICE function is executed with the new structure.
+
+

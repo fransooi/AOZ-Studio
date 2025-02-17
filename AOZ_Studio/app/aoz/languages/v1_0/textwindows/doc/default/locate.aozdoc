@@ -1,0 +1,12 @@
+<i>Locate</i>
+<b>Locate</b> xxxxxxx
+=
+The Locate embedded command moves the graphics cursor to coordinates x,y measured relative to the top left-hand
+corner of the 'menu line. Please note that after this command, the graphics cursor will always be positioned at the
+bottom right of the object which has just be drawn. These coordinates will also be used to determine the location of
+any further items in your menu. For example:
+@code
+Home : Print "Hello"
+Locate 0, 20 : Print "AOZ"
+@code
+

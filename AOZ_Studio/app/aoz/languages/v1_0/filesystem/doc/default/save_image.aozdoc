@@ -1,0 +1,21 @@
+<i>Save Image</i>
+<b>Save Image</b> xxxxxxx
+=
+The SAVE IMAGE command saves the current screen as a picture file with the selected filename onto disc.
+
+This version AOZ Studio supports PNG and JPG, this type being determined by the extension of the filename (for JPP you can also save as ".jpeg").
+
+You can indicate the compression ratio, from 0 to 1 with the optional parameter, the default value being 0.8...
+@code
+
+// Converts all the PNG images of a directory to JPG
+file$ = Dir First$( "*.png" )
+While file$ <> ""
+Screen Close 0
+Load Image file$, 0
+file$ = Left$( file, 0, Len( file$ - 3 ) ) + "jpg"
+Save Image file$, 0
+file$ = Dir Next$
+Wend
+@code
+

@@ -1,0 +1,10 @@
+<i>Menu Inactive</i>
+<b>Menu Inactive</b> xxxxxxx
+=
+Use this command to turn off options in your menu. By selecting the number of a level from 1 to 8, all items in that
+level will be deactivated. If you define an individual item in brackets by giving its parameters, only that item will
+become inactive.
+
+If no inactive string has been defined when you originally set your menu up with MENU$, any menu options that
+have been made inactive will be shown in italics. Otherwise the special inactive string will appear.
+

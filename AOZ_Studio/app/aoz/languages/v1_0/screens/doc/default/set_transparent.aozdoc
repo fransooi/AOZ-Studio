@@ -1,0 +1,34 @@
+<i>Set Transparent</i>
+<b>Set Transparent</b> xxxxxxx
+=
+After this instruction, the colors you have indicated will be transparent. It means that the user will see whatever lays behind the screen at the position where the given colors are used.
+
+Use this instruction to easliy create parallax scrollings as in this example:
+
+@code
+Degree
+
+// Open a background screen and put some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Open a front screen, larger than the display and put some circles in it
+Screen Open 1, 1280 * 4, 720, 16
+
+// Set color 0 of the front screen (the current one) to transparent and clear the screen
+Set Transparent 0 : Cls 0
+Screen To Front 1			// Not really necessary... ;)
+For N = 0 To 100
+Ink Rnd( 15 ) + 1 : Circle Rnd( 1280 * 4 ), Rnd( 720 ), Rnd( 200 )
+Next
+
+// Perform the scroll
+For X = 0 To 1280 * 4
+Screen Offset 1, X, 0
+Wait Vbl
+Next
+@code
+Warning: this instruction will invoke a complete remapping of the screen that might take a long time. Use this instruction to make parralax scrolling diplays
+

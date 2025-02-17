@@ -1,0 +1,10 @@
+<i>HTML Code$</i>
+<b>HTML Code$</b> xxxxxxx
+=
+@code
+Load Asset "resources/assets/home.html", "home"
+Show HTML "home"
+
+Print HTML Code$( "contact_list" )
+@code
+

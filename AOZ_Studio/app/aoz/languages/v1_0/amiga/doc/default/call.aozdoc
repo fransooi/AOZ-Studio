@@ -1,0 +1,47 @@
+<i>Call</i>
+<b>Call</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The CALL instruction is used to run a machine code program straight from the Amiga's memory. You can specify
+either an absolute memory location or the number of a memory bank, previously installed using the PLOAD
+command.
+
+On entry to the program, registers D0 to D7 and A0 to A2 will be loaded from values stored in the DREG and
+AREG functions. The assembly language program can change any 68000 registers it chooses. At the start of the
+routine, register A3 will point to the optional parameter list, which is explained next, and A5 will contain the address
+of the AOZ Studio data zone. When the routine has completed its task, you can return to Basic with a RTS.
+
+After the memory location or bank number, a list of optional parameters may be given in the form of a list of
+values. These values will be taken from the AOZ Studio Basic program and pushed onto the A3 stack by the
+CALL command. They must be removed in reverse order, so the last value in the list will be the first on the stack.
+The format of a parameter depends on what type of variable they are, as follows:
+
+Integers. The parameter holds a long word, containing a normal AOZ Studio number. It can be grabbed with
+a line such as this:
+@code
+Move.l (a3)+,d0
+@code
+Single precision numbers. These are stored in Fast Floating Point format, and are held in one long word. To load
+such a number into register d0, use the following:
+@code
+Move.l (a3)+,d0
+@code
+Double precision numbers. These are stored in IEEE double precision format, and are held as two long words. To
+load a double precision variable into registers d0 and dl, you could use this:
+@code
+Move.l (a3)+,d0 * Top half
+Move.l (a3)+,d1 * Bottom half
+@code
+Strings. The stack contains the Address of the string in memory. All strings begin with a single word that holds their
+length. For example:
+@code
+
+; Grab the string. Each string is stored at an EVEN address,
+; starting with the length of the string, and then the string itself
+Move.l (a3)+,a2 	* Address of the string
+Move.w (a2)+,d2 	* Length of the string
+
+@code
+
+

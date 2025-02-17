@@ -1,0 +1,102 @@
+{
+	"templates":
+	[
+		{
+			"name": "Cross platform",
+			"path": "template_cross",
+			"type": "project",
+			"title":
+			{
+				"fr": "Projet AOZ multiplateforme.",
+				"en": "AOZ Project cross-platform."
+			},
+			"description":
+			{
+				"fr": "Créer une application AOZ qui pourra s'exécuter sur plusieurs plateformes (PC, Mac, Linux, Android et IOS). L'application pourra détecter l'orientation de l'écran pour s'adapter aux smartphones et tablettes.",
+				"en": "Create an AOZ application that can run on multiple platforms (PC, Mac, Linux, Android and IOS). The application will be able to detect the screen orientation to adapt to smartphones and tablets."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Informations"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Icône et Ressources",
+						"en": "Icon and Resources"
+					}
+				}
+			]
+		},
+
+		{
+			"name": "Amiga",
+			"path": "template_amiga",
+			"type": "project",
+			"title":
+			{
+				"fr": "Projet AOZ dans le style du Commodore Amiga.",
+				"en": "AOZ Project with a Commodore Amiga's style."
+			},
+			"description":
+			{
+				"fr": "Créer une application AOZ avec les caractéristiques du Commodore Amiga. Pour les nostalgiques de AMOS Basic et STOS Basic ;)",
+				"en": "Create an AOZ application with the features of the Commodore Amiga. For the nostalgic of AMOS Basic and STOS Basic ;)"
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Informations"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					}
+				}
+			]
+		},
+		{
+			"name": "Empty",
+			"path": "template_empty",
+			"type": "copy",
+			"title":
+			{
+				"fr": "Projet AOZ personnalisable.",
+				"en": "Customizable AOZ Project."
+			},
+
+			"description":
+			{
+				"fr": "Créer un projet AOZ que vous pourrez configurer manuellement.",
+				"en": "Create an AOZ project that you can configure manually."
+			},
+
+			"pages":[]
+		}
+	]
+}

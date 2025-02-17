@@ -1,0 +1,8 @@
+<i>Menu TLine</i>
+<b>Menu TLine</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+MENU TUNE is used to display a section of your menu as a total line, stretching from the extreme left to the extreme right of the screen. The complete line will be drawn even if the first item is centre screen. Use this instruction in the same way as MENU LINE during your menu definitions.
+
+

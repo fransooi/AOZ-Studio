@@ -1,0 +1,362 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Companion Extension
+ * By Francois Lionet
+ *
+ * AOZ Tween objects and instructions
+ *
+ * @author FL
+ * @date first pushed on 22/10/2022
+ */
+#noWarning:"instruction_not_implemented"
+#need_javascript_file:"tween.js-main/dist/tween.umd.js"
+
+{
+	this.tweens = {};
+	this.groupManual = new TWEEN.Group();
+	this.groupTimer = new TWEEN.Group();
+	this.groupTicks = new TWEEN.Group();
+	var self = this;
+	this.aoz.addExternalEventHandler( this, function( type, event )
+	{
+		if ( type == 'update' )
+		{
+			try
+			{
+				self.groupTimer.update( performance.now() );
+				self.groupTicks.update( self.aoz.frameCounter );
+			}
+			catch ( e )
+			{
+				debugger;
+			}
+		}
+		return event;
+	} );
+	
+	this.tween = function( index, args )
+	{
+		var tween = this.tweens[ index ];
+		var duration = args.duration;
+		if ( !tween )
+		{
+			var group;
+			switch ( args.group.toLowerCase() )
+			{
+				case 'manual':
+					group = this.groupManual;
+					break;
+				case 'ticks':
+					group = this.groupTicks;
+					break;
+				default:
+				case 'timer':
+					group = this.groupTimer;
+					duration *= 1000;
+					break;
+			}
+			tween = new TWEEN.Tween( { value: args.in }, group ).to( { value: args.out }, duration );
+			this.tweens[ index ] = tween;
+			tween.aozIndex = index;
+			tween.easing( this.getEasing( args.easing, args.inOut ) );
+		}
+
+		// Properties
+		if ( typeof args.yoyo != 'undefined' )
+			tween.yoyo( args.yoyo )
+		if ( typeof args.repeat != 'undefined' )
+			tween.repeat( args.repeat )
+		if ( typeof args.repeatDelay != 'undefined' )
+			tween.repeatDelay( args.repeatDelay );
+		if ( typeof args.chain != 'undefined' )
+		{
+			var chainTo = this.tweens[ args.chain ];
+			if ( !chainTo )
+				throw { error: 'tween_not_defined', parameter: args.chainTo };	
+			tween.chain( chainTo );
+		}
+
+		var self = this;
+		var extra = args.extra;
+		if ( args.onUpdate )
+		{
+			var onUpdate = args.onUpdate;
+			tween.onUpdate( function( value, elapsed )
+			{
+				if ( typeof args.onUpdate == 'string' )
+					aoz.runProcedure( args.onUpdate, { name$: self.name, value: self.vars.Value_f } );
+				else
+				onUpdate( value, elapsed, extra );
+			} );
+		}
+		if ( args.onComplete )
+		{
+			var onComplete = args.onComplete;
+			var deleteAtEnd = args.deleteAtEnd;
+			tween.onComplete( function( value, elapsed )
+			{
+				if ( typeof args.onComplete == 'string' )
+					aoz.runProcedure( args.onComplete, { name$: self.name, value: self.vars.Value_f } );
+				else
+					args.onComplete( value, elapsed, extra );
+				if ( deleteAtEnd )
+					self.tweens[ index ] = null;
+			} );
+		}
+		if ( args.onRepeat )
+		{
+			var onRepeat = args.onRepeat;
+			tween.onRepeat( function( value, elapsed )
+			{
+				if ( typeof args.onRepeat == 'string' )
+					aoz.runProcedure( args.onComplete, { name$: self.name, value: self.vars.Value_f } );
+				else
+					args.onRepeat( value, elapsed, extra );
+			} );
+		}
+		var autoStart = true;
+		args.autoStart = typeof args.autoStart != 'undefined' ? args.autoStart : true;
+		if ( args.autoStart )
+		{
+			if ( tween._group == this.groupManual )
+				tween.start( 0 );
+			else if ( tween._group == this.groupTicks )
+				tween.start( this.aoz.frameCounter );
+			else
+				tween.start();
+		}
+		return tween;
+	}
+	this.getEasing = function( type, inOut )
+	{
+		var easing;
+		var classType = type.charAt( 0 ).toUpperCase() + type.substring( 1 ).toLowerCase();
+		if ( !TWEEN.Easing[ classType ] )
+			throw { error: 'easing_not_defined', parameter: type };
+		easing = TWEEN.Easing[ classType ];
+		if ( !easing.None )
+		{
+			switch ( inOut.toLowerCase() )
+			{
+				case 'in':
+					inOut = 'In';
+					break;
+				case 'out':
+					inOut = 'Out';
+					break;
+				case 'inout':
+					inOut = 'InOut';
+					break;
+				default:
+					throw { error: 'easing_not_defined', parameter: inOut };
+			}
+			easing = easing[ inOut ];
+			if ( !easing )
+				throw { error: 'easing_not_defined', parameter: args.type };	
+		}
+		else
+		{
+			easing = easing.None;
+		}
+		return easing;
+	}
+	this.getTween = function( index )
+	{
+		if ( !index )
+			return this;
+		if ( this.aoz.utilities.isObject( index ) )
+			return index;
+
+		var tween = this.tweens[ index ];
+		if ( !tween )
+			throw { error: 'tween_not_defined', parameter: index };	
+		return tween;		
+	}
+	this.deleteTween = function( index )
+	{
+		var tween = this.getTween( index );
+		this.tweens[ tween.aozIndex ] = null;
+		tween._group.remove( tween );
+	}
+	this.start = function( index )
+	{
+		var tween = this.getTween( index );
+
+		if ( tween._group == this.groupManual )
+			tween.start( 0 );
+		else if ( tween._group == this.groupTicks )
+			tween.start( this.aoz.frameCounter );
+		else
+		tween.start();
+	}
+	this.stop = function( index )
+	{
+		var tween = this.getTween( index );
+		tween.stop();
+	}
+	this.value = function( index )
+	{
+		var tween = this.getTween( index );
+		return tween._object.value;
+	}
+	this.update = function( index, numberOfTimes )
+	{
+		var tween = this.getTween( index );
+		if ( tween._group == this.groupManual )
+		{
+			for ( var count = 0; count <= numberOfTimes; count++ )
+			{
+				tween.update( count );
+			}
+		}
+		else
+		{
+			throw { error: 'tween_not_manual', parameter: index };	
+		}
+	}
+}
+
+Class Tween, Value# = 0, ValueEnd# = 100, Duration# = 1, \
+	Color, ColorEnd, \
+	Easing$ = "Linear", InOut$ = "In", \
+	Yoyo = False, Repeat = 0, \
+	Delay = 0, RepeatDelay = 0, Chain = (index), \
+	AutoStart = True, Name$ = "", OnComplete$ = "", OnRepeat$ = "", OnUpdate$ = "", \
+	Elapsed# = 0, Group$ = "timer", \
+	Variable = (varptr)
+	{
+		#errors
+		#waiting
+		#noDefaults
+
+		var self = this;
+		function setVariable( elapsed )
+		{
+			var value = self.vars.Value_f;
+			if ( self.variableDefinition.variable.numberType == '0' )
+				value = Math.floor( value );
+			if ( !self.vArray )
+			{
+				self.variableDefinition.variable.dimensions = self.dimensions;
+				self.aoz.setVariable( self.variableDefinition.variable, value );
+			}
+			else
+			{
+				var dim = self.vArray.dimensions.length - 1;
+				var count = Math.floor( elapsed * self.vArray.dimensions[ dim ] );
+				var dimensions = self.aoz.utilities.copyObject( self.dimensions );
+				dimensions[ dim ] = count;
+				self.vArray.setValue( dimensions, value );
+			}
+		}
+		function onRepeat( value, elapsed, tween )
+		{
+			if ( self.vars.OnRepeat$ )
+				self.aoz.runProcedure( self.vars.OnRepeat$, { name$: self.vars.Name$, value: self.vars.Value_f } );
+		};
+		function onComplete( value, elapsed, tween )
+		{
+			if ( self.vars.OnComplete$ )
+				self.aoz.runProcedure( self.vars.OnComplete$, { name$: self.vars.Name$, value: self.vars.Value_f } );
+		};
+		function onUpdate( value, elapsed, tween )
+		{
+			self.vars.Elapsed_f = elapsed;
+			if ( self.aoz.utilities.isObject( value.value ) )
+				self.vars.Value_f = self.aoz.utilities.getAOZRGB( Math.floor( value.value.r ), Math.floor( value.value.g ), Math.floor( value.value.b ) );
+			else
+				self.vars.Value_f = value.value;
+			if ( self.variableDefinition )
+				setVariable( elapsed );
+			if ( self.vars.OnUpdate$ )
+				self.aoz.runProcedure( self.vars.OnUpdate$, { name$: self.vars.Name$, value: self.vars.Value_f } );
+		};
+
+		// Initialize default variables if object is not created
+		if ( !this.isInitialized )
+		{
+			for ( var p in this.defaults )
+			{
+				if ( typeof vars[ p ] == 'undefined' )
+					vars[ p ] = this.defaults[ p ];
+			}
+			this.isIntialized = true;
+			this.vars = vars;	
+			if ( vars.Name$ == '' )
+				vars.Name$ = this.name;
+			var args = 
+			{
+				name: vars.Name$,
+				duration: vars.Duration_f,
+				easing: vars.Easing$,
+				inOut: vars.InOut$,
+				yoyo: vars.Yoyo$,
+				repeat: vars.Repeat,
+				repeatDelay: vars.RepeatDelay_f,
+				chain: vars.Chain,
+				onUpdate: onUpdate,
+				onComplete: onComplete,
+				onRepeat: onRepeat,
+				autoStart: vars.AutoStart,
+				group: vars.Group$,
+				extra: this
+			};
+			if ( typeof vars.Color != 'undefined' && typeof vars.ColorEnd != 'undefined' )
+			{
+				args.in = this.aoz.utilities.getRGBColors( vars.Color );
+				args.out = this.aoz.utilities.getRGBColors( vars.ColorEnd );			
+			}
+			else
+			{
+				args.in = vars.Value_f,
+				args.out = vars.ValueEnd_f
+			}
+			if ( vars.Variable )
+			{
+				this.variableDefinition = this.aoz.getVariableDefinition( vars.Variable );
+				this.dimensions = this.variableDefinition.variable.currentDimensions;
+				if ( this.variableDefinition.variable.numberOfDimensions > 0 && this.dimensions.length == 0 )
+				{
+					this.vArray = this.aoz.getVarptr( this.variableDefinition, this.parent );
+					args.group = 'manual';
+					args.duration = this.vArray.dimensions[ this.vArray.dimensions.length - 1 ];
+				}
+			}
+			this.tween = this.aoz.ext_tween.tween( this.name, args );
+			if ( args.group == 'manual' && args.autoStart )
+			{
+				this.aoz.ext_tween.update( this.name, args.duration );
+			}
+		}
+	}
+	Method Stop
+	{
+		this.tween.stop();
+		return { type: 0 };
+	}
+	End Method
+	Method Start
+	{
+		this.tween.start();
+		return { type: 0 };
+	}
+	End Method
+End Class
+

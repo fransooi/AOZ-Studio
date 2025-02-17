@@ -1,0 +1,6 @@
+<i>Port</i>
+<b>Port</b> xxxxxxx
+=
+The PORT function is used to test the status of readiness of the specified channel. If the device is waiting to be read True is returned, otherwise False.
+
+

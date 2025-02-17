@@ -1,0 +1,16 @@
+<i>Menu Del</i>
+<b>Menu Del</b> xxxxxxx
+=
+On its own, MENU DEL erases the whole menu. But be warned, once the menu has been deleted it cannot be retrieved!
+
+MENU DEL can also be qualified by up to eight parameters, separated by commas, and held in a single pair of
+brackets. These values represent the precise position of the item in the menu hierarchy to be deleted.
+
+For example:
+
+@code
+Menu Del(1) : Rem Delete title number 1
+Menu Del(1,2) : Rem Delete option 2 of title 1
+Menu Del(2,3,4) : Rem Delete sub-option 4 of option 3 of title 2
+@code
+

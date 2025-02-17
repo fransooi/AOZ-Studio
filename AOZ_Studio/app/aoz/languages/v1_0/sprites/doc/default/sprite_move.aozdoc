@@ -1,0 +1,7 @@
+<i>Sprite Move</i>
+<b>Sprite Move</b> xxxxxxx
+=
+The instruction has been added to AOZ to allow you to declare movement in just one instruction instead of two, namely "Sprite Move X" and "Sprite Move Y".
+
+Each string contains the definition of the movement for it's axe. The syntax of the string is identical to the one used in "Sprite Move X" and "Sprite Move Y".
+

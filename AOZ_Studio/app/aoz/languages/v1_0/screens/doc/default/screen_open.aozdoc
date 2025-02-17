@@ -1,0 +1,40 @@
+<i>Screen Open</i>
+<b>Screen Open</b> xxxxxxx
+=
+To open a new screen give the SCREEN OPEN command, followed by these parameters:
+
+- *index* is the identification index of the new screen. If a screen with this number already exists, it will be completely replaced by this new screen.
+
+- *width* sets up the number of pixels that will make up the width of the new screen. There is no problem in opening
+a screen that is wider than the physical limit of the television or monitor display, and extra-wide screens can be
+manipulated by the SCREEN OFFSET command. The widest possible screen depends on the browser and the platform your application is running on.
+
+- *height* holds the number of pixels that make up the height of the screen. Like the width parameter, this can be larger
+than the visible screen height to a maximum of 1023 pixels, and scrolled into view. Screens with oversized widths
+and heights can be used with all of the normal screen techniques which are explained later.
+
+- *numberOfColors* sets the number of colours to be used for the new screen to create a paletted screen.
+If you ommit this parameter, the screen will be create in True Color mode, without a palette (TODO)
+
+- *pixelMode* is a choice of the width of the pixel points on the screen and is specific to the Amiga.
+Lowres is the normal status, allowing 320 pixels to be displayed across the screen, at any one time. Hires halves the width of each pixel, and so allows 640 to
+be displayed.
+
+- *lines* if specified indicates the number of lines in the text window associated with the screen. If not specified the number of lines will be the one of the manifest of the application:
+1. AOZ: 25 lines
+2. Amiga NTSC: 25 lines
+3. Amiga PAL: 32 lines
+4. Amiga NTSC "Interlaced": 50 lines
+5. Amiga PAL "Interlaced": 64 lines
+
+Note that the number of columns in the default window created in the back of the screen is calculated from the size of the font, which is itself the result of a calculation based on the number of lines, and is for default manifest values:
+1. AOZ: 80 columns
+2. Amiga "Lowres": 40 columns
+3. Amiga "Hires": 80 columns
+
+- *tags$* is a list of text tags that allow you to control how the screen is open
+1. #keepCurrent: will not activate the new screen
+2. #noCls: will not clear the new screen and leave the canvas with it's original transparent color
+3. #noTextWindow: will not open a text window in the back, saving processing time if you only display graphics
+4. #findFreeIndex: will use the index you give as a basis and find a free screen above this index, if it is a number
+

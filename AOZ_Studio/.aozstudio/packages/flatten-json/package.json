@@ -1,0 +1,55 @@
+{
+  "_from": "https://www.atom.io/api/packages/flatten-json/versions/0.1.5/tarball",
+  "_id": "flatten-json@0.1.5",
+  "_inBundle": false,
+  "_integrity": "sha512-maPMMbv5jilkev8A2rUaOUlR4cTIJnXnkNe3tv9fCdhCeybk1lPOqhwje1NWTKHyk4ihkwStdNXYoPfu7Qy03A==",
+  "_location": "/flatten-json",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "remote",
+    "raw": "https://www.atom.io/api/packages/flatten-json/versions/0.1.5/tarball",
+    "rawSpec": "https://www.atom.io/api/packages/flatten-json/versions/0.1.5/tarball",
+    "saveSpec": "https://www.atom.io/api/packages/flatten-json/versions/0.1.5/tarball",
+    "fetchSpec": "https://www.atom.io/api/packages/flatten-json/versions/0.1.5/tarball"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://www.atom.io/api/packages/flatten-json/versions/0.1.5/tarball",
+  "_shasum": "e1411d6239386cea364f6d6d2d03bdf765253e66",
+  "_spec": "https://www.atom.io/api/packages/flatten-json/versions/0.1.5/tarball",
+  "_where": "C:\\Users\\jeglo\\AppData\\Local\\Temp\\apm-install-dir-120420-11152-1yjtif7.18q4l",
+  "activationCommands": {
+    "atom-workspace": [
+      "flatten-json:flatten",
+      "flatten-json:unflatten"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/KunihikoKido/atom-flatten-json/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "flat": "^2.0.1"
+  },
+  "deprecated": false,
+  "description": "flatten (unflatten) json",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "homepage": "https://github.com/KunihikoKido/atom-flatten-json#readme",
+  "keywords": [
+    "json",
+    "flat",
+    "format"
+  ],
+  "license": "MIT",
+  "main": "./lib/flatten-json",
+  "name": "flatten-json",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KunihikoKido/atom-flatten-json.git"
+  },
+  "version": "0.1.5"
+}

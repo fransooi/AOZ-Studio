@@ -1,0 +1,8 @@
+<i>Sprite Priority</i>
+<b>Sprite Priority</b> xxxxxxx
+=
+When SPRITE PRIORITY ON is used, Sprites with the highest y-coordinates take priority on the screen.
+It is usually best to set hot spots at the bottom of the Sprite to exploit this priority, and some superb perspective effects can be created.
+
+All that is needed to re-set the original sprite number priorities is to use the SPRITE PRIORITY OFF command.
+

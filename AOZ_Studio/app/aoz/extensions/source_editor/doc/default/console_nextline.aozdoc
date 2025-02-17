@@ -1,0 +1,6 @@
+<i>Console Nextline</i>
+<b>Console Nextline</b> xxxxxxx
+=
+This function is to be used after a command has been entered: commands do not add any line so that you can process
+and print the result. Once the result printed, called this instruction to display the command prompt again.
+

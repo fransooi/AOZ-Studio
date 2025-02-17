@@ -1,0 +1,29 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ 
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ 
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ - Google Font Definition
+ *
+ */	
+<FONT_FACE-START>
+/* pixeltype */
+@font-face {
+	font-family: 'pixeltype';
+	src: url('../fonts/pixeltype-webfont.eot');
+	src: url('../fonts/pixeltype-webfont.eot?#iefix') format('embedded-opentype'),
+		 url('../fonts/pixeltype-webfont.woff2') format('woff2'),
+		 url('../fonts/pixeltype-webfont.woff') format('woff'),
+		 url('../fonts/pixeltype-webfont.ttf') format('truetype'),
+		 url('../fonts/pixeltype-webfont.svg#pixeltyperegular') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+<FONT_FACE-END>

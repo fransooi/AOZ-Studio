@@ -1,0 +1,17 @@
+<i>Peek$</i>
+<b>Peek$</b> xxxxxxx
+=
+PEEK$ reads the maximum number of characters specified in the length parameter, into a new string. If this is not a
+sensible value, the length is assumed to be 65500. The address parameter is the location of the first character to be
+read.
+The address should be resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset. Normal computer memory is inaccessible.
+
+There is an optional stop$ parameter, and if this is included, AOZ Studio will stop in its tracks the moment a
+specified stop$ character is encountered in the memory area. You will then be left with a string of characters up to
+the final stop$. Here is an example using PEEK$:
+@code
+Reserve As Data 10,1000 : Rem Reserve a memory bank
+Poke$ Start( 10 ), "Hello AOZ!"
+Print Peek$( Start( 10 ), 10 )
+@code
+

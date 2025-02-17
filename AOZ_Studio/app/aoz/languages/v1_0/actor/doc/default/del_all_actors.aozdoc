@@ -1,0 +1,11 @@
+<i>instruction:Delete all the actors</i>
+<b>Del All Actors</b>
+<b>Del All Actors</b>
+=
+@code
+Cls 0
+Actor 1, x=100, y=50, image$="magic"
+Actor 2, x=150, y=50, image$="lucie"
+Del All Actors
+@code
+

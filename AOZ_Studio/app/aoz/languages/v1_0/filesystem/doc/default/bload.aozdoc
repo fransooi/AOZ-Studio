@@ -1,0 +1,6 @@
+<i>BLoad</i>
+<b>BLoad</b> xxxxxxx
+=
+The BLOAD instruction loads a file of binary data into memory. It does not alter the data in any way.
+To load this data into a memory bank, the bank must first be reserved, otherwise an error will be generated. Also note that files to be loaded must not be any larger than the reserved bank, or other areas of memory will be corrupted.
+

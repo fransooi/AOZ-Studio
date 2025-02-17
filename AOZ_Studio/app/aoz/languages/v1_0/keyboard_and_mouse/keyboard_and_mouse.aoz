@@ -1,0 +1,810 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Rainbow Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Keyboard and Mouse
+@description:Instructions and functions to handle the keyboard and the mouse
+@author:Francois Lionet and Brian Flanagan
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Key Code Table
+@description_file:key_codes_table.aozdoc
+@keywords:key,code,keys,codes,keycode,keycodes,list,table,reference
+@compatible:aoz
+api*/
+
+/**api
+@name:Inkey$
+@description:Checks to see if a key has been pressed, and reports back its value in a string
+@return:string:The value of the last key pressed
+@compatible: aoz, stos, amos
+@examples:instructions:i_43
+@content:
+This function checks to see if a key has been pressed, and reports back its value in a string. For example:
+~~~                
+Do
+	K$=Inkey$
+	If K$<>Then Print "You pressed a key!"
+Loop
+~~~
+Now use the INKEY$ function to move your cursor around the screen, like this:
+~~~                
+Print "Use your cursor keys"
+Do
+	K$=Inkey$
+	If K$ <> Then Print K$;
+Loop
+~~~
+The INKEY$ function does not wait for you to input anything from the keyboard, so if a character is not entered an empty string is returned. 
+INKEY$ can only register a key-press from one of the keys that carries its own Ascii code, and the Ascii code numbers that represent the characters which can be printed on the screen.
+
+It has also been explained that certain keys like [Help] and the function keys [Fl] to [F10] do not carry as Ascii code at all, and if INKEY$ detects that this type of key has been pressed, a character with a value of zero will be returned. When this happens, the internal 
+scan codes" of these keys can be found."
+
+api*/
+Function Inkey$
+{
+	#errors
+}
+End Function( {aoz.inkey$()} )
+
+/**api
+@name:Input$
+@description:Anticipate a number of characters to input into a string
+@param:numChars:integer:Number of characters to anticipate
+@return:string:The text entered by the user
+@examples:instructions:i_42,instructions:i_69
+@content:
+This function loads a given number of characters into a string variable, waiting for the user to enter each character in
+turn. Although characters will not appear on the screen, similar to INKEY$, the two instructions are totally different.
+
+Here is an example:
+~~~
+Clear Key : Print "Please type in ten characters"
+V$=Input$(10) : Print "You typed: ";V$
+~~~
+api*/
+Function Input$, numChar
+{
+	#waiting
+	return{type:12,waitThis:aoz,callFunction:"input$",waitFunction:"input$_wait",args:[%numChar]};
+}
+End Function( {aoz.input$String} )
+
+/**api
+@name:Input
+@description:The INPUT command is used to enter information into one or more variables, separated by commas
+@param:variable:variable:The variable to store the return in, any type
+@examples:instructions:i_63
+@content:
+The INPUT command is used to enter information into one or more variables. Any variable may be used, as well as
+any set of variables, providing they are separated by commas. A question mark will automatically appear at the
+current cursor position as a prompt for your input.
+
+If your own "Prompt string" is included, it will be printed out before your information is entered. Please note that a
+semi-colon must be used between your prompt text and the variable list, a comma is not allowed for this purpose.
+You may also use an optional semi-colon at the end of your variable list, to specify that the text cursor is not to be
+affected by the INPUT command, and will retain its original position after your data has been entered.
+
+When INPUT is executed, the program will wait for the required information to be entered via the keyboard, and
+each variable in the list must be matched by a single value entered by the user. These values must be of exactly the
+same type as the original variables, and should be separated by commas.
+
+For example:
+
+~~~
+Print "Type in a number"
+Input A
+Print "Your number was ";A
+Input "Type in a floating point number";N#
+Print "Your number was ";N#
+Input "What's your name?";Name$
+Locate 23, : Print "Hello ";Name$
+~~~
+api*/
+
+/**api
+@name:Line Input
+@description:Input a list of variables separated by [Return]
+@param:variable:variable:The variable to store the return in, any type
+@examples:instructions:i_63
+@content:
+LINE INPUT is identical in usage to "INPUT", except that is uses a press of the [Return] key to separate each value you enter via the keyboard instead of a comma. Try this:
+~~~
+Line Input "Type in three numbers";A,B,C
+Print A,B,C
+~~~
+api*/
+
+/**api
+@name:Wait Key
+@description:Pauses the application until the user presses a key
+@examples:instructions:i_42
+@content:
+This simple command waits for a single key-press before acting on the next instruction. For example:
+~~~                
+Print "Please press a key" : Wait key : Print "Thank you!"
+~~~
+api*/
+Instruction Wait Key
+{
+	#waiting
+	return{type:12,waitThis:aoz,callFunction:"waitKey",waitFunction:"waitKey_wait",args:[]};
+}
+End Instruction
+
+/**api
+@name:Key Speed
+@description:Change key repeat speed. Not implented in HTML applications, maybe later in executable applications
+@param:timeLag:integer:The time-lag before repeat, in 1/50th of second
+@param:delaySpeed:integer:The delay before each repeated key, in 1/50th of second
+@examples:instructions:i_42
+@compatible:notimplemented
+@content:
+During editing, a character or cursor movement is repeated for as long as its key is held down. This can be
+frustrating if it causes unwanted characters or cursor movements. KEY SPEED lets you change the repeat rate while
+a key is held down, to your own particular preference. State the time-lag you want to use between pressing a key
+and the start of the repeat sequence, measured in 50ths of a second.Follow this by the delay-speed between each character you type, also in 50ths of a second. This line will slow
+everything down:
+~~~                
+Key Speed 50,50: Rem One second delay
+~~~
+The following setting may well prevent you from editing at all!"
+~~~                
+Key Speed 1,1: Rem Ridiculously fast
+~~~
+api*/
+Instruction Key Speed, timeLag, delaySpeed
+{
+	#errors
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Key State
+@description:Test for a specific key press
+@param:keyCode:integer:The Javascript code of the key to test. The Amiga Scan Code in Amiga mode
+@return:boolean:true if the key is pressed, False if not
+@examples:instructions:i_43
+@compatible: aoz, stos, amos
+@content:
+Use this function to check whether or not a specific key has been pressed. 
+The relevant scan code should be enclosed in brackets, and when the associated key is being pressed KEY STATE will return a value of TRUE, otherwise the result will be given as FALSE. 
+
+For example:
+~~~                
+Do
+	If Key State(69)=True Then Print "ESCAPE!" : Rem Esc key pressed
+	If Key State(95)=True Then Print "HELP!": Rem Help key pressed
+Loop
+~~~
+api*/
+Function Key State, code
+{
+	#errors
+}
+End Function( {aoz.getKeyState(%code)} )
+
+/**api
+@name:Key Shift
+@description:Return the state of the modifier keys
+@return:boolean:A set of flags indicating the state of the various modifier keys
+@compatible: aoz, stos, amos
+@examples:instructions:i_43
+@content:
+KEY SHIFT is used to report the current status of those keys which cannot be detected by either INKEY$ or
+SCANCODE because they do not carry the relevant codes. These "control keys can kb tested individually, or a test
+can be set up for any combination of such keys pressed together. A single call to the KEY SHIFT function can test
+for all eventualities, by examining a bit map in the following format"
+~~~                
+Bit 	Key 		Tested Notes
+0 	left [Shift] 	Only one [Shift] key can be tested at a time
+1 	right [Shift] 	Only one [Shift] key can be tested at a time
+2 	[Caps Lock] 	Either ON or OFF
+3 	[Ctrl]
+4 	left [Alt]
+5 	right [Alt]
+6 	left [Platform] 	This is the Windows key on windows platforms, Amiga key on the Amiga etc.
+7 	right [Platform]
+~~~
+If the report reveals that a bit is set to 1, then the associated key has been held down by the user, otherwise a 0 is
+given. Here is a practical example:
+~~~                
+Centre "Please press some Control keys"
+Curs Off
+Do
+	Locate 14,4: Print Bin$(Key Shift,8)
+Loop
+~~~
+These keys can also be used when setting up macro definitions, using the "SCAN$" and "KEY$" functions...
+api*/
+Function Key Shift
+{
+	#errors
+}
+End Function( {aoz.getKeyShift()} )
+
+/**api
+@name:Key Name$
+@description:Return the Javascript name of the last pressed key 
+@return:string:The Javascript name of the key
+@compatible: aoz
+@content:
+This function has been added to AOZ to provide a simple way to know on which key the user has pressed.
+The value returned are platform independant, ensuring your application will work on every machine.
+
+You can find the list of Javascript key name [here](http://javascriptkeycode.com/).
+api*/
+Function Key Name$
+{
+	#errors
+}
+End Function( {aoz.getKeyName()} )
+
+/**api
+@name:ScanCode
+@description:Return the scancode of a key entered with INKEY$
+@return:integer:The code of the key that was entered by the user and detected by the last INKEY$. Will report Javascript key-codes for PC, and Amiga ScanCodes in Amiga emulation
+@compatible: aoz, stos, amos
+@examples:instructions:i_43
+@content:
+SCANCODE returns the internal scan code of a key that has already been entered using the INKEY$ function. 
+The next example may be tested by pressing the function keys, [Del] and [Help]. To interrupt the example, press [Ctrl]+[C].
+~~~                
+Do
+    While K$= ""
+        K$=Inkey$
+    Wend
+    If Asc(K$)=0 Then Print "No Ascii Code"
+        Print "The Scan Code is ";Scancode
+    End If
+   Loop
+~~~
+
+api*/
+Function ScanCode
+{
+	#errors
+}
+End Function( {aoz.getScanCode()} )
+
+/**api
+@name:ScanShift
+@description:Return shift status of key entered with INKEY$
+@return:integer:A mask of bits indicating the sate of the SHIFT key. =0 no Shift key pressed, <>0 one of the Shift key is pressed
+@compatible: aoz, stos, amos
+@examples:instructions:i_43
+@content:
+To determine if keys are pressed at the same time as either or both of the [Shift] keys, the Scanshift function returns
+the following values:
+~~~                
+Value 	Meaning
+0 	no [Shift] key pressed
+1 	[Left Shift] pressed
+2 	[Right Shift] pressed
+3 	both [Shift] keys pressed
+~~~
+Try out the following example by pressing various keys, in combination with the [Shift] keys:
+~~~                
+Do
+	A$=Inkey$
+	S=Scanshift
+	If S<>0
+		Print S
+	End If
+Loop
+~~~
+api*/
+Function ScanShift
+{
+	#errors
+}
+End Function( {aoz.getScanShift()} )
+
+/**api
+@name:Put Key
+@description:Load a string of characters directly into the keyboard buffer, enabling you to simulate user typing (in INPUT functions for example)
+@param:text$:string:The texte to put in the buffer
+@examples:instructions:i_42
+@content:
+This command loads a string of characters directly into the keyboard buffer, and it is most commonly used to set up
+defaults for your INPUT routines. Note that end of line returns can be included using a CHR$(13) character. In the
+next example, "NO" is assigned to the default INPUT string.
+~~~                
+Do
+	Put Key "NO"
+	Input "Do you love me, Yes or No: ";A$
+	B$=Upper$(A$)
+	If B$="NO" Then Boom : Wait 50: Exit
+Loop
+~~~
+api*/
+Instruction Put Key, text$
+{
+	#errors
+	aoz.putKey(%text$);
+}
+End Instruction
+
+/**api
+@name:Clear Key
+@description:Re-set the keyboard buffer. Might not have an effect on all platforms.
+@examples:instructions:i_42
+@content:
+When an appropriate character is entered from the keyboard, its Ascii code is placed in an area of memory called
+the keyboard buffer. This buffer is then examined by the INKEY$ function in order to report on key presses.
+CLEAR KEY completely erases this buffer and re-sets the keyboard, making it a very useful command at the
+beginning of a program when the keyboard buffer may be filled with unwanted information. CLEAR KEY can also
+be called immediately before a WAIT KEY command, to make sure that the program waits for a fresh key-press
+before proceeding.
+
+api*/
+Instruction Clear Key
+{
+	#errors
+	aoz.clearKey();
+}
+End Instruction
+
+/**api
+@name:Key$
+@description:Reserved variable. Define a keyboard macro
+@param:macro$:string:The text of the macro
+@content:
+KEY$ assigns the contents of the specified command$ to a function key number from 1 to 20. 
+
+Once done, a press on the given key will be identical to the user typeing the text on the keyboard.
+api*/
+
+/**api
+@name:Scan$
+@description:Return a scan-code for use with Key$
+@param:scanCode:integer:The Javascript code of the key for PC, and the Amiga scan code for Amiga emulation
+@param:mask:integer:A mask of bits, wioth the same format as KEY SHIFT
+@return:string:The string to use with Key$
+@compatible: aoz, stos, amos
+@content:
+The scan-code parameter refers to the scan-code of a key that is to be used in one of your macro definitions. There
+is also an optional mask parameter, which sets special keys such as [Ctrl] and [Alt], and the format is the same as
+for "KEY SHIFT".
+api*/
+Function Scan$, scanCode, mask
+{
+	#errors
+}
+End Function( {aoz.scan$(%_SCANCODE,%_MASK)} )
+
+/**api
+@name:Hide On
+@description:Hide the mouse pointer (Deprecatred, use "Hide")
+@compatible: aoz, stos, amos
+@examples:instructions:i_49
+@content:
+This instruction hides the mouse pointer by making it invisible. Although it cannot be seen, it is still active and
+sending back reports, and the position of the mouse pointer co-ordinates can still be read. AOZ Studio will
+automatically count the number of times that the HIDE instruction is used, and employ this number to SHOW the
+mouse pointer once again at your command. If you prefer to keep the mouse pointer invisible all the time and ignore
+the counting system, use the special ON version of the instruction, like this:
+~~~                
+Hide On
+~~~
+api*/
+Instruction Hide On
+{
+	#errors
+	aoz.showMouse(false, true);
+}
+End Instruction
+
+/**api
+@name:Hide
+@description:Hide the mouse pointer
+@examples:instructions:i_47
+@content:
+This instruction hides the mouse pointer by making it invisible. Although it cannot be seen, it is still active and
+sending back reports, and the position of the mouse pointer co-ordinates can still be read. AOZ Studio will
+automatically count the number of times that the HIDE instruction is used, and employ this number to SHOW the
+mouse pointer once again at your command. If you prefer to keep the mouse pointer invisible all the time and ignore
+the counting system, use the special ON version of the instruction, like this:
+~~~                
+Hide
+~~~
+api*/
+Instruction Hide
+{
+	#errors
+	aoz.showMouse(false);
+}
+End Instruction
+
+/**api
+@name:Show On
+@description:Show the mouse pointer (Deprecated, use "Show")
+@compatible: aoz, stos, amos
+@content:
+This makes the mouse pointer visible again after a HIDE instruction.As a default, the system counts the number of times that the HIDE command has been used, then reveals the pointer
+on screen when the number of SHOWs equals the number of HIDEs. To bypass this counting system and reveal the mouse pointer immediately, use SHOW ON.
+~~~                
+Do
+	For N=1 To 10
+		Hide : Wait N : Show
+	Next N
+Loop
+~~~
+
+api*/
+Instruction Show On
+{
+	#errors
+	aoz.showMouse(true,true	);
+}
+End Instruction
+
+/**api
+@name:Show
+@description:Show the mouse pointer
+@content:
+This makes the mouse pointer visible again after a HIDE instruction.As a default, the system counts the number of times that the HIDE command has been used, then reveals the pointer
+on screen when the number of SHOWs equals the number of HIDEs. To bypass this counting system and reveal the mouse pointer immediately, use SHOW.
+~~~                
+Do
+	For N=1 To 10
+		Hide : Wait N : Show
+	Next N
+Loop
+~~~
+api*/
+Instruction Show
+{
+	#errors
+	aoz.showMouse(true);
+}
+End Instruction
+
+/**api
+@name:Change Mouse
+@description:Change the shape of the pointer arrow
+@param:shape:index:Shape to use
+@examples:instructions:i_49
+@compatible: aoz
+@content:
+
+The behavior fo the instruction is different depending on the type of the *shape* parameter...
+
+### *shape* is a number
+
+Pre-defined shapes are selected when the value of *shape* is under 3... The 1, 2 or 3 values are reserved.
+~~~
+Number 	Shape of mouse cursor
+1 		Arrow pointer (default shape)
+2 		Cross-hair
+3 		Clock
+~~~
+If you select an image name or number,
+AOZ Studio will look at an image stored in the "resources/assets/mouse" folder, and install it as the mouse pointer. 
+Note: The PNG Image format is supported only with a maximum size of 128x128px.
+For example:
+~~~                
+Do
+	For N=1 To 3
+		Change Mouse N
+		Wait 25
+	Next N
+Loop
+~~~
+
+### *shape* is a string:
+AOZ will first check if the *shape* parameter is equal to one fo the default Javascript shapes. If yes, it will set this one.
+
+List of Javascript cursor shape: [here](http://https://www.w3schools.com/jsref/prop_style_cursor.asp/).
+
+If not, tyhen AOZ will look int he Image bank to find the given image, and will set the mouse if found.
+api*/
+Instruction Change Mouse, shape=(index) 
+{
+	#errors
+	aoz.changeMouse(%shape);
+}
+End Instruction
+
+
+/**api
+@name:Mouse Image
+@description:Change the mouse pointer by an image
+@param:URL$:string:URL of the image to use. The image used must not be larger than 128x128 pixels. Supported formats are CUR, GIF, SVG and PNG. If this argument is an empty string, the mouse pointer will be reinitialized. 
+@compatible: aoz
+@content:
+Replaces the mouse cursor with an image of your choice. This image is defined by the URL passed in parameter URL$.
+Using an image from the web
+~~~
+Cls 0
+Rem Change the mouse pointer with an image from web
+Mouse Image "https://d.furaffinity.net/art/pixelhoot/1464195067/1464195067.pixelhoot_rowlet_mouse_pointer_large.png"
+Wait Key
+Rem Reset the mouse pointer
+Mouse Image ""
+~~~
+Using an image from the images bank:
+~~~                
+Cls 0
+Rem Change the mouse pointer by the image 10
+Rem Get the data URL of the image 10 
+URL$ = Image DataURL$( 10 ) 
+Mouse Image URL$
+Wait Key
+Rem Reset the mouse pointer
+Mouse Image ""
+~~~
+api*/
+Instruction Mouse Image, URL$
+{
+	#error$
+	if( %URL$ == "" )
+	{
+		document.body.setAttribute( 'style', 'cursor: auto;' );	
+	}
+	else
+	{
+		document.body.setAttribute( 'style', 'cursor: url(' + %URL$ + '), auto;' );
+	}
+}
+End Instruction
+
+
+/**api
+@name:X Mouse
+@description:Reserved Variable. Returns / Set the horizontal coordinate of the mouse. Note: setting the coordinate may not work on all platforms and in HTML applications.
+@return:integer:The horizontal coordinate of the mouse over the application in hardware coordinates
+@examples:instructions:i_49
+@compatible: aoz, stos, amos
+@content:
+X MOUSE reports the current location of the x-coordinate of the mouse pointer. Because movement is controlled by
+the mouse rather than by software, coordinates are given in hardware notation, which is demonstrated by the
+following example:
+~~~
+Do
+	Print X Mouse
+Loop
+~~~
+This can also be used to set a new coordinate position for the mouse pointer and move it to a specific position on the
+screen. This is done by assigning a value to X MOUSE as if it was a Basic variable. 
+
+For example:
+~~~
+For N=200 To 350
+	X Mouse = N
+	Print X Mouse
+Next N
+~~~
+
+Please note that changing the cursor location is usually seen as an unfriendly action ont he user's machine, and might be forbidden on specific machines.
+api*/
+
+/**api
+@name:Y Mouse
+@description:Reserved Variable. Returns / Set the vertical coordinate of the mouse. Note: setting the coordinate may not work on all platforms and in HTML applications.
+@compatible: aoz, stos, amos
+@return:integer:The vertical coordinate of the mouse over the application in hardware coordinates
+@content:
+Y MOUSE reports the current location of the y-coordinate of the mouse pointer. Because movement is controlled by
+the mouse rather than by software, coordinates are given in hardware notation, which is demonstrated by the
+following example:
+~~~
+Do
+	Print Y Mouse
+Loop
+~~~
+This can also be used to set a new coordinate position for the mouse pointer and move it to a specific position on the
+screen. This is done by assigning a value to Y MOUSE as if it was a Basic variable. 
+
+For example:
+~~~
+For N=200 To 350
+	Y Mouse = N
+	Print Y Mouse
+Next N
+~~~
+
+Please note that changing the cursor location is usually seen as an unfriendly action ont he user's machine, and might be forbidden on specific machines.
+api*/
+
+/**api
+@name:Mouse Key
+@description:Return the status of the mouse buttons
+@return:integer:A mask of bits. Bit 0: Left mouse button, Bit 1: Right mouse button, Bit 2: Middle mouse button if it exists
+@compatible: aoz, stos, amos
+@content:
+The MOUSE KEY function checks whether one of the mouse buttons has been pressed and makes a report in the form of a binary pattern made up of these elements:
+~~~                
+Pattern 	Report
+Bit 0 		Left mouse button
+Bit 1 		Right mouse button
+Bit 2 		Third mouse button if it exists
+~~~
+As usual, the numbers zero and one make up the report, with a one displayed when the relevant button is held down,
+otherwise a zero is shown. Try this routine:
+~~~  
+Curs Off
+Do
+	Locate 0,0
+	M = Mouse Key : Print "Bit Pattern ";Bin$(M,8);" Number ";M
+Loop
+~~~
+
+api*/
+Function Mouse Key
+{
+	#errors
+}
+End Function( {aoz.mouseButtons} )
+
+/**api
+@name:Mouse Click
+@description:Check for click of mouse button. 
+@return:integer:A mask of bits. Bit 0: Left mouse button, Bit 1: Right mouse button, Bit 2: Middle mouse button if it exists
+@compatible: aoz, stos, amos
+@content:
+This is similar to MOUSE KEY, but instead of checking to see whether or not a mouse button is held down,
+MOUSE CLICK is only interested in whether the user has just made a single click on a mouse button. It returns the
+familiar bit pattern of these elements:
+~~~                
+Pattern 	Report
+Bit 1 		Single test for left mouse button
+Bit 2 		Single test for right mouse button
+Bit 3 		Single test for third mouse button, if available
+~~~
+These bits are automatically re-set to zero after one test has been made, so they will only check for a single key
+press at a time. Here is an example:
+~~~                
+Curs Off
+Do
+	M=Mouse Click
+	If M<>0 Then Print "Bit Pattern ";Bin$(M,8);" Number";M
+Loop
+~~~
+
+api*/
+Function Mouse Click
+{
+	#errors
+}
+End Function( {aoz.mouseClick()} )
+
+/**api
+@name:Limit Mouse
+@description:Change the shape of the pointer arrow
+@param:x1:integer:Horizontal coordinate of the top-left corner of the bounding area
+@param:y1:integer:Vertical coordinate of the top-left corner of the bounding area
+@param:x2:integer:Horizontal coordinate of the bottom-right corner of the bounding area
+@param:y2:integer:Vertical coordinate of the bottom-right corner of the bounding area
+@compatible: aoz, stos, amos
+@content:
+This command sets up a rectangular area for the mouse pointer to move around, and traps it inside the boundaries
+set by hardware coordinates, from the rectangle's top-left TO bottom right-hand corner. For example:
+~~~                
+Limit Mouse 300,100 To 350,150
+~~~
+If you need to restore freedom to the mouse pointer and allow it to move around the entire screen, use the LIMIT
+MOUSE instruction on its own, without any coordinates after it. Note that SCREEN OPEN must be followed by a
+WAIT VBL command before LIMIT MOUSE can be used, otherwise no screen will be set up for screen limits to be
+set.
+
+api*/
+Instruction Limit Mouse, x1, y1 To x2, y2
+{
+	#errors
+	aoz.setMouseLimits({x:%x1,y:%y1,width:%x2-%x1,height:%y2-%y1});
+}
+End Instruction
+
+Instruction Limit Mouse, x, y, width, height
+{
+	#errors
+	aoz.setMouseLimits({x:%x,y:y,width:%width,height:%height});
+}
+End Instruction
+
+/**api
+@name:Limit Mouse
+@description:Without parameters, restore the displacement of the mouse to the whole screen
+@compatible: aoz, stos, amos
+@content:
+api*/
+Instruction Limit Mouse
+{
+	#errors
+	aoz.setMouseLimits();
+}
+End Instruction
+
+/**api
+@name:Mouse Wheel
+@description:Return the movement of the mouse wheel
+@return:integer:A displacement, positive or negative and dependant of the system
+@compatible: aoz
+@content:
+This example scrolls a screen by setting it's offset from the rotation of the mouse wheel.
+~~~
+Screen Open 0, 1280, 4000, 16		// Open a large screen
+For X = 0 To 1000
+	Ink Rnd( 16 ) : Print X;		// Fill the screen with numbers
+Next 
+Do
+	D = Mouse Wheel * 10			// Multiplies the value to accelerate scrolling
+	Screen Offset 0, 0, D			// Scrolls vertically
+	Wait Vbl
+Loop
+~~~
+api*/
+Function Mouse Wheel
+{
+	#errors
+}
+End Function( {aoz.mouseWheel()} )
+
+/**api
+@name:Wait Click
+@description:Pauses the application until the user presses a mouse button or touches the screen (touch screen)
+@content:
+This simple command waits for a single mouse button-press before acting on the next instruction. For example:
+~~~                
+Print "Please press a mouse button or touch the screen" : Wait Click : Print "Thank you!"
+~~~
+api*/
+Instruction Wait Click
+{
+	#waiting
+	return{type:12,waitThis:aoz,callFunction:"waitClick",waitFunction:"waitClick_wait",args:[]};
+}
+End Instruction
+
+/**api
+@name:Wait Input
+@description:Pauses the application until the user presses a mouse button, touches the screen (touch screen) or press a key
+@content:
+This simple command waits for a single mouse button-press or a kay-press before acting on the next instruction. For example:
+~~~                
+Print "Please press a mouse button, touch the screen or press a key" : Wait Input : Print "Thank you!"
+~~~
+api*/
+Instruction Wait Input
+{
+	#waiting
+	return{type:12,waitThis:aoz,callFunction:"waitInput",waitFunction:"waitInput_wait",args:[]};
+}
+End Instruction

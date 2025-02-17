@@ -1,0 +1,13 @@
+<i>Show</i>
+<b>Show</b> xxxxxxx
+=
+This makes the mouse pointer visible again after a HIDE instruction.As a default, the system counts the number of times that the HIDE command has been used, then reveals the pointer
+on screen when the number of SHOWs equals the number of HIDEs. To bypass this counting system and reveal the mouse pointer immediately, use SHOW.
+@code
+Do
+For N=1 To 10
+Hide : Wait N : Show
+Next N
+Loop
+@code
+

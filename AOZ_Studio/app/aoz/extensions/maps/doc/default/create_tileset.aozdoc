@@ -1,0 +1,24 @@
+<i>Create Tileset</i>
+<b>Create Tileset</b> xxxxxxx
+=
+This instruction creates an empty tileset, that is a tileset with all the information by the images themselves. It is up to you to create the images in the image bank, as in this example:
+
+@code
+Load Map "mymap.tsx"
+Create Tileset "mytileset", 1000, 100
+
+// Load the image containg the tiles and grab them into the image bank after location 1000
+Load Image "tiles.png", 1
+NUMIMAGE = 1000
+For Y = 0 To 3
+For X = 0 To 7
+Get Image NUMIMAGE, X * 24, Y * 32 To ( X + 1 ) * 24, ( Y + 1 ) * 32
+Inc NUMIMAGE
+Next X
+Next Y
+
+// We can now open our view on layer 0 of the map
+Open View "Ground", "mymap", "mytileset", 0
+@code
+
+

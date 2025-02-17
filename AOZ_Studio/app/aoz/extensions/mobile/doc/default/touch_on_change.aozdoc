@@ -1,0 +1,11 @@
+<i>Touch On Change</i>
+<b>Touch On Change</b> xxxxxxx
+=
+The procedure is called up each time an event occurs on the touch screen.
+For each event, the following information is sent to the procedure
+- X: Current X position of the touch
+- Y: Current Y-position of the touch
+- LASTX: Last X position of the touch
+- LASTY: Last Y position of the touch
+- STATE: State of the touch (1=START, 2=MOVE, 3=END)
+

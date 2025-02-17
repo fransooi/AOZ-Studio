@@ -1,0 +1,336 @@
+{
+	"templates":
+	[
+		{
+			"name": "Cross platform",
+			"path": "template_cross",
+			"type": "project",
+			"disable": false,			
+			"title":
+			{
+				"fr": "Application AOZ multiplateforme.",
+				"en": "Cross-platform AOZ application."
+			},
+			"description":
+			{
+				"fr": "Créez une application AOZ qui pourra s'exécuter sur plusieurs plateformes (PC, Mac, Linux, Android et IOS). L'application pourra détecter l'orientation de l'écran pour s'adapter aux smartphones et tablettes.",
+				"en": "Create an AOZ application that can run on multiple platforms (PC, Mac, Linux, Android and IOS). The application will be able to detect the screen orientation to adapt to smartphones and tablets."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Information"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Icône et Ressources",
+						"en": "Icon and Resources"
+					}
+				}
+			]
+		}
+	],
+	"web":
+	[
+		{
+			"name": "Website",
+			"path": "template_web",
+			"type": "project",
+			"disable": false,			
+			"title":
+			{
+				"fr": "Site internet utilisant des contenus HTML.",
+				"en": "Website using HTML content"
+			},
+			"description":
+			{
+				"fr": "Créez un site Internet avec AOZ, contenant des pages HTML et du Javascript.",
+				"en": "Create a website with AOZ, containing HTML pages and Javascript."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Information"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Icône et Ressources",
+						"en": "Icon and Resources"
+					}
+				}
+			]
+		}
+	],
+	"games":
+	[
+		{
+			"name": "AOZ Game",
+			"path": "template_cross",
+			"type": "project",
+			"disable": false,			
+			"title":
+			{
+				"fr": "Jeu AOZ multiplateforme.",
+				"en": "Cross-platform AOZ Game."
+			},
+			"description":
+			{
+				"fr": "Créez un jeu avec les moteurs 2D et 3D de AOZ qui pourra s'exécuter sur plusieurs plateformes (PC, Mac, Linux, Android et IOS).",
+				"en": "Create an AOZ game that can run on multiple platforms (PC, Mac, Linux, Android and IOS)."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Information"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Icône et Ressources",
+						"en": "Icon and Resources"
+					}
+				}
+			]
+		},		
+		{
+			"name": "AOZ For Unity",
+			"path": "template_unity",
+			"type": "project",
+			"disable": true,
+			"title":
+			{
+				"fr": "Jeu AOZ multiplateforme utilisant Unity®.",
+				"en": "Cross-platform AOZ Game using Unity®."
+			},
+			"description":
+			{
+				"fr": "Unity est un puissant moteur de jeu 2D/3D utilisé par de nombreux studios de jeux vidéos. Créez vos décors, placez vos personnages depuis l'éditeur de Unity, et programmez votre jeu avec la simplicité du langage AOZ.",
+				"en": "Unity is a powerful 2D/3D game engine used by many video game studios. Create your scenery, place your characters from the Unity editor, and program your game with the simplicity of the AOZ language."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "A propos de Unity®",
+						"en": "About Unity®"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Information"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Icône et Ressources",
+						"en": "Icon and Resources"
+					}
+				}
+			]
+		}
+	],
+	"robot":
+	[
+		{
+			"name": "MBot",
+			"path": "template_mbot",
+			"type": "project",
+			"disable": true,
+			"title":
+			{
+				"fr": "Programme AOZ pour le robot MBOT2.",
+				"en": "AOZ program for the MBOT2 robot"
+			},
+			"description":
+			{
+				"fr": "Programmez votre robot MBOT2 très facilement avec AOZ.",
+				"en": "Program your MBOT2 robot very easily with AOZ."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Information"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					}
+				}
+			]
+		},
+		{
+			"name": "Arduinot",
+			"path": "template_arduino",
+			"type": "project",
+			"disable": true,
+			"title":
+			{
+				"fr": "Programme AOZ pour les cartes ARDUINO.",
+				"en": "AOZ program for the ARDUINO Boards"
+			},
+			"description":
+			{
+				"fr": "Programmez votre cartes ARDUINO très facilement avec AOZ.",
+				"en": "Program your ARDUINO Board very easily with AOZ."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Information"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					}
+				}
+			]
+		}					
+	],
+	"retro":
+	[
+		{
+			"name": "Amiga",
+			"path": "template_amiga",
+			"type": "project",
+			"disable": false,			
+			"title":
+			{
+				"fr": "Programme AOZ compatible avec le Commodore Amiga.",
+				"en": "AOZ program compatible with the Commodore Amiga."
+			},
+			"description":
+			{
+				"fr": "Créez une application AOZ avec les caractéristiques du Commodore Amiga, qui pourra aussi être compilé pour fonctionner sur la machine réelle. Pour les nostalgiques de AMOS Basic.",
+				"en": "Create an AOZ application with Commodore Amiga features, which can also be compiled to run on the real machine. For those nostalgic for AMOS Basic."
+			},
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Information"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Affichage",
+						"en": "Display"
+					}
+				},
+				{
+					"title":
+					{
+						"fr": "Autres options",
+						"en": "Others options"
+					}
+				}
+			]
+		}
+	],
+	"others":
+	[
+		{
+			"name": "Empty",
+			"path": "template_empty",
+			"type": "project",
+			"disable": false,			
+			"title":
+			{
+				"fr": "Projet AOZ personnalisable.",
+				"en": "Customizable AOZ Project."
+			},
+
+			"description":
+			{
+				"fr": "Créer un projet AOZ que vous pourrez configurer manuellement.",
+				"en": "Create an AOZ project that you can configure manually."
+			},
+
+			"pages":
+			[
+				{
+					"title":
+					{
+						"fr": "Informations",
+						"en": "Information"
+					}
+				}			
+			]
+		}
+	]
+
+}

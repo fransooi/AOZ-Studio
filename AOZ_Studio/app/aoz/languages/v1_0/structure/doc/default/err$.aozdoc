@@ -1,0 +1,7 @@
+<i>Err$</i>
+<b>Err$</b> xxxxxxx
+=
+This simple function returns an error message string.
+If the error number is out of range, then an empty string will be given.
+ERR$ will return error messages as long as they are loaded in memory, but messages will not be returned from a compiled program, or if the Editor has been KILLed.
+

@@ -1,0 +1,13 @@
+<i>Get Icon</i>
+<b>Get Icon</b> xxxxxxx
+=
+The GET ICON command grabs an image from the screen and loads it into an Icon. Specify the Icon number, and
+then give the coordinates of the rectangle that is to be grabbed, from the top left-hand corner to the bottom righthand
+corner. If the Icon whose number you specify does not already exist, it will be created in Bank 2. If the
+memory bank has not been reserved, this will also be done automatically.
+
+An optional screen number can also be given, immediately after the GET ICON instruction, and this will select the
+screen to be used as the source of the Icon's image. If this screen number is omitted, the image is taken from the
+current screen.
+
+

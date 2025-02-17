@@ -1,0 +1,21 @@
+<i>Close Workbench</i>
+<b>Close Workbench</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This command closes the Workbench screen, saving about 40k of memory, and freeing it for your own programs!
+Prove this now, as follows:
+@code
+Print Chip Free, Fast free
+Close Workbench
+Print Chip Free, Fast Free
+@code
+CLOSE WORKBENCH can be executed from inside an AOZ Studio program, or from Direct Mode, but it
+will not work if there is a CLI window opened. To solve this problem, ensure that AOZ Studio loads using
+the following CLI instruction:
+@code
+run>nil:AMOSPro
+ENDCLI
+@code
+
+

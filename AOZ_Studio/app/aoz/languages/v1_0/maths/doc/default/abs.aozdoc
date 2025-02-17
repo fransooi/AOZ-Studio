@@ -1,0 +1,12 @@
+<i>Abs</i>
+<b>Abs</b> xxxxxxx
+=
+This function is used to convert arguments into a positive number. ABS returns an absolute value of an integer or
+fractional number, paying no attention to whether that number is positive or negative, in other words, ignoring its
+sign.
+
+For example:
+@code
+Print Abs(-1),Abs(1)
+@code
+

@@ -1,0 +1,870 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ IDE extension
+ * By Francois Lionet
+ *
+ * @author FL
+ * @date first pushed on 01/06/2020
+ *
+ */
+
+#basicRemarks:false
+#need_extension:"WebSocket"
+
+/**doc
+@name:IDE Commands
+@description:Instructions and functions to interact with the AOZ editor
+@author:Francois Lionet and Philip Bell
+doc*/
+
+
+//
+// Initialization
+//
+{
+    this.aoz.IDE = this;
+	this.state = 'disconnected';
+	this.webSocketToReconnectTo = undefined;
+	this.webSocket = new FakeSocket();
+	this.newMessages = [];
+	this.currentCommand = undefined;
+	this.currentResponse = undefined;
+	this.currentPropertyBase = undefined;
+	this.currentCommands = [];
+	this.currentResponses = [];
+	this.currentProperties = [];
+	this.callbacks = {};
+
+	this.connect = function( tags, throwError )
+	{
+		var parts = window.document.location.hostname;
+		var hostname = window.document.location.hostname;
+		if( parts != undefined && parts != "" )
+		{
+			var parts = window.document.location.hostname.split( ":" );
+			if( parts.length > 0 )
+			{
+				hostname = parts[ 0 ];
+			}
+		}
+		
+		if( hostname == '' )
+		{
+			hostname ='127.0.0.1';
+		}
+		
+		console.log( hostname );	
+		if ( this.webSocket && !this.webSocket.aoz )
+		{
+			this.webSocket = new this.aoz.ext_websocket.WebSocket( this.aoz, "ws://" + hostname + ":6503", "json" );
+			this.webSocket.addCallback( 'onopen', this, this.onOpen );
+			this.webSocket.addCallback( 'onmessage', this, this.onMessage );
+			this.webSocket.addCallback( 'onerror', this, this.onError );
+			this.webSocket.addCallback( 'onclose', this, this.onClose );
+		}
+		else
+		{
+			if ( throwError )
+				throw throwError;
+			return null;
+		}
+		return this.webSocket;
+	};
+	this.onOpen = function()
+	{
+		this.authenticated = false;
+		this.webSocket.sendMessage( "AOZ-Calling!" );
+		this.state = 'waitingforinitialreply';
+	}
+	this.onMessage = function( timeStamp, message )
+	{
+		switch ( this.state )
+		{
+			case 'disconnected':
+				break;
+			case 'reconnecting':
+				break;
+			case 'authenticating':
+				// Todo,.
+				break;
+			case 'waitingforinitialreply':
+				if ( message.data == 'Hello Aozeee! :)' )
+					this.state = 'connected';
+				break;
+			case 'waitingforidentification':
+				break;
+			case 'connected':
+				if ( message.data.startsWith( 'json:' ) )
+				{
+					var data = JSON.parse( message.data.substring( 5 ) );
+					if ( data.callbackId && this.callbacks[ data.callbackId ] )
+					{
+						this.aoz.loadingCount++;
+						this.callbacks[ data.callbackId ]( true, data, data.extra );
+						this.callbacks[ data.callbackId ] = null;
+						return;
+					}
+				}
+				this.newMessages.push( message );
+				break;
+			default:
+				break;
+		}
+	};
+	this.onError = function( stillConnected, message, extra )
+	{
+		if ( !stillConnected )
+		{
+			this.state = 'reconnecting';
+			this.webSocketToReconnectTo = this.webSocket;
+			this.webSocket = new FakeReconnectingSocket();
+		}
+	};
+	this.onClose = function( becauseOfError, message, extra )
+	{
+		this.connected = false;
+	};
+	this.disconnect = function( tags, throwError )
+	{
+		if ( this.state != 'disconnected' )
+		{
+			this.webSocket.close();
+			this.webSocket = new FakeSocket();
+			this.state = 'disconnected';
+		}
+		else
+		{
+			if ( throwError )
+				throw throwError;
+		}
+	};
+	this.sendCommand = function( command, param, throwError, callback, extra )
+	{
+		param = ( typeof param === 'undefined' ? [] : param );
+		param = ( typeof param === 'string' ? [ param ] : param );
+		var message =
+		{
+			type: 'command',
+			command: command,
+			parameters: param,
+			extra: extra
+		};
+		if ( callback )
+		{
+			message.callbackId = this.aoz.utilities.getUniqueIdentifier( 'ide' );
+			this.callbacks[ message.callbackId ] = callback;
+			this.aoz.loadingMax++;
+		}
+		this.webSocket.sendMessage
+		(
+			message,
+			throwError
+		);
+	};
+	this.nextCommand = function( filter, throwError )
+	{
+		if ( !this.listOfCommands )
+		{
+			// Make the list
+			var commands = [];
+			for ( var m = 0; m < this.newMessages.length; m++ )
+			{
+				var message = this.newMessages[ m ];
+				if ( !filter || filter == message.command )
+				{
+					commands.push( message );
+					message.toDestroy = true;
+				}
+			}
+
+			// Store
+			this.listOfCommands =
+			{
+				commands: commands,
+				position: 0
+			}
+
+			// Clean
+			var temp = [];
+			for ( var m = 0; m < this.newMessages.length; m++ )
+			{
+				var message = this.newMessages[ m ];
+				if ( !message.toDestroy )
+					temp.push( message );
+			}
+			this.newMessages = temp;
+		}
+		var info = this.listOfCommands;
+		if ( info.position < info.commands.length )
+		{
+			this.currentCommand = info.commands[ info.position ];
+			this.currentProperties.push( this.currentProperty );
+			this.currentPropertyRoot = info.commands[ info.position ];
+			info.position++;
+			return true;
+		}
+		this.listOfCommands = undefined;
+		return false;
+	};
+	this.nextResponse = function( filter, throwError )
+	{
+		if ( !this.listOfResponses )
+		{
+			// Make the list
+			var responses = [];
+			for ( var m = 0; m < this.newMessages.length; m++ )
+			{
+				var message = this.newMessages[ m ].data;
+				try
+				{
+					if ( message.substring( 0, 5 ) == 'json:' )
+						message = message.substring( 5 );
+					message = JSON.parse( message );
+				}
+				catch( e )
+				{
+					message =
+					{
+						type: 'error',
+						command: 'error',
+						parameters: '',
+						extra: ''
+					};
+				}
+				if ( !filter || filter == message.command )
+				{
+					responses.push( message );
+					message.toDestroy = true;
+				}
+			}
+
+			// Store
+			this.listOfResponses =
+			{
+				responses: responses,
+				position: 0
+			}
+
+			// Clean
+			var temp = [];
+			for ( var m = 0; m < this.newMessages.length; m++ )
+			{
+				var message = this.newMessages[ m ];
+				if ( !message.toDestroy )
+					temp.push( message );
+			}
+			this.newMessages = temp;
+		}
+		var info = this.listOfResponses;
+		if ( info.position < info.responses.length )
+		{
+			this.currentResponse = info.responses[ info.position ];
+			this.currentPropertiesRoot = info.responses[ info.position ]
+			info.position++;
+			return true;
+		}
+		this.listOfResponses = undefined;
+		return false;
+	};
+	this.getAozAPIValue = function( command, args, aozObject )
+	{
+		var self = this;
+		args.command = command;
+		this.sendCommand( 'aozAPI', args, 'cannot_send_command_to_ide', function( response, response, extra )
+		{
+			if ( aozObject )
+				self.aoz.setOnlineMethodResult( aozObject, response.result );
+		} );		
+		return true;
+	}
+
+	// Fake classes for error
+	var internalError = function() { throw 'internal_error'; };
+	var notOpened = function() { throw 'IDE_websocket_not_opened'; };
+	var reconnecting = function() { throw 'IDE_websocket_reconnecting'; };
+	function FakeSocket() {};
+	FakeSocket.prototype.open = internalError;
+	FakeSocket.prototype.close = notOpened;
+	FakeSocket.prototype.sendMessage = notOpened;
+	FakeSocket.prototype.isMessage = notOpened;
+	FakeSocket.prototype.getMessage = notOpened;
+	FakeSocket.prototype.forgetMessage = notOpened;
+	FakeSocket.prototype.isError = notOpened;
+	FakeSocket.prototype.getError = notOpened;
+	FakeSocket.prototype.forgetError = notOpened;
+	FakeSocket.prototype.isResponse = notOpened;
+	FakeSocket.prototype.getResponse = notOpened;
+	FakeSocket.prototype.forgetResponse = notOpened;
+	FakeSocket.prototype.isTask = notOpened;
+	FakeSocket.prototype.getTask = notOpened;
+	FakeSocket.prototype.nextTask = notOpened;
+
+	function FakeReconnectingSocket() {};
+	FakeReconnectingSocket.prototype.open = internalError;
+	FakeReconnectingSocket.prototype.close = reconnecting;
+	FakeReconnectingSocket.prototype.sendMessage = reconnecting;
+	FakeReconnectingSocket.prototype.isMessage = reconnecting;
+	FakeReconnectingSocket.prototype.getMessage = reconnecting;
+	FakeReconnectingSocket.prototype.forgetMessage = reconnecting;
+	FakeReconnectingSocket.prototype.isError = reconnecting;
+	FakeReconnectingSocket.prototype.getError = reconnecting;
+	FakeReconnectingSocket.prototype.forgetError = reconnecting;
+	FakeReconnectingSocket.prototype.isResponse = reconnecting;
+	FakeReconnectingSocket.prototype.getResponse = reconnecting;
+	FakeReconnectingSocket.prototype.forgetResponse = reconnecting;
+	FakeReconnectingSocket.prototype.isTask = reconnecting;
+	FakeReconnectingSocket.prototype.getTask = reconnecting;
+	FakeReconnectingSocket.prototype.nextTask = reconnecting;
+}
+/**api
+@name:IDE End Accessory
+@description:Terminates the current application if it is running as an accessory, and restore the previous running one
+@content:
+
+```                
+
+```
+
+api*/
+Instruction IDE End Accessory
+{
+	#errors
+	aoz.IDE.sendCommand( 'end_accessory', undefined, 'cannot_send_message_to_die' );
+}
+End Instruction
+
+/**api
+@name:IDE Connect
+@description:Connects to the IDE
+@param:TAGS:string:Unused, for future expansion
+@content:
+
+```                
+
+```
+
+api*/
+Instruction IDE Connect, tags$
+{
+	#errors
+	aoz.IDE.connect( %tags$ );
+}
+End Instruction
+
+/**api
+@name:IDE Disconnect
+@description:Stops the connection with the IDE
+@param:TAGS:string:Unused, for future expansion
+@content:
+
+```                
+
+```
+
+api*/
+Instruction IDE Disconnect, tags$
+{
+	#errors
+	aoz.IDE.disconnect( %tags$ );		// Todo, maybe a waiting function. For later.
+}
+End Instruction
+
+/**api
+@name:IDE Is Connected
+@description:Indicates if the application is connected to the IDE
+@return:boolean:True if the application is connected to the IDE, False if not
+@content:
+
+```                
+
+```
+
+api*/
+Function IDE Is Connected
+{
+	#errors
+}
+End Function( { ( aoz.IDE.state == 'connected' || aoz.IDE.state == 'waitingforresponse' ) } )
+
+/**api
+@name:IDE Send Command
+@description:Send a command to the IDE
+@param:command$:string:The command
+@param:param1$:string:Optional first parameter (will be stored in the "parameters" array)
+@param:param2$:string:Optional second parameter (will be stored in the "parameters" array)
+@param:param3$:string:Optional third parameter (will be stored in the "parameters" array)
+@content:
+
+```                
+
+```
+
+api*/
+Instruction IDE Send Command, command$, param1$, param2$, param3$
+{
+	#errors
+	aoz.IDE.sendCommand( %command$, [ %param1$, %param2$, %param3$ ], 'cannot_send_command_to_ide' );
+}
+End Instruction
+
+/**api
+@name:IDE Commands
+@description:Starts the exploration of the last messages, and switch to the next one if more the next times it is called. Old messages are discarted.
+#param:filter$:string:Optional string containing the commands to look for. Can contains wildcards (not implemented)
+@return:boolean:True if there are messages to read, false if not. To be used with While - Wend loops
+@content:
+
+```                
+
+```
+
+api*/
+Function IDE Commands, filter$
+{
+	#errors
+}
+End Function( {aoz.IDE.nextCommand(%filter$)} )
+
+/**api
+@name:IDE Command$
+@description:Returns the command of the current message
+@return:string:The command
+@content:
+
+```                
+
+```
+
+api*/
+Function IDE Command$
+{
+	#errors
+}
+End Function( {aoz.IDE.getCommand()} )
+
+/**api
+@name:IDE Responses
+@description:Starts the exploration of the last responses to one, or all messages, in order of reception, and switch to the next one if more the next times it is called. Old reponses are discarted.
+#param:*filter$:string:Optional string containing the responses to look for. Can contains wildcards (not implemented)
+@return:boolean:True if there are reponses to read, false if not. To be used with While - Wend loops
+@content:
+
+```                
+
+```
+
+api*/
+Function IDE Responses, filter$
+{
+	#errors
+}
+End Function( {aoz.IDE.nextResponse(%filter$)} )
+
+/**api
+@name:IDE Response$
+@description:Returns the current reponse
+@return:string:The current response
+@content:
+
+```                
+
+```
+
+api*/
+Function IDE Response$
+{
+	#errors
+}
+End Function( {aoz.IDE.getResponse()} )
+
+/**api
+@name:IDE Property$
+@description:Returns one of the string properties of the last message
+@param:path$:string:A string with the path to the property
+@param:default$:string:An optional string to use if the property is not found. In this case, AOZ will not generate any error
+@return:string:The property
+@content:
+
+```                
+
+```
+
+api*/
+Function IDE Property$, path$, default$
+{
+	#errors
+}
+End Function( {aoz.utilities.getProperty(this.aoz.IDE.currentPropertiesRoot,%path$,'string','property_not_found',%default$)} )
+
+/**api
+@name:IDE Property
+@description:Returns the value of one of the properties of the last message
+@param:path$:string:A string with the path to the property
+@param:default:number:An optional value to use if the property is not found. In this case, AOZ will not generate any error
+@return:number:The value of the property
+@content:
+
+```                
+
+```
+
+api*/
+Function IDE Property, path$, default
+{
+	#errors
+}
+End Function( {aoz.utilities.getProperty(this.aoz.IDE.currentPropertiesRoot,%path$,'number','property_not_found',%default)} )
+
+/**api
+@name:IDE Property Type$
+@description:Returns the type one of the property of the last message as a string
+@param:path$:string:A string with the path to the property
+@return:string:Either 'number', 'string', 'object' or 'array'. If the property is not found, then an empty string
+@content:
+
+```                
+
+```
+
+api*/
+Function IDE Property Type$, path$
+{
+	#errors
+}
+End Function( {this.aoz.IDE.getPropertyType(this.aoz.IDE.currentPropertiesRoot,%path$)} )
+
+/**api
+@name:PSel$
+@description:Used to handle multiple applications in the AMOS IDE. Will not be implemented.
+@return:string:""
+@content:
+~~~                
+
+~~~
+
+api*/
+Function PSel$, string1$, string2$, string3$, string4$
+{
+}
+End Function( {''} )
+
+/**api
+@name:IDE Copy Text
+@description:Copy a string into the clipboard
+@param:text$:string:Text to copy
+api*/
+Instruction IDE Copy Text, text$, tags$
+{
+	#errors
+	aoz.IDE.copyText( %text$, %tags$ );
+}
+End Instruction
+
+/**api
+@name:IDE Insert Text
+@description:Insert a string at the position of the cursor
+@param:text$:string:Text to insert
+@param:tags$:string:Tags for future expansion
+api*/
+Instruction IDE Insert Text, text$, tags$
+{
+	#errors
+	aoz.IDE.insertText( %text$, %tags$ );
+}
+End Instruction
+
+/**api
+@name:IDE Resize Panel
+@description:Resize an IDE panel
+@param:panel$:string: Name of the IDE panel
+@param:width:integer: Width of the IDE panel
+@param:height:integer: Height of the IDE panel
+api*/
+Instruction IDE Resize Panel, panel$, width, height, tags$
+{
+	#errors
+	aoz.IDE.resizePanel( %panel$, %width, %height, %tags$ );
+}
+End Instruction
+
+/**api
+@name:IDE Move Panel
+@description:Move an IDE panel
+@param:panel$:string: Name of the IDE panel
+@param:width:integer: Horizontal position of the IDE panel
+@param:height:integer: Vertical position of the IDE panel
+api*/
+Instruction IDE Move Panel, panel$, x, y, tags$
+{
+	#errors
+	aoz.IDE.movePanel( %panel$, %x, %y, %tags$ );
+}
+End Instruction
+
+/**api
+@name:IDE Destroy Panel
+@description:Close an IDE panel
+@param:panel$:string: Name of the IDE panel
+api*/
+/*
+Instruction IDE Destroy Panel, panel$
+{
+	#errors
+	aoz.IDE.destroyPanel( %panel$ );
+}
+End Instruction
+*/
+
+
+Class IDE
+
+	{
+		#class:"Ide"
+		this.aoz.ext_IDE.connect( '' );
+	}
+
+	Method IsConnected
+	End Method( {this.aoz.ext_IDE.state=="connected"} )
+
+	Method TokenInfo$, keyword$, lang$="en"
+	{
+		#errors
+		#waiting
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'getCurrentTokenInfo', {keyword:vars.keyword$, lang:vars.lang$}, this.root );
+		return true;
+	}
+	End Method( {dummy} )
+
+	Method FindToken$, keyword$
+	{
+		#errors
+		#waiting
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'getToken', {keyword:vars.keyword$}, this.root );
+		return true;
+	}
+	End Method( {dummy} )
+
+	Method TokenList$, chapter$ = "", instructions = True, functions = True, numbers = True, csv = False, duplicated = False
+	{
+		#errors
+		if ( !this.parent.connected )
+			throw 'not_running_in_ide';		
+	}
+	End Method( {dummy} )
+
+	Method OpenDocChapter, chapter$
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'openDocChapter', {chapter:vars.chapter$} );	// Does not return a value.
+	}
+	End Method
+
+	Method XCursor
+	{
+		#errors
+		#waiting
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'getCursorPosition', {axe:'x'}, this.root );
+		return true;
+	}
+	End Method( {dummy} )
+
+	Method YCursor
+	{
+		#errors
+		#waiting
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'getCursorPosition', {axe:'y'}, this.root );
+		return true;
+	}
+	End Method( {dummy} )
+
+	Method Word$, x, y
+	{
+		#errors
+		#waiting
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'getWord', {x:vars.x,y:vars.y}, this.root );
+		return true;
+	}
+	End Method( {dummy} )
+
+	Method Line$, y
+	{
+		#errors
+		#waiting
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'getLine', {y:vars.y}, this.root );
+		return true;
+	}
+	End Method( {dummy} )
+
+	Method Text$
+	{
+		#errors
+		#waiting
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'getText', {x:vars.x,y:vars.y}, this.root );
+		return true;
+	}
+	End Method( {dummy} )
+
+	Method InsertText, text$
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'insertText', {text:vars.text$,tags:vars.tags$} );
+	}
+	End Method
+
+	Method SetCaretPosition, x, y
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'setCaretPosition', {x:vars.x,y:vars.y} );
+	}
+	End Method
+
+	Method MoveCaret, dx, dy
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'setCaretPosition', {x:vars.dx,y:vars.dy} );
+	}
+	End Method
+
+	Method SetPanel Title, panel$, title$
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'setPanelTitle', {panel:vars.panel$,title:vars.title$} );
+	}
+	End Method
+
+	Method ResizePanel, panel$, width, height
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'resizePanel', {panel:vars.panel$,width:vars.width,height:vars.height} );
+	}
+	End Method
+
+	Method MovePanel, panel$, x, y
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'movePanel', {panel:vars.panel$,x:vars.x,y:vars.y} );
+	}
+	End Method
+
+	Method DragPanelStart, panel$, x, y
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'dragPanelStart', {panel:vars.panel$,x:vars.x,y:vars.y} );
+	}
+	End Method
+
+	Method DragPanel, panel$, x, y
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'dragPanel', {panel:vars.panel$,x:vars.x,y:vars.y} );
+	}
+	End Method
+
+	Method DragPanelEnd, panel$
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'dragPanelEnd', {panel:vars.panel$} );
+	}
+	End Method
+
+	Method DestroyPanel, panel$
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'destroyPanel', {panel:vars.panel$} );
+	}
+	End Method
+
+	Method GetPath$, id$
+	{
+		#errors
+		#waiting
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'getPath', {id:id}, this.root );
+		return true;
+	}
+	End Method( {dummy} )
+
+	Method CopyText, text$
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'copyText', {text:vars.text$} );
+	}
+	End Method
+
+	Method LoadExample, path$, options$
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';					
+		this.aoz.ext_IDE.getAozAPIValue( 'loadExample', {path:vars.path$,options:vars.options$} );
+	}
+	End Method
+
+	Method OpenDocChapter, chapter$
+	{
+		#errors
+		if ( this.aoz.ext_IDE.state!="connected" )
+			throw 'not_running_in_ide';
+		this.aoz.ext_IDE.getAozAPIValue( 'openDocChapter', {path:vars.path$,options:vars.options$} );
+	}
+	End Method
+
+
+End Class
+

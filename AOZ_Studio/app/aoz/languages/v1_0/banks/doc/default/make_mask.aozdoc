@@ -1,0 +1,8 @@
+<i>Make Mask</i>
+<b>Make Mask</b> xxxxxxx
+=
+This command creates a mask around every one of the images in the Object Bank, and may take
+a little time, depending on the number of objects involved. If an optional number is given, then a mask is created for that specified image only.
+
+Please ntoe that there is no need to use this command with AOZ banks that contain PNG images. You may want to use it for JPG as they do not contain transparency information.
+

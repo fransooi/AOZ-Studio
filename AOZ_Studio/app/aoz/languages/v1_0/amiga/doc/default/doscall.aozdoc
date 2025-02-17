@@ -1,0 +1,16 @@
+<i>DosCall</i>
+<b>DosCall</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+DOSCALL executes a function directly from the DOS library, with the offset to the appropriate function being
+specified in brackets. The selected command is executed straight from an AOZ Studio program, without the
+need to open the DOS library in your program. This is useful for single calls to an important routine.
+
+The offset value can either be a simple number or a named function using the LVO command. As with LIB CALL,
+the control registers first need to be set up carefully. These values should be placed into D0 to D7 and A0 to A3,
+with the aid of the AREG and DREG functions. After the command has been executed, the result will be given as
+the return value in D0. Please note that the contents of the other registers will not be loaded back into AREG and
+DREG.
+
+

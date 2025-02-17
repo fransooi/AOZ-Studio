@@ -1,0 +1,578 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ String Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:String Manipulation
+@description:Instructions and functions to handle strings
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Asc
+@description:Converts the first character of a string into it's ASCII code
+@param:text$:string:The character to convert
+@return:integer:The equivalent in ASCII
+@content:
+To get the internal ASCII code of the first character in a string, use the ASC function like this:
+~~~
+Print Asc("B")
+Print Asc("AMOS Professional")
+~~~                
+api*/
+Function Asc, text$
+{
+}
+End Function( {aoz.asc(%text$)} )
+
+/**api
+@name:Left$
+@description:Return or set the leftmost characters of a string
+@param:string$:string:The string
+@param:number:integer:The number of characters to set or return
+@return:string:The extracted portion of string
+@examples:instructions:i_2
+@content:
+LEFT$ reads the specified number of characters in a source string, starting from the left-hand side, and copies them
+into a destination string. The first type of usage of this function creates a new destination string from the chosen
+number of characters of the source string. 
+
+For example:
+~~~
+Do
+	Input "Type in a string:";S$
+	Print "Display how many characters from"
+	Input "the left?";N
+	Print Left$(S$,N)
+Loop
+~~~
+The second type of usage replaces the leftmost number of characters in the destination string with the equivalent
+number of characters from the source string. For example:
+~~~
+A$="**** Basic"
+Left$(A$,4)="AMOS"
+Print A$
+~~~
+Exactly the same processes can be performed with characters from the right-hand side of a string, by using the
+equivalent RIGHT$ function.
+api*/
+
+/**api
+@name:Right$
+@description:Return or set the rightmost characters of a string
+@param:string$:string:The string
+@param:number:integer:The number of characters to set or return
+@return:string:The extracted portion of string
+@examples:instructions:i_2
+@content:
+Here are two examples demonstrating each version of usage:
+~~~
+Print Right$("IGNORED54321",5)
+A$=Right$("REJECTED0123456789",10)
+Print A$
+~~~
+
+~~~
+B$="AOZ ******"
+Right$(B$,6)="Studio"
+Print B$
+~~~
+api*/
+
+/**api
+@name:Replace$
+@description:Replace a number or all occurrences of a sub-string in a string
+@param:string$:string:The string to be searched
+@param:subString$:string:The sub-string to replace
+@param:replacement$:string:The string to replace with
+@param:*number:integer:The number of occurences to replace, or all if ommited
+@return:string:The string with the occurences of the sub-string replaced by the replacement string
+@content:
+Here are two examples demonstrating each version of usage:
+~~~
+Print Replace$( "Hello XYZ Studio!", "XYZ", "AOZ" )
+~~~
+api*/
+Function Replace$, string$, subString$, replacement$, number
+{
+	#errors
+}
+End Function( { aoz.utilities.replaceStringInText(%string$,%subString$,%replacement$,%number) } )
+
+/**api
+@name:Mid$
+@description:Return or set a portion of a string
+@param:string$:string:The string
+@param:offset:integer:The offset from the start of the string
+@param:number:integer:The number of characters to set or return
+@return:string:The extracted portion of string
+@examples:instructions:i_2
+@content:
+The MID$ function returns characters from the middle of a string, with the first number specified in
+brackets setting the offset from the start of the string and the second number setting how many characters are to be
+fetched. 
+
+If the number of characters to be fetched is omitted from your instruction, then the characters will be read
+right up to the end of the string being examined. Here are some examples:
+
+~~~
+Print Mid$("AOZ Studio",4)
+Print Mid$("AOZ Studio",0,4)
+~~~
+
+~~~
+A$="AOZ ******"
+Mid$(A$,4)="Studio"
+Print A$
+Mid$(A$,4,3)="AOZ"
+Print A$
+api*/
+
+/**api
+@name:Flip$
+@description:Invert a string
+@param:string$:string:The string
+@return:string:The inverted string
+@examples:instructions:i_10
+@content:
+This function simply reverses the order of the characters held in an existing string. For example:
+~~~
+Print Flip$("SOMA gnippilf")
+~~~
+api*/
+Function Flip$, string$
+{
+}
+End Function( {aoz.flip$(%string$)})
+
+/**api
+@name:Chr$
+@description:Return the character with a given ASCII code
+@param:code:integer:The ascii code to convert into a string
+@return:string:The string containing the representation of the ASCII code
+@examples:instructions:i_10
+@content:
+The CHR$ function creates a string that contains a single character generated by a given ASCII code number. 
+
+ASCII code in AOZ follow the UTF-8 standard, which mean that the first 127 characters are just standard Amiga-compatible ASCII codes.
+The characters after that number contain accents and language-specific characters.
+
+Match characters with their codes using this routine:
+~~~
+For S=32 To 255: Print Chr$(S); : Next S
+~~~
+api*/
+Function Chr$, code
+{
+}
+End Function( {String.fromCharCode(%code)})
+
+/**api
+@name:Space$
+@description:Return a string contain the demanded amount of spaces
+@param:length:integer:The number of spaces desired
+@return:string:A string with only spaces
+@examples:instructions:i_10
+@content:
+Try the following example:
+~~~
+Print "Ten";Space$(10);"spaces"
+~~~
+api*/
+Function Space$, length
+{
+	#errors
+}
+End Function( {aoz.space$(%length)})
+
+/**api
+@name:String$
+@description:Create a new string from the first character of an existing string
+@param:string$:string:The string to repeat
+@param:number:integer:The number of time to repeat the first character
+@return:string:A string with the source first character repeated a number of times
+@examples:instructions:i_10
+@content:
+Do not confuse this with STR$, which converts numbers into a string. 
+
+The STRING$ function creates a new string filled with the required number of copies of the first character from an existing string. 
+
+For instance, the following example produces a new string containing ten copies of the character "A":
+~~~
+Print String$("AMOS Professional is a joy forever",10)
+~~~
+api*/
+Function String$, source$, number
+{
+	#errors
+}
+End Function( {aoz.string$(%source$, %number)} )
+
+/**api
+@name:Upper$
+@description:Convert a string of text to upper-case
+@param:string$:string:The string to convert
+@return:string:The upper-case version of the string
+@examples:instructions:i_2
+@content:
+This function converts the characters in a string into upper case (capital) letters, and places the result into a new
+string. 
+
+For example:
+~~~
+Print Upper$("aMoS pRoFeSsIoNaL")
+~~~
+api*/
+Function Upper$, string$
+{
+	#errors
+}
+End Function( {(%string$).toUpperCase()} )
+
+/**api
+@name:Lower$
+@description:Convert a string of text to upper-case
+@param:STRING$:string:The string to convert
+@return:string:The lower-case version of the string
+@examples:instructions:i_2
+@content:
+This works in the same way as UPPER$, but translates all the characters in a string into nothing but lower case
+(small) letters. These sorts of text conversions are particularly useful for interpreting user-input in interactive data
+programs and adventure games, because input can be converted into a standard format which is understood by your
+programs. 
+
+For example:
+~~~
+Input "Do you want to continue? (Yes or No)";ANSWER$
+ANSWER$=Lower$(ANSWER$) : If ANSWER$="no" Then Edit
+Print "OK. Continuing with your program"
+~~~
+api*/
+Function Lower$, string$
+{
+	#errors
+}
+End Function( {(%string$).toLowerCase()} )
+
+/**api
+@name:Str$
+@description:Convert a number into a string
+@param:number:number:The number to convert
+@return:string:The text version of the number, respecting the rules et by the "Fix" instruction
+@examples:instructions:i_4
+@content:
+Str$ converts a real number variable into a string. This can be used to overcome limitations posed by functions like
+CENTRE, which does not accept numbers as parameters, but will work happily with parameters in the form of
+strings. 
+
+Here is an example:
+~~~
+Centre "Remaining memory is"+Str$(Chip Free)+" Bytes"
+~~~
+api*/
+Function Str$, number
+{
+	#errors
+}
+End Function( {aoz.str$( %number)} )
+
+/**api
+@name:Trim$
+@description:Used to remove blanks at the beginning and end of a string. The considered blanks are the space characters (space, tab, non-breaking space, etc.) as well as the end-of-line characters (LF, CR, etc.).
+@param:value:string:The number to convert
+@return:string:The text version of the number, respecting the rules et by the "Fix" instruction
+@content:
+Trim$ remove blanks at the beginning and end of a string. 
+
+Here is an example:
+~~~
+Print Trim$( "                                 Hello World!")
+~~~
+api*/
+Function Trim$, value
+{
+	#errors
+}
+End Function( {aoz.trim$( %value )} )
+
+/**api
+@name:Val
+@description:Convert a string into a number
+@param:string$:string:The string to evaluate
+@return:number:The numerical version of the string. Returns zero if the converstion fails (TODO! Report error)
+@examples:instructions:i_4
+@content:
+To perform the reverse task to STR$, the VAL function converts a list of decimal digits stored in a string, changing
+them into a number. If this process fails for any reason, a value of zero will be returned. 
+
+For example:
+~~~
+X=Val("1234") : Print X
+~~~
+api*/
+Function Val, string$
+{
+	#errors
+}
+End Function( {aoz.val(%string$)} )
+
+/**api
+@name:Bin$
+@description:Convert a decimal value into a string of binary digits
+@param:number:integer:The number to convert
+@param:*digits:integer:The number of digits
+@return:string:A string in the form of %0000... representing the binary version of the number
+@content:
+This is the function that converts a decimal number or expression into the equivalent string of binary digits. The
+binary number that is returned will automatically have a leading % (per cent) character added to it. This character
+acts as an introduction sign, to indicate that the number which follows it is in binary notation, rather than the
+standard decimal system.
+
+After the decimal value that is to be converted, an optional number between 1 and 31 can be added which sets the
+number of digits to be returned in the binary string. If this parameter is omitted, AOZ will express the
+value in the fewest possible digits, with no leading zeros. 
+
+Here are a few examples:
+~~~
+Print Bin$(5)
+Print Bin$(10)
+Print Bin$(255)
+X$=Bin$(100) : Print X$
+~~~
+You may enter binary numbers directly, as part of an expression, providing that the % (per cent) character is placed
+in front of your binary value. Such numbers will be converted into standard decimal notation automatically. 
+
+For example:
+~~~
+Print %101
+Print %1010
+Print %11111111
+X$=Bin$(100) : Print Val(X$)
+~~~
+Certain functions make use of yet another system of counting. The Hexadecimal system counts in units of 16 rather
+than ten, so a total of 16 different digits is needed to represent all the different numbers. The digits from 0 to 9 are
+used as normal, but the digits from 10 to 15 are signified by the letters A to F, as shown in the following table:
+~~~
+Hex digit 	0 1 2 3 4 5 6 7 8 9 A  B  C  D  E  F
+Decimal 	0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+api*/
+Function Bin$, number, digits
+{
+	#errors
+}
+End Function( {aoz.bin$(%number,%digits)} )
+
+/**api
+@name:Hex$
+@description:Convert a decimal value into a string of hexadecimal digits
+@param:number:integer:The number to convert
+@param:*digits:integer:The number of digits, optional
+@return:string:A string in the form of %0000... representing the binary version of the number
+@content:
+HEX$ converts numbers from the decimal system into a string of hexadecimal (Hex) digits. The decimal value to be
+converted is specified in brackets. The hex number that is returned will automatically have a leading $ (dollar)
+character added to it.
+
+This character acts as an introduction sign, to indicate that the number which follows it is in hexadecimal notation,
+rather than the standard decimal system.
+
+After the decimal value that is to be converted, an optional number can be added which sets the number of digits to
+be returned in the hex string. If this parameter is omitted, AMOS Professional will return the value in the fewest
+possible digits needed to express the hex number. 
+
+For example:
+~~~
+Print Hex$(100)
+Print Hex$(100,3)
+~~~
+HEX$ is often used with the COLOR function to display the precise mixture of Red, Green and Blue components
+in a particular colour, as follows:
+~~~
+Print Hex$(Color(2))
+~~~
+Hexadecimal notation is ideal for handling large numbers such as addresses, and it may be entered directly in any
+AOZ expression. The $ (dollar) character must be placed in front of hex numbers, and they will
+be converted into standard decimal notation automatically. For example:
+~~~
+Print $64
+Print $A
+~~~
+Do not confuse the use of the leading $ character for a hex number with the use of a trailing $ character for a
+string. $A is a hexadecimal number, but A$ is a variable!
+api*/
+Function Hex$, number, digits
+{
+	#errors
+}
+End Function( {aoz.hex$(%number,%digits)} )
+
+/**api
+@name:Len
+@description:Return the length in characters of a string
+@param:string:string:The number to convert
+@return:integer:The number of characters in the string
+@examples:instructions:i_4
+@content:
+The LEN function returns the number of characters stored in a string. For example:
+~~~
+Print Len("0123456789")
+~~~
+api*/
+Function Len, array()
+{
+	#errors
+}
+End Function( {aoz.getArrayLength(%array)} )
+
+Function Len, array$()
+{
+	#errors
+}
+End Function( {aoz.getArrayLength(%array$)} )
+
+Function Len, string$
+{
+	#errors
+}
+End Function( {(%string$).length} )
+
+
+/**api
+@name:Instr
+@description:Search for occurrences of one sub-string within another string
+@param:host$:string:The string to search into
+@param:guest$:string:The sub-string to search
+@param:*start:integer:Option first character position to start the search
+@return:integer:The position of the sub-string if found, starting at 1, zero if not found
+@examples:instructions:i_2
+@content:
+INSTR allows you to search for all instances of one string inside another. 
+
+In the following examples, the "host" strings are searched for the first occurrence of the "guest" strings you are seeking. If the relevant string is found, its
+location will be reported in the form of the number of characters from the left-hand side of the host string. If the
+search is unsuccessful, a result of zero will be given.
+
+~~~
+Print Instr("AMOS Professional","AMOS")
+Print Instr("AMOS Professional","O")
+Print Instr("AMOS Professional","o")
+Print Instr("AMOS Professional","Provisional")
+~~~
+
+~~~
+Do
+	Input "Type in a host string:";H$
+	Input "Type in a guest string to be found:";G$
+	X=Instr(H$,G$)
+	If X=0 Then Print G$;" Not found"
+	If X<>0 Then Print G$;" Found at position ";X
+Loop
+~~~
+Normally, the search will begin from the first character at the extreme left-hand side of the host string, but you may
+begin searching from any position by specifying an optional number of characters from the beginning of the host
+string. The optional start-of-search position can range from zero to the maximum number of characters in the host
+string to be searched. For example:
+
+~~~
+Print Instr("AMOS PROFESSIONAL","O",0)
+Print Instr("AMOS PROFESSIONAL","O",4)
+~~~
+api*/
+Function Instr, host$, guest$, start
+{
+	#errors
+}
+End Function( {aoz.instr(%host$,%guest$,%start)} )
+
+
+/**api
+@name:Trim$
+@description:Remove any space at the beginning or at the end of a string
+@param:string$:string:The string to clean
+@param:*position:integer:1 to trim the start of the string only, 2 to trim the end only, 0 (default) to trim both
+@return:string:The string without spaces at the beginning and/or the end
+@compatible aoz
+@content:
+~~~
+A$ = "     I love AOZ Studio !      "
+Print Trim$( A$ )
+~~~
+api*/
+Function Trim$, string$, position = 0
+{
+	#errors
+}
+End Function( {aoz.trim$(%string$,%position)} )
+
+/**api
+@name:String Base Index
+@description:Set the base index of string functions like Mid$, Left$ or Right$
+@param:index:integer:the value of the new index, 0 or 1.
+@compatible aoz
+@content:
+This instruction set the base index of string function, that is the value that points to the first letter of the string.
+
+Historically, the Basic language uses 1 as base index for strings. Although it is good for learning how to program, it is recommende, specially if you do complex string manipulation or
+orient yourself toward professional programming, to use 0 as index for strings (as for arrays).
+
+Please note that you can also use the tag #stringBaseIndex: 0 or 1. This tag has a global effect of the whole application whereas this instruction allows you to change it locally.
+~~~
+A$ = "I love AOZ Studio !"
+String Base Index 0
+Print Mid$(A$, 8, 1)		// Will print O
+String Base Index 1
+Print Mid$(A$, 9, 1)		// Use plus one on the index to get the O
+~~~
+api*/
+Instruction String Base Index, number = 1
+{
+	#errors
+	this.aoz.setStringBaseIndex(%number);
+}
+End Instruction
+
+/**api
+@name: Zero$( value, size )
+@description:Add zero front the given value to generate a string of size characters
+@syntax: SCORE$ = Zero$( "1235", 6 ) // "001235"
+@param:value:integer:The value to format
+@param:size:integer:The size of the final string
+@return:string:The final string
+api*/
+Function Zero$, Value, Size
+{
+	#errors
+}
+End Function( { aoz.utilities.addZeroFrontValue( %Value, %Size ) } )

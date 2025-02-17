@@ -1,0 +1,11 @@
+<i>Length</i>
+<b>Length</b> xxxxxxx
+=
+The LENGTH function is used to find the size of the bank whose number is specified in brackets. Normally, this is measured in bytes, but if the bank contains Objects or Icon data, the number of images in that bank will be given.
+A value of zero is returned for any bank that has not been defined. For example:
+@code
+Load Fsel$("*.Abk"," ","Load an Object bank") : Rem Bank 1
+Print "There are ";Length(1);" images available."
+@code
+
+

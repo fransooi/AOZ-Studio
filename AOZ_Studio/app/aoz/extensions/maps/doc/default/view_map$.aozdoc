@@ -1,0 +1,13 @@
+<i>View Map$</i>
+<b>View Map$</b> xxxxxxx
+=
+For complex games, you may need to change the tileset affected to each view. This function allows you to recover which tileset is used in which view...
+@code
+Load Map "mymap.json"
+Load Tileset "tileset1.json", 1000
+
+Open View "MapView", "mymap", "tileset1", 0
+Display View "MapView", 0, 0, 160, 144
+Print View Map$( "MapView" )				// Will display "mymap"
+
+

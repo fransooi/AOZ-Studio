@@ -1,0 +1,5 @@
+SDK_BUSY = False : Global SDK_BUSY
+Load Asset "libs/editor-sdk/js/editor-sdk.js", "editor-sdk"
+While SDK_BUSY = True
+	Wait Vbl
+Wend

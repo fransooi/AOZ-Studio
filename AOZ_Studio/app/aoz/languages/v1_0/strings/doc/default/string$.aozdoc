@@ -1,0 +1,12 @@
+<i>String$</i>
+<b>String$</b> xxxxxxx
+=
+Do not confuse this with STR$, which converts numbers into a string.
+
+The STRING$ function creates a new string filled with the required number of copies of the first character from an existing string.
+
+For instance, the following example produces a new string containing ten copies of the character "A":
+@code
+Print String$("AMOS Professional is a joy forever",10)
+@code
+

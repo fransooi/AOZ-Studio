@@ -1,0 +1,11 @@
+<i>WebSocket Open</i>
+<b>WebSocket Open</b> xxxxxxx
+=
+The WebSocket extension allows you to connect to several servers at the same time. To do so, it works with channels, each channel corresponding to a connection. The first parameter of each WebSocket instruction is therefore the index of the channel.
+
+AOZ tries to connect immediately after this instruction but does not wait for the connection to be established. In order to know if the destination WebSocket server has been effectively reached, you must use the "WebSocket Is Connected" function.
+@code
+URL$ = "ws://my_url.me:3000"
+WebSocket Open 1, URL$
+@code
+

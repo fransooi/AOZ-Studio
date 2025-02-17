@@ -1,0 +1,694 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Music Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Bank Management
+@description:Functions and instruction to manage memory banks
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Bank Swap
+@description:Swap two banks in the list of banks
+@param:bank1:index:Index of the first bank to swap
+@param:bank2:index:Index of the second bank to swap
+@compatible: aoz, stos, amos
+@examples:instructions:i_78
+@content:
+The BANK SWAP command switches over the memory pointers assigned to a pair of selected banks, so that the first bank is assigned to the second bank's memory block and the second bank grabs the locations used by the first.
+
+Note that the items held in these banks are completely unaffected by this operation, and the only thing that changes
+is the number and type of the memory bank to which the items are assigned.
+
+BANK SWAP is commonly used in conjunction with Objects, Icons and music banks. For example, it can be used
+to instantly flick between the images in an Icon bank and an Object bank, like this:
+~~~
+Load "Objects.Abk"
+Load "Icons.Abk"
+Bank Swap 1,2 : Rem Banks 1 and 2 normally used for Sprites and Icons
+~~~
+Another possibility is to store several different music banks in memory, and swap them as required.
+
+api*/
+Instruction Bank Swap, bank1 = (index), bank2 = (index)
+{
+    #errors
+    aoz.banks.bankSwap(%bank1,%bank2);
+}
+End Instruction
+
+/**api
+@name:Bank Shrink
+@description:Change the size of a memory bank
+@param:bannkIndex:index:Index of the bank to resize
+@param:length:integer:New size in bytes
+@compatible: aoz, stos, amos
+@content:
+This instruction does not erase a bank at all, but shrinks it! BANK SHRINK will not work with Object or Icon banks, but it is used to reduce the length of a previously reserved memory bank to the specified smaller length. The excess memory will be returned for use by the main program without complications.
+
+This feature is very useful if you create a bank by poking it into memory, and wish to save it with a more suitable
+size. For example:
+~~~
+Reserve As Data 10,1000000: Rem Very large bank
+Poke$ Start(10)-8,"My Bank" : Rem Rename bank 8 bytes
+Poke$ Start(10),"This is a small bank!" : Rem Poke some data
+Bank Shrink 10 To 100: Rem Shrink bank to 100 bytes
+Save "My_Bank.Abk",10
+~~~
+api*/
+Instruction Bank Shrink, bankIndex=(index), length
+{
+    #errors
+    aoz.banks.bankShrink(%bankIndex,%length);
+}
+End Instruction
+
+/**api
+@name:Start
+@description:Return the address of the start of a memory bank (composite number, only useable with AOZ mmemory instruction)
+@param:bankIndex:index:Index of the bank to resize
+@return:integer:The start of the memory bank
+@compatible: aoz, stos, amos
+@examples:instructions:i_78
+@content:
+Use the START function to reveal the address of the memory area allocated to a bank, whose number is specified in brackets. The address will usually remain fixed for the duration of a program, but it can be changed by a BANK SWAP command.
+
+If the specified bank number does not exist, AOZ Studio will give a "Bank not reserved" error report. This
+can be avoided by checking the status of a bank with the LENGTH function, like this:
+~~~
+If Length( N )>0: Rem give N a suitable bank number
+	Print "Address of the bank is ";Start(N)
+Else
+	Print "This bank does not exist!"
+End If
+~~~
+api*/
+Function Start, bankIndex=(index)
+{
+    #errors
+}
+End Function( {aoz.banks.getStart(%bankIndex)} )
+
+/**api
+@name:Length
+@description:Return the length of a memory bank
+@param:bankIndex:index:Index of the bank to query
+@return:integer:The length of the memory bank
+@compatible: aoz, stos, amos
+@examples:instructions:i_78
+@content:
+The LENGTH function is used to find the size of the bank whose number is specified in brackets. Normally, this is measured in bytes, but if the bank contains Objects or Icon data, the number of images in that bank will be given.
+A value of zero is returned for any bank that has not been defined. For example:
+~~~
+Load Fsel$("*.Abk"," ","Load an Object bank") : Rem Bank 1
+Print "There are ";Length(1);" images available."
+~~~
+
+api*/
+Function Length, bankIndex=(index)
+{
+    #errors
+}
+End Function( {aoz.banks.getLength(%bankIndex)} )
+
+/**api
+@name:Erase
+@description:Destroy the content of a memory bank and remove it from the list of banks
+@param:bankIndex:index:Index of the bank to query
+@compatible: aoz, stos, amos
+@examples:instructions:i_78
+@content:
+The ERASE command clears the memory space used by the specified bank number, and returns this memory to the main program, for future use. For example:"
+~~~
+Reserve as Work 5,1000: Rem Reserve temporary work bank 5
+Wait Key
+Erase 5
+~~~
+api*/
+Instruction Erase, bankIndex=(index)
+{
+    #errors
+    aoz.banks.erase(%bankIndex);
+    aoz.banks.updateBank(null,%bankIndex);
+}
+End Instruction
+
+/**api
+@name:Erase All
+@description:Destroy all memory banks
+@compatible: aoz, stos, amos
+@examples:instructions:i_78
+@content:
+This command is used to erase all memory banks that are assigned to the current program, quickly and completely!
+api*/
+Instruction Erase All
+{
+    #errors
+    aoz.banks.eraseAll();
+}
+End Instruction
+
+/**api
+@name:Erase Temp
+@description:Destroy all temporary memory banks (bank marked as "Work")
+@compatible: aoz, stos, amos
+@examples:instructions:i_78
+@content:
+This instruction is used to erase all of the temporary work banks from the current program. Any permanent data banks used for holding Sprites, music or samples will be completely unaffected. For example:
+~~~
+Reserve As Data 5,1000: Rem Reserve 1000 bytes of permanent data
+Reserve As Work 6,1000: Rem Reserve 1000 bytes of temporary workspace
+Reserve As Chip Work 7,2000: Rem Reserve 2000 bytes of chip memory
+Erase Temp
+List Bank
+~~~
+api*/
+Instruction Erase Temp
+{
+    #errors
+    aoz.banks.eraseTemp();
+}
+End Instruction
+
+/**api
+@name:List Bank
+@description:Displays the list of one or all the memory banks in the current screen, type and length
+@param:*bankIndex:string:Index of the bank to list (optional)
+@compatible: aoz, stos, amos
+@content:
+The LIST BANK instruction is used to provide a complete list of all the banks that are available from the current program. Information about the banks is listed in the following order:
+
+- The bank number or index
+- A single letter indicating the type of bank
+- The name of the bank, held in a string of eight characters. Please note that Object banks are identified with the
+letters "Sprite", even though the same images can be used equally well for Sprites or Bobs.
+- The address of the start of the bank in memory, using hexadecimal notation.
+- The length of the bank in normal decimal format. In the case of "Sprite" or "Icon" banks, the number of
+images in the bank will be given instead.
+
+LIST BANK will result in the following sort of report appearing on the screen:
+~~~
+1- Sprites S:C61298 	L:0000005
+3- Music   S:C60E80 	L:0001000
+6- Work    S:100000 	L:0010000
+~~~
+
+api*/
+Instruction List Bank, bankIndex=(index)
+{
+    #errors
+    aoz.banks.listBank(%bankIndex);
+}
+End Instruction
+
+/**api
+@name:Reserve As Work
+@description:Reserve and allocates memory for a new bank of "Work" type, and add it to the list of banks
+@param:bankIndex:index:Index of the bank to create
+@param:length:integer:Length in byte of the new bank
+@compatible:aoz, stos, amos
+@examples:instructions:i_78
+@content:
+This allocates a temporary workspace of the requested length from fast memory, if it is available.
+
+The work data will be erased every time the program is run from the Editor, and it will be discarded when the listing is saved onto disc. A quick check can be made to see if the data area has been successfully assigned to fast memory, using the FAST FREE function, like this:
+~~~
+Reserve As Work 10,1000
+~~~
+
+api*/
+Instruction Reserve As Work, bankIndex=(index), length
+{
+    #errors
+    var bank=aoz.banks.reserve(%bankIndex,"work",%length);
+    aoz.banks.updateBank(bank,%bankIndex);
+}
+End Instruction
+
+/**api
+@name:Reserve As Data
+@description:Reserve and allocates memory for a new bank of "Data" type, and add it to the list of banks
+@param:bankIndex:index:Number of the bank to create
+@param:length:integer:Length in byte of the new bank
+@compatible:aoz, stos, amos
+@examples:instructions:i_78
+@content:
+This reserves the selected bank number with the number of bytes specified as its length. Data banks are permanent, and wherever possible, their memory will be allocated from fast memory, so this type of bank should not be used for information such as Objects and samples which need to be accessed directly by the Amiga's hardware chips.
+
+api*/
+Instruction Reserve As Data, bankIndex=(index), length
+{
+    #errors
+    var bank=aoz.banks.reserve(%bankIndex,"data",%length);
+    aoz.banks.updateBank(bank,%bankIndex);
+}
+End Instruction
+
+/**api
+@name:Image Width
+@description:Return the width in pixels of an image in the Images bank
+@param:imageIndex:index:Index of the image in the Images bank
+@return:integer:The width in pixels of the image
+@compatible:aoz
+api*/
+Function Image Width, imageIndex=(index)
+{
+	#errors
+}
+End Function( {aoz.banks.getImage('images',%imageIndex).width} )
+
+/**api
+@name:Image Height
+@description:Return the height in pixels of an image in the Images bank
+@param:imageIndex:index:Index of the image in the Images bank
+@return:integer:The height in pixels of the image
+@compatible:aoz
+api*/
+Function Image Height, imageIndex=(index)
+{
+	#errors
+}
+End Function( {aoz.banks.getImage('images',%imageIndex).height} )
+
+/**api
+@name:Image DataURL$
+@description:Return a data URI containing a representation of an image in the Images bank. The returned image is in a resolution of 96 dpi. 
+@param:imageIndex:index:Index of the image in the Images bank
+@return:string:The data URI containing a representation of the image
+@compatible:aoz
+api*/
+Function Image DataURL$, imageIndex=(index)
+{
+	#errors
+	var img = aoz.banks.getImage('images',%imageIndex);
+	
+}
+End Function( {aoz.banks.utilities.getBase64Image( img.getCanvas( false, false ) )} )
+
+/**api
+@name:HRev
+@description:Return a flag of bits to be used in Bob and Sprite instructions that will mirror the image horizontally
+@param:imageIndex:integer:Index of the image in the Images bank (this function does not work with string indexes)
+@return:integer:The given index with the flag indicating to mirror the image horizontally ($8000)
+@compatible: aoz, stos, amos
+@examples:instructions:i_29
+@content:
+This function reverses an image from left to right, creating a mirror image. Use HREV by specifying the existing image number (in brackets) to be flipped horizontally, in order to create a new identification number for the reversed image. This new image number can be freely used with any of the standard Bob commands.
+
+Here is an example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" : Rem Load Bob images from disc
+Curs Off.: Cls 0 : Rem Set up screen
+Flash Off : Get Bob Palette : Rem Grab Bob colours from image bank
+For X=360 To -60 Step -4: Rem Move Bob across screen
+	Bob 1,X,100,2 : Rem Display Bob at a new position
+	Wait Vbl : Rem Wait for next vertical blank period
+Next X
+For X=-60 To 400 Step 4: Rem Flip image and move from left to right
+	Bob 1,X,100,Hrev(2) : Rem Display Bob at new position
+	Wait Vbl : Rem Wait 50th of second for Vbl
+Next X
+~~~
+There is a hexadecimal version of this function, and the value returned by the HREV function is in the following format:
+~~~
+$800+n
+~~~
+Where $8000 is a "flag" telling AOZ Studio to reverse the Bob whenever it is displayed on screen, and
+where n is the number of your image. This technique can be used to flip images directly from an AMAL animation
+sequence.
+
+Supposing your original sequence was created with this:
+~~~
+"Anim 0,(1,2)(2,2)(3,2)(4,2)"
+~~~
+To reverse these images, either of the following two lines could be used:
+~~~
+"Anim 0,($8000+1,2)($8000+2,2)($8000+3,2)($8000+4,2)"
+"Anim 0,($8001,2)($8002,2)($8003,2)($8004,2)"
+~~~
+When an image is reversed like this, the location of the hot spot is reversed horizontally too. So if the hot spot was originally in the top left-hand corner, the hot spot of the HREV image will be in the top right-hand corner:
+Depending on the image involved, this can have a great effect on the way your image is displayed on screen. Be
+careful to position your hot spots sensibly, or avoid any risks by setting them centrally, using the appropriate HOT
+SPOT command.
+
+api*/
+Function HRev, imageIndex
+{
+}
+End Function( {(%imageIndex|0x8000)} )
+
+/**api
+@name:VRev
+@description:Return a flag of bits to be used in Bob and Sprite instructions that will mirror the image vertically
+@param:imageIndex:integer:Index of the image in the Images bank, can only a number for this function,.
+@return:integer:the index with a flag indicating to mirror the image vertically ($4000)
+@compatible: aoz, stos, amos
+@examples:instructions:i_29
+@content:
+VREV is identical to HREV, except that it takes the specified image and turns it upside down before displaying it on the screen. This is best used for animated objects that move vertically, although comic effects can be achieved with cartoon characters.
+As with HREV, there is an equivalent hexadecimal version of the VREV function, which can be used with AMAL
+animation strings. The format is:
+~~~
+$4000+n
+~~~
+WWhere $4000 acts as the reversal flag, and n is the image number. Here are two typical AMAL string of reversed
+animation:
+~~~
+"Anim 0,($4000+1,2)($4000+2,2)($4000+3,2)($4000+4,2)"
+"Anim 0,($4001,2)($4002,2)($4003,2)($4004,2)"
+~~~
+
+api*/
+Function VRev, imageIndex
+{
+}
+End Function( {(%imageIndex|0x4000)} )
+
+/**api
+@name:Rev
+@description:Return a flag of bits to be used in Bob and Sprite instructions that will mirror the image horizontally and vertically
+@param:imageIndex:integer:Index of the image in the Images bank, can only be a number for this function
+@return:integer:The given index with a flag indicating to mirror the image horizontally and vertically (C000)
+@compatible: aoz, stos, amos
+@examples:instructions:i_29
+@content:
+REV combines HREV and VREV into a single function. It takes the image whose number is held in brackets, reverses it from left to right and then performs another reversal from top to bottom. For example:
+~~~
+Load "AMOSPro Tutorial:Objects/Bobs.abk"
+Curs Off : Cls 0
+Flash Off : Get Bob Palette
+For Y=200 To -40 Step -1
+	Bob 1,Y*2,Y,1
+	Wait Vbl
+Next Y
+For Y=-40 To 200
+	Bob 1,Y*2,Y,Rev(1)
+	Wait Vbl
+Next Y
+~~~
+api*/
+Function Rev, imageIndex
+{
+}
+End Function( {(%imageIndex|0xC000)} )
+
+// Images
+///////////////////////////////////////////////////////////////////////
+
+/**api
+@name:Ins Image
+@description:Inserts an empty image in the Images bank
+@param:position:integer:Position to insert at
+@compatible: aoz
+@content:
+INS IMAGE inserts a blank image at the numbered position in the current Image Bank.
+All of the images after this numbered position will then be moved down one place in the numerical order. The second version of this command
+allows you to create several spaces in a single operation, by giving the range of new gaps between the first and last
+image numbers that you specify.
+
+Any of these new image spaces are completely empty, and so cannot be allocated to a Bob or displayed directly on
+screen while they are still blank. An actual image must first be grabbed into the Object Bank, using a GET IMAGE
+command. If this is not done, the appropriate error message will be given as soon as you try to access
+the empty image.
+api*/
+Instruction Ins Image, position
+{
+	#errors
+	aoz.banks.insertImage('images',%position);
+}
+End Instruction
+
+/**api
+@name:Ins Image
+@description:Inserts a number of empty images in the Images bank
+@param:start:integer:Position of insersion
+@param:end:integer:End position of insertion
+@compatible: aoz
+@content:
+This version of the INS IMAGE instruction works like the version with only one parameter but inserts a series of blank image after the numbered position in the current image Bank and not only one.
+All of the images after this numbered position will then be moved down one place in the numerical order.
+api*/
+Instruction Ins Image, start To end
+{
+	#errors #errors
+	aoz.banks.insertImageRange('images',%start,%end);
+}
+End Instruction
+
+/**api
+@name:Del Image
+@description:Delete an image in the Images bank
+@param:imageIndex:index:Index of the image to delete
+@compatible: aoz
+@content:
+The DEL IMAGE command permanently deletes one or more images from the Images Bank. To erase a single image, simply give the image number to be deleted, like this:
+~~~
+Del Sprite 2
+~~~
+Whenever an image is deleted, all the subsequent images in the Bank are moved up one place in the numerical order IF and only if they have a numerical index.
+Images with a string index are not affected.
+
+For instance, if the Bank originally contained four images, the above example would remove image number 2 from memory, leaving a gap between images 1 and 3. This gap would be filled immediately, as the old image numbers 3 and 4 were shunted up one place, to become the new image numbers 2 and 3.
+
+api*/
+Instruction Del Image, imageIndex
+{
+	#errors
+	aoz.banks.deleteImage('images',%imageIndex);
+}
+End Instruction
+
+/**api
+@name:Del Image
+@description:Delete a range of images from the image bank
+@param:start:integer:Position of deletion
+@param:end:integer:End position of deletion
+@compatible: aoz
+@content:
+use this version of the DEL IMAGE instruction to delete more than one image from the Images Bank. The following example would delete Sprite images 4,5,6 and 7:
+~~~
+Del Image 4 To 7
+~~~
+After the last image has been deleted from the Image Bank, the entire Bank is erased automatically.
+api*/
+Instruction Del Image, start To end
+{
+	#errors
+	aoz.banks.deleteImageRange('images',%number1,%number2);
+}
+End Instruction
+
+/**api
+@name:Get Image
+@description:Captures a portion of the current screen, create a transparency mask out of true black (RGB #000000) and add the image to the Images bank.
+@param:*screenIndex:index:Index of the screen to grab the image from
+@param:imageIndex:index:Index of the image to insert in the Images bank
+@param:x1:integer:Horizontal coordinate of the top-left corner of the capture area
+@param:y1:integer:Vertical coordinate of the top-left corner of the capture area
+@param:x2:integer:Horizontal coordinate of the bottom-right corner of the capture area
+@param:y2:integer:Vertical coordinate of the bottom-right corner of the capture area
+@param:*tags$:string:Unused for the moment
+api*/
+Instruction Get Image, imageIndex = (index), x1, y1 To x2, y2, tags$
+{
+	#errors
+	aoz.currentScreen.getImage('images',%imageIndex,{x:%x1,y:%y1,x2:%x2,y2:%y2},%tags$);
+}
+End Instruction
+Instruction Get Image, screenIndex=(index), imageIndex = (index), x1, y1 To x2, y2, tags$
+{
+	#errors
+	aoz.getScreen(%screenIndex).getImage('images',%imageIndex,{x:%x1,y:%y1,x2:%x2,y2:%y2},%tags$);
+}
+End Instruction
+Instruction Get Image, imageIndex = (index), x, y, width, height, tags$
+{
+	#errors
+	aoz.currentScreen.getImage('images',%imageIndex,{x:%x,y:%y,width:%width,height:%height},%tags$);
+}
+End Instruction
+Instruction Get Image, screenIndex=(index), imageIndex = (index), x, y, width, height, tags$
+{
+	#errors
+	aoz.getScreen(%screenIndex).getImage('images',%imageIndex,{x:%x,y:%y,width:%width,height:%height},%tags$);
+}
+End Instruction
+
+
+// Masks and hot-spots
+///////////////////////////////////////////////////////////////////////
+
+/**api
+@name:Make Mask
+@description:Create a transparency mask out of the full black color of an image in the Images bank (RGB = $000000)
+@param:imageIndex:index:Index of the image work on
+@compatible: aoz, stos, amos
+@examples:instructions:i_26
+@content:
+This command creates a mask around every one of the images in the Object Bank, and may take
+a little time, depending on the number of objects involved. If an optional number is given, then a mask is created for that specified image only.
+
+Please ntoe that there is no need to use this command with AOZ banks that contain PNG images. You may want to use it for JPG as they do not contain transparency information.
+api*/
+Instruction Make Mask, imageIndex=(index)
+{
+	#errors
+	aoz.banks.processMask('images',%imageIndex,true);
+}
+End Instruction
+
+/**api
+@name:No Mask
+@description:Removes the transparency mask of an image in the Images bank, turning the image full opaque
+@param:imageIndex:index:Index of the image work on
+@compatible: aoz, stos, amos
+@examples:instructions:i_26
+@content:
+A "mask" means that the background colour (colour zero) around a Bob is made transparent, so t hat the screen graphics show through. The mask is also used by certain collision detection routines. A mask is automatically set up for every Bob, and the NO MASK command takes away this mask, so that the entire Bob image is drawn on the screen, including its original background colour and any other graphics in colour zero. To remove a mask, simply use this command followed by the number of the Bob image you are interested in.
+api*/
+Instruction No Mask, imageIndex=(index)
+{
+	#errors
+	aoz.banks.processMask('images',%imageIndex,false);
+}
+End Instruction
+
+/**api
+@name:Hot Spot
+@description:Set the hot-spot of an image in the Images bank
+@param:imageIndex:index:Index of the image in the Images bank
+@param:x:integer:Horizontal coordinate of the hot-spot
+@param:y:integer:Vertical coordinate of the hot-spot
+@examples:instructions:i_26
+@compatible: aoz, stos, amos
+@content:
+The HOT SPOT command sets the hot spot of an image stored in the current Object Bank. The hot spot x,y-offset is measured from the top left-hand corner of the image, and is added to those coordinates before use, as illustrated in the following diagram:
+
+![example1](help:img/bank_commands/bank_com_ex1.png)
+It is perfectly legal to position the hot spot outside of the current screen display. This can be used for automatic conversion of all screen coordinates, as explained above, or to set up a games sequence with Sprites appearing from off-screen.
+
+There is another version of this instruction, allowing automatic positioning of the hot spot to any one of nine pre-set positions. These positions are shown in the following diagram, with the central point of the image
+represented by the value $11. The value for a pre-set hot spot at the top right-hand corner of the image is $20, for
+the bottom left-hand corner $02, and so on.
+![example2](help:img/bank_commands/bank_com_ex2.png)
+
+api*/
+Instruction Hot Spot, imageIndex=(index), x, y
+{
+	#errors
+	aoz.banks.setImageHotSpot("images",%imageIndex,{x:%x,y:%y});
+}
+End Instruction
+
+/**api
+@name:Hot Spot
+@description:Calculates the hot-spot of an image in the Images bank
+@param:imageIndex:index:Index of the image in the Images bank
+@param:flags:integer:Flag of bits indicating the horizontal and vertical position of the hot-spot, 0: top or left, 1: center or middle, 2: right or bottom. Example: $11 centers the hot-spot horizontally and vertically
+@examples:instructions:i_26
+@compatible: aoz, stos, amos
+@content:
+This version of the Hot Spot allows an automatic positioning of the hot spot to any one of nine pre-set positions. These positions are shown in the following diagram, with the central point of the Object image
+represented by the value $11. The value for a pre-set hot spot at the top right-hand corner of the image is $20, for
+the bottom left-hand corner $02, and so on.
+![example2](help:img/bank_commands/bank_com_ex2.png)
+api*/
+Instruction Hot Spot, imageIndex=(index), mask
+{
+	#errors
+	aoz.banks.setImageHotSpot("images",%imageIndex,{x:"mask",y:%mask});
+}
+End Instruction
+
+/**api
+@name:Hot Spot
+@description:Returns the coordinate of the hot-spot of an image in the Images bank
+@param:imageIndex:index:Index of the image in the Images bank
+@param:direction$:string:Use "x" to get the horizontal position or "y" to get the vertical position
+@return:integer:The horizontal or vertical position of the hot-spot
+@examples:instructions:i_26
+@compatible: aoz, stos, amos
+@content:
+~~~
+Hot Spot 1, 16, 24
+Print Hot Spot( 1, "x" )		// Will print 16
+Print Hot Spot( 1, "y" )		// Will print 24
+api*/
+Function Hot Spot, imageIndex=(index), direction$
+{
+	#errors
+}
+End Function ( {aoz.banks.getImageHotSpot("images",%imageIndex,%direction$)} )
+
+
+/**api
+@name:BGrab
+@description:Grab a memory bank used by the previous program
+@param:imageIndex:index:Index of the bank to grab
+@examples:
+@content:
+api*/
+Instruction BGrab, index=(index)
+{
+	#errors
+}
+End Instruction
+
+/**api
+@name:BSend
+@description:Transfer a memory bank from the current program to the previous program
+@param:imageIndex:index:Index of the bank to grab
+@examples:
+@content:
+api*/
+Instruction BSend, index=(index)
+{
+	#errors
+}
+End Instruction
+
+/**api
+@name:=BStart
+@description:Return the address of a memory bank from a previous program
+@param:imageIndex:index:Index of the bank to grab
+@examples:
+@content:
+api*/
+Function BStart, index=(index)
+{
+	#errors
+}
+End Function( {0} )

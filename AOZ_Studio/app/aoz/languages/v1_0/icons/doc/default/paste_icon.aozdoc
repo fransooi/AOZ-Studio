@@ -1,0 +1,19 @@
+<i>Paste Icon</i>
+<b>Paste Icon</b> xxxxxxx
+=
+Use the PASTE ICON command to draw the specified Icon number already stored in Bank 2, on screen. The screen position is defined by graphic coordinates, and can be anywhere you like. Icon images will be clipped in the normal way, if they exceed the standard limitations. Here is a simple example:
+@code
+Load Image "AMOSPro_Examples:Iff/logo.iff"
+Z=0
+For A=0 To 304 Step 16
+Inc Z
+Get Block Z,A,1,16,199
+Next A
+Cls 0
+For A=0 To 304 Step 16
+Put Block Z,A,0
+Dec Z
+Wait Vbl
+Next A
+@code
+

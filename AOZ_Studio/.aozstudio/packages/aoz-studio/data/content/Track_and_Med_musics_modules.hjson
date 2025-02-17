@@ -1,0 +1,202 @@
+{
+    track_and_med_musics_modules:
+    { 
+        name: "Tracker and Med Music Commands"
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "track_loop_on": //SAME AS OFF
+            [
+                Use these commands to make Tracker modules loop over and over again, or to stop a particular loop after it has
+commenced. Try this example:
+                '''
+                ~~~                
+		   Track Load "AMOSPro_Examples:Music/Mod.Tracker"
+		   Track Play
+		   Track Loop On
+                ~~~
+                '''
+            ]
+            "track_loop_off": //SAME AS ON TODO
+            [
+                Use these commands to make Tracker modules loop over and over again, or to stop a particular loop after it has
+commenced. Try this example:
+                '''
+                ~~~                
+		   Track Load "AMOSPro_Examples:Music/Mod.Tracker"
+		   Track Play
+		   Track Loop Off
+                ~~~
+                '''
+            ]
+            "track_load":
+            [
+                Use this command to load a specified Tracker module into the memory bank number of your choice. Any existing
+data in this bank will be erased before the module is loaded, and the new bank will be called "Tracker".
+
+            ]
+            "track_play":
+            [
+                To start your Tracker module playing, give this command followed by the appropriate bank number. If the bank
+number is omitted, bank number 6 will be used as a default. Most electronic composers use sets of patterns to make
+up a tune, and these can be repeated in any suitable order. A Tracker sequence can be started from any one of these
+patterns, providing that you know which pattern number refers to which particular part of the sequence. An optional
+pattern number can be added after the bank number parameter. Here are some example settings:
+                '''
+                ~~~                
+		   Track Play : Rem Use default Tracker bank
+		   Track Play ,5 : Rem Play pattern 5 from default Tracker bank
+		   Track Play 9,5: Rem Play pattern 5 from bank 9
+                ~~~
+                '''
+            ]
+            "track_stop":
+            [
+                This command is used to halt all Tracker modules playing.
+
+            ]
+            "track_pause": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_resume": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_title": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_signature": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_length": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_channels": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_position": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_volume": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_pattern": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_sam_init": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "track_sam_play": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "med_load":
+            [
+                The MED LOAD instruction loads the specified module in memory, and re-locates it to the specified reserved bank
+in Chip memory. This bank is not a data bank, and will not be saved along with your program, so Med modules
+must be loaded anew each time that the program is run.
+""
+This command will open the "Medplayer.library" file, and you may be asked to insert your System disc into the
+drive if this file is not available on the current disc.
+""
+As with Tracker modules, AOZ Studio sound samples can be played while Med modules are active. When a
+sound effect is triggered, any Med music will be stopped on all four voices, and will start again as soon as the
+sample has been played.
+
+            ]
+            "med_stop":
+            [
+                This simple instruction halts the current Med song being played. The song can now be started from the beginning
+with a new call to MED PLAY, or continued using a MED CONT command.
+
+            ]
+            "med_cont":
+            [
+                This simple instruction halts the current Med song being played. The song can now be started from the beginning
+with a new call to MED PLAY, or continued using a MED CONT command.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "midi_on": //TODO med_midi_on?
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            
+        }
+    }
+}

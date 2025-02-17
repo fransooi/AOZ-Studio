@@ -1,0 +1,9 @@
+<i>Screen Width</i>
+<b>Screen Width</b> xxxxxxx
+=
+The dimensions of the current screen can be found like this:
+@code
+Print Screen Height
+Print Screen Width
+@code
+

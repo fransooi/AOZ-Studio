@@ -1,0 +1,16 @@
+<i>Polygon</i>
+<b>Polygon</b> xxxxxxx
+=
+This can be regarded as creating a solid version of the POLYLINE command, and your shape will begin at the
+current graphic coordinates if you commence the command in its POLYGON TO form. Provided that your single
+statement does not exceed the maximum allowed line length of 255 characters, there is no limit to the number of
+pairs of coordinates you can use. Try this example:
+@code
+Do
+Ink Rnd(15)
+X1=Rnd(250) : Y1=Rnd(150) : H=Rnd(200) : W=Rnd(150)
+Polygon X1,Y1 To X1+W,Y1 To X1+W/2,Y1+H To X1,Y1
+Loop
+@code
+
+

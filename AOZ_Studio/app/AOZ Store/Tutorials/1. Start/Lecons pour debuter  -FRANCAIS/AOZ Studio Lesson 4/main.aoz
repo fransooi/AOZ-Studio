@@ -1,0 +1,125 @@
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+
+// Bienvenue à la leçon 4 d'AOZ Studio.     Adaptée par Dave Baldwin - Avril 2020
+// Nous allons apprendre à dessiner des formes aléatoires (rectangles) ou triangles
+// et les remplire de motifs colorés également aléatoires sur tout l'écran.
+
+// Les commandes présentées dans ce tutorial sont SET PATTERN, SET PAINT, BAR et POLYGON
+// Il est préférable d'avoir lu les tutoriaux précédents, pour comprendre certaines instructions.
+
+#manifest:"aoz"
+	// AOZ Studio peut créer des programmes pour différents types d'ordinateurs, de smartphones, etc...
+	// Cette commande indique que l'environnement du programme est le PC standard,
+	// (c'est ce qui est pris par défaut si vous n'indiquez rien.)
+#fullScreen:true
+	// Affichage en plein écran (également ce qui est par défaut, mais on apprends en passant)
+#splashScreen:false
+	// Si "false" le logo AOZ Studio ne s'affiche pas, changez en "true" (vrai) si vous souhaitez.
+Curs Off			// Désactive le curseur clignotant, qui est On par défaut.
+
+#fps:true			// Affiche le compteur de trames par seconde ou FPS (frame per second) dans le coin supérieur gauche.
+					// C'est un indicateur pendant le developpement du nombre de fois que l'écran est redessiné à chaque seconde.
+					// Pratique pour vérifier que votre programme n'est pas trop lent.
+					// Pour des jeux fluides par exemple il est conseillé un FPS de 50 ou plus.
+					// Changez "true" en "false" ou ne mettez pas cette ligne si vous ne voulez pas voir cet indicateur.
+
+sw=Screen Width		// Défini la variable sw comme la largeur de l'écran.
+sh=Screen Height	// Défini la variable sh comme la hauteur de l'écran.
+
+BARS=1 				// Défini la variable pour activer (1) ou désactiver (0) les rectangles
+TRIANGLES=0			// Défini une variable pour activer (1) ou désactiver (0) les triangles
+SPEED=0				// Défini une variable pour contrôler la vitesse. Lent (0), rapide (1)
+
+Cls 				// Efface l'écran avant de commencer.
+
+// L'instruction Rnd(xx) donne un nombre aléatoire compris entre 0 et le nombre (xx).
+
+// Boucle du programme principal.
+// Tout le code entre Do et Loop sera répété encore et encore jusqu'à ce que nous arrêtions le programme.
+Do						// Démarre la boucle du programme.
+
+	x1 = Rnd(sw)		// Défini des coordonnées aléatoires x et Y pour le premier coin du polygone.
+	y1 = Rnd(sh)+100
+
+	x2 = Rnd(sw)		// Défini des coordonnées aléatoires x et Y pour le deuxième coin du polygone.
+	y2 = Rnd(sh)
+
+	x3 = Rnd(sw)		// Défini des coordonnées aléatoires x et Y pour le troisième coin du polygone.
+	y3 = Rnd(sh)
+
+
+	// Tout d'abord, nous allons dessiner avec la dernière couleur d'encre (Ink) afin de couvrir toutes les formes et les motifs derrière lui.
+	Set Pattern 0 		// Défini le motif de remplissage sur un bloc de couleur solide (la dernière couleur d'encre utilisée)
+	Set Paint 0			// Défini le contour de la forme :
+						// «0» signifie aucun contour, «1» signifie que la forme aura un contour.
+
+	If BARS=1 then Bar x1,y1 to x2,y2						// Si nous devons dessiner des barres (BARS = 1) alors on le fait avec deux paires de coordonnées, qui représentent les sommets opposés.
+	If TRIANGLES=1 then Polygon x1,y1 to x2,y2 to x3,y3		// Si nous devons dessiner des triangles (TRIANGLES = 1) alors on le fait avec trois paires de coordonnées, qui représentent chaque sommet.
+
+	// Maintenant, nous allons dessiner la même forme remplie d'un motif aléatoire.
+	// Il existe 34 motifs prédéfinis, le motif 0 est une couleur unie (sans motif).
+	// Les motifs sont constitués de deux couleurs :
+	// la couleur 0 (qui est traitée comme transparente par le dessin) et la couleur d'encre actuelle.
+
+	Set Pattern rnd( 34 )									// Défini le motif sur un nombre aléatoire compris entre 0 et 34. Ce motif sera utilisé dans toutes les futures opérations de dessin jusqu'à ce qu'il soit modifié.
+	Set Paint 1												// Indique qu'il y a un contour.
+	Ink Rnd( 32 )											// Défini la couleur de l'encre. (Ceci est utilisé pour le prochain polygone dessiné, et aussi pour la prochaine couleur de bloc solide dans la boucle suivante)
+	If BARS=1 then Bar x1,y1 to x2,y2						// Vérifie si nous devons dessiner un rectangle, et si c'est le cas (BARS = 1) le dessine
+	If TRIANGLES=1 then Polygon x1,y1 to x2,y2 to x3,y3		// Vérifie si nous devons dessiner un triangle, et si c'est le cas (TRIANGLES = 1) le dessine
+
+
+	// Enfin, nous ajouterons quelques commandes de clavier pour rendre cela plus intéractif.
+	Centre "Appuyez sur 'B'->BARRES, 'T'->TRIANGLES, 'L'->LENT, 'R'->RAPIDE, 'Q'->QUITTER"
+	// Affiche cette ligne en haut de l'écran.
+	// Le faire seulement maintenant garantit qu'il ne sera pas recouvert par nos dessins.
+
+	I$=Inkey$ // Cette instruction est un peu comme Input mais sans montrer un curseur clignotant.
+			  // Si une touche a été enfoncée elle est stockée içi dans I$.
+			  // Si vous appuyez sur la touche "T", I$ contiendra "T"
+			  // Pour mémoire Wait Key attends juste qu'une touche soit appuyée pour continuer.
+
+	// Vérifions les majuscules et les minuscules.
+	If I$="B" or I$="b" then BARS=1 : TRIANGLES=0	// Si "B" ou "b" on active BARS et désactive TRIANGLES.
+	If I$="T" or I$="t" then TRIANGLES=1 : BARS=0
+	If I$="L" or I$="l" then SPEED=0				// Si "L" a été enfoncé on régle la variable SPEED sur "0" pour ralentir.
+	If I$="R" or I$="r" then SPEED=1				// Si "R" a été pressé on régle la variable SPEED sur "1" pour accélérer.
+	If I$="Q" or I$="q" then Exit					// Si c'est «Q», on quitte définitivement le programme.
+
+	If SPEED=0 then Wait 0.2						// Si nous devons ralentir on attend 0,2 seconde à chaque affichage.
+
+	Wait 0.001						   				// Met le programme en pause brièvement pour le ralentir un peu. Sans cela, le programme s'exécutera trop rapidement et bloquera votre navigateur.
+Loop												// Fin de la boucle du programme, revenir au "Do" et exécuter les instructions entre "Do" et "Loop" à nouveau.
+
+// #############################
+// # VOICI VOS DÉFIS DE CODAGE #
+// #############################
+
+// 1. FACILE : Au lieu des rectangles, pouvez-vous dessiner des carrés de tailles aléatoires ?
+//    Et des ellipses ? (voir ci-dessous)
+
+// 2. MOYEN : Dessiner des triangles équilatéraux ?
+
+// 3. DIFFICILE: Ajouter un quatrième ensemble de coordonnées à vos polygones et observer ce qui se passe.
+//	  Réfléchir à la façon dont vous pouver vous assurer que des formes à quatre côtés sont dessinées.
+
+// 	Les instructions utiles sont:
+//		POLYLINE x1,y1 to x2,y2 to x3,y3 to ... - Dessine un polygone avec autant de sommets que souhaité
+//		BOX x1,y1 to x2,y2 - Dessine un rectangle ou un carré
+//		CIRCLE x1,y1,r - Trace un cercle de centre x1, y1 de rayon r
+//		ELLIPSE x1,y1,r1,r2 - Dessine une ellipse de centre x1, y1 de rayon horizontal r1 et de rayon vertical r2
+
+
+
+//    _       __     ____       __                 __
+//   | |     / /__  / / /  ____/ /___  ____  ___  / /
+//   | | /| / / _ \/ / /  / __  / __ \/ __ \/ _ \/ /
+//   | |/ |/ /  __/ / /  / /_/ / /_/ / / / /  __/_/
+//   |__/|__/\___/_/_/   \__,_/\____/_/ /_/\___(_)

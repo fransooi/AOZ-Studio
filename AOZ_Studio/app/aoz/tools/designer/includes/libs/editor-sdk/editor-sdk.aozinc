@@ -1,0 +1,3 @@
+Load Asset "resources/assets/libs/editor-sdk/js/editor-sdk.js", "editor-sdk"
+
+SDK_BUSY = False : Global SDK_BUSY

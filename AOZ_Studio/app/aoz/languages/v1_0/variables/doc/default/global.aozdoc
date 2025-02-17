@@ -1,0 +1,55 @@
+<i>structure: declare a list of global variables for procedures</i>
+<b>Global</b> list of variables
+=
+GLOBAL sets up a list of variables that can be accessed from absolutely anywhere in your program. This is a simplified single command, designed to be used without the need for an explicit SHARED statement in your procedure definitions. Here is an example
+=
+@code
+A=6 : B=9
+Global A,B
+TEST1
+TEST2
+Print A,B
+Procedure TESTI
+ A=A+1 : B=B+1
+End Proc
+Procedure TEST2
+ A=A+B : B=B+A
+End Proc
+@code
+=
+AOZ programmers who are familiar with earlier versions of the AMOS system are now able to employ the new facility of using strings in procedure definitions. As with disc names, the "wild card" characters * and ? can also be included. In this case, the * character is used to mean "match this with any list of characters in the variable name, until the next control character is reached", and the ? character means "match this with any single character in the variable name". So the next line would define every variable as global:
+=
+@code
+Global "*"
+@code
+=
+Now look at the following example:
+@code
+Shared A,"V*","VAR*END","A?0S*"
+@code
+=
+That line would declare the following variables as shared:
+<ul>
+<li>A, as usual.</li>
+<li>Any variable beginning with the character V, followed by any other characters, or on its own.</li>
+<li>Any variable beginning with the letters VAR, followed by any other characters, and ending with the characters END.</li>
+<li>Any variable beginning with A, followed by any single letter, followed by OS, followed by any other characters.</li>
+</ul>
+GLOBAL or SHARED should be employed before the first use of the variable, otherwise it will have no effect on an interpreted program, although it will affect programs compiled with the AMOS Professional Compiler.
+=
+Only strings may be used for this technique. Global and shared arrays cannot be defined using wild cards. These must be defined individually, using brackets. Also, if you try to use an expression in this way, an error will be generated.
+For example:
+=
+@code
+A$="AM*"
+Global A$
+@code
+In that case, the A$ variable would be regarded as global, and it would not be taken as a wild card for subsequent use.
+=
+With AOZ Studio, you are able to define global arrays from a procedure, even if the array is not created at root level, as follows:
+@code
+Procedure VARIABLES
+ Dim ARRAY(100,100)
+ Global ARRAY()
+End Proc
+@code

@@ -1,0 +1,31 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ 
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ 
+*
+****************************************************************************@*/
+
+<FONT_FACE-START>
+/* ibm-plex-sans-regular - latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+       url('../fonts/ibm-psvlr.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/ibm-psvlr.woff') format('woff'); /* Modern Browsers */
+}
+/* ibm-plex-sans-italic - latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: italic;
+  font-weight: 400;
+  src: local(''),
+       url('../fonts/ibm-psvli.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/ibm-psvli.woff') format('woff'); /* Modern Browsers */
+}
+<FONT_FACE-END>

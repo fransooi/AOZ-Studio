@@ -1,0 +1,27 @@
+<i>Play</i>
+<b>Play</b> xxxxxxx
+=
+Patterns of individual notes can be played, allocated to any voice, given a pitch and delayed for pause, using just one
+PLAY command. The voice parameter is optional, allowing notes to be played through any combination of thecomputer voices,
+and is set by the usual bit-map format.
+
+The pitch parameter uses the values from 1 to 96, which correspond to the notes in the table given earlier. Delay sets
+the length of any pause between this PLAY command and the next instruction in the program, with a value of zero
+starling the note and immediately going on to the next command.
+
+The next example demonstrates this technique, including stereo harmonies:
+@code
+Play 1,40,0: Play 2,50,0: Rem No delay
+Wait Key
+Play 1,40,15: Play 2,50,15: Rem Delay
+Rem Play a random sequence of notes
+Do
+V=Rnd(1 5): P=Rnd(96): Play V,P,3
+Loop
+@code
+PLAY is not restricted to pure notes. It is possible to assign complex wave forms to voices, using the WAVE and
+NOISE commands next. To stop the playing process, simply turn it off like this:
+@code
+Play Off
+@code
+

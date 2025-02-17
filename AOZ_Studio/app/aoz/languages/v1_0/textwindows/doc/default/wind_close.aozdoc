@@ -1,0 +1,13 @@
+<i>Wind Close</i>
+<b>Wind Close</b> xxxxxxx
+=
+The WIND CLOSE command deletes the current window. If the WIND SAVE command has been activated, the
+deleted window will be replaced by the saved graphics, otherwise the area will be totally erased from the screen.
+
+Here is an example:
+@code
+Wind Open 1,1,8,35,18,1 : Print "Press a key to close this window"
+Wait Key
+Wind Close
+@code
+

@@ -1,0 +1,19 @@
+<i>Flash</i>
+<b>Flash</b> xxxxxxx
+=
+When FLASH is followed by the index number of any colour, that colour will display animated flashing every time it is used, until FLASH OFF is called.
+Up to 16 colours can be cycled to customise your flashing effects, and the rate of delay from one colour change to the next can be individually set. Try this
+@code
+Flash 1 ,"(00AA00,10)(FF00FF,40)"
+@code
+In that example, the colour to be affected is set to index number 1.
+After the comma, the set of quotation marks contains pairs of brackets, and each pair of brackets contains the colour that is next on the list to be flashed, and the time it will appear for.
+Colour is set in RGB component values. Delay time is set in units of a 50th of a second.
+So the last example has the effect of flashing colour number 1 between a green value and a violet value once every second. The next example is more subtle
+@code
+Cls : Centre "SILENT MOVIES"
+Flash 1,"(111,4)(333,4)(555,4)(777,4)(555,7)(333,7)
+Curs Off : Wait 250 : Flash Off
+@code
+
+

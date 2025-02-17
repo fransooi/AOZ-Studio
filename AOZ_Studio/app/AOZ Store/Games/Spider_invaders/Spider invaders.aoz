@@ -1,0 +1,226 @@
+// Welcome to this tutorial, let's make a Spider Invaders in AOZ!
+
+// All what is in green, starting by // is a comment
+
+// Ready? Starting by displaying the main game elements:
+// Using Actor our great instruction to display images, animations and control them (see the User Guide to know more)
+#SplashScreen: False
+
+//Games's variable
+SCORE = 0 : ENLEFT = 45 : RESTART = False : Dim NUMB$( 10 )
+SPEED = 2 				 // speed of moving in the X axis
+Shooting_Rate = 2000
+
+// Image files for each number
+NUMB$( 0 ) = "Zero.png" : NUMB$( 1 ) = "Un.png" : NUMB$( 2 ) = "Deux.png"
+NUMB$( 3 ) = "Trois.png" : NUMB$( 4 ) = "Quatre.png" : NUMB$( 5 ) = "Cinq.png"
+NUMB$( 6 ) = "Six.png" : NUMB$( 7 ) = "Sept.png" : NUMB$( 8 ) = "Huit.png"
+NUMB$( 9 ) = "Neuf.png"
+
+Global SCORE, SPEED, ENLEFT, RESTART, NUMB$(),Shooting_Rate
+
+//Starting Screen
+START:
+Cls 0 : Flash Off : Curs Off
+SCORE = 0
+Paste Bob 0, 0, "background"
+Actor "Play", Image$ = "play.png", X = Screen Width / 2, Y = Screen Height / 2, Hotspot$ = "middle"
+Wait 1
+Repeat
+ 	BTNS$ = ""
+ 	CLK = Mouse Click
+	A = 0
+	If ( CLK & 1 ) = 1
+	 Del Actor "Play"
+	 A = 1
+	End If
+	Wait Vbl
+Until A = 1
+
+// Display the static background image.We give the same name to the actor here than its image, but we are obliged to
+Actor "magic", Image$ = "magictop", X = Screen Width / 2, Y = Screen Height - 132, Hotspot$ = "middle"
+Actor "magic", Control$ = "Mouse: Honly=True", Oncollision$ = "DEAD"
+
+// Display our hero, Magic, at the middle of the screen in X and almost the bottom in Y
+// Control$ says how to.. control this actor, Hotspot defines the gravity center of the image here at the middle (by default it is the up left cornier of the image)
+
+// Display the score image close to the top left corner (the screen starts at X=0, Y=0)
+MBOK = True : Global MBOK // Mbok est global car on l'utilise également dans des procédures
+Curs Off
+// Now that we have initialise our program, let's do what is called:
+
+// ***The main program loop
+Goto ENEMIES	// Go to the program part -call subroutine (so the GoSub...)- which manage the enemies
+
+End	// this is the end of the program, but not for you, now it is your turn to improve that game
+// ***End of the main program loop
+
+
+
+// Below are the subroutines of our program,they are organized by specific tasks and starts by a name:
+
+ENEMIES:  // the ENEMIES subroutine display all the enemies
+	// let's start by creating some variables that we will use frequently:
+	X = 0 : Y = 50			 // position in X and Y to start
+	XMOVE = 115 : YMOVE = 115  // space between each enemies between lines and columns
+	XDIR = 1					 // Direction of the movement 1 to the right, -1 to the left
+	BOMB = 0                     // Bomb number
+	RESTART = False
+	ENLEFT = 45                  // Number of enemies left
+	RIGHT_BORDER = 730
+	LEFT_BORDER = -40
+	Actor "magic", X = Screen Width / 2, Y = Screen Height - 132, Visible = True, Enable = True
+
+	For L = 1 To 5
+	For C = 1 To 9
+		ENEMY = ( L * 10 ) + C
+		Del Actor ENEMY
+	Next C
+	Next L
+
+	Repeat
+
+		Repeat
+			For L = 1 To 5			// we have 5 lines
+				POSX  = X : POSY = Y
+					For C = 1 To 9	    // of 9 enemies per line
+						ENEMY = ( L * 10 ) + C
+						X = X + XMOVE 	  		  // Xmove= nb of pixels between each columns of enemies
+						If Actor Exists( ENEMY )
+							Actor ENEMY, X = X, Y = Y, Visible = Actor IsVisible( ENEMY ) // display all the enemies with diff images per line
+						Else
+							Actor ENEMY, X = X, Y = Y, Image = L
+						End If
+
+
+						if Rnd( Shooting_Rate ) = 1 And Actor IsVisible( "magic" )     // Randomly throw bombs*
+							If ENLEFT > 0
+							If Actor IsVisible (ENEMY)
+								Sam Play "BombDrop" // Sound FX when a bomb is launched
+								BOMB = BOMB + 1
+								If BOMB = 11 Then BOMB = 1
+								BOMB$ = "bomb" + Str$( BOMB )
+								Actor BOMB$, X = X, Y = Y, Auto$="offsetY=10", Image$ = "bomb"
+							End If
+							End If
+						End If
+
+
+						// If we press the mouse button
+						// and no missile was fired
+						If Mouse Key <> 0 And MBOK = True And Actor IsVisible( "magic" )
+							Actor "magic_shoot", Visible = True, X = Actor X( "magic" ) - 15, Y = 850,Image$="rubis",Auto$="offsetY=-20", OnCollision$="SHOOTED"
+							MBOK = False  // Magic shoot
+						End If
+
+						// Magic has shot
+						If MBOK = False
+						// If Magic's shot comes out of the top of the screen
+
+							If Actor Y( "magic_shoot" ) < -20
+								// We destroy the Actor of the shoot
+								Actor "magic_shoot", Visible=False
+								//Del Actor "magic_shoot"
+								MBOK = True // Magic is ready to shoot again
+							End If
+						End If
+
+						// All enemies are destroyed
+						If ENLEFT = 0 Then Goto VICTORY
+
+						// Detects that the game must be restarted after Magic's death
+						If RESTART = True
+							Wait 2
+							Goto RESTART_GAME
+						End If
+						UPDATE_SCORE
+					Next C
+					X = POSX : Y = Y + YMOVE // YMOVE = nb of pixels between each lines of enemies
+				Next L
+				X = X + ( SPEED * XDIR )
+				Y = POSY - ( 4 * YMOVE )
+				Wait Vbl
+
+		Until ( X > RIGHT_BORDER Or X < LEFT_BORDER )
+
+		Y = Y + 20
+		XDIR = - XDIR
+
+	Until Y > 420
+
+RESTART_GAME:
+	Wait Click
+	// Remove all Actors
+
+	Del All Actors
+	SPEED = 2
+	Shooting_Rate = 2000
+	Goto START:
+
+VICTORY:
+// Remove enemy bombs
+
+	For B = 1 To 10
+		If Actor Exists( "bomb" + Str$( B ) ) Then Del Actor "bomb" + Str$( B )
+	Next B
+	Actor "magic_shoot", Visible=True
+	// Remove magic shoot
+	// If Actor Exists ("magic_shoot") Then Del Actor "magic_shoot"
+
+	// We deactivate Magic movement
+	Actor "magic", Enable = False
+
+	Actor "You_win", X = 660, Y = 400, Image$ = "you_win.png"  // Display You Win image
+	Wait Click // wait a click on the mouse !!! The wait action during procedure are not allowed. Any other option ?
+	Actor "You_win", Visible=False
+	SPEED = SPEED + 1 // Level UP!
+	Goto ENEMIES
+
+// Update the score on the screen
+Procedure UPDATE_SCORE
+
+	U1 = SCORE / 100000 //first we get the units, tens, hundreds of the current score
+	U2 = ( SCORE - U1 * 100000 ) / 10000
+	U3 = ( SCORE - U2 * 10000 - U1 * 100000 ) / 1000
+	U4 = ( SCORE - U3 * 1000 - U2 * 10000 - U1 * 100000 ) / 100
+	U5 = ( SCORE - U4 * 100 - U3 * 1000 - U2 * 10000 - U1 * 100000 ) / 10
+	U6 = ( SCORE - U5 * 10 - U4 * 100 - U3 * 1000 - U2 * 10000 - U1 * 100000 )
+
+	Actor "high_score", Image$ = "high_score.png", X = 20, Y = 20, Z = 5
+	Actor "DeciScore1", Image$ = NUMB$( U1 ), X = 20, Y = 100, Z = 5
+	Actor "DeciScore2", Image$ = NUMB$( U2 ), X = 70, Y = 100, Z = 5
+	Actor "DeciScore3", Image$ = NUMB$( U3 ), X = 120, Y = 100, Z = 5
+	Actor "DeciScore4", Image$ = NUMB$( U4 ), X = 170, Y = 100, Z = 5
+	Actor "DeciScore5", Image$ = NUMB$( U5 ), X = 220, Y = 100, Z = 5
+	Actor "DeciScore6", Image$ = NUMB$( U6 ), X = 270, Y = 100, Z = 5
+
+End Proc
+
+// Magic's shot hits something
+// INDEX2 is the number of the affected Actor
+Procedure SHOOTED[ INDEX2, IMAGE ]
+
+	If IMAGE > 0 And IMAGE < 6 	// If the affected Actor has the image of an enemy
+		Sam Play "Shot18" // Sound FX when a enemy is destroyed
+		Actor INDEX2, Visible = False // On cache l'Actor de l'ennemi touché
+		Actor "magic_shoot", Visible = False
+		MBOK = True // Magic is ready to shoot again
+		SCORE = SCORE + 100
+		If Shooting_Rate > 300 Then Shooting_Rate = Shooting_Rate - 10
+
+		Dec ENLEFT
+	End If
+
+End Proc
+
+Procedure DEAD[ IMAGE$ ]
+
+	If IMAGE$ = "bomb"
+		Sam Play "Death_6" // Sound FX when magic dies
+		Actor "magic", Visible = False, Enable = false
+		Actor "magic_dead", Image$ = "magic_dead-0", X = Actor X( "magic"), Y = Screen Height - 132, Hotspot$ = "middle", EndY = -120, Auto$ = "offsetY=-10", Duration = 2500
+		Actor "gameover", X = 660, Y = 400, Image$ = "gameover"
+		RESTART = True
+	End if
+
+End Proc

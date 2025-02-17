@@ -1,0 +1,11 @@
+<i>Upper$</i>
+<b>Upper$</b> xxxxxxx
+=
+This function converts the characters in a string into upper case (capital) letters, and places the result into a new
+string.
+
+For example:
+@code
+Print Upper$("aMoS pRoFeSsIoNaL")
+@code
+

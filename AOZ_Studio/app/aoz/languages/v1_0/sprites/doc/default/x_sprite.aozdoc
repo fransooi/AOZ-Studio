@@ -1,0 +1,18 @@
+<i>X Sprite</i>
+<b>X Sprite</b> xxxxxxx
+=
+This function returns the current x-coordinate of the Sprite whose index is given in brackets.
+Positions are given in hardware coordinates in Amiga emulation.
+
+@code
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Cls 0
+Do
+// Move Sprite 1 with mouse
+Sprite 1, X Screen( X Mouse ), Y Screen( Y Mouse ),1
+
+// Print new location on screen
+Locate 0,0 : Print X Sprite(1);" ";Y Sprite(1);" ";
+Loop
+@code
+

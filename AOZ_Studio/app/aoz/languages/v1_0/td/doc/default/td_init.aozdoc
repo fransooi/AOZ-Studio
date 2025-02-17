@@ -1,0 +1,11 @@
+<i>Td Init</i>
+<b>Td Init</b> xxxxxxx
+=
+@code
+Rem Initialize the 3D engine
+Td Init
+
+Rem Show a default scene
+Td View "my_view", Scene$ = "my_scene"
+@code
+

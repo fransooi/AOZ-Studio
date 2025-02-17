@@ -1,0 +1,14 @@
+<i>Default Palette</i>
+<b>Default Palette</b> xxxxxxx
+=
+It is often necessary to open several screens using the same palette. To simplify this process, the DEFAULT
+PALETTE instruction is used to define a standard palette which will be used by all subsequent screens created by
+the SCREEN OPEN command. Colours are set using the $RGB values that are fully explained in the COLOUR
+section of Chapter 6.4. Up to 32 colours may be defined, depending on the screen mode, and any colours that are not
+re-set must have their appropriate commas in place.
+
+Here is an example line for eight colour screens:
+@code
+Default Palette $000000,$111111,$AA6699,,,,,$FFFFFF
+@code
+

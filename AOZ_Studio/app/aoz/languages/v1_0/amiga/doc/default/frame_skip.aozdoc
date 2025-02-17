@@ -1,0 +1,11 @@
+<i>Frame Skip</i>
+<b>Frame Skip</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This is exactly the same as FRAME PLAY, except that no output is made to the screen. FRAME SKIP omits any selected frames and returns the address of the next frame to be played in the sequence. The bank or address number of a valid IFF animation frame is given, followed by the number of frames to be skipped over.
+
+Use FRAME SKIP carefully, because frames are stored relative to the existing screen background. This means that
+the animation will only re-commence when an identical frame is reached to the one currently being displayed.
+
+

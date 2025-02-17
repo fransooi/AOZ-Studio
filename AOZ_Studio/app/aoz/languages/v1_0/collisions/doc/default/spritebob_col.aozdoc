@@ -1,0 +1,19 @@
+<i>SpriteBob Col</i>
+<b>SpriteBob Col</b> xxxxxxx
+=
+As its name suggests, this function checks for a collision between the Sprite whose number you specify, and one or more Bitmap Objects.
+If the Sprite collides with a Bob, a value of True is returned, otherwise False is given
+
+This function will test for collisions with all Bobs on screen, but the checking process can be restricted with the
+optional setting of the range of Bobs to be monitored, from the first Bob number to the last in the range.
+If you need to test for collisions between several Sprites and Bobs, the command should be enclosed in a loop, like this
+@code
+For FIRSTSPRITE=1 To LASTSPRITE
+If Spritebob Col(FIRSTSPRITE,FIRSTBOB To LASTBOB) Then Boom
+Next FIRSTSPRITE
+@code
+Remember that all specified Sprites must be assigned to a masked image, before collision detection can work. You
+are also warned that this function will only work with low resolution screens, and attempts to use it in high
+resolution will lead to unpredictable results. This is because your Sprites and Bobs are likely to have different sized screen points
+
+

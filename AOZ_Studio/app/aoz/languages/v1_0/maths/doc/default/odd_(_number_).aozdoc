@@ -1,0 +1,10 @@
+<i>Odd ( number )</i>
+<b>Odd ( number )</b> xxxxxxx
+=
+Example
+@code
+For f=0 to 20
+if Odd (f) then print f
+next f
+@code
+

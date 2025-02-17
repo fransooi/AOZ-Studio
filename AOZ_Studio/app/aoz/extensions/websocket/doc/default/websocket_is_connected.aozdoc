@@ -1,0 +1,26 @@
+<i>WebSocket Is Connected</i>
+<b>WebSocket Is Connected</b> xxxxxxx
+=
+This function allows you to wait for the socket to be connected.
+
+Example:
+@code
+URL$ = "ws://my_url.me:3000"
+WebSocket Open 1, URL$
+Repeat
+Wait Vbl
+Until WebSocket Is Connected( 1 )
+
+WebSocket Send Message 1, "Hello"
+Repeat
+If WebSocket Is Error
+Print "Connection aborted!"
+End
+End If
+Wait Vbl
+Until Inkey$ <> ""
+WebSocket Send Message 1, "Bye-bye!"
+WebSocket Close 1
+@code
+
+

@@ -1,0 +1,85 @@
+//#splashScreen: False
+#googleFont: "Roboto Mono"
+
+Curs Off : Flash Off
+Palette $202020, $b8b8b8, $000000, $ffab00, $355470, $048faf, $ffffff
+Cls 0
+
+Load Asset "locale.json", "locale"
+Load Asset "js/client.js", "client"
+Load Asset "js/publisher.js", "publisher"
+
+Load Asset "css/fonts/avenir-next/font.css", "avenir_next"
+Load Asset "css/fonts/brandon_grotesque/font.css", "brandon"
+Load Asset "css/global.css", "global"
+
+Load Asset "html/analyze.html", "analyze"
+
+While Asset Loaded( "locale", "json" ) = False
+	Wait Vbl
+Wend
+
+PRG_PATH$ = "" : ZIP_PATH$ = "" : LANG$ = "en"
+ETAPE = 1 : RESULT = 0 : ERR_TXT$ = ""
+APP_ID$ = "" : URL$ = ""
+Global PRG_PATH$, ZIP_PATH$, LANG$, RESULT, ETAPE, APP_ID$, ERR_TXT$, URL$
+
+JS Execute "client.getLang()"
+
+Show HTML "analyze"
+HTML Element "download_anim", Visible = False
+HTML Element "textPanel2", Visible = False
+HTML Element "btn_close", Visible = False
+HTML Element "qrcode", Visible = False
+JS Execute "publisher.getSettings()"
+
+Do
+
+	If RESULT = 1
+		RESULT = 0
+
+		If ETAPE = 3
+			Cls 0
+			ETAPE = 4
+			QRCode Create URL$, 255, 300, 300
+			HTML Element "textPanel", Content$ = TXT_ETAPE3$
+			HTML Element "download_anim", Visible = False
+			HTML Element "prepare_anim", Visible = False
+			HTML Element "qrcode", Visible = True
+			HTML Element "textPanel2", Visible = True
+			HTML Element "btn_close", Visible = True, OnClick$ = "CLOSE_APP"
+			HTML Element "qrcode", Style$="background-image:url('" + Image DataURL$( 255 ) + "')"
+		End If
+
+		If ETAPE = 2
+			ETAPE = 3 : Cls 0
+			HTML Element "download_anim", Visible = True
+			HTML Element "prepare_anim", Visible = False
+			HTML Element "textPanel", Content$ = TXT_ETAPE2$
+			JS Execute "publisher.publishPackagedApplication()"
+		End If
+
+		If ETAPE = 1
+			ETAPE = 2 : Cls 0
+			HTML Element "download_anim", Visible = True
+			HTML Element "prepare_anim", Visible = False
+			HTML Element "textPanel", Content$ = TXT_ETAPE2$
+			JS Execute "publisher.prepareApplicationForPublish()"
+		End If
+
+	End If
+
+	If ETAPE = 4
+	End If
+
+	If RESULT = -1
+		JS Execute "client.close()" : End
+	End If
+
+	Wait Vbl
+Loop
+
+Procedure CLOSE_APP[ EVENT$ ]
+	JS Execute "publisher.openURLInBrowser()"
+	JS Execute "client.close()" : End
+End Proc

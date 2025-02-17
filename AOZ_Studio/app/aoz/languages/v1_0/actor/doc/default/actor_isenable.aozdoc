@@ -1,0 +1,10 @@
+<i>function:tests if an actor is enabled</i>
+value=<b>Actor IsEnable</b>(number)
+value=<b>Actor IsEnable</b>(name$)
+=
+@code
+Cls 0
+Actor 1, Image$="my_image"
+Print Str$( Actor IsEnable( 1 ) )
+@code
+

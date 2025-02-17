@@ -1,0 +1,109 @@
+TRANSPILER AS INDIVIDUAL TASK
+=============================
+Major changes in the structure of the product: the transpiler is now an individual task.
+
+CHANGES IN THE PROJECT
+----------------------
+-> lib/transpiler folder is now nearly empty, one file being the part of the utilities that were 
+use in other parts of the IDE, and the other one, "transpiler.js" being the emulation, as close
+to the original one as possible of the commands of the transpiler when it was inline, 
+init, warmInit, transpile, convert, transpileCommand.
+
+Changes in aoz-studio-view.js, aoz-viewer and aoz-io to cope with this.
+
+The "init" function in transpiler.js now uses the "fork" child_process instruction to
+directly launch node.js on the transpiler, removing the need of making it into an exe
+and thus saving 33 megs. Yeah! Still it will have to be minified.
+
+-> the transpiler now lays in a new folder, aoz/transpiler, and contains the sub-folders
+aoz/transpiler/build and node_modules. It accesses all aoz/extensions aoz/languages etc. 
+folders as usual (I had to restrain myself but in the next version it would be much more 
+logical to have those folders like extensions and module INSIDE of the transpiler 
+folder...)
+
+aoz.js stays the main entry point. It can be packaged as an executable as it manages
+the command line and interpret the commands.
+
+COMMAND-LINE SYNTAX
+-------------------
+AOZ.EXE --command [ -property value ] path
+
+With commands:
+--transpile: performs a transpilation on the given path
+--command: switch to IDE/ATOM direct interface
+--convert: converts the given path to an Aoz application (only works for .AMOS apps for now)
+--watch: to be implemented, watches a directory and automatically compiles when
+changes are detected.
+--help: will print this text! hahaha!
+
+Please note that no-commands and a path is equivalent to --transpile.
+
+With Properties:
+The command line interface allows you to define any of the tags used by the transpiler
+(that you can also use in the source-code with #) within the command-line. 
+Just put a minus character before the name of any property, like
+-fps ... and the value of the property in the next command line argument, here "true"
+to display the FPS counter in the application.
+
+For Boolean properties, accepted 0, 1, true, false (case insensitive)
+For String properties, the string, quoted strings accepted
+For Number properties, the number in base 10
+For Path properties, a path (can be within quotes)
+
+Common uses:
+-fps true
+-developperMode true
+-noWarning variable_not_declared
+-appTitle "My super-wonderful application"
+
+Example:
+aoz.exe -fps true -developperMode true -noWarning variable_not_declared c:\temp\essai\main.aoz
+
+Please note that the --transpile option is still VERY slow, needs more work.
+
+INTERFACE WITH AOZ AND THE IDE
+-------------------------------
+The system I use is a very simple one, TWO files in the aoz/transpiler folder.
+
+1. transpiler.js writes the commands in form of messages in the aoz/transpiler/in.json 
+file
+
+2. aoz.js waits for the "in.json" file to appear (with a library, "Chokidar"), reads
+it and deletes it immediately, interpret the command and stores the result in "out.json".
+
+3. transpiler.js once the command is launched waits for the reply in "out.js" (and also
+for the NON-presence of in.json, indicating that the transpiler is still active astusss! :)
+reads the reply and deletes it, then call the callback with the response back to the 
+"old" routines in aoz-studio-view or aoz-viewer
+
+DEBUGGING THE TRANSPILER
+------------------------
+If you need, like me, to debug the transpiler, it is very easy to do in VSCode.
+1. Remove the fork instruction in transpiler.js line 46.
+2. In VSCode, create a debugging entry for the transpiler, like this one:
+{
+	"version": "0.2.0",
+	"configurations": [
+	  {
+		"type": "node",
+		"request": "launch",
+		"name": "Launch Program",
+		"skipFiles": ["<node_internals>/**"],
+		"program": "${workspaceFolder}\\aoz.js",
+		"args": ["--command"]
+	  }
+	]
+  }
+3. Launch the transpiler in VsCode debug mode. It should display "Waiting for command"
+If it does not display that message, relaunch it, the "in.json" file was still present.
+4. Launch Aoz... maaaagic!
+
+- Implementation of the --watch command in the command-line version of the transpiler.
+Example: aoz.exe --watch c:\myaozapplication
+The transpiler will intialize and transpile the application. Then, two seconds after a 
+change is detected in any of the files and folders of the application (excepting the 
+html folder of course), the application is re-transpiled.
+In case of error, the errors are displayed in the CLI.
+This option can proove to be real useful for complex projects and/or people
+who prefer to use another IDE than AOZ Editor.
+No change in the AOZ version of the transpiler.

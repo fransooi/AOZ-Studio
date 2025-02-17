@@ -1,0 +1,9 @@
+<i>CLeft$</i>
+<b>CLeft$</b> xxxxxxx
+=
+Return the control character (29) to move cursor up one line.
+
+@code
+Print "AO" + CLeft$ + "Z"		// "Z" will replace "O"
+@code
+

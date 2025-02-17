@@ -1,0 +1,877 @@
+// ############################################################################
+// AOZ Flicks V1.0
+// By Phil Bell
+// Created June 2022
+// phil@aozwithphil.com
+// ############################################################################
+// V1.1
+// 17 June 2022
+// Added export gif feature
+// ############################################################################
+// V1.2
+// 17 June 2022
+// Added compression for storing the project frame data in Firebase
+// ############################################################################
+// V1.3
+// 17 June 2022
+// Added Rectangle, Filled Rectangle, Circle, Filled Circle, Line drawing tools
+// ############################################################################
+// V1.4
+// 18 June 2022
+// New pallet UI and code tidy up
+// ############################################################################
+// V1.5
+// 19 June 2022
+// Changed mouse handling to use Touch On Change
+// ############################################################################
+// V1.6
+// 19 June 2022
+// Updated to use a second screen for drawing the "onion" frame
+// ############################################################################
+#useAssetsResources:false
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#googleFont:"permanent marker"
+#clean:true
+Flash Off: Curs Off: Break Off
+
+Load Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+VERSION$ = "V1.6"
+CURRENT_TIME# = Timer: DELTA_TIME# = 0: DSTATE = 0: FRAME_INDEX = 0: FRAME_COUNT = 1: FRAME_BUTTON_START = 1: PLAY_TRIGGER = 0
+SPEED# = 16: MAIN_TRIGGER = 0: PROJECT_COUNT = 0: EXIT_TRIGGER = 0: OX = 0: OY = 0
+HAS_CHANGES = false: GIF = 0: PROJECT_DOC_ID$ = "": PROJECT_NAME$ = ""
+Global DSTATE, FRAME_INDEX, FRAME_COUNT, FRAME_BUTTON_START, PLAY_TRIGGER, SPEED#, MAIN_TRIGGER, EXIT_TRIGGER
+Global OX, OY, HAS_CHANGES, PROJECT_COUNT, GIF, PROJECT_DOC_ID$, PROJECT_NAME$
+
+TOOL = 1					// 1:Path,2:Rectangle,3:Filled Rectangle,4:Circle,5:Filled Circle,6:Line
+TOOL_LINE_WIDTH = 5
+TOOL_INK = 1
+Global TOOL, TOOL_LINE_WIDTH, TOOL_INK
+
+// Load the app supporting javascript code
+Load Asset "resources/assets/js/flix.js"
+
+// Load 3rd party utils
+Load Asset "resources/assets/js/gif.js"
+Load Asset "resources/assets/js/lz-string.min.js"
+Load Asset "resources/assets/js/FileSaver.js"
+
+// Load CSS styles
+Load Asset "resources/assets/css/main.css"
+
+JS_LOADED = 0
+Repeat
+	Wait Vbl
+	{
+		if (typeof flix === 'object') {
+			vars.JS_LOADED = 1;
+		};
+	}
+Until JS_LOADED = 1
+
+Touch On Change "TOUCH_CHANGE_GAME"
+
+Procedure TOUCH_CHANGE_GAME [ X, Y, LASTX, LASTY, STATE ]
+	IF DSTATE = 2 Then Pop Proc
+	// Change co-ords to integers, dont need the precision and saves memory when storing the elements
+	X = Int(X): Y = Int(Y)
+
+	// Mouse Down/Touch Start
+	If STATE = 1
+		ON_MOUSE_DOWN[X, Y]
+		Change Mouse 2
+		Pop Proc
+	End If
+
+	// Mouse Move/Touch Drag/Move
+	If STATE = 2
+		ON_MOUSE_MOVE[X, Y]
+		Pop Proc
+	End If
+
+	// Mouse Up/Touch End
+	If STATE = 3
+		ON_MOUSE_UP
+		Change Mouse 1
+		Pop Proc
+	End If
+End Proc
+
+// Main screen
+Screen Open 0, 1920, 1080, 64, Lowres
+Screen 0: Curs Off: Flash Off
+Color 0, $FFFFFF: Color 1, $000000: Color 2, $CCCCCC: Color 3, $FFFFFF: Cls 0: Ink 1
+Line Cap "round"
+Set Transparent 0
+
+// "onion" screen
+Screen Open 1, 1920, 1080, 64, Lowres
+Screen 1: Curs Off: Flash Off
+Color 0, $FFFFFF: Color 1, $CCCCCC: Cls 0: Ink 1
+Cls 0
+Line Cap "round"
+Screen To Front 0
+
+// Initialise Firebase
+// *********************************************************************
+// ** IMPORTANT !! DO NOT USE THESE CREDENTIALS IN YOUR OWN PROJECTS  **
+// *********************************************************************
+Firebase Init apiKey$ = "AIzaSyAcrSsdNFAWLKEx-h6_frkkQd7h3mP14wo", authDomain$ = "aozflicks.firebaseapp.com", projectId$ = "aozflicks", storageBucket$ = "aozflicks.appspot.com", messagingSenderId$ = "954244690260", appId$ = "1:954244690260:web:34e0685a3c718122fb18c1"
+
+If FirebaseAuth AuthState() = false
+	// User is not signed in
+	Goto SIGN_IN
+End If
+
+THE_MENU:
+	Screen 1: Cls
+	Screen 0: Cls: UI Cls
+	JS Execute "document.title = 'AOZ Flicks - By Phil Bell'"
+	MenuUI: UI Value "lblVersion", VERSION$
+	GetProjects
+	DSTATE = 2
+	Do
+		If FirebaseAuth AuthState() = false
+			Goto SIGN_IN
+		End If
+
+		If MAIN_TRIGGER = 1
+			MAIN_TRIGGER = 0
+			Goto MAIN
+		End If
+		Wait Vbl
+	Loop
+
+MAIN:
+	Screen 0: UI Cls: Cls
+	MainScreen
+	HTML Element "txtToolSize", OnFocus$ = "ON_FOCUS"
+	UI Hide "sldSpeed"
+	Line Width TOOL_LINE_WIDTH
+	DSTATE = 0
+	UI Slider "sldSpeed", value=Int(SPEED#)
+	UI TextBox "txtToolSize", value$= Trim$(Str$(TOOL_LINE_WIDTH))
+	UI Hide "btnStop"
+	ShowFrameButtons
+	ShowSelectedColor
+	SetToolIcon
+	RenderScene
+
+	Do
+		If FirebaseAuth AuthState() = false
+			Goto SIGN_IN
+		End If
+
+		If PLAY_TRIGGER = 1
+			PLAY_TRIGGER = 0
+			Goto PLAY_ANIM
+		End If
+
+		If EXIT_TRIGGER = 1
+			EXIT_TRIGGER = 0
+			Goto THE_MENU
+		End If
+
+		Wait Vbl
+	Loop
+
+PLAY_ANIM:
+	DSTATE = 2
+	Screen 1: Cls: Screen 0
+	Do
+		For i = 0 to FRAME_COUNT -1
+			CURRENT_TIME# = Timer
+
+			If PLAY_TRIGGER = 1
+				PLAY_TRIGGER = 0
+				Goto MAIN
+			End If
+
+			target_frame_time# = 1 / SPEED#
+
+			Cls 0
+			RenderFrame[i, false]
+			DELTA_TIME# = (Timer - CURRENT_TIME#)
+			Wait (target_frame_time# - DELTA_TIME#)
+		Next i
+	Loop
+
+SIGN_IN:
+	Screen 1: Cls
+	Screen 0: Cls: UI Cls
+	UI TextBlock "txtTitle", x=619, y=0, width=681, height=188, fontSize=111, content$="<span class='text-warning'>AOZ</span> Flicks", fontName$="permanent marker", class$="text-secondary"
+	UI TextBlock "txtSubTitle", x=1260, y=110, width=163, fontSize=14, content$="By Phil Bell", class$="text-secondary"
+	UI TextBlock "lblVersion", x=1260, y=90, width=163, fontSize=14, content$=VERSION$, class$="text-secondary"
+
+	FirebaseAuth SignInWithBuiltInUI signInFlow$="popup", provider$="google,email", class$="built-in-ui", termsOfServiceUrl$ = "https://aozwithphil.com/resources/assets/privacypolicy.html", privacyPolicyUrl$ = "https://aozwithphil.com/resources/assets/privacypolicy.html"
+	Do
+		If FirebaseAuth AuthState() = true
+			Goto THE_MENU
+		End If
+		Wait Vbl
+	Loop
+
+Procedure GetProjects
+	// The following Firestore database rule has been added in the Firebase console.
+	// It restricts read/write/create to documents that belong to the authenticated user signed into this application.
+	// This ensures other users data is protected and can not be accessed by other users.
+	// Try comment out the "Firebase QueryAddWhere" in the query below, which would attempt to retrieve all the
+	// project documents in the database, but will fail.
+
+	//  DATABASE RULE:-
+	//  match /projects/{ownerId} {
+    //    allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId;
+    //  }
+
+	BusyScreen
+	queryRef$ = Firebase NewQuery$ (collection$ = "projects", onData$="ON_GOT_PROJECT_ITEMS")
+	Firebase QueryAddWhere queryRef$ = queryRef$, field$ = "userId", operator$ = "=", value$ = FirebaseAuth UserID$()
+	Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "created", direction$ = "desc"
+	Firebase QueryGet queryRef$ = queryRef$
+End Proc
+
+Procedure ON_GOT_PROJECT_ITEMS[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	PROJECT_COUNT = DOCUMENT_COUNT
+	If DOCUMENT_COUNT > 0
+		yOffset = 0
+
+		For row = 0 To DOCUMENT_COUNT -1
+			docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+			name$ = Firebase QueryGetString$(QUERY_REF$, docId$, "projectName")
+			created$ = Firebase QueryGetDate$(QUERY_REF$, docId$, "created", "DD MMM YYYY HH:mm:ss")
+			frameCount = Firebase QueryGetValue(QUERY_REF$, docId$, "frameCount")
+
+			UI TextBlock "lblProjectName" + docId$, x=430, y=280 + yOffset * 60, width=600, height=50, fontSize=25, content$=name$, fontName$="roboto mono", class$="text-secondary"
+			UI TextBlock "lblProjectFrameCount" + docId$, x=830, y=280 + yOffset * 60, width=600, height=50, fontSize=25, content$="<span class='bi bi-images'></span>" + Str$(frameCount), fontName$="roboto mono", class$="text-secondary"
+			UI TextBlock "lblProjectCreated" + docId$, x=1100, y=280 + yOffset * 60, width=600, height=50, fontSize=25, content$=created$, fontName$="roboto mono", class$="text-secondary"
+			UI Button docId$, x=1370, y=280 + yOffset * 60, width=50, content$="", iconClass$="bi bi-pen", class$="btn btn-outline-primary", onClick$="ON_EDIT_PROJECT_CLICK"
+			UI Button docId$ + "_delete", x=1440, y=280 + yOffset * 60, width=50, content$="", iconClass$="bi bi-trash", class$="btn btn-outline-danger", onClick$="ON_DELETE_PROJECT_CLICK"
+			Add yOffset, 1
+		Next row
+	End If
+	Firebase QueryDispose QUERY_REF$
+	UI Cls group$="busy"
+End Proc
+
+Procedure ON_EDIT_PROJECT_CLICK[ID$]
+	BusyScreen
+	PROJECT_DOC_ID$ = ID$
+	Firebase DocumentGet collection$="projects", docId$=PROJECT_DOC_ID$, onData$="ON_GOT_PROJECT_DOC"
+End Proc
+
+Procedure ON_GOT_PROJECT_DOC[ERROR$, EXISTS, DOCUMENT_REF$]
+	UI Cls group$="busy"
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		json$ = Firebase GetDocumentString$(DOCUMENT_REF$, "frames")
+		compressed = Firebase GetDocumentValue(DOCUMENT_REF$, "compressed")
+		PROJECT_NAME$ = Firebase GetDocumentString$(DOCUMENT_REF$, "projectName")
+		SPEED# = Firebase GetDocumentValue(DOCUMENT_REF$, "speed")
+		If SPEED# = 0 Then SPEED# = 16
+		{
+			document.title = this.root.vars.PROJECT_NAME$
+			var frames = this.vars.json$;
+			if (this.vars.compressed == 1) {
+				frames = LZString.decompressFromUTF16(frames);
+			}
+
+			this.root.vars.FRAME_COUNT = flix.setJson(frames);
+		}
+		FRAME_INDEX = 0
+		MAIN_TRIGGER = 1
+		FRAME_BUTTON_START = 1
+		Firebase DocumentDispose DOCUMENT_REF$
+	End If
+End Proc
+
+Procedure ON_NEW_PROJECT_CLICK[ID$]
+	If PROJECT_COUNT >= 13
+		UI Popup "ErrorPopup", content$="Maximum number of projects has been reached", placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		UI Prompt$ "Enter Project Name", value$="New Project", onConfirm$="CONFIRM_NEW_PROJECT", closeButton$="Cancel", confirmButton$="Create"
+	End If
+End Proc
+
+Procedure CONFIRM_NEW_PROJECT[VALUE$]
+	If Len(Trim$(VALUE$)) > 0
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "userId", value$ = FirebaseAuth UserID$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "projectName", value$ = Trim$(VALUE$)
+		Firebase SetDocumentValue docRef$ = docRef$, field$ = "frameCount", value = 0
+		Firebase SetDocumentValue docRef$ = docRef$, field$ = "speed", value = SPEED#
+		Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+		Firebase DocumentAdd collection$ = "projects", docRef$ = docRef$, onCompleted$="ON_PROJECT_CREATED"
+		Firebase DocumentDispose docRef$
+	End If
+End Proc
+
+Procedure ON_PROJECT_CREATED[ERROR$, ERROR_CODE, DOCUMENT_ID$, DOCUMENT_REF$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		ON_EDIT_PROJECT_CLICK[DOCUMENT_ID$]
+	End If
+End Proc
+
+Procedure ON_QUIT_CLICK[ID$]
+	If HAS_CHANGES = true
+		UI Confirm "You have unsaved changes?", "Are you sure?", closeButton$="No", confirmButton$="Yes", onConfirm$="CONFIRM_QUIT"
+	Else
+    	EXIT_TRIGGER = 1
+	End If
+End Proc
+
+Procedure CONFIRM_QUIT
+	EXIT_TRIGGER = 1
+End Proc
+
+Procedure ON_DELETE_PROJECT_CLICK[ID$]
+	PROJECT_DOC_ID$ = Mid$(ID$, 0, Instr(ID$, "_"))
+	UI Confirm "Delete Project?", "Are you sure?", closeButton$="No", confirmButton$="Yes", onConfirm$="CONFIRM_DELETE"
+End Proc
+
+Procedure CONFIRM_DELETE
+	Firebase DocumentDelete collection$="projects", docId$ = PROJECT_DOC_ID$, onCompleted$ = "ON_DELETE_PROJECT_COMPLETED"
+End Proc
+
+Procedure ON_DELETE_PROJECT_COMPLETED
+	UI Cls
+	MenuUI
+	GetProjects
+End Proc
+
+Procedure ON_SAVE_CLICK[ID$]
+	BusyScreen
+    json$ = ""
+	frames$ = ""
+	{
+		this.vars.json$ = flix.getJson();
+		this.vars.frames$ = LZString.compressToUTF16(this.vars.json$);
+	}
+	docRef$ = Firebase NewDocument$()
+
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "frames", value$ = frames$
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "compressed", value = true
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "frameCount", value = FRAME_COUNT
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "speed", value = SPEED#
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastUpdated"
+	Firebase DocumentUpdate collection$ = "projects", docRef$ = docRef$, docId$ = PROJECT_DOC_ID$ , onCompleted$ = "ON_UPDATE_PROJECT_COMPLETED"
+End Proc
+
+Procedure ON_UPDATE_PROJECT_COMPLETED[ERROR$, ERROR_CODE, DOCUMENT_ID$, DOCUMENT_REF$]
+	Firebase DocumentDispose DOCUMENT_REF$
+	UI Cls group$="busy"
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		HAS_CHANGES = false
+	End If
+End Proc
+
+Procedure ShowSelectedColor
+	UI Button "btnPallet", class$ = "pallet" + Trim$(Str$(TOOL_INK))
+End Proc
+
+Procedure ON_SPEED_CHANGE[ID$, VALUE$]
+    SPEED# = VAL(VALUE$)
+End Proc
+
+Procedure ON_PLAY_CLICK[ID$]
+	PLAY_TRIGGER = 1
+	UI Hide
+	UI Show "sldSpeed"
+	UI Show "btnStop"
+
+	UI Cls group$="frame_buttons"
+End Proc
+
+Procedure ON_STOP_CLICK[ID$]
+	PLAY_TRIGGER = 1
+End Proc
+
+Procedure ON_UNDO_CLICK[ID$]
+	HAS_CHANGES = true
+	{
+		flix.undo(this.root.vars.FRAME_INDEX);
+	}
+	Cls
+	RenderScene
+	ShowSelectedColor
+End Proc
+
+Procedure ON_REDO_CLICK[ID$]
+	HAS_CHANGES = true
+	{
+		flix.redo(this.root.vars.FRAME_INDEX);
+	}
+	Cls
+	RenderScene
+	ShowSelectedColor
+End Proc
+
+Procedure ON_SCROLL_LEFT[ID$]
+	If FRAME_BUTTON_START > 1
+		Add FRAME_BUTTON_START, -1
+		ShowFrameButtons
+	End If
+End Proc
+
+Procedure ON_SCROLL_RIGHT[ID$]
+	If FRAME_COUNT < 10 Then Pop Proc
+
+	If FRAME_BUTTON_START + 9 < FRAME_COUNT
+		Add FRAME_BUTTON_START, 1
+		ShowFrameButtons
+	End If
+End Proc
+
+Procedure ShowFrameButtons
+	UI Cls group$="frame_buttons"
+
+	For i = 1 to 10
+		fi = FRAME_BUTTON_START + i -1
+		If fi <= FRAME_COUNT
+			UI Button Str$(fi) + "_framebutton", x = 70 + (i - 1) * 90, y=10, group$="frame_buttons", width=80, height=50, content$=Str$(fi), onClick$="ON_SELECT_FRAME", class$="btn btn-outline-secondary"
+		End If
+	Next i
+
+	xpos = 70 + (Min(FRAME_COUNT, 10) * 90)
+
+	If FRAME_COUNT > 10
+		UI Button "btnLeftFrame", x=10, y=10, group$="frame_buttons", width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-arrow-left-short", class$="btn btn-primary", onClick$="ON_SCROLL_LEFT"
+		UI Button "btnRightFrame", x= 70 + (Min(FRAME_COUNT, 10) * 90), group$="frame_buttons", y=10, width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-arrow-right-short", class$="btn btn-primary", onClick$="ON_SCROLL_RIGHT"
+		Add xpos, 60
+	End If
+
+	UI Button "btnAddFrame", x= xpos, group$="frame_buttons", tooltip$="New Frame", tooltipPlacement$="bottom", y=10, width=50, height=50, content$="", class$="btn btn-primary", iconClass$="bi bi-plus-lg", onClick$="ON_ADD_FRAME"
+
+	If FRAME_INDEX +1 > FRAME_BUTTON_START -1 and FRAME_INDEX +1 < FRAME_BUTTON_START + 10
+		UI Button Str$(FRAME_INDEX +1) + "_framebutton", class$="btn btn-primary"
+	End If
+End Proc
+
+Procedure ON_SELECT_FRAME[ID$]
+	FRAME_INDEX = Val(Mid$(ID$, 0, Instr(ID$, "_"))) -1
+	RenderScene
+	ShowFrameButtons
+	ShowSelectedColor
+End Proc
+
+Procedure RenderScene
+	If FRAME_INDEX > 0
+		RenderFrame[FRAME_INDEX -1, true]
+	Else
+		Screen 1: Cls 0: Screen 0
+	End If
+	Cls
+	RenderFrame[FRAME_INDEX, false]
+End Proc
+
+Procedure RenderFrame[index, renderOnion]
+	x = 0: y = 0: x2 = 0: y2 = 0: r = 0
+	elementCount = 0
+	pathCount = 0
+	elementType$ = ""
+	elementLineWidth = 0
+	elementInk = 0
+
+	{
+		this.vars.elementCount = flix.frames[this.vars.index].index;
+	}
+
+	If elementCount = -1
+		Pop Proc
+	End If
+
+	If renderOnion = true
+		Screen 1
+		Cls 0
+		Ink 1
+	Else
+		Screen 0
+	End If
+
+	For e = 0 to elementCount
+		pathCount = 0
+		{
+			var el = flix.getElement(this.vars.index, this.vars.e);
+			if (el) {
+				this.vars.elementType$ = el.type;
+				this.vars.elementLineWidth = el.options.lineWidth;
+				this.vars.elementInk = el.options.ink;
+				if (el.type === 'path') {
+					this.vars.pathCount = el.path.length;
+				}
+			}
+		}
+
+		If renderOnion = false
+			Ink elementInk
+		End If
+
+		Line Width elementLineWidth
+
+		If elementType$ = "path"
+			If pathCount > 0
+				For p = 0 to pathCount -1
+					{
+						this.vars.x = flix.frames[this.vars.index].elements[this.vars.e].path[this.vars.p].x;
+						this.vars.y = flix.frames[this.vars.index].elements[this.vars.e].path[this.vars.p].y;
+					}
+
+					If p = 0
+						Draw x, y To x, y
+					Else
+						Draw To x, y
+					End If
+				Next p
+			End If
+		End If
+
+		If elementType$ = "rectangle" or elementType$ = "filled_rectangle" or elementType$ = "line"
+			{
+				this.vars.x = flix.frames[this.vars.index].elements[this.vars.e].x1;
+				this.vars.y = flix.frames[this.vars.index].elements[this.vars.e].y1;
+				this.vars.x2 = flix.frames[this.vars.index].elements[this.vars.e].x2;
+				this.vars.y2 = flix.frames[this.vars.index].elements[this.vars.e].y2;
+			}
+			If elementType$ = "rectangle"
+				Box x, y To x2, y2
+			Else If elementType$ = "filled_rectangle"
+				Bar x, y To x2, y2
+			Else If elementType$ = "line"
+				Draw x, y To x2, y2
+			End If
+		End If
+
+		If elementType$ = "circle" or elementType$ = "filled_circle"
+			{
+				this.vars.x = flix.frames[this.vars.index].elements[this.vars.e].x;
+				this.vars.y = flix.frames[this.vars.index].elements[this.vars.e].y;
+				this.vars.r = flix.frames[this.vars.index].elements[this.vars.e].radius;
+			}
+			If elementType$ = "circle"
+				Circle x, y, r
+			Else If elementType$ = "filled_circle"
+				Disc x, y, r
+			End If
+		End If
+
+	Next e
+
+	Screen 0
+	Ink TOOL_INK
+	Line Width TOOL_LINE_WIDTH
+End Proc
+
+Procedure ON_ADD_FRAME[ID$]
+	If DSTATE = 2 Then Pop Proc
+	HAS_CHANGES = true
+	DSTATE = 0
+	Add FRAME_COUNT, 1
+	FRAME_INDEX = FRAME_COUNT -1
+	Cls 0
+	RenderFrame[FRAME_INDEX -1, true]
+	{
+		flix.addFrame();
+	}
+	IF FRAME_INDEX >= 9
+		FRAME_BUTTON_START = FRAME_INDEX - 8
+	End If
+
+	ShowFrameButtons
+	ShowSelectedColor
+End Proc
+
+Procedure ON_LINE_WIDTH_CHANGE[ID$, VALUE$]
+	TOOL_LINE_WIDTH = Val(VALUE$)
+    Line Width TOOL_LINE_WIDTH
+End Proc
+
+Procedure ON_SHOW_PALLETE[ID$]
+	If DSTATE = 2 Then Pop Proc
+	PaletteUI
+
+	i = 1: offsetX = 1100: offsetY = 105
+	For y = 0 To 7
+		For x = 0 To 7
+			If i < 64
+				UI Button Trim$(Str$(i)) + "_btnColor", x=offsetX + (x * 60), y=offsetY + (y * 60), width=57, height=50, content$="", class$="layer3 pallet" + Trim$(Str$(i)), onClick$="ON_SELECT_COLOR_CLICK", group$="palette_selector"
+				Add i, 1
+			End If
+		Next x
+	Next y
+
+	UI Button "btnPallet", onClick$="ON_CLOSE_PALLETE", class$=UI Class$("btnPallet") + " layer3"
+End Proc
+
+Procedure ON_SELECT_COLOR_CLICK[ID$]
+	TOOL_INK = Val(Mid$(ID$, 0, Instr(ID$, "_")))
+	UI Cls group$="palette_selector"
+	UI Button "btnPallet", onClick$="ON_SHOW_PALLETE"
+	ShowSelectedColor
+End Proc
+
+Procedure ON_CLOSE_PALLETE[ID$]
+	UI Cls group$="palette_selector"
+	UI Button "btnPallet", onClick$="ON_SHOW_PALLETE"
+	ShowSelectedColor
+End Proc
+
+Procedure ON_MAKE_GIFF_CLICK[ID$]
+	BusyScreenGeneratingGif
+    target_frame_time# = (1000 / SPEED#)
+	finished = 0
+
+	{
+		this.root.vars.GIF = new GIF({
+			workers: 10,
+			quality: 10,
+			repeat: 0
+		});
+
+		var self = this;
+		this.root.vars.GIF.on('finished', function(blob) {
+			var filename = self.root.vars.PROJECT_NAME$ + ".gif";
+		  	saveAs(blob, filename);
+			self.vars.finished = 1;
+		});
+	}
+
+	For f = 0 to FRAME_COUNT -1
+		Cls 3
+		RenderFrame[f, false]
+		Wait Vbl
+		{
+			this.root.vars.GIF.addFrame(this.aoz.currentScreen.canvas, {copy: true, delay: this.vars.target_frame_time_f});
+		}
+	Next f
+
+	{
+		this.root.vars.GIF.render();
+	}
+
+	While finished = 0
+		Wait Vbl
+	Wend
+
+	UI Cls group$ = "busy"
+	RenderScene
+End Proc
+
+Procedure ON_SELECT_TOOL_CLICK[ID$]
+	TOOL = Val(Mid$(ID$, 0, Instr(ID$, "_")))
+    UI Cls group$="select_tool"
+	SetToolIcon
+	UI Button "btnTool", onClick$="ON_SHOW_TOOL_SELECTOR_CLICK", class$="btn btn-outline-secondary"
+End Proc
+
+Procedure SetToolIcon
+	If TOOL = 1 Then UI Button "btnTool", iconClass$ = "bi bi-pencil-fill"
+	If TOOL = 2 Then UI Button "btnTool", iconClass$ = "bi bi-square"
+	If TOOL = 3 Then UI Button "btnTool", iconClass$ = "bi bi-square-fill"
+	If TOOL = 4 Then UI Button "btnTool", iconClass$ = "bi bi-circle"
+	If TOOL = 5 Then UI Button "btnTool", iconClass$ = "bi bi-circle-fill"
+	If TOOL = 6 Then UI Button "btnTool", iconClass$ = "bi bi-slash-lg"
+End Proc
+
+Procedure ON_SHOW_TOOL_SELECTOR_CLICK[ID$]
+    ToolSelectUI
+	UI Button "btnTool", onClick$="ON_CLOSE_TOOL_SELECTOR", class$="btn btn-outline-secondary layer3"
+End Proc
+
+Procedure ON_CLOSE_TOOL_SELECTOR[ID$]
+	UI Button "btnTool", onClick$="ON_SHOW_TOOL_SELECTOR_CLICK", class$="btn btn-outline-secondary"
+	UI Cls group$="select_tool"
+End Proc
+
+Procedure ON_FOCUS[INDEX$]
+	UI SelectText INDEX$
+End Proc
+
+Procedure ON_MOUSE_DOWN[x, y]
+	If DSTATE = 2 Then Pop Proc
+	HAS_CHANGES = true
+
+	Ink TOOL_INK
+	OX = x: OY = y
+	DSTATE = 1
+
+	If TOOL = 1 // path
+		Draw x, y To x, y
+		{
+			flix.createElement(this.root.vars.FRAME_INDEX, 'path', { x: this.vars.x, y: this.vars.y, lineWidth: this.root.vars.TOOL_LINE_WIDTH, ink: this.root.vars.TOOL_INK });
+		}
+		Pop Proc
+	End If
+
+	If TOOL = 2 // rectangle
+		Box x, y To x, y
+		{
+			flix.createElement(this.root.vars.FRAME_INDEX, 'rectangle', { x1: this.vars.x, y1: this.vars.y, x2: this.vars.x, y2: this.vars.y, lineWidth: this.root.vars.TOOL_LINE_WIDTH, ink: this.root.vars.TOOL_INK });
+		}
+		Pop Proc
+	End If
+
+	If TOOL = 3 // filled rectangle
+		Bar x, y To x, y
+		{
+			flix.createElement(this.root.vars.FRAME_INDEX, 'filled_rectangle', { x1: this.vars.x, y1: this.vars.y, x2: this.vars.x, y2: this.vars.y, lineWidth: this.root.vars.TOOL_LINE_WIDTH, ink: this.root.vars.TOOL_INK });
+		}
+		Pop Proc
+	End If
+
+	If TOOL = 4 // circle
+		Circle x, y, 1
+		{
+			flix.createElement(this.root.vars.FRAME_INDEX, 'circle', { x: this.vars.x, y: this.vars.y, radius: 1, lineWidth: this.root.vars.TOOL_LINE_WIDTH, ink: this.root.vars.TOOL_INK });
+		}
+		Pop Proc
+	End If
+
+	If TOOL = 5 // filled circle
+		Disc x, y, 1
+		{
+			flix.createElement(this.root.vars.FRAME_INDEX, 'filled_circle', { x: this.vars.x, y: this.vars.y, radius: 1, lineWidth: this.root.vars.TOOL_LINE_WIDTH, ink: this.root.vars.TOOL_INK });
+		}
+		Pop Proc
+	End If
+
+	If TOOL = 6 // line
+		Draw x, y To x, y
+		{
+			flix.createElement(this.root.vars.FRAME_INDEX, 'line', { x1: this.vars.x, y1: this.vars.y, x2: this.vars.x, y2: this.vars.y, lineWidth: this.root.vars.TOOL_LINE_WIDTH, ink: this.root.vars.TOOL_INK });
+		}
+		Pop Proc
+	End If
+End Proc
+
+Procedure ON_MOUSE_MOVE[x, y]
+	If TOOL = 1		// Path
+		IF x <> OX Or y <> OY
+			OX = x: OY = y
+			Ink TOOL_INK
+			Draw To x, y
+			{
+				flix.addPath(this.root.vars.FRAME_INDEX, this.vars.x, this.vars.y);
+			}
+		End If
+	End If
+
+	If TOOL = 2	or TOOL = 3 or TOOL = 6	// Rectangle, Filled Rectangle or Line
+		IF x <> OX Or y <> OY
+			OX = x: OY = y
+			{
+				flix.updateRectangle(this.root.vars.FRAME_INDEX, this.vars.x, this.vars.y);
+			}
+			Cls
+			RenderFrame[FRAME_INDEX, false]
+			ShowSelectedColor
+		End If
+	End If
+
+	If TOOL = 4	or TOOL = 5	// Circle or Filled Circle
+		IF x <> OX Or y <> OY
+			OX = x: OY = y
+			{
+				flix.updateCircle(this.root.vars.FRAME_INDEX, this.vars.x, this.vars.y);
+			}
+			Cls
+			RenderFrame[FRAME_INDEX, false]
+			ShowSelectedColor
+		End If
+	End If
+End Proc
+
+Procedure ON_MOUSE_UP
+	If DSTATE = 2 Then Pop Proc
+	DSTATE = 0
+End Proc
+
+Procedure ON_SIGNOUT_CLICK[ID$]
+    FirebaseAuth SignOut
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure MainScreen
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI Button "btnStop", x=1680, y=10, width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-stop-fill", class$="btn btn-danger", onClick$="ON_STOP_CLICK"
+UI Slider "sldSpeed", x=1750, y=30, width=115, min=1, max=30, value=1, onChange$="ON_SPEED_CHANGE"
+UI Button "btnUndo", x=1100, y=10, width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-arrow-counterclockwise", class$="btn btn-outline-secondary", onClick$="ON_UNDO_CLICK", group$="toolbar"
+UI Button "btnPallet", x=1340, y=10, width=50, height=50, padding=0, fontSize=30, content$="", class$="pallet0", onClick$="ON_SHOW_PALLETE", group$="toolbar"
+UI Button "btnPlay", x=1680, y=10, width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-play-fill", class$="btn btn-primary", onClick$="ON_PLAY_CLICK"
+UI Button "btnQuit", x=1610, y=10, width=50, height=50, padding=0, fontSize=30, content$="", tooltip$="Exit", tooltipPlacement$="bottom", iconClass$="bi bi-box-arrow-left", class$="btn btn-outline-secondary", onClick$="ON_QUIT_CLICK"
+UI Button "btnSave", x=1490, y=10, width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-cloud-arrow-up", class$="btn btn-outline-secondary", onClick$="ON_SAVE_CLICK"
+UI Button "btnExportGiff", x=1550, y=10, width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-download", class$="btn btn-outline-secondary", onClick$="ON_MAKE_GIFF_CLICK"
+UI Button "btnTool", x=1400, y=10, width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-pencil-fill", class$="btn btn-outline-secondary", onClick$="ON_SHOW_TOOL_SELECTOR_CLICK"
+UI Button "btnRedo", x=1160, y=10, width=50, height=50, padding=0, fontSize=30, content$="", iconClass$="bi bi-arrow-clockwise", class$="btn btn-outline-secondary", onClick$="ON_REDO_CLICK", group$="toolbar"
+UI TextBox "txtToolSize", x=1230, y=10, width=100, fontSize=25, value$="5", type$="number", min=1, max=300, class$="form-control select-all-on-touch", onChange$="ON_LINE_WIDTH_CHANGE"
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure MenuUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtTitle", x=619, y=0, width=681, height=188, fontSize=111, content$="<span class='text-warning'>AOZ</span> Flicks", fontName$="permanent marker", class$="text-secondary"
+UI Button "btnNewProject", x=806, y=180, width=307, height=66, padding=0, fontSize=39, content$="New Project", iconClass$="bi bi-plus-lg", class$="btn btn-outline-secondary", onClick$="ON_NEW_PROJECT_CLICK"
+UI TextBlock "txtSubTitle", x=1260, y=110, width=163, fontSize=14, content$="By Phil Bell", class$="text-secondary"
+UI Button "btnSignOut", x=1740, y=1000, width=150, height=50, content$="Sign Out", class$="btn btn-outline-success", onClick$="ON_SIGNOUT_CLICK"
+UI TextBlock "lblVersion", x=1260, y=90, width=163, fontSize=14, content$="#", class$="text-secondary"
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure BusyScreen
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtBusyBackground", x=0, y=0, width=1920, height=1080, content$="", class$="layer2 fade-background", group$="busy"
+UI TextBlock "txtBusyTitle", x=760, y=580, height=52, content$="Please Wait", class$="layer4 text-secondary text-center", group$="busy"
+UI TextBlock "txtBusySubBack", x=869, y=495, width=181, height=134, content$="", class$="text-light layer3 bg-light border rounded", group$="busy"
+UI Image "imgBusy", x=935, y=515, width=50, height=50, src$="resources/assets/loading.gif", class$="layer4", group$="busy"
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure BusyScreenGeneratingGif
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtBusyBackground", x=0, y=0, width=1920, height=1080, content$="", class$="layer2 fade-background", group$="busy"
+UI Image "imgBusy", x=935, y=515, width=50, height=50, src$="resources/assets/loading.gif", class$="layer4", group$="busy"
+UI TextBlock "txtGifBusyTitle", x=760, y=580, height=52, fontSize=25, content$="Generating GIF", class$="layer4 text-secondary text-center", group$="busy"
+UI TextBlock "txtGifBusySubTitle", x=760, y=640, content$="Please Wait", class$="layer4 text-secondary text-center", group$="busy"
+UI TextBlock "txtBusySubBack", x=822, y=480, width=275, height=225, content$="", class$="text-light layer3 bg-light border rounded", group$="busy"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure ToolSelectUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtSelectToolDialogBackground", x=1132, y=80, width=506, height=90, content$="", class$="text-secondary border rounded bg-light layer3", group$="select_tool"
+UI TextBlock "txtToolSelectorBackground", x=0, y=0, width=1920, height=1080, content$="", class$="layer2", group$="select_tool"
+UI Button "1_btnTool", x=1160, y=100, width=57, height=50, content$="", iconClass$="bi bi-pencil-fill", class$="layer3 btn", onClick$="ON_SELECT_TOOL_CLICK", group$="select_tool"
+UI Button "2_btnTool", x=1240, y=100, width=57, height=50, content$="", iconClass$="bi bi-square", class$="layer3 btn", onClick$="ON_SELECT_TOOL_CLICK", group$="select_tool"
+UI Button "3_btnTool", x=1320, y=100, width=57, height=50, content$="", iconClass$="bi bi-square-fill", class$="layer3 btn", onClick$="ON_SELECT_TOOL_CLICK", group$="select_tool"
+UI Button "4_btnTool", x=1400, y=100, width=57, height=50, content$="", iconClass$="bi bi-circle", class$="layer3 btn", onClick$="ON_SELECT_TOOL_CLICK", group$="select_tool"
+UI Button "5_btnTool", x=1480, y=100, width=57, height=50, content$="", iconClass$="bi bi-circle-fill", class$="layer3 btn", onClick$="ON_SELECT_TOOL_CLICK", group$="select_tool"
+UI Button "6_btnTool", x=1560, y=100, width=57, height=50, content$="", iconClass$="bi bi-slash-lg", class$="layer3 btn", onClick$="ON_SELECT_TOOL_CLICK", group$="select_tool"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure PaletteUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtPaletteDialogBackground", x=1070, y=80, width=535, height=520, content$="", class$="text-secondary border rounded bg-light layer3", group$="palette_selector"
+UI TextBlock "txtPaletteBackground", x=0, y=0, width=1920, height=1080, content$="", class$="layer2", group$="palette_selector"
+End Proc

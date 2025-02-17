@@ -1,0 +1,36 @@
+<i>UI Progress</i>
+<b>UI Progress</b> xxxxxxx
+=
+@code
+// Display a defaut progress bar filled at 50%
+UI Progress "MyProgressBar", value=50
+
+// Display Bootstrap Styled progress bars
+UI Progress "MyProgressBar1", x=100, y=350, width=500, height=50, class$="progress-bar bg-success", value=10
+UI Progress "MyProgressBar2", x=100, y=450, width=800, height=60, class$="progress-bar bg-info", value=20
+UI Progress "MyProgressBar3", x=100, y=550, width=1000, height=80, class$="progress-bar bg-warning", value=50
+UI Progress "MyProgressBar4", x=100, y=650, width=1500, height=20, class$="progress-bar bg-danger progress-bar-striped", value=75
+
+// You can easily update a progress bar value
+UI Progress "MyProgressBar", value=40
+UI Progress "MyProgressBar", value=60
+UI Progress "MyProgressBar", value=80
+
+// To get the progress bar value you can use the UI Value$ function
+V = Val(UI Value$("MyProgressBar"))
+Print UI Value$("MyProgressBar")
+
+// Working example
+UI Progress "MyProgressBar", x=100, y=750, width=500, class$="progress-bar bg-primary progress-bar-striped"
+V = 0: VS = 10: LAST_TIME# = Timer
+Do
+If Timer - LAST_TIME# > 0.5
+LAST_TIME# = Timer
+V = Val(UI Value$("MyProgressBar"))
+If V > 100 or V < 0: VS = -VS: End If: Add V, VS
+UI Progress "MyProgressBar", value = V
+End If
+Wait Vbl
+Loop
+@code
+

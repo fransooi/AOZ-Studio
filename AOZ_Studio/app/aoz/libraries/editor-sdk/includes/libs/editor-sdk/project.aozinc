@@ -1,0 +1,50 @@
+AOZ_FILENAME$ = "" : AOZ_PROJECT_PATH$ = "" : AOZ_FOLDER$ = ""
+Global AOZ_FILENAME$, AOZ_PROJECT_PATH$, AOZ_FOLDER$
+
+Load Asset "libs/editor-sdk/js/project.js", "sdk-project"
+
+/**
+	AOZ Project Procedures
+*/
+
+/**
+Opens an AOZ Project in the editor
+ - PATH$ is the path of the project AOZ to open
+ - PROCNAME$ is the name of the AOZ Event Procedure called after the opening
+*/
+Procedure _OPEN_AOZ_PROJECT[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.project.openAOZProject( '" + PATH$ + "','" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Gets the AOZ filename of the project and store the result in the AOZ_FILENAME$ variable
+- PATH$ is the path of the project AOZ
+- PROCNAME$ is the name of the AOZ Event Procedure called after the capture
+*/
+Procedure _GET_AOZ_FILENAME[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.project.getAOZFilename( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Gets the AOZ Project folder associated with the opened tab in the editor
+and store the result in the AOZ_PROJECT_PATH$ variable
+- PROCNAME$ is the name of the AOZ Event Procedure called after the capture
+*/
+Procedure _GET_CURRENT_PROJECT_FOLDER[ PROCNAME$ ]
+	JS Execute "application.editorSDK.project.getCurrentProjectFolder( '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Gets the AOZ Installation Folder and store the result in the AOZ_FOLDER$ variable
+*/
+Procedure _GET_AOZ_FOLDER[]
+	JS Execute "application.editorSDK.project.getAOZFolder();"
+	While SDK_BUSY
+	Wend
+End Proc

@@ -1,0 +1,16 @@
+<i>Player Data$</i>
+<b>Player Data$</b> xxxxxxx
+=
+Returns the value of a data item that was stored using the "Player Data" instruction.
+
+Example:
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+
+// Save an item
+Player Data itemName$="maxUnlockedLevel", itemValue$="3"
+
+// Retrieve an item
+Print Player Data$(itemName$="maxUnlockedLevel")
+@code
+

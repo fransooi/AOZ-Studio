@@ -1,0 +1,8 @@
+<i>Del CBlock</i>
+<b>Del CBlock</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The DEL CBLOCK instruction erases all compacted Blocks from memory, unless an individual Block number is
+specified, in which case only that Block will be erased.
+

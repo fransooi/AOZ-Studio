@@ -1,0 +1,8 @@
+<i>Y Curs</i>
+<b>Y Curs</b> xxxxxxx
+=
+@code
+Locate 0, 15
+Print "Hello AOZ! ";Y Curs			// Will print "Hello AOZ! 15"
+@code
+

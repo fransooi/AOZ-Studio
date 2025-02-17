@@ -1,0 +1,21 @@
+<i>Player Login</i>
+<b>Player Login</b> xxxxxxx
+=
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Print "Login": Print "====="
+EMAIL$ = "": PASSWORD$ = ""
+Input "Enter Email: "; EMAIL$
+Input "Enter Password: "; PASSWORD$
+
+If EMAIL$ <> "" and PASSWORD$ <> ""
+Player Login email$=EMAIL$, password$=PASSWORD$
+
+If Player ErrorCode() <> 0
+Print Player ErrorMessage$()
+Else
+Print "Player is logged in"
+End If
+End If
+@code
+

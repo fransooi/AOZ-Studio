@@ -1,0 +1,5 @@
+<i>DFree</i>
+<b>DFree</b> xxxxxxx
+=
+This simple function returns the amount of free space remaining on the current disc (pointed by the current directory), measured in bytes.
+

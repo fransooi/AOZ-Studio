@@ -1,0 +1,11 @@
+<i>CMove</i>
+<b>CMove</b> xxxxxxx
+=
+Characters can be printed relative to the current cursor position by setting up a string using the CMOVE$ function.
+The following example prints a string at coordinates 10,10 from the current text cursor:
+@code
+Print "AOZ"
+CMove( 10, 0
+Print "Studio"
+@code
+

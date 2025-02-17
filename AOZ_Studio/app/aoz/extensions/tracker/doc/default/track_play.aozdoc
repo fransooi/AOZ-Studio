@@ -1,0 +1,14 @@
+<i>Track Play</i>
+<b>Track Play</b> xxxxxxx
+=
+To start your BassoonTracker module playing, give this command followed by the appropriate bank number. If the bank
+number is omitted, bank number 6 will be used as a default. Most electronic composers use sets of patterns to make
+up a tune, and these can be repeated in any suitable order. A BassoonTracker sequence can be started from any one of these
+patterns, providing that you know which pattern number refers to which particular part of the sequence. An optional
+pattern number can be added after the bank number parameter. Here are some example settings:
+@code
+Track Play : Rem Use default BassoonTracker bank
+Track Play ,5 : Rem Play pattern 5 from default BassoonTracker bank
+Track Play 9,5: Rem Play pattern 5 from bank 9
+@code
+

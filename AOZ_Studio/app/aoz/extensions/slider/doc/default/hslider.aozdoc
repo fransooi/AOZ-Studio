@@ -1,0 +1,19 @@
+<i>HSlider</i>
+<b>HSlider</b> xxxxxxx
+=
+Horizontal slider bars are set up by giving the HSLIDER command, qualified by the following parameters:
+the x,y-coordinates of the top left-hand corner of the bar in pixels
+followed by the x,y-coordinates of the bottom right-handcorner,
+then the number of individual units that the slider is divided into.
+
+Next, you must specify the position of theactive slider box or control button from the left-hand end of the slider,
+measured in the same sized units as the sliderdivisions.
+
+Finally, give the length of the slider control box in these units.
+
+Here is an example:
+
+@code
+Hslider 10,10 To 100,20,100,20,5   Hslider 10,50 To 150,100,25,10,10
+@code
+

@@ -1,0 +1,237 @@
+{
+    game_controllers_commands:
+    { 
+        name: "Game Controller Commands"
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "joy":
+            [
+                This inspects what is happening with the joystick and makes a report. If the joystick you are interested in is plugged
+into the joystick port, the computer must be told to look at port number (1). If you are using the mouse port call that
+port number (0). For example:
+                '''
+                ~~~                
+		 Do
+		   	J=Joy(1)
+			Print Bin$(J,5),J
+		   Loop
+                ~~~
+                '''
+When you run that routine, reports are given about the movements of the joystick and the status of the fire-button in
+the form of binary numbers. The pattern of ones and zeros in the report can then be inspected. Binary bits shown as
+zero indicate that nothing is happening, whereas if any of the bits in the report is shown as a one, it means that the
+joystick has been moved in the direction that relates to that bit. Here is a list of those bits along with their meanings.
+                '''
+                ~~~                
+		Bit number 	Meaning
+		0 		Joystick has been moved Up
+		1 		Joystick has been moved Down
+		2 		Joystick has been moved Left
+		3 		Joystick has been moved Right
+		4 		Fire-button has been pressed
+                ~~~
+                '''
+            ]
+            "joykey":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "jup": // Same txt for all directions
+            [
+This returns a value of -1 (meaning True) if the joystick connected to the given port number has been pushed to the
+left, otherwise a value of 0 is returned (meaning False).
+                These functions can be demonstrated by the following example:
+                '''
+                ~~~                
+		 Do
+		   	If Jleft(1) Then Print "WEST"
+			If Jright(1) Then Print "EAST"
+			If Jup(1) Then Print "NORTH"
+			If Jdown(1) Then Print "SOUTH"
+		   Loop
+                ~~~
+                '''
+            ]
+            "jdown": // Same txt for all directions
+            [
+		This returns a value of -1 (meaning True) if the joystick connected to the given port number has been pushed to the
+left, otherwise a value of 0 is returned (meaning False).
+                These functions can be demonstrated by the following example:
+                '''
+                ~~~                
+		 Do
+		   	If Jleft(1) Then Print "WEST"
+			If Jright(1) Then Print "EAST"
+			If Jup(1) Then Print "NORTH"
+			If Jdown(1) Then Print "SOUTH"
+		   Loop
+                ~~~
+                '''
+            ]
+            "jleft": // Same txt for all directions
+            [
+This returns a value of -1 (meaning True) if the joystick connected to the given port number has been pushed to the
+left, otherwise a value of 0 is returned (meaning False).
+                These functions can be demonstrated by the following example:
+                '''
+                ~~~                
+		 Do
+		   	If Jleft(1) Then Print "WEST"
+			If Jright(1) Then Print "EAST"
+			If Jup(1) Then Print "NORTH"
+			If Jdown(1) Then Print "SOUTH"
+		   Loop
+                ~~~
+                '''
+            ]
+            "jright": // Same txt for all directions
+            [
+This returns a value of -1 (meaning True) if the joystick connected to the given port number has been pushed to the
+left, otherwise a value of 0 is returned (meaning False).
+                These functions can be demonstrated by the following example:
+                '''
+                ~~~                
+		   Do
+		   	If Jleft(1) Then Print "WEST"
+			If Jright(1) Then Print "EAST"
+			If Jup(1) Then Print "NORTH"
+			If Jdown(1) Then Print "SOUTH"
+		   Loop
+                ~~~
+                '''
+            ]
+            "jupleft":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "jupright":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "jdownleft":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "jdownright":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "fire":
+            [
+                To set up a routine for testing to see if the fire-button has been pressed, use the FIRE function followed by the
+joystick port number. A value of -1 will be given only if the fire-button on the relevant joystick has been pressed.
+                '''
+                ~~~                
+		   Do
+			F=Fire(1)
+			If F=-1 Then Centre "BANG!": Shoot
+			Print
+		   Loop
+                ~~~
+                '''
+            ]
+            "gamepad_treshold":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "gamepad_treshold_t":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "gamepad_buttons":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "gamepad_axes":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "gamepad_axis":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "gamepad_trigger":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "gamepad":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "gamepad_connected":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+           
+        }
+    }
+}

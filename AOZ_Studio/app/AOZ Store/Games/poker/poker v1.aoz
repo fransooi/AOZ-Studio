@@ -1,0 +1,1055 @@
+// Pocker V1.0a   Marcus.zone  pour Aoz Studio   15/05/2021
+#useAssetsResources: False
+#manifest: "aoz"
+#appTitle: "Poker"
+#displayWidth:1080
+#displayHeight:768
+#fullScreen:true
+#splashScreen:false
+#googleFont:"faster one"
+#googleFont:"allerta stencil"
+Curs Off
+Hide
+
+Global couln : coul=1
+Global debut_jeu : debut_jeu=1
+Global HitScore, comp_resultat, delai_resultat, comp_1, delai_1, comp_2, delai_2, comp_3, delai_3, comp_4, delai_4, comp_5, delai_5, comp_6, delai_6, comp_7, delai_7, comp_c1, delai_c1
+Global comp_c2, delai_c2, comp_c3, delai_c3, comp_c4, delai_c4, comp_c5, delai_c5, delai_son, delai_mise, comp_clignot_gain, delai_clignot_gain, comp_clignot_poker,delai_clignot_poker
+Global comp_choix_jeu, delai_choix_jeu, gagne_son, af_dos1, af_dos2, af_dos3, af_dos4, af_dos5
+Global del_tir : del_tir = 300
+Global tir, r, jeu_joker, coeur, carreau, pique, trefle, joker
+Global As1, deux, trois, quatre, cinq, six, sept, huit, neuf, dix, valet, dame, roi
+Global couleur, paire, paire_10, brelan, full, suite, carre, suite_couleur, suite_roi, suite_couleur_roi
+Global gain_paire_10, gain_2paires, gain_brelan, gain_suite, gain_couleur, gain_full, gain_carre, gain_suite_couleur, gain_suite_couleur_roi, gagne
+Global total_paire_10, total_2paires, total_brelan, total_suite, total_couleur, total_full, total_carre, total_suite_couleur, total_suite_couleur_roi, total_coups_gagne, total_coups_joues
+Global MouseSpeed#
+Global mise : mise =1
+Global cagniote_QFR : cagniote_QFR=1000
+Global cagniote_j_QFR : cagniote_j_QFR=500
+Global cagniote_QF : cagniote_QF =100
+Global cagniote_j_QF : cagniote_j_QF=80
+Global cagniote_CARRE : cagniote_CARRE=25
+Global cagniote_j_CARRE : cagniote_j_CARRE=20
+Global cagniote_FULL : cagniote_FULL=9
+Global cagniote_j_FULL : cagniote_j_FULL=7
+Global cagniote_FLUSH : cagniote_FLUSH=6
+Global cagniote_j_FLUSH : cagniote_j_FLUSH=5
+Global cagniote_QUINTE : cagniote_QUINTE=4
+Global cagniote_j_QUINTE : cagniote_j_QUINTE=4
+Global cagniote_BRELAN : cagniote_BRELAN=3
+Global cagniote_j_BRELAN : cagniote_j_BRELAN=3
+Global cagniote_PAIRES : cagniote_PAIRES=2
+Global cagniote_j_PAIRES : cagniote_j_PAIRES=2
+Global cagniote_PAIRE : cagniote_PAIRE=1
+Global cagniote_j_PAIRE : cagniote_j_PAIRE=0
+Global cagniot_QFR, cagniot_QF, cagniot_CARRE, cagniot_FULL, cagniot_FLUSH, cagniot_QUINTE, cagniot_BRELAN, cagniot_PAIRES, cagniot_PAIRE, V_cagniot_QFR, V_cagniot_QF, V_cagniot_CARRE
+Global V_cagniot_FULL, V_cagniot_FLUSH, V_cagniot_QUINTE, V_cagniot_BRELAN, V_cagniot_PAIRES, V_cagniot_PAIRE
+Global score : score =10
+Global total_score_max : total_score_max = score
+Global v_brelan
+Global tjoc#
+Global xx#
+Global yy#
+Global p# : p# = 2
+Global z# : z#= 0.1
+Global dx# : dx# = 3
+Global dy# : dy# = 3
+Dim choix(5) : Global choix()
+Dim Tirage(1500) : Global Tirage()
+Dim Bx(2000) : Global Bx()
+Dim By(2000) : Global By()
+Dim Bw(2000) : Global Bw()
+Dim Bh(2000) : Global Bh()
+
+Procedure DrawTxt[TEXT$, x, y] // Polices graphiques
+  For xt = 1 to Len(TEXT$)
+	Strig$ = Mid$(TEXT$, xt-1, 1)
+	If Asc(Strig$) =  32: X=X + 28 :
+	Else
+	  Nspr = Abs(Asc(Strig$) - 55 + 600) :
+	  If Nspr < 610 Or Nspr > 635 : Nspr = Val(Strig$) + 600 : End If
+	  Paste Bob X, Y ,Nspr
+	  X = X + Image Width(Nspr)  + 1 :
+	End If
+  Next xt
+End Proc
+
+Procedure Lire  // Chargements medias
+Locate 11,6 : Print"Veuillez patienter..."
+	For i = 600 To 635
+	  Load Asset "resources/assets/"+Mid$(Str$(i),1,Len(Str$(i)))+".bmp", i
+	Next i
+    For i = 1 To jeu_joker
+	  Load Asset "resources/assets/"+Mid$(Str$(i),1,Len(Str$(i)))+".jpg", 1000+i
+    Next i
+  Load Asset "resources/assets/54.jpg", 1054 :wait 1: Bw(1054)=Image Width (1054) : Bh(1054)=Image Height (1054)
+  Load Asset "resources/assets/coeur.bmp", 1100 : Bw(1100)=Image Width (1100) : Bh(1100)=Image Height (1100)
+  Load Asset "resources/assets/donne11.bmp", 1103 : Bw(1103)=Image Width (1103) : Bh(1103)=Image Height (1103)
+  Load Asset "resources/assets/redonne12.bmp", 1101 : Bw(1101)=Image Width (1101) : Bh(1101)=Image Height (1101)
+  Load Asset "resources/assets/1001.bmp", 1102 : Bw(1102)=Image Width (1102) : Bh(1102)=Image Height (1102)
+  Load Asset "resources/assets/filtre3.bmp", 1105 : Bw(1105)=Image Width (1105) : Bh(1105)=Image Height (1105)
+  Load Asset "resources/assets/moins.bmp", 1106 : Bw(1106)=Image Width (1106) : Bh(1106)=Image Height (1106)
+  Load Asset "resources/assets/plus.bmp", 1107 : Bw(1107)=Image Width (1107) : Bh(1107)=Image Height (1107)
+  Load Asset "resources/assets/cadre2.jpg", 1108 : Bw(1108)=Image Width (1108) : Bh(1108)=Image Height (1108)
+  Load Asset "resources/assets/poker_11.bmp", 1110 : Bw(1110)=Image Width (1110) : Bh(1110)=Image Height (1110)
+  Load Asset "resources/assets/poker_11.bmp", 1115 : Bw(1115)=Image Width (1115) : Bh(1115)=Image Height (1115)
+  Load Asset "resources/assets/poker_12.bmp", 1111 : Bw(1111)=Image Width (1111) : Bh(1111)=Image Height (1111)
+  Load Asset "resources/assets/poker_13.bmp", 1112 : Bw(1112)=Image Width (1112) : Bh(1112)=Image Height (1112)
+  Load Asset "resources/assets/poker_14.bmp", 1113 : Bw(1113)=Image Width (1113) : Bh(1113)=Image Height (1113)
+  Load Asset "resources/assets/poker_15.bmp", 1114 : Bw(1114)=Image Width (1114) : Bh(1114)=Image Height (1114)
+  Load Asset "resources/assets/jeu_Sj1.bmp", 1120 : Bw(1120)=Image Width (1120) : Bh(1120)=Image Height (1120)
+  Load Asset "resources/assets/jeu_j1.bmp", 1121 : Bw(1121)=Image Width (1121) : Bh(1121)=Image Height (1121)
+  Load Asset "resources/assets/rejouer.bmp", 1125 : Bw(1125)=Image Width (1125) : Bh(1125)=Image Height (1125)
+  Load Asset "resources/assets/aoz.png", 1126 : Bw(1126)=Image Width (1126) : Bh(1126)=Image Height (1126)
+  Load Asset "resources/assets/542.bmp", 1109 : Bw(1009)=Image Width (1109) : Bh(1109)=Image Height (1109)
+  Load Asset "resources/assets/1.wav", 1
+  Load Asset "resources/assets/2.wav", 2
+  Load Asset "resources/assets/3.wav", 3
+  Load Asset "resources/assets/4.wav", 4
+  Load Asset "resources/assets/5.wav", 5
+  Load Asset "resources/assets/2.mp3", 10
+
+	Locate 11,8 : Print"Appuyez sur une touche."
+   	wait key
+   	Bob 1,40,40,1109
+   	Play Audio 10
+   	Volume Audio 10,30 : Audio Loop On 10
+
+End Proc
+
+Procedure Tri // Test de triages cartes
+  For i = 11 To 15
+    If Tirage(i) = 1001 Or Tirage(i) = 1002 Or Tirage(i) = 1003 Or Tirage(i) = 1004 Or Tirage(i) = 1005 Or Tirage(i) = 1006 Or Tirage(i) = 1007 Or Tirage(i) = 1008 Or Tirage(i) = 1009 Or Tirage(i) = 1010 Or Tirage(i) = 1011 Or Tirage(i) = 1012 Or Tirage(i) = 1013 :
+      coeur = coeur + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1014 Or Tirage(i) = 1015 Or Tirage(i) = 1016 Or Tirage(i) = 1017 Or Tirage(i) = 1018 Or Tirage(i) = 1019 Or Tirage(i) = 1020 Or Tirage(i) = 1021 Or Tirage(i) = 1022 Or Tirage(i) = 1023 Or Tirage(i) = 1024 Or Tirage(i) = 1025 Or Tirage(i) = 1026 :
+      carreau = carreau + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1027 Or Tirage(i) = 1028 Or Tirage(i) = 1029 Or Tirage(i) = 1030 Or Tirage(i) = 1031 Or Tirage(i) = 1032 Or Tirage(i) = 1033 Or Tirage(i) = 1034 Or Tirage(i) = 1035 Or Tirage(i) = 1036 Or Tirage(i) = 1037 Or Tirage(i) = 1038 Or Tirage(i) = 1039 :
+      pique = pique + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1040 Or Tirage(i) = 1041 Or Tirage(i) = 1042 Or Tirage(i) = 1043 Or Tirage(i) = 1044 Or Tirage(i) = 1045 Or Tirage(i) = 1046 Or Tirage(i) = 1047 Or Tirage(i) = 1048 Or Tirage(i) = 1049 Or Tirage(i) = 1050 Or Tirage(i) = 1051 Or Tirage(i) = 1052 :
+      trefle = trefle + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1053 :
+      joker = joker + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1001 Or Tirage(i) = 1014 Or Tirage(i) = 1027 Or Tirage(i) = 1040 :
+      As1 = As1 + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1002 Or Tirage(i) = 1015 Or Tirage(i) = 1028 Or Tirage(i) = 1041 :
+      deux = deux + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1003 Or Tirage(i) = 1016 Or Tirage(i) = 1029 Or Tirage(i) = 1042 :
+      trois = trois + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1004 Or Tirage(i) = 1017 Or Tirage(i) = 1030 Or Tirage(i) = 1043 :
+      quatre = quatre + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1005 Or Tirage(i) = 1018 Or Tirage(i) = 1031 Or Tirage(i) = 1044 :
+      cinq = cinq + 1
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1006 Or Tirage(i) = 1019 Or Tirage(i) = 1032 Or Tirage(i) = 1045
+      six = six + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1007 Or Tirage(i) = 1020 Or Tirage(i) = 1033 Or Tirage(i) = 1046 :
+      sept = sept + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1008 Or Tirage(i) = 1021 Or Tirage(i) = 1034 Or Tirage(i) = 1047 :
+      huit = huit + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1009 Or Tirage(i) = 1022 Or Tirage(i) = 1035 Or Tirage(i) = 1048 :
+      neuf = neuf + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1010 Or Tirage(i) = 1023 Or Tirage(i) = 1036 Or Tirage(i) = 1049 :
+      dix = dix + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1011 Or Tirage(i) = 1024 Or Tirage(i) = 1037 Or Tirage(i) = 1050 :
+      valet = valet + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1012 Or Tirage(i) = 1025 Or Tirage(i) = 1038 Or Tirage(i) = 1051 :
+      dame = dame + 1 :
+    End If
+  Next i
+  For i = 11 To 15
+    If Tirage(i) = 1013 Or Tirage(i) = 1026 Or Tirage(i) = 1039 Or Tirage(i) = 1052 :
+      roi = roi + 1 :
+    End If
+  Next i
+End Proc
+
+Procedure Resultat // compinaisons obtenues
+  If coeur = 5 Or carreau = 5 Or pique = 5 Or trefle = 5 : couleur = 1 : End If
+  If As1 = 2 : paire = paire + 1 : paire_10 = paire_10 + 1 : End If
+  If deux = 2 : paire = paire + 1 : End If
+  If trois = 2 : paire = paire + 1 : End If
+  If quatre = 2 : paire = paire + 1 : End If
+  If cinq = 2 : paire = paire + 1 : End If
+  If six = 2 : paire = paire + 1 : End If
+  If sept = 2 : paire = paire + 1 : End If
+  If huit = 2 : paire = paire + 1 : End If
+  If neuf = 2 : paire = paire + 1 : End If
+  If dix = 2 : paire = paire + 1 : End If
+  If valet = 2 : paire = paire + 1 : paire_10 = paire_10 + 1 : End If
+  If dame = 2 : paire = paire + 1 : paire_10 = paire_10 + 1 : End If
+  If roi = 2 : paire = paire + 1 : paire_10 = paire_10 + 1 : End If
+  If As1 = 3 Or deux = 3 Or trois = 3 Or quatre = 3 Or cinq = 3 Or six = 3 Or sept = 3 Or huit = 3 Or neuf = 3 Or dix = 3 Or valet = 3 Or dame = 3 Or roi = 3 :
+    brelan = 1 :  v_brelan = 1 :
+  End If
+  If As1 = 1 And deux = 1 And trois = 1 And quatre = 1 And cinq = 1 : suite = 1 : End If
+  If deux = 1 And trois = 1 And quatre = 1 And cinq = 1 And six = 1 : suite = 1 : End If
+  If trois = 1 And quatre = 1 And cinq = 1 And six = 1 And sept = 1 : suite = 1 : End If
+  If quatre = 1 And cinq = 1 And six = 1 And sept = 1 And huit = 1 : suite = 1 : End If
+  If cinq = 1 And six = 1 And sept = 1 And huit = 1 And neuf = 1 : suite = 1 : End If
+  If six = 1 And sept = 1 And huit = 1 And neuf = 1 And dix = 1 : suite = 1 : End If
+  If sept = 1 And huit = 1 And neuf = 1 And dix = 1 And valet = 1 : suite = 1 : End If
+  If huit = 1 And neuf = 1 And dix = 1 And valet = 1 And dame = 1 : suite = 1 : End If
+  If neuf = 1 And dix = 1 And valet = 1 And dame = 1 And roi = 1 : suite = 1 : End If
+  If dix = 1 And valet = 1 And dame = 1 And roi = 1 And As1 = 1 : suite_roi = 1 : End If
+  If As1 = 4 Or deux = 4 Or trois = 4 Or quatre = 4 Or cinq = 4 Or six = 4 Or sept = 4 Or huit = 4 Or neuf = 4 Or dix = 4 Or valet = 4 Or dame = 4 Or roi = 4 :
+    carre = 1 :
+  End If
+  If valet = 1 And joker = 1 : gain_paire_10 = 1 : End If
+  If dame = 1 And joker = 1 : gain_paire_10 = 1 : End If
+  If roi = 1 And joker = 1 : gain_paire_10 = 1 : End If
+  If As1 = 1 And joker = 1 : gain_paire_10 = 1 : End If
+  If paire = 1 And joker = 1 : brelan = 1 : End If
+  If paire = 2 And joker = 1 : full = 1 : End If
+  If paire = 0 And brelan = 1 And joker = 1 : carre = 1 : End If
+  If coeur = 4 And joker = 1 : couleur = 1 : End If
+  If carreau = 4 And joker = 1 : couleur = 1 : End If
+  If pique = 4 And joker = 1 : couleur = 1 : End If
+  If trefle = 4 And joker = 1 : couleur = 1 : End If
+  If joker = 1 And deux = 1 And trois = 1 And quatre = 1 And cinq = 1 : suite = 1 : End If
+  If As1 = 1 And joker = 1 And trois = 1 And quatre = 1 And cinq = 1 : suite = 1 : End If
+  If As1 = 1 And deux = 1 And joker = 1 And quatre = 1 And cinq = 1 : suite = 1 : End If
+  If As1 = 1 And deux = 1 And trois = 1 And joker = 1 And cinq = 1 : suite = 1 : End If
+  If As1 = 1 And deux = 1 And trois = 1 And quatre = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And trois = 1 And quatre = 1 And cinq = 1 And six = 1 : suite = 1 : End If
+  If deux = 1 And joker = 1 And quatre = 1 And cinq = 1 And six = 1 : suite = 1 : End If
+  If deux = 1 And trois = 1 And joker = 1 And cinq = 1 And six = 1 : suite = 1 : End If
+  If deux = 1 And trois = 1 And quatre = 1 And joker = 1 And six = 1 : suite = 1 : End If
+  If deux = 1 And trois = 1 And quatre = 1 And cinq = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And quatre = 1 And cinq = 1 And six = 1 And sept = 1 : suite = 1 : End If
+  If trois = 1 And joker = 1 And cinq = 1 And six = 1 And sept = 1 : suite = 1 : End If
+  If trois = 1 And quatre = 1 And joker = 1 And six = 1 And sept = 1 : suite = 1 : End If
+  If trois = 1 And quatre = 1 And cinq = 1 And joker = 1 And sept = 1 : suite = 1 : End If
+  If trois = 1 And quatre = 1 And cinq = 1 And six = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And cinq = 1 And six = 1 And sept = 1 And huit = 1 : suite = 1 : End If
+  If quatre = 1 And joker = 1 And six = 1 And sept = 1 And huit = 1 : suite = 1 : End If
+  If quatre = 1 And cinq = 1 And joker = 1 And sept = 1 And huit = 1 : suite = 1 : End If
+  If quatre = 1 And cinq = 1 And six = 1 And joker = 1 And huit = 1 : suite = 1 : End If
+  If quatre = 1 And cinq = 1 And six = 1 And sept = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And six = 1 And sept = 1 And huit = 1 And neuf = 1 : suite = 1 : End If
+  If cinq = 1 And joker = 1 And sept = 1 And huit = 1 And neuf = 1 : suite = 1 : End If
+  If cinq = 1 And six = 1 And joker = 1 And huit = 1 And neuf = 1 : suite = 1 : End If
+  If cinq = 1 And six = 1 And sept = 1 And joker = 1 And neuf = 1 : suite = 1 : End If
+  If cinq = 1 And six = 1 And sept = 1 And huit = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And sept = 1 And huit = 1 And neuf = 1 And dix = 1 : suite = 1 : End If
+  If six = 1 And joker = 1 And huit = 1 And neuf = 1 And dix = 1 : suite = 1 : End If
+  If six = 1 And sept = 1 And joker = 1 And neuf = 1 And dix = 1 : suite = 1 : End If
+  If six = 1 And sept = 1 And huit = 1 And joker = 1 And dix = 1 : suite = 1 : End If
+  If six = 1 And sept = 1 And huit = 1 And neuf = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And huit = 1 And neuf = 1 And dix = 1 And valet = 1 : suite = 1 : End If
+  If sept = 1 And joker = 1 And neuf = 1 And dix = 1 And valet = 1 : suite = 1 : End If
+  If sept = 1 And huit = 1 And joker = 1 And dix = 1 And valet = 1 : suite = 1 : End If
+  If sept = 1 And huit = 1 And neuf = 1 And joker = 1 And valet = 1 : suite = 1 : End If
+  If sept = 1 And huit = 1 And neuf = 1 And dix = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And neuf = 1 And dix = 1 And valet = 1 And dame = 1 : suite = 1 : End If
+  If huit = 1 And joker = 1 And dix = 1 And valet = 1 And dame = 1 : suite = 1 : End If
+  If huit = 1 And neuf = 1 And joker = 1 And valet = 1 And dame = 1 : suite = 1 : End If
+  If huit = 1 And neuf = 1 And dix = 1 And joker = 1 And dame = 1 : suite = 1 : End If
+  If huit = 1 And neuf = 1 And dix = 1 And valet = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And dix = 1 And valet = 1 And dame = 1 And roi = 1 : suite = 1 : End If
+  If neuf = 1 And joker = 1 And valet = 1 And dame = 1 And roi = 1 : suite = 1 : End If
+  If neuf = 1 And dix = 1 And joker = 1 And dame = 1 And roi = 1 : suite = 1 : End If
+  If neuf = 1 And dix = 1 And valet = 1 And joker = 1 And roi = 1 : suite = 1 : End If
+  If neuf = 1 And dix = 1 And valet = 1 And dame = 1 And joker = 1 : suite = 1 : End If
+  If joker = 1 And valet = 1 And dame = 1 And roi = 1 And As1 = 1 : suite_roi = 1 : End If
+  If dix = 1 And joker = 1 And dame = 1 And roi = 1 And As1 = 1 : suite = 1 : suite_roi = 1 : End If
+  If dix = 1 And valet = 1 And joker = 1 And roi = 1 And As1 = 1 : suite = 1 : suite_roi = 1 : End If
+  If dix = 1 And valet = 1 And dame = 1 And joker = 1 And As1 = 1 : suite = 1 : suite_roi = 1 : End If
+  If dix = 1 And valet = 1 And dame = 1 And roi = 1 And joker = 1 : suite = 1 : suite_roi = 1 : End If
+  If couleur = 1 And suite = 1 : suite_couleur = 1 : End If
+  If couleur = 1 And suite_roi = 1 : suite_couleur_roi = 1 : End If
+  If v_brelan = 1 And paire = 1 : full = 1 : End If
+End Proc
+
+Procedure Affiche_c1 // 1er carte
+  delai_c1 = (Timer*1000) - comp_c1
+  If (delai_c1 - af_dos1) < 0 :
+    Paste Bob 50, 400, 1054 : Bx(1054) = 50 : By(1054) = 400:
+  End If
+  If (delai_c1 - af_dos1) > 0 And (delai_c1 - af_dos1) < 100 :
+  Play Audio 1
+  End If
+End Proc
+
+Procedure Affiche_c2 // 2er carte
+  delai_c2 = (Timer*1000) - comp_c2
+  If (delai_c2 - af_dos2) < 0 :
+    Paste Bob 240, 400, 1054 : Bx(1054) = 240 : By(1054) = 400:
+  End If
+  If (delai_c2 - af_dos2) > 0 And (delai_c2 - af_dos2) < 100 :
+  Play Audio 1
+  End If
+End Proc
+
+Procedure Affiche_c3 // 3er carte
+  delai_c3 = (Timer*1000) - comp_c3
+  If (delai_c3 - af_dos3) < 0 :
+    Paste Bob 430, 400, 1054 : Bx(1054) = 430 : By(1054) = 400:
+  End If
+  If (delai_c3 - af_dos3) > 0 And (delai_c3 - af_dos3) < 100 :
+  Play Audio 1
+  End If
+End Proc
+
+Procedure Affiche_c4 // 4er carte
+  delai_c4 = (Timer*1000) - comp_c4
+  If (delai_c4 - af_dos4) < 0 :
+    Paste Bob 620, 400, 1054 : Bx(1054) = 620 : By(1054) = 400:
+  End If
+  If (delai_c4 - af_dos4) > 0 And (delai_c4 - af_dos4) < 100 :
+  Play Audio 1
+  End If
+End Proc
+
+Procedure Affiche_c5 // 5er carte
+  delai_c5 = (Timer*1000) - comp_c5
+  If (delai_c5 - af_dos5) < 0 :
+    Paste Bob 810, 400, 1054 : Bx(1054) = 810 : By(1054) = 400:
+  End If
+  If (delai_c5 - af_dos5) > 0 And (delai_c5 - af_dos5) < 100 :
+  Play Audio 1
+  End If
+End Proc
+
+Procedure Affiche // affichage general
+  Cls 0
+  Paste Bob 0, 0, 1108 : Bx(1108) = 0 : By(1108) = 0:
+  If debut_jeu=0 :
+    Paste Bob 50, 400, Tirage(11) : Bx(Tirage(11)) = 50 : By(Tirage(11)) = 400:
+    affiche_c1 :
+    Paste Bob 240, 400, Tirage(12) : Bx(Tirage(12)) = 240 : By(Tirage(12)) = 400:
+    affiche_c2 :
+    Paste Bob 430, 400, Tirage(13) : Bx(Tirage(13)) = 430 : By(Tirage(13)) = 400:
+    affiche_c3 :
+    Paste Bob 620, 400, Tirage(14) : Bx(Tirage(14)) = 620 : By(Tirage(14)) = 400:
+    affiche_c4 :
+    Paste Bob 810, 400, Tirage(15) : Bx(Tirage(15)) = 810 : By(Tirage(15)) = 400:
+    affiche_c5 :
+  End If
+
+  If tir = 2 And Y Mouse < 660 And Y Mouse > 360 And debut_jeu=0 Or score <>0 :    // Grise Les cartes
+	If Bx(1103)>=(Bx(1100)+Bw(1100))=0 And (Bx(1103)+Bw(1103))<=Bx(1100)=0 And By(1103)>=(By(1100)+Bh(1100))=0 And (By(1103)+Bh(1103))<=By(1100)=0 :
+    Else
+	If debut_jeu <> 1 :
+      Paste Bob  50, 400, 1105 : Bx(1105) = 50 : By(1105) = 400:
+      Paste Bob  240, 400, 1105 : Bx(1105) = 240 : By(1105) = 400:
+      Paste Bob  430, 400, 1105 : Bx(1105) = 430 : By(1105) = 400:
+      Paste Bob  620, 400, 1105 : Bx(1105) = 620 : By(1105) = 400:
+      Paste Bob  810, 400, 1105 : Bx(1105) = 810 : By(1105) = 400:
+	 End If
+    End If
+  End If
+
+  If tir = 1 :
+    DrawTxt["CHOISIR", 200, 703] :
+    Paste Bob 560, 690, 1101 : Bx(1101) = 560 : By(1101) = 690:
+  End If
+
+  If score>0 And  tir = 2 :
+    Paste Bob 360, 690, 1103 : Bx(1103) = 360 : By(1103) = 690:
+    DrawTxt["MISE", 48, 703] :
+    DrawTxt[Str$(mise),185,703] :
+    If mise>1 :
+      Paste Bob 160, 698,1106 : Bx(1106) = 160 : By(1106) = 698:
+    End If
+    If mise < score And mise<10 :
+      Paste Bob 245, 698, 1107 : Bx(1107) = 245 : By(1107) = 698:
+    End If
+  End If
+
+  DrawTxt["SCORE", 740, 703]
+  DrawTxt[Str$(score),870,703]
+  delai_resultat = (Timer*1000) - comp_resultat
+  delai_clignot_gain= (Timer*1000) - comp_clignot_gain
+  DrawTxt["QUINTE FLUSH ROYAL ", 400, 50]
+  DrawTxt[Str$(V_cagniot_QFR), 860, 50]
+
+  If delai_resultat>1000 And gain_suite_couleur_roi=1 And delai_clignot_gain >500 And debut_jeu=0 :
+    Ink 0,0 : Bar 400,50,565,30
+    If  delai_clignot_gain >800 :
+      comp_clignot_gain=(Timer*1000) :
+    End If
+  End If
+
+  DrawTxt["QUINTE FLUSH       ", 400, 80]
+  DrawTxt[Str$(V_cagniot_QF), 860, 80]
+
+  If delai_resultat>1000 And gain_suite_couleur=1 And delai_clignot_gain >500 And debut_jeu=0 :
+    Ink 0,0 :Bar 400,80,560,30
+    If  delai_clignot_gain >800 :
+      comp_clignot_gain=(Timer*1000) :
+    End If
+  End If
+
+  DrawTxt["CARRE            ", 400, 110]
+  DrawTxt[Str$(V_cagniot_CARRE), 860, 110]
+
+  If delai_resultat>1000 And gain_carre=1 And delai_clignot_gain >500 And debut_jeu=0 :
+    Ink 0,0 :Bar 400,110,550,30 : Ink 1,0
+    If  delai_clignot_gain >800 :
+      comp_clignot_gain=(Timer*1000) :
+    End If
+  End If
+
+  DrawTxt["FULL              ", 400, 140]
+  DrawTxt[Str$(V_cagniot_FULL), 860, 140]
+
+  If delai_resultat>1000 And gain_full=1 And delai_clignot_gain >500 And debut_jeu=0 :
+    Ink 0,0 :Bar 400,140,550,30 : Ink 1,0
+    If  delai_clignot_gain >800 :
+      comp_clignot_gain=(Timer*1000) :
+    End If
+  End If
+
+  DrawTxt["FLUSH               ", 400, 170]
+  DrawTxt[Str$(V_cagniot_FLUSH), 860, 170]
+
+  If delai_resultat>1000 And gain_couleur=1 And delai_clignot_gain >500 And debut_jeu=0 :
+    Ink 0,0 :Bar 400,170,550,30 : Ink 1,0
+    If  delai_clignot_gain >800 :
+      comp_clignot_gain=(Timer*1000) :
+    End If
+  End If
+
+  DrawTxt["QUINTE                ", 400, 200]
+  DrawTxt[Str$(V_cagniot_QUINTE), 860, 200]
+
+  If delai_resultat>1000 And gain_suite=1 And delai_clignot_gain >500 And debut_jeu=0 :
+    Ink 0,0 :Bar 400,200,550,30 : Ink 1,0
+    If  delai_clignot_gain >800 :
+      comp_clignot_gain=(Timer*1000) :
+    End If
+  End If
+
+  DrawTxt["BRELAN               ", 400, 230]
+  DrawTxt[Str$(V_cagniot_BRELAN), 860, 230]
+
+  If  delai_resultat>1000 And gain_brelan=1 And delai_clignot_gain >500 And debut_jeu=0 :
+    Ink 0,0 :Bar 400,230,550,30 : Ink 1,0
+    If  delai_clignot_gain >800 :
+      comp_clignot_gain=(Timer*1000) :
+    End If
+  End If
+
+  DrawTxt["PAIRES               ", 400, 260]
+  DrawTxt[Str$(V_cagniot_PAIRES), 860, 260]
+
+  If delai_resultat>1000 And gain_2paires=1 And delai_clignot_gain >500 And debut_jeu=0 :
+    Ink 0,0 :Bar 400,260,550,30 : Ink 1,0
+    If  delai_clignot_gain >800 :
+      comp_clignot_gain=(Timer*1000) :
+    End If
+  End If
+
+  If  jeu_joker = 52
+    DrawTxt["PAIRE                ", 400, 290]
+    DrawTxt[Str$(V_cagniot_PAIRE), 860, 290]
+    If delai_resultat>1000 And  gain_paire_10=1 And delai_clignot_gain >500 And debut_jeu=0 :
+      Ink 0,0 :Bar 400,290,550,30 : Ink 1,0
+      If  delai_clignot_gain >800 :
+        comp_clignot_gain=(Timer*1000) :
+      End If
+    End If
+  End If
+
+  If (debut_jeu = 0 And delai_resultat>1000 And jeu_joker = 52 And gain_paire_10 = 1) Or gain_2paires = 1 Or gain_brelan = 1 Or gain_suite = 1 Or gain_couleur = 1 Or gain_full = 1 Or gain_carre = 1 Or gain_suite_couleur = 1 Or gain_suite_couleur_roi = 1 :
+    frame_poker :
+  End If
+
+  If (debut_jeu=0 And delai_resultat>1000 And jeu_joker = 53 And gain_2paires = 1) Or gain_brelan = 1 Or gain_suite = 1 Or gain_couleur = 1 Or gain_full = 1 Or gain_carre = 1 Or gain_suite_couleur = 1 Or gain_suite_couleur_roi = 1 :
+    frame_poker :
+  End If
+
+  If debut_jeu=1 :
+    frame_poker :
+  End If
+
+  Paste Bob X Mouse, Y Mouse, 1100 : Bx(1100) = X Mouse : By(1100) = Y Mouse:
+
+End Proc
+
+Procedure Choix_jeux // choix du jeu avec ou sans joker
+
+  Paste Bob 620, 180, 1121 : Bx(1121) = 620 : By(1121) = 180 :
+  Paste Bob 720, 180, 1120 : Bx(1120) = 720 : By(1120) = 180 :
+  delai_choix_jeu= (Timer*1000) - comp_choix_jeu
+  If delai_choix_jeu>500 :
+
+    If Bx(1121)>=(Bx(1100)+Bw(1100))=0 And (Bx(1121)+Bw(1121))<=Bx(1100)=0 And By(1121)>=(By(1100)+Bh(1100))=0 And (By(1121)+Bh(1121))<=By(1100)=0 And Mouse Key <> 0 And  jeu_joker = 52   :
+      Paste Bob X Mouse, Y Mouse, 1100 : Bx(1100) = X Mouse : By(1100) = Y Mouse:
+	  Play Audio 3 : Ink 0,0 : Bar 620, 180, 60, 100 : ink 1,0
+	  Wait Vbl :
+      jeu_joker = 53 :jok :
+      comp_choix_jeu = (Timer*1000) :
+    End If
+    If Bx(1120)>=(Bx(1100)+Bw(1100))=0 And (Bx(1120)+Bw(1120))<=Bx(1100)=0 And By(1120)>=(By(1100)+Bh(1100))=0 And (By(1120)+Bh(1120))<=By(1100)=0 And Mouse Key <> 0 And  jeu_joker = 53:
+      Paste Bob X Mouse, Y Mouse, 1100 : Bx(1100) = X Mouse : By(1100) = Y Mouse:
+	  Play Audio 3 : Ink 0,0 : Bar 720, 180, 60, 100 : ink 1,0
+	  Wait Vbl :
+      jeu_joker = 52 :jok :
+      comp_choix_jeu = (Timer*1000) :
+    End If
+  End If
+End Proc
+
+Procedure Frame_poker // defilement couleur logo poker
+  delai_clignot_poker = (Timer*1000) - comp_clignot_poker
+  If delai_clignot_poker >0 And delai_clignot_poker < 300 : Paste Bob 100, 260, 1110 : Bx(1110) = 100 : By(1110) = 300: end if
+  If delai_clignot_poker >=300 And delai_clignot_poker < 600 : Paste Bob 100, 260, 1111 : Bx(1111) = 100 : By(1111) = 300: end if
+  If delai_clignot_poker >=600 And delai_clignot_poker < 900 : Paste Bob 100, 260, 1112 : Bx(1112) = 100 : By(1112) = 300:end if
+  If delai_clignot_poker >=900 And delai_clignot_poker < 1200 : Paste Bob 100, 260, 1113 : Bx(1113) = 100 : By(1113) = 300:end if
+  If delai_clignot_poker >=1200 And delai_clignot_poker < 1500 : Paste Bob 100, 260, 1114 : Bx(1114) = 100 : By(1114) = 300: end if
+  If delai_clignot_poker >=1500 : comp_clignot_poker = (Timer*1000) :  End If
+End Proc
+
+Procedure Change // affiche icones gardee cartes
+  If choix(1) = 1 : Paste Bob 115, 375, 1102 : Bx(1102) = 115 : By(1102) = 375: End If
+  If choix(2) = 1 : Paste Bob 302, 375, 1102 : Bx(1102) = 302 : By(1102) = 375: End If
+  If choix(3) = 1 : Paste Bob 493, 375, 1102 : Bx(1102) = 943 : By(1102) = 375: End If
+  If choix(4) = 1 : Paste Bob 682, 375, 1102 : Bx(1102) = 682 : By(1102) = 375: End If
+  If choix(5) = 1 : Paste Bob 871, 375, 1102 : Bx(1102) = 871 : By(1102) = 375: End If
+End Proc
+
+Procedure Selection //  selection des cartes gardées
+  If Bx(Tirage(1))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(1))+160)<=Bx(1100)=0 And By(Tirage(1))>=(By(1100)+Bh(1100))=0 And (By(Tirage(1))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(1) = 0 :
+    delai_1 = (Timer*1000) - comp_1 :
+    If delai_1 > del_tir :
+	  choix(1) = 1 : Paste Bob 115, 375, 1102 : Bx(1102) = 115 : By(1102) = 375:
+	  change : affiche : Play Audio 5
+      comp_1 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(1))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(1))+160)<=Bx(1100)=0 And By(Tirage(1))>=(By(1100)+Bh(1100))=0 And (By(Tirage(1))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(1) = 1:
+    delai_1 = (Timer*1000) - comp_1 :
+    If delai_1 > del_tir :
+	  choix(1) = 0 :  change : affiche : Play Audio 5
+      comp_1 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(2))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(2))+160)<=Bx(1100)=0 And By(Tirage(2))>=(By(1100)+Bh(1100))=0 And (By(Tirage(2))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(2) = 0  :
+    delai_2 = (Timer*1000) - comp_2 :
+    If delai_2 > del_tir :
+	  choix(2) = 1 : Paste Bob 302, 375, 1102 :  Bx(1102) = 302 : By(1102) = 375 :
+	  change : affiche :  Play Audio 5
+      comp_2 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(2))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(2))+160)<=Bx(1100)=0 And By(Tirage(2))>=(By(1100)+Bh(1100))=0 And (By(Tirage(2))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(2) = 1  :
+    delai_2 = (Timer*1000) - comp_2 :
+    If delai_2 > del_tir :
+	  choix(2) = 0 : change : affiche :  Play Audio 5
+      comp_2 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(3))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(3))+160)<=Bx(1100)=0 And By(Tirage(3))>=(By(1100)+Bh(1100))=0 And (By(Tirage(3))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(3) = 0  :
+    delai_3 = (Timer*1000) - comp_3 :
+    If delai_3 > del_tir :
+	  choix(3) = 1 : Paste Bob 493, 375, 1102 : Bx(1102) = 493 : By(1102) = 375:
+	  change : affiche :  Play Audio 5
+      comp_3 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(3))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(3))+160)<=Bx(1100)=0 And By(Tirage(3))>=(By(1100)+Bh(1100))=0 And (By(Tirage(3))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(3) = 1:
+    delai_3 = (Timer*1000) - comp_3 :
+    If delai_3 > del_tir :
+      choix(3) = 0 : change : affiche :  Play Audio 5
+      comp_3 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(4))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(4))+160)<=Bx(1100)=0 And By(Tirage(4))>=(By(1100)+Bh(1100))=0 And (By(Tirage(4))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(4) = 0  :
+    delai_4 = (Timer*1000) - comp_4 :
+    If delai_4 > del_tir :
+	  choix(4) = 1 : Paste Bob 682, 375, 1102 : Bx(1102) = 682 : By(1102) = 375:
+	  change : affiche :  Play Audio 5
+      comp_4 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(4))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(4))+160)<=Bx(1100)=0 And By(Tirage(4))>=(By(1100)+Bh(1100))=0 And (By(Tirage(4))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(4) = 1 :
+    delai_4 = (Timer*1000) - comp_4 :
+    If delai_4 > del_tir :
+	  choix(4) = 0 : change : affiche :  Play Audio 5
+      comp_4 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(5))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(5))+160)<=Bx(1100)=0 And By(Tirage(5))>=(By(1100)+Bh(1100))=0 And (By(Tirage(5))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(5) = 0 :
+    delai_5 = (Timer*1000) - comp_5 :
+    If delai_5 > del_tir :
+	  choix(5) = 1 : Paste Bob 871, 375, 1102 : Bx(1102) = 871 : By(1102) = 375:
+	  change : affiche :  Play Audio 5
+      comp_5 = (Timer*1000) :
+    End If
+  End If
+  If Bx(Tirage(5))>=(Bx(1100)+Bw(1100))=0 And (Bx(Tirage(5))+160)<=Bx(1100)=0 And By(Tirage(5))>=(By(1100)+Bh(1100))=0 And (By(Tirage(5))+247)<=By(1100)=0 And Mouse Key <> 0 And choix(5) = 1 :
+    delai_5 = (Timer*1000) - comp_5 :
+    If delai_5 > del_tir :
+	  choix(5) = 0 : change : affiche :  Play Audio 5
+      comp_5 = (Timer*1000) :
+    End If
+  End If
+End Proc
+
+Procedure Gain // resultat gain obtenu
+  If paire_10 = 1 : gain_paire_10 = 1 : total_paire_10 = total_paire_10 + 1 : End If
+  If paire = 2 : gain_paire_10 = 0 : gain_2paires = 1 : total_2paires = total_2paires + 1 : End If
+  If brelan = 1 : gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 1 : total_brelan = total_brelan + 1 : End If
+  If suite = 1 : gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 0 : gain_suite = 1 : total_suite = total_suite + 1 : End If
+  If couleur = 1 : gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 0 : gain_suite = 0 : gain_couleur = 1 : total_couleur = total_couleur + 1 : End If
+  If full = 1 : gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 0 : gain_suite = 0 : gain_couleur = 0 : gain_full = 1 : total_full = total_full + 1 : End If
+  If carre = 1 : gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 0 : gain_suite = 0 : gain_couleur = 0 : gain_full = 0 : gain_carre = 1 : total_carre = total_carre + 1 : End If
+  If suite_couleur = 1 : gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 0 : gain_suite = 0 : gain_couleur = 0 : gain_full = 0 : gain_carre = 0 : gain_suite_couleur = 1 : total_suite_couleur =total_suite_couleur + 1 : End If
+  If suite_couleur_roi = 1 : suite_roi = 0 :gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 0 : gain_suite = 0 : gain_couleur = 0 : gain_full = 0 : gain_carre = 0 : gain_suite_couleur = 0 : gain_suite_couleur_roi = 1 : total_suite_couleur_roi = total_suite_couleur_roi + 1 : End If
+  If suite_roi = 1 : gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 0 : gain_suite = 0 : gain_couleur = 0 : gain_full = 0 : gain_carre = 0 : gain_suite_couleur = 0 : gain_suite_couleur_roi = 0 : gain_suite = 1: total_suite = total_suite + 1 : End If
+  If gain_2paires = 1 Or gain_brelan = 1 Or gain_suite = 1 Or gain_couleur = 1 Or gain_full = 1 Or gain_carre = 1 Or gain_suite_couleur = 1 Or gain_suite_couleur_roi = 1 :
+    gagne = 1 : total_coups_gagne = total_coups_gagne + 1 : gagne_son = 1 :
+  End If
+  If  jeu_joker = 52  And gain_paire_10 = 1 :
+    gagne = 1 : total_coups_gagne = total_coups_gagne + 1 : gagne_son = 1 :
+  End If
+  total_coups_joues = total_coups_joues + 1
+End Proc
+
+Procedure Gagner // encaisser les gains
+  If gain_paire_10 =1 : score = score + V_cagniot_PAIRE : End If
+  If gain_2paires =1 : score = score + V_cagniot_PAIRES : End If
+  If gain_brelan =1 : score = score + V_cagniot_BRELAN : End If
+  If gain_suite=1 : score = score + V_cagniot_QUINTE : End If
+  If gain_couleur=1: score = score + V_cagniot_FLUSH : End If
+  If gain_full=1 : score = score + V_cagniot_FULL : End If
+  If gain_carre=1 : score = score + V_cagniot_CARRE : End If
+  If gain_suite_couleur=1 : score = score + V_cagniot_QF : End If
+  If gain_suite_couleur_roi=1 : score = score + V_cagniot_QFR : End If
+  gagne = 0
+End Proc
+
+Procedure Change_carte // Change les cartes non retenues
+  If choix(1) = 0 : Tirage(11) = Tirage(6) : comp_c1 = (Timer*1000) : End If
+  If choix(2) = 0 : Tirage(12) = Tirage(7) : comp_c2 = (Timer*1000) : End If
+  If choix(3) = 0 : Tirage(13) = Tirage(8) : comp_c3 = (Timer*1000) : End If
+  If choix(4) = 0 : Tirage(14) = Tirage(9) : comp_c4 = (Timer*1000) : End If
+  If choix(5) = 0 : Tirage(15) = Tirage(10) : comp_c5 = (Timer*1000) : End If
+  If choix(1) = 1 : Tirage(11) = Tirage(1) : End If
+  If choix(2) = 1 : Tirage(12) = Tirage(2) : End If
+  If choix(3) = 1 : Tirage(13) = Tirage(3) : End If
+  If choix(4) = 1 : Tirage(14) = Tirage(4) : End If
+  If choix(5) = 1 : Tirage(15) = Tirage(5) : End If
+  If choix(1) = 0 And choix(2) = 0 And choix(3) = 0 And choix(4) = 0 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 1200 : End If
+  If choix(1) = 0 And choix(2) = 0 And choix(3) = 1 And choix(4) = 0 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 700 : af_dos5 = 900 : delai_son = 1000 : End If
+  If choix(1) = 0 And choix(2) = 0 And choix(3) = 0 And choix(4) = 1 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 900 : delai_son = 1000 : End If
+  If choix(1) = 0 And choix(2) = 0 And choix(3) = 0 And choix(4) = 0 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 1000 : End If
+  If choix(1) = 0 And choix(2) = 0 And choix(3) = 1 And choix(4) = 1 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 700 : delai_son = 800 : End If
+  If choix(1) = 0 And choix(2) = 0 And choix(3) = 1 And choix(4) = 0 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 700 : af_dos5 = 1100 : delai_son = 800 : End If
+  If choix(1) = 0 And choix(2) = 0 And choix(3) = 1 And choix(4) = 1 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 600 : End If
+  If choix(1) = 0 And choix(2) = 0 And choix(3) = 0 And choix(4) = 1 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 800 : End If
+  If choix(1) = 0 And choix(2) = 1 And choix(3) = 0 And choix(4) = 0 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 500 : af_dos4 = 700 : af_dos5 = 900 : delai_son = 1000 : End If
+  If choix(1) = 0 And choix(2) = 1 And choix(3) = 1 And choix(4) = 0 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 500 : af_dos5 = 700 : delai_son = 800 : End If
+  If choix(1) = 0 And choix(2) = 1 And choix(3) = 0 And choix(4) = 1 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 500 : af_dos4 = 900 : af_dos5 = 700 : delai_son = 800 : End If
+  If choix(1) = 0 And choix(2) = 1 And choix(3) = 0 And choix(4) = 0 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 500 : af_dos4 = 700 : af_dos5 = 1100 : delai_son = 800 : End If
+  If choix(1) = 0 And choix(2) = 1 And choix(3) = 1 And choix(4) = 1 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 500 : delai_son = 600 : End If
+  If choix(1) = 0 And choix(2) = 1 And choix(3) = 1 And choix(4) = 0 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 500 : af_dos5 = 1100 : delai_son = 600 : End If
+  If choix(1) = 0 And choix(2) = 1 And choix(3) = 1 And choix(4) = 1 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 400 : End If
+  If choix(1) = 0 And choix(2) = 1 And choix(3) = 0 And choix(4) = 1 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 500 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 600 : End If
+  If choix(1) = 1 And choix(2) = 0 And choix(3) = 0 And choix(4) = 0 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 300 : af_dos3 = 500 : af_dos4 = 700 : af_dos5 = 900 : delai_son = 1000 : End If
+  If choix(1) = 1 And choix(2) = 0 And choix(3) = 1 And choix(4) = 0 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 300 : af_dos3 = 700 : af_dos4 = 500 : af_dos5 = 700 : delai_son = 800 : End If
+  If choix(1) = 1 And choix(2) = 0 And choix(3) = 0 And choix(4) = 1 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 300 : af_dos3 = 500 : af_dos4 = 900 : af_dos5 = 700 : delai_son = 800 : End If
+  If choix(1) = 1 And choix(2) = 0 And choix(3) = 0 And choix(4) = 0 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 300 : af_dos3 = 500 : af_dos4 = 700 : af_dos5 = 1100 : delai_son = 800 : End If
+  If choix(1) = 1 And choix(2) = 0 And choix(3) = 1 And choix(4) = 1 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 300 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 500 : delai_son = 600 : End If
+  If choix(1) = 1 And choix(2) = 0 And choix(3) = 1 And choix(4) = 0 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 300 : af_dos3 = 700 : af_dos4 = 500 : af_dos5 = 1100 : delai_son = 600 : End If
+  If choix(1) = 1 And choix(2) = 0 And choix(3) = 1 And choix(4) = 1 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 300 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 400 : End If
+  If choix(1) = 1 And choix(2) = 0 And choix(3) = 0 And choix(4) = 1 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 300 : af_dos3 = 500 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 600 : End If
+  If choix(1) = 1 And choix(2) = 1 And choix(3) = 0 And choix(4) = 0 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 300 : af_dos4 = 500 : af_dos5 = 700 : delai_son = 800 : End If
+  If choix(1) = 1 And choix(2) = 1 And choix(3) = 1 And choix(4) = 0 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 300 : af_dos5 = 500 : delai_son = 600 : End If
+  If choix(1) = 1 And choix(2) = 1 And choix(3) = 0 And choix(4) = 1 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 300 : af_dos4 = 900 : af_dos5 = 500 : delai_son = 600 : End If
+  If choix(1) = 1 And choix(2) = 1 And choix(3) = 0 And choix(4) = 0 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 300 : af_dos4 = 500 : af_dos5 = 1100 : delai_son = 600 : End If
+  If choix(1) = 1 And choix(2) = 1 And choix(3) = 1 And choix(4) = 1 And choix(5) = 0 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 300 : delai_son = 400 : End If
+  If choix(1) = 1 And choix(2) = 1 And choix(3) = 1 And choix(4) = 0 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 300 : af_dos5 = 1100 : delai_son = 400 : End If
+  If choix(1) = 1 And choix(2) = 1 And choix(3) = 1 And choix(4) = 1 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 200 : End If
+  If choix(1) = 1 And choix(2) = 1 And choix(3) = 0 And choix(4) = 1 And choix(5) = 1 : af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 300 : af_dos4 = 900 : af_dos5 = 1100 : delai_son = 400 : End If
+End Proc
+
+Procedure Tire_carte // Tirage des cartes aléatoire
+  For i = 1 To 10 : Tirage(i) = Rnd(jeu_joker - 1) + 1001 : Next
+  If Tirage(1) = Tirage(2) Or Tirage(1) = Tirage(3) Or Tirage(1) = Tirage(4) Or Tirage(1) = Tirage(5) Or Tirage(1) = Tirage(6) Or Tirage(1) = Tirage(7) Or Tirage(1) = Tirage(8) Or Tirage(1) = Tirage(9) Or Tirage(1) = Tirage(10) : r = r + 1 : tire_carte : End If
+  If Tirage(2) = Tirage(3) Or Tirage(2) = Tirage(4) Or Tirage(2) = Tirage(5) Or Tirage(2) = Tirage(6) Or Tirage(2) = Tirage(7) Or Tirage(2) = Tirage(8) Or Tirage(2) = Tirage(9) Or Tirage(2) = Tirage(10) : r = r + 1 : tire_carte : End If
+  If Tirage(3) = Tirage(4) Or Tirage(3) = Tirage(5) Or Tirage(3) = Tirage(6) Or Tirage(3) = Tirage(7) Or Tirage(3) = Tirage(8) Or Tirage(3) = Tirage(9) Or Tirage(3) = Tirage(10) : r = r + 1 : tire_carte : End If
+  If Tirage(4) = Tirage(5) Or Tirage(4) = Tirage(6) Or Tirage(4) = Tirage(7) Or Tirage(4) = Tirage(8) Or Tirage(4) = Tirage(9) Or Tirage(4) = Tirage(10) : r = r + 1 : tire_carte : End If
+  If Tirage(5) = Tirage(6) Or Tirage(5) = Tirage(7) Or Tirage(5) = Tirage(8) Or Tirage(5) = Tirage(9) Or Tirage(5) = Tirage(10) : r = r + 1 : tire_carte : End If
+  If Tirage(6) = Tirage(7) Or Tirage(6) = Tirage(8) Or Tirage(6) = Tirage(9) Or Tirage(6) = Tirage(10) : r = r + 1 : tire_carte : End If
+  If Tirage(7) = Tirage(8) Or Tirage(7) = Tirage(9) Or Tirage(7) = Tirage(10) : r = r + 1 : tire_carte : End If
+  If Tirage(8) = Tirage(9) Or Tirage(8) = Tirage(10) : r = r + 1 : tire_carte : End If
+  If Tirage(9) = Tirage(10) : r = r + 1 : tire_carte : End If
+  For i = 1 To 5
+    Tirage(10 + i) = Tirage(i)
+  Next
+
+End Proc
+
+Procedure Aide  // Affiche Aide
+  Ink 5,0
+  Text 80, 340, "Règle du jeu POKER "
+  Ink 1,0
+  Text 80, 370, "Sélectionner un jeu en cliquant sur le JOCKER ou sur l'AS "
+  Ink 1,0
+  Text 80, 385, "Le but du jeu POKER est d'obtenir la meilleure combinaison de cartes afin de remporter le meilleur gain "
+  Ink 5,0
+  Text 80, 410,"Déroulement du jeu :"
+  Ink 1,0
+  Text 95, 430,"En premier temps, on choisi la mise (fixée à 1 par défaut) en cliquant sur + ou - ,10 max, mise soustraite de votre SCORE "
+  Ink 1,0
+  Text 95, 445, "Distribution des cartes en cliquant le bouton DONNER"
+  Ink 1,0
+  Text 95, 460, "Sélection des cartes que l'on désire GARDER en cliquant dessus"
+  Ink 1,0
+  Text 95, 475, "Remplacement des autres cartes en cliquant le bouton REDONNE"
+  Ink 1,0
+  Text 95, 490, "Si une combinaison gagnante est obtenue les gains seront ajoutés au SCORE"
+  Ink 1,0
+  Text 80, 515, "Possibilités de combinaisons par ordre croissant des gains :"
+  Ink 4,0
+  Text 85, 535, "PAIRE >10 :"
+  Ink 1,0
+  Text 270, 535, "2 Cartes de la même figure supérieure au 10  ( Jeu sans joker ) "
+  Ink 4,0
+  Text 85, 550, "2 PAIRES :"
+  Ink 1,0
+  Text 270, 550, "2 X 2 Cartes de la même figure "
+  Ink 4,0
+  Text 85, 565,"BRELAN: "
+  Ink 1,0
+  Text 270, 565, "3 Cartes de la même figure "
+  Ink 4,0
+  Text 85, 580, "QUINTE :"
+  Ink 1,0
+  Text 270, 580, "1 Suite de cartes  ( ex : 7 , 8 , 9 , 10 , Valet  de couleurs mélangées ) "
+  Ink 4,0
+  Text 85, 595, "FLUSH :"
+  Ink 1,0
+  Text 270, 595, "5 Cartes de la même couleur "
+  Ink 4,0
+  Text 85, 610, "FULL :"
+  Ink 1,0
+  Text 270, 610, "1 Brelan + 1 Paire "
+  Ink 4,0
+  Text 85, 625, "CARRE :"
+  Ink 1,0
+  Text 270, 625, "4 Cartes de la même figure  "
+  Ink 4,0
+  Text 85, 640, "QUINTE FLUSH :"
+  Ink 1,0
+  Text 270, 640, "1 Suite de la même couleur "
+  Ink 4,0
+  Text 85, 655, "QUINTE FLUSH ROYAL :"
+  Ink 1,0
+  Text 270, 655, "1 Suite de la même couleur avec l'as   ( ex : 10 , Valet , Dame , Roi , As   de Trêfle ) "
+  Ink 5,0
+  Text 570, 715,"HIT SCORE "
+  Ink 1,0
+  Text 660, 715, Str$(HitScore)
+  Ink 1,0
+  Text 300, 280,"V1.0a"
+End Proc
+
+Procedure D_tire_carte // dos des cartes
+  For i = 1 To 5
+    Tirage(10 + i) = 1054
+  Next
+End Proc
+
+Procedure Fin // resultat final
+  If jeu_joker=52 :
+    Ink 1,0
+    Text 50, 660,"total paire>10"
+    Ink 4,0
+    Text 150, 660, Str$(total_paire_10)
+  End If
+  Ink 1,0
+  Text 50, 675, "total 2paires"
+  Ink 4,0
+  Text 150, 675, Str$(total_2paires)
+  Ink 1,0
+  Text 50, 690, "total brelan"
+  Ink 4,0
+  Text 150, 690, Str$(total_brelan)
+  Ink 1,0
+  Text 50, 705, "total quinte"
+  Ink 4,0
+  Text 150, 705, Str$(total_suite)
+  Ink 1,0
+  Text 50, 720, "total flush"
+  Ink 4,0
+  Text 150, 720, Str$(total_couleur)
+  Ink 1,0
+  Text 200, 675, "total full"
+  Ink 4,0
+  Text 326, 675, Str$(total_full)
+  Ink 1,0
+  Text 200, 690, "total carre"
+  Ink 4,0
+  Text 326, 690, Str$(total_carre)
+  Ink 1,0
+  Text 200, 705, "total quinte flush"
+  Ink 4,0
+  Text 326, 705, Str$(total_suite_couleur)
+  Ink 1,0
+  Text 200, 720, "total Q flush royal"
+  Ink 4,0
+  Text 326, 720, Str$(total_suite_couleur_roi)
+  Ink 1,0
+  Text 380, 705, "total coups gagnés"
+  Ink 4,0
+  Text 514, 705, Str$(total_coups_gagne)
+  Ink 1,0
+  Text 380, 720, "total coups joués"
+  Ink 4,0
+  Text 514, 720, Str$(total_coups_joues
+  Ink 1,0
+  Text 570, 720,"HIT SCORE"
+  Ink 4,0
+  Text 660, 720,Str$(HitScore)
+  Ink 5,0
+  Text 50, 340,"Programme  MARCUS.ZONE   AOZ STUDIO  2021"
+  Ink 1,0
+  Text 50, 360,"http://marcus.zone.free.fr"
+  Ink 1,0
+  Text 300, 280,"V1.0a"
+
+  Paste Bob 830, 330,1126 : Bx(1126) = 830 : By(1126) = 330:
+  Paste Bob X Mouse, Y Mouse, 1100 : Bx(1100) = X Mouse : By(1100) = Y Mouse:
+End Proc
+
+Procedure Jok // gain possible jeu sans joker
+  If jeu_joker = 52 :
+    cagniot_QFR=cagniote_QFR :
+    cagniot_QF=cagniote_QF :
+    cagniot_CARRE=cagniote_CARRE :
+    cagniot_FULL= cagniote_FULL :
+    cagniot_FLUSH=cagniote_FLUSH :
+    cagniot_QUINTE= cagniote_QUINTE :
+    cagniot_BRELAN=cagniote_BRELAN :
+    cagniot_PAIRES=cagniote_PAIRES :
+    cagniot_PAIRE= cagniote_PAIRE :
+  End If
+  If Jeu_joker = 53 :  // gain possible avec joker
+    cagniot_QFR=cagniote_j_QFR :
+    cagniot_QF=cagniote_j_QF :
+    cagniot_CARRE=cagniote_j_CARRE :
+    cagniot_FULL= cagniote_j_FULL :
+    cagniot_FLUSH=cagniote_j_FLUSH :
+    cagniot_QUINTE= cagniote_j_QUINTE :
+    cagniot_BRELAN=cagniote_j_BRELAN :
+    cagniot_PAIRES=cagniote_j_PAIRES :
+    cagniot_PAIRE= cagniote_j_PAIRE :
+  End If
+End Proc
+
+Procedure Definir // definitions variables
+
+  af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100
+  MouseSpeed = 1.0
+  debut_jeu=1
+  mise =1
+  cagniote_QFR=1000
+  cagniote_j_QFR=500
+  cagniote_QF=100
+  cagniote_j_QF=80
+  cagniote_CARRE=25
+  cagniote_j_CARRE=20
+  cagniote_FULL=9
+  cagniote_j_FULL=7
+  cagniote_FLUSH=6
+  cagniote_j_FLUSH=5
+  cagniote_QUINTE=4
+  cagniote_j_QUINTE=4
+  cagniote_BRELAN=3
+  cagniote_j_BRELAN=3
+  cagniote_PAIRES=2
+  cagniote_j_PAIRES=2
+  cagniote_PAIRE=1
+  cagniote_j_PAIRE=0
+  score =10
+  p# = 2: z#= 0.1 : dx# = 3 : dy# = 3
+  tir = 2
+  comp_1 = (Timer*1000)
+  comp_2 = (Timer*1000)
+  comp_3 = (Timer*1000)
+  comp_4 = (Timer*1000)
+  comp_5 = (Timer*1000)
+  comp_6 = (Timer*1000)
+  comp_7 = (Timer*1000)
+  comp_c1 = (Timer*1000)
+  comp_c2 = (Timer*1000)
+  comp_c3 = (Timer*1000)
+  comp_c4 = (Timer*1000)
+  comp_c5 = (Timer*1000)
+  comp_mise = (Timer*1000)
+  comp_clignot_gain = (Timer*1000)
+  comp_clignot_poker = (Timer*1000)
+  comp_resultat = (Timer*1000)
+  comp_choix_jeu = (Timer*1000)
+  delai_son = 1000
+  gagne_son = 0
+  jeu_joker = 53
+  jok
+  For i = 1 To 5
+    choix(i) = 0
+  Next
+  comp_c1 = (Timer*1000) : comp_c2 = (Timer*1000) : comp_c3 = (Timer*1000) : comp_c4 = (Timer*1000) : comp_c5 = (Timer*1000)
+
+End Proc
+
+  Definir  // Preparation Jeu
+  lire
+  d_tire_carte
+  comp_c1 = (Timer*1000) : comp_c2 = (Timer*1000) : comp_c3 = (Timer*1000) : comp_c4 = (Timer*1000) : comp_c5 = (Timer*1000)
+
+
+  Do // Boucle principale
+
+      affiche :
+	  tjoc# = tjoc# + 0.001
+	  If tjoc# >= 1 : tjoc# = 0 : End if
+      Bob Alpha 1, tjoc#
+
+      If debut_jeu=1 :
+        aide  : choix_jeux :
+		Paste Bob X Mouse, Y Mouse, 1100 : Bx(1100) = X Mouse : By(1100) = Y Mouse:
+      End If
+
+      If V_cagniot_QFR =0 :
+        Paste Bob 620, 220, 1125 : Bx(1125) = 620 : By(1125) = 220:
+        Paste Bob X Mouse, Y Mouse, 1100 : Bx(1100) = X Mouse : By(1100) = Y Mouse:
+		If Bx(1125)>=(Bx(1100)+Bw(1100))=0 And (Bx(1125)+Bw(1125))<=Bx(1100)=0 And By(1125)>=(By(1100)+Bh(1100))=0 And (By(1125)+Bh(1125))<=By(1100)=0 And Mouse Key <> 0 :
+          d_tire_carte : definir : Play Audio 4
+        End If
+        fin :
+        d_tire_carte :
+      End If
+
+      If tir = 1 :
+        selection :
+        change :
+		If Bx(1101)>=(Bx(1100)+Bw(1100))=0 And (Bx(1101)+Bw(1101))<=Bx(1100)=0 And By(1101)>=(By(1100)+Bh(1100))=0 And (By(1101)+Bh(1101))<=By(1100)=0 And Mouse Key <> 0  :
+          tir = 2 : Play Audio 4
+          change_carte :
+          tri :
+          resultat :
+          gain :
+          comp_6 = (Timer*1000) :
+          comp_7 = (Timer*1000) :
+          comp_resultat = (Timer*1000) :
+        End If
+      End If
+
+      delai_6 = (Timer*1000) - comp_6 : delai_7 = (Timer*1000) - comp_7
+
+      If delai_6>1450 And   tir = 2  And score<mise :mise=score:End If
+      If gagne_son = 1 :
+        If delai_7 > delai_son :
+           Play Audio 2
+          gagne_son = 0 :
+        End If
+      End If
+
+      delai_mise = (Timer*1000) - comp_mise
+
+      If tir=2 And delai_mise >140 :
+		If mise >1 And Bx(1106)>=(Bx(1100)+Bw(1100))=0 And (Bx(1106)+Bw(1106))<=Bx(1100)=0 And By(1106)>=(By(1100)+Bh(1100))=0 And (By(1106)+Bh(1106))<=By(1100)=0 And Mouse Key <> 0:
+          mise = mise-1 :
+          Ink 0,0 : Bar 160, 700, 35,35 : ink 1,0 : Play Audio 5
+          Paste Bob X Mouse, Y Mouse, 1100 : Bx(1100) = X Mouse : By(1100) = Y Mouse:
+          Wait Vbl :
+        End If
+		If mise < score And mise < 10 And Bx(1107)>=(Bx(1100)+Bw(1100))=0 And (Bx(1107)+Bw(1107))<=Bx(1100)=0 And By(1107)>=(By(1100)+Bh(1100))=0 And (By(1107)+Bh(1107))<=By(1100)=0 And Mouse Key <> 0 :
+          mise = mise+1 :
+		  Ink 0,0 : Bar 245, 698, 35,35 : ink 1,0 : Play Audio 5
+          Paste Bob X Mouse, Y Mouse, 1100 : Bx(1100) = X Mouse : By(1100) = Y Mouse:
+          Wait Vbl :
+		End If
+        comp_mise = (Timer*1000) :
+      End If
+
+      V_cagniot_QFR = mise * cagniot_QFR
+      V_cagniot_QF = mise * cagniot_QF
+      V_cagniot_CARRE = mise * cagniot_CARRE
+      V_cagniot_FULL = mise * cagniot_FULL
+      V_cagniot_FLUSH = mise * cagniot_FLUSH
+      V_cagniot_QUINTE = mise * cagniot_QUINTE
+      V_cagniot_BRELAN = mise * cagniot_BRELAN
+      V_cagniot_PAIRES = mise * cagniot_PAIRES
+      V_cagniot_PAIRE = mise * cagniot_PAIRE
+
+      If delai_7 > 1000 And delai_6 > 500 And gagne=1 :
+        gagner :
+      End If
+
+	  If score>0 And delai_7 > 1200 And delai_6 > 500  And Mouse Key <> 0 And tir = 2 And Bx(1103)>=(Bx(1100)+Bw(1100))=0 And (Bx(1103)+Bw(1103))<=Bx(1100)=0 And By(1103)>=(By(1100)+Bh(1100))=0 And (By(1103)+Bh(1103))<=By(1100)=0 :
+        debut_jeu=0 : Play Audio 4
+        choix(1) = 0 : choix(2) = 0 : choix(3) = 0 : choix(4) = 0 : choix(5) = 0 :
+        coeur = 0 : carreau = 0 : pique = 0 : trefle = 0 : joker = 0 :
+        As1 = 0 : deux = 0 : trois = 0 : quatre = 0 : cinq = 0 : six = 0 : sept = 0 : huit = 0 : neuf = 0 : dix = 0 : valet = 0 : dame = 0 : roi = 0 :
+        couleur = 0 : paire = 0 : paire_10 = 0 : brelan = 0 :v_brelan=0: full = 0 : suite = 0 : carre = 0 : suite_couleur = 0 : suite_roi = 0 : suite_couleur_roi = 0 :
+        gain_paire_10 = 0 : gain_2paires = 0 : gain_brelan = 0 : gain_suite = 0 : gain_couleur = 0 : gain_full = 0 : gain_carre = 0 : gain_suite_couleur = 0 : gain_suite_couleur_roi = 0 :
+        tire_carte :
+        tir = 1 :
+        af_dos1 = 300 : af_dos2 = 500 : af_dos3 = 700 : af_dos4 = 900 : af_dos5 = 1100 :
+        comp_c1 = (Timer*1000) : comp_c2 = (Timer*1000) : comp_c3 = (Timer*1000) : comp_c4 = (Timer*1000) : comp_c5 = (Timer*1000) :
+        comp_clignot_gain = (Timer*1000) :
+        If score<mise :mise=score:End If
+        score = score-mise :
+      End If
+
+      If tir=2 And debut_jeu=0 And score > HitScore :
+          HitScore = total_score_max :
+      End If
+
+	  If score > total_score_max
+	    total_score_max = score
+      End If
+
+      Wait Vbl
+  Loop

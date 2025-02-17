@@ -1,0 +1,12 @@
+body 
+{
+	margin: 0px;
+	padding: 0px;
+}
+
+a{
+	outline: none;
+	text-decoration: none;
+	color: #008888;
+	font-size: 14px;
+}

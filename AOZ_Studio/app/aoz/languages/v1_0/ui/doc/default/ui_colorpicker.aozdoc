@@ -1,0 +1,23 @@
+<i>UI ColorPicker</i>
+<b>UI ColorPicker</b> xxxxxxx
+=
+@code
+// Display a default color picker
+UI ColorPicker "MyColorPicker"
+
+// To get the selected color value you can use the UI Value$ function
+Print UI Value$("MyColorPicker")
+
+// You can update the selected color by setting its value$ parameter
+UI ColorPicker "MyColorPicker", value$="#C4C4C4"
+
+// You can also use the UI Value command to update the selected color
+UI Value "MyColorPicker", value$="#FFAABB"
+
+// Example using the onChange$ event
+UI ColorPicker "MyColorPicker", x=50, y=50, width=200, height=75, value$="#000000", onChange$="MYCOLORCHANGE"
+Procedure MYCOLORCHANGE[ID$, VALUE$]
+Print "The selected color is " + VALUE$
+End Proc
+@code
+

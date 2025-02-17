@@ -1,0 +1,21 @@
+<i>Rol.b</i>
+<b>Rol.b</b> xxxxxxx
+=
+@code
+B = 1
+Rol.b 2,B
+Print B
+@code
+Here is an example routine:
+@code
+Curs Off : Locate 0,20 : Centre "Press a key to ROL the number"
+Locate 0,0 : Print "Binary version"
+Locate 0,4 : Print "Decimal version"
+B = 1 : Rem Set initial value
+Do
+Locate 0,2: Print Bin$(B,32) : Rem Display number in binary
+Locate 0,6: Print B;" "; : Rem Nine spaces
+Wait Key
+Rol.b 1,B : Rem Try ROL.W and ROL.L too
+Loop
+

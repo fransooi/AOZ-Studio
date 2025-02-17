@@ -1,0 +1,16 @@
+<i>BSave</i>
+<b>BSave</b> xxxxxxx
+=
+There a 3 different syntaxes for BSave. These are shown is the following example.
+@code
+Reserve as Data 5, 100  // Define memory bank number 5, 100 bytes long.
+Length=80
+Bsave "Test", 5    		// Save all of memory bank 5 to file "Test"
+Bsave "Test", Start (5) to Start(5) + 39 // Save the first 40 bytes of bank 5.
+Bsave "Test", Start (5), Length   // Save the first 80 (Length) bytes of memory bank 5
+@code
+At present, BSave saves the data locally to the browser cache. The difference between this
+file and a file saved as a normal memory bank is that while SAVE causes a special bank header to be written,
+containing information about the bank, this header is not written for a file when BSAVE is used. This means that
+LOAD cannot be used for this type of file. It is also not suitable for Object banks.
+

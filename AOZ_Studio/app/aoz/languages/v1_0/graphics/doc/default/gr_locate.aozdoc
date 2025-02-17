@@ -1,0 +1,18 @@
+<i>Gr Locate</i>
+<b>Gr Locate</b> xxxxxxx
+=
+The graphics cursor sets the starting point for most drawing operations. To establish this point, use GR LOCATE to
+position the graphics cursor at your chosen coordinates.
+
+For example:
+Note that the coordinate parameters are omitted from the Circle instruction
+@code
+Cls 1
+X=960 : Y=10
+For R=10 To 490 Step 20
+Gr Locate X,Y+R
+Circle ,,R
+Next R
+@code
+
+

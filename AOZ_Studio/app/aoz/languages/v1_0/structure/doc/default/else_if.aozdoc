@@ -1,0 +1,18 @@
+<i>Else If</i>
+<b>Else If</b> xxxxxxx
+=
+ELSE IF allows you to extend structured test to a higher level... If non of the conditions in the sections above it were true, it evaluates the condition and performs the code inside when the result is TRUE.
+
+@code
+Input "Please nter your age ";AGE
+If AGE < 10
+Print "Hey kid!"
+Else If AGE < 20
+Print "Hey dude!"
+Else If AGE < 60
+Print "Bonjour Monsieur!"
+Else
+Print "Hello grand-pa!"
+End If
+@code
+

@@ -1,0 +1,16 @@
+<i>Leaderboard$</i>
+<b>Leaderboard$</b> xxxxxxx
+=
+There are 3 items of data for each leaderboard entry.
+
+itemName$="playername" - returns the name of the player
+itemName$="value" - returns the value for the leaderboard entry
+itemName$="id" - returns the unique identifier for the player
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+Leaderboard Load leaderboardName$="Level 1", onLoaded$="ON_LEADERBOARD_LOADED"
+
+// Returns the player name at the first position in the leaderboard
+Print Leaderboard$(itemIndex = 0, itemName$="playerName")
+@code
+

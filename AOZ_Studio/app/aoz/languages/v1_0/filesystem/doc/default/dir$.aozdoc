@@ -1,0 +1,10 @@
+<i>Dir$</i>
+<b>Dir$</b> xxxxxxx
+=
+DIR$ can hold the directory name that is to be used as the starting point for further disc operations, like this:
+@code
+Dir$="AOZ Resources:Sounds/"
+Print Dir$
+@code
+
+

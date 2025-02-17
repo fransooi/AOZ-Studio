@@ -1,0 +1,13 @@
+<i>Ink</i>
+<b>Ink</b> xxxxxxx
+=
+used to specify which colour is to be used for subsequent drawing, and the number of the colour register is set like
+this:
+@code
+Cls: Ink 5
+Draw To 319,199
+@code
+The INK instruction can also be used to set patterns for filling shapes, as well as colours for borders around shapes,
+and this will be explained later.
+
+

@@ -1,0 +1,5 @@
+<i>CUp</i>
+<b>CUp</b> xxxxxxx
+=
+This instruction will force a scrolling of all text down if the cursor is already on the first line and scrolling is enabled.
+

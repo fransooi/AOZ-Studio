@@ -1,0 +1,35 @@
+<i>Y Hard</i>
+<b>Y Hard</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+These functions convert screen coordinates into hardware coordinates, relative to the current screen. As with X
+SCREEN and Y SCREEN, an optional screen number can be given, and coordinates will be returned relative to that
+screen.
+
+With all four of the above functions, sensible values can only be returned when the relevant screen has been fully
+initialised. Both the SCREEN OPEN and SCREEN DISPLAY commands only come into effect from the next
+vertical blank, and the following examples demonstrate that the correct coordinate values (in this case 128,50) are
+only returned after a WAIT VBL command.
+@code
+Screen Open 0,320,255,16,Lowres
+Print X Hard(0,0); Y Hard(0,0)
+@code
+Now try the correct version:
+@code
+Screen Open 0,320,255,16,Lowres
+Wait Vbl
+Print X Hard(0,0); Y Hard(0,0)
+@code
+The default screen is initially located at hardware coordinates (128,50), and if you find the whole business of
+hardware coordinates and screen coordinates tiresome, you can bypass the entire conversion system.
+
+By setting the HOT SPOT of your Sprite images to (-128,-50), the reference point for all position calculations is
+removed to the far corner of the display. Once an image has been prepared in this way, it can be assigned to a Sprite
+and moved around using normal screen coordinates. For example:
+@code
+Hot Spot 1,-128,-50: Rem Set up hot spot
+Sprite 8,160,100,1 : Rem Sprite 8 to screen coords 160,100
+@code
+
+

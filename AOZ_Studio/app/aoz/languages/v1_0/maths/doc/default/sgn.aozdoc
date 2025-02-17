@@ -1,0 +1,9 @@
+<i>Sgn</i>
+<b>Sgn</b> xxxxxxx
+=
+The SGN function returns a value representing the sign of a number. The three possible results are these:
+@code
+-1 : the value is negative
+1 : the value is positive
+0 : if the value is zero
+

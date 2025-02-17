@@ -1,0 +1,609 @@
+{
+    bob_commands:
+    { 
+        name: "Bob Commands"
+        intro:"TODO"
+        conclusion:""
+        commands: 
+        {
+
+
+            "bob":
+            [
+                The BOb command draws the specified Bob image from the Object Bank at the current cursor position. The existence of any hot spot will be ignored. Colour zero will normally be treated as transparent, but this can be
+changed with NO MASK. All coordinates will be measured relative to the top left-hand corner.
+
+            ]
+            "bob_off":
+            [
+                Use this command to remove all Bobs from the screen simultaneously. If a Bob number is specified, only that Bob will be extinguished. For example:
+                '''
+                ~~~                
+		   Bob Off 1: Rem Remove Bob1 only
+		   Bob Off : Rem Remove all Bobs from screen
+                ~~~
+                '''
+The BOB OFF instruction also turns off any animation or collision routines associated with these Bobs.
+            ]
+            "bob_update_off": //TODO Same txt as update_on
+            [
+		
+                BOB UPDATE performs all Bob movements in a single, mighty burst, so all objects are moved at the same instant in your program. The resulting movement effects are now incredibly smooth, even with dozens of objects on screen at once. BOB UPDATE is extremely easy to use, as the following technique explains.
+
+- First, turn off the automatic system with BOB UPDATE OFF
+- Execute your main loop as normal.
+- Now call a BOB UPDATE command at the point when objects are to be drawn on screen. This command
+automatically flips the results onto the display, using the internal equivalent of a SCREEN SWAP.
+- Finally, wait for the updates to be completed, by using WAIT VBL.
+""
+BOB UPDATE is now used as the standard technique in the vast majority of AMOS arcade games.
+""
+If you need to restore the re-drawing system to its default status, BOB UPDATE ON sets the situation back to
+normal. One word of warning though, if you are already swapping the screens manually with SCREEN SWAP, use
+BOB UPDATE carefully, because it will switch between the logical and physical screens immediately after your
+Bobs have been updated. The simplest remedy for any problems this may cause is to use BOB CLEAR and BOB
+DRAW instead. These are explained later.
+            ]
+            "bob_update_on": //TODO Same txt as update_off
+            [
+                BOB UPDATE performs all Bob movements in a single, mighty burst, so all objects are moved at the same instant in your program. The resulting movement effects are now incredibly smooth, even with dozens of objects on screen at once. BOB UPDATE is extremely easy to use, as the following technique explains.
+""
+- First, turn off the automatic system with BOB UPDATE OFF
+- Execute your main loop as normal.
+- Now call a BOB UPDATE command at the point when objects are to be drawn on screen. This command
+automatically flips the results onto the display, using the internal equivalent of a SCREEN SWAP.
+- Finally, wait for the updates to be completed, by using WAIT VBL.
+""
+BOB UPDATE is now used as the standard technique in the vast majority of AMOS arcade games.
+""
+If you need to restore the re-drawing system to its default status, BOB UPDATE ON sets the situation back to
+normal. One word of warning though, if you are already swapping the screens manually with SCREEN SWAP, use
+BOB UPDATE carefully, because it will switch between the logical and physical screens immediately after your
+Bobs have been updated. The simplest remedy for any problems this may cause is to use BOB CLEAR and BOB
+DRAW instead. These are explained later.
+            ]
+            "bob_clear": //TODO Same txt as bob_draw
+            [
+                This pair of commands is used to synchronise Bob updates with complex screen movements, and generate superbly smooth scrolling screen effects. The technique is achieved by the following steps.
+- Remove all Bobs from the logical screen display with BOB CLEAR. Background areas are copied from their
+invisible hiding places in memory, and the display is returned to its original condition.
+- Each Bob is now examined in turn, and checked to see if it has been repositioned. If so, the area beneath the
+new coordinates are copied invisibly, as they will be needed to return the screen back to normal, when the
+Bob is next moved. You can now perform your drawing operations as required, and move your Bobs to any
+point on the screen.
+- Now use BOB DRAW to re-draw any Bobs that have moved at their new screen coordinates, using the
+appropriate image from the Object Bank.
+""
+Note that BOB CLEAR and BOB DRAW will only work on the current logical screen, so if DOUBLE BUFFER has
+been activated, a SCREEN SWAP command will be needed to call the relevant display, as follows:
+
+                '''
+                ~~~                
+		Screen Swap : Wait Vbl
+                ~~~
+                '''
+Also remember to turn off the automatic updating system completely before use. Here is the correct procedure.
+- Turn off the AUTOBACK system to stop the synchronisation between your graphics and Bobs, like this:
+                '''
+                ~~~                
+		Autoback 0
+                ~~~
+                '''
+- Now that all graphical operations have been forced to work with the logical screen, turn off the standard
+updating system, with BOB UPDATE OFF.
+- Next add a BOB CLEAR command at the start of your main loop. You can now draw your graphics on
+screen, and move your objects as required.
+- Finally, re-draw your objects at their new positions using BOB DRAW.
+If you are using double buffering, you must make sure that there is a genuine connection between the logical and
+physical screens. To achieve smooth graphics, there must be a sensible progression from screen to screen, otherwise
+flickering distortions will be displayed.
+""
+When scrolling the playing area of a computer game, it is often possible to ensure that screens are already in step, so BOB CLEAR and BOB DRAW can be used without any problems. In other situations, you may need to make
+radical changes from screen to screen, so ensure that these are made both copies of the current screen.
+            ]
+            "bob_draw": //TODO Same txt as bob_clear
+            [
+This pair of commands is used to synchronise Bob updates with complex screen movements, and generate superbly smooth scrolling screen effects. The technique is achieved by the following steps.
+- Remove all Bobs from the logical screen display with BOB CLEAR. Background areas are copied from their
+invisible hiding places in memory, and the display is returned to its original condition.
+- Each Bob is now examined in turn, and checked to see if it has been repositioned. If so, the area beneath the
+new coordinates are copied invisibly, as they will be needed to return the screen back to normal, when the
+Bob is next moved. You can now perform your drawing operations as required, and move your Bobs to any
+point on the screen.
+- Now use BOB DRAW to re-draw any Bobs that have moved at their new screen coordinates, using the
+appropriate image from the Object Bank.
+""
+Note that BOB CLEAR and BOB DRAW will only work on the current logical screen, so if DOUBLE BUFFER has
+been activated, a SCREEN SWAP command will be needed to call the relevant display, as follows:
+
+                '''
+                ~~~                
+		Screen Swap : Wait Vbl
+                ~~~
+                '''
+Also remember to turn off the automatic updating system completely before use. Here is the correct procedure.
+- Turn off the AUTOBACK system to stop the synchronisation between your graphics and Bobs, like this:
+                '''
+                ~~~                
+		Autoback 0
+                ~~~
+                '''
+- Now that all graphical operations have been forced to work with the logical screen, turn off the standard
+updating system, with BOB UPDATE OFF.
+- Next add a BOB CLEAR command at the start of your main loop. You can now draw your graphics on
+screen, and move your objects as required.
+- Finally, re-draw your objects at their new positions using BOB DRAW.
+- If you are using double buffering, you must make sure that there is a genuine connection between the logical and
+physical screens. To achieve smooth graphics, there must be a sensible progression from screen to screen, otherwise
+flickering distortions will be displayed.
+""
+When scrolling the playing area of a computer game, it is often possible to ensure that screens are already in step, so BOB CLEAR and BOB DRAW can be used without any problems. In other situations, you may need to make
+radical changes from screen to screen, so ensure that these are made both copies of the current screen.
+            ]
+            "limit_bob":
+            [
+                This command keeps all Bobs restricted to moving inside an invisible rectangular area of the screen, whose coordinates are set by the usual top left to bottom right-hand corner coordinates. If LIMIT BOB is followed with a Bob number, then only that Bob becomes restricted by the boundaries of the rectangle.
+""
+Note that the width of the rectangle must always be wider than the width of the Bob, and that the x -coordinates are
+always rounded up to the nearest 16-pixel boundary. To keep Bob number 1 trapped inside an area, you would use
+something like this:
+                '''
+                ~~~        
+		        Limit Bob 1,10,0 To 320,100
+
+                ~~~
+                '''
+Remember that a Bob must be called up with the BOB command before LIMIT BOB is used, otherwise the
+limitation will have no effect. To restore a Bob's freedom to move around the whole screen, use the command
+without any coordinates, like this:
+                '''
+                ~~~                
+		   Limit Bob
+                ~~~
+                '''
+            ]
+            "set_bob":
+            [
+               SET BOB is used to change the drawing mode used to display a particular Blitter Object. It is best used before displaying a Bob on the screen. This command has several parameters, of which the first is simply the number of the Bob to be affected.
+""
+The second parameter is a number that sets the mode of the background, in other words, the way that graphics
+underneath the Bob are to be re-drawn. There are three alternative background mode settings. A value of zero
+automatically replaces the screen background beneath the Bob, after it moves away. This is the standard drawing
+system, and gives a smooth animation effect when the Bob is moved across the screen.
+""
+If the background is a positive number, then the original background graphics are completely forgotten when the
+Bob moves away, and the area beneath the Bob is replaced by a solid block of colour. The colour is calculated with
+this formula:
+                '''
+                ~~~                
+		Colour = Background-1
+                ~~~
+                '''
+                So the following line sets the mode of Bob 1, and draws a block of graphics in colour 9 (calculated as 10-1) whenever the Bob is moved. Notice how commas must be included if other parameter values are omitted.
+                '''
+                ~~~                
+		   Set Bob 1,10,,
+                ~~~
+                '''
+Since this operation is much faster than the standard system, it is recommended for bursts of extra speed. It can be
+used for moving Bobs across areas such as clear blue sky, and is also extremely effective when operated with the
+various rainbow effects.
+""
+The final alternative background setting is to use a negative value. This turns off the re-drawing process, allowing
+you to fill the old background areas with any colours or patterns you like, using the standard AOZ
+graphics commands.
+""
+After the two parameters that set the Bob number, and the background mode, SET BOB requires a parameter to
+establish which of the screen planes is to be used for the Bob. The planes setting is a bit-map, consisting of a binary number where each digit represents one plane of the screen, and each plane represents one bit of the final colour to be displayed on screen. The numbering system works like this:
+                '''
+                ~~~                
+		Plane: 543210
+		Digit: %111111
+                ~~~
+                '''
+By changing these planes, selected colours can be omitted from the Bob when it is drawn on screen. For example:
+                '''
+                ~~~                
+		  Set Bob 1,0,$000111 : Rem Display bits drawn in colours 0 to 7
+		  Set Bob 1,0,$111111 : Rem Display all bit-planes
+                ~~~
+                '''
+The last SET BOB parameter is another bit pattern, that selects one of 255 possible Miler modes used to draw Bobs
+on screen. This can set a mask, so that colour zero is transparent, and a full description of the available modes is
+given at the beginning of Chapter 6.2, in the SCREEN COPY section. In fact, the mask parameter is usually set to
+one of two values:
+""
+%11100010 if no mask is to be used.
+""
+%11001010 if the Bob is to be used with a mask, in other words, if colour zero is to be transparent.
+""
+So the following line would set Bob 1 moving across the original screen colours, with a mask set:
+                
+                '''
+                ~~~                
+		   Set Bob 1,0,%111111, %11001010
+                ~~~
+                '''
+                Advanced users may find the following information useful:
+                '''
+                ~~~                
+		Blitter Source 		Purpose
+			A 		Blitter Mask
+			B 		Blitter Object
+			C 		Destination Screen
+                ~~~
+                '''
+            ]
+            "paste_bob":
+            [
+                PASTE BOB takes an image held in the Object Bank, and draws it straight onto the current screen. Unlike the PUT BOB command, the image is drawn immediately, so there is no need to add the WAIT VBL commands before
+proceeding.
+""
+It is important to note that the coordinates for the given image number are measured from the top left-hand corner of the image, and take no account of the current hot spot setting!"
+""
+PASTE BOB is just like any other graphics instruction, so it does not need a double buffered screen. It can be used
+to generate a range of extremely fast graphical operations, and it is also useful for mapping complex displays in
+scrolling arcade games. Here is an example:
+                '''
+                ~~~                
+                Flash Off : Curs Off : Cis 0
+                Rem The following Palette values go on one line
+                Palette 0,$100,$200,$300,$400,$500.$600,$700,$800,
+                $900,$A00,$B00,$000,$D00,$E00,$F00
+                Rem Create some coloured circles for images
+                For C=1 To 15
+                ----Ink C : Circle 16,16,15 : Paint 16,16
+                ----Get Bob C,0,0 To 32,32
+                Next C
+                Do
+                    Rem Choose a random circle and choose its position
+                    N=Rnd(14)+1 : X=Rnd(320) : Y=Rnd(200)
+                    Rem Paste image on screen at new coordinates
+                    Paste Bob X,Y,N
+                Loop
+                ~~~
+                '''
+            ]
+            "bob_alpha":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bob_show":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bob_hide":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bob_scale":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bob_rotate":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bob_skew":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "put_bob":
+            [
+                The PUT BOB command takes the Bob whose number is given and fixes a permanent copy of its image on the screen, at the current position. This is achieved by preventing the background area beneath the Bob from being redrawn. Note that after the image has been copied, the original Bob can be animated and moved with no ill effects.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "priority_on": //TODO Same text as priority_off
+            [
+                When PRIORITY ON is used, Bobs with the highest y-coordinates take priority on the screen. It is usually best to set hot spots at the bottom of Bobs to exploit this priority, and some superb perspective effects can be created. All that is needed to re-set the original Bob number priorities is to use the PRIORITY OFF command.
+ 
+            ]
+            "priority_off": //TODO Same text as priority_on
+            [
+                When PRIORITY ON is used, Bobs with the highest y-coordinates take priority on the screen. It is usually best to set hot spots at the bottom of Bobs to exploit this priority, and some superb perspective effects can be created. All that is needed to re-set the original Bob number priorities is to use the PRIORITY OFF command.
+
+            ]
+            "x_bob": //TODO Same text as y_bob
+            [
+                It is not difficult to keep track of Bobs under normal circumstances, but if Bobs are moved with AMAL, their coordinates can vary unpredictably. In which case, the X BOB and Y BOB functions may be used to get a snapshot of their current position, by returning the screen coordinates of your selected Bob. Specify the number of the chosen Bob on screen, and the appropriate coordinate will be returned, as measured from the top left-hand corner of the screen to the hot spot of the current image. For example:
+                '''
+                ~~~                
+		   Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+		   Curs Off : Cls 0: Rem Set up screen
+		   Flash Off : Get Bob Palette : Rem Grab Bob colours from image bank
+		   Double Buffer : Rem Engage double buffering
+		   Autoback 1: Rem Engage fast drawing mode
+		   Do
+			Rem Move Bob1 with mouse
+			Rem Convert hardware coords to screen coords
+			Bob 1,X Screen(X Mouse),Y Screen(Y Mouse),1
+			Rem Print new location on screen
+			Locate 0,0 : Print X Bob(1);" ";Y Bob(1);" ";
+	           Loop
+                ~~~
+                '''
+            ]
+            "y_bob": //TODO Same text as x_bob
+            [
+                It is not difficult to keep track of Bobs under normal circumstances, but if Bobs are moved with AMAL, their coordinates can vary unpredictably. In which case, the X BOB and Y BOB functions may be used to get a snapshot of their current position, by returning the screen coordinates of your selected Bob. Specify the number of the chosen Bob on screen, and the appropriate coordinate will be returned, as measured from the top left-hand corner of the screen to the hot spot of the current image. For example:
+                '''
+                ~~~                
+		   Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+		   Curs Off : Cls 0: Rem Set up screen
+		   Flash Off : Get Bob Palette : Rem Grab Bob colours from image bank
+		   Double Buffer : Rem Engage double buffering
+		   Autoback 1: Rem Engage fast drawing mode
+		   Do
+			Rem Move Bob1 with mouse
+			Rem Convert hardware coords to screen coords
+			Bob 1,X Screen(X Mouse),Y Screen(Y Mouse),1
+			Rem Print new location on screen
+			Locate 0,0 : Print X Bob(1);" ";Y Bob(1);" ";
+	           Loop
+                ~~~
+                '''
+            ]
+            "i_bob":
+            [
+                I BOB returns the number of the image currently assigned to the specified Bob number. If the Bob number you want to examine does not exist, an illegal function error will be given, so it is vital to define the Bob correctly before calling I BOB. Here is an example:
+                '''
+                ~~~                
+		   Load "AMOSPro Tutorial:Objects/Bobs.abk"
+		   Flash Off : Get Bob Palette : Double Buffer : Autoback 0
+		   Bob 1,160,100,1: Rem Display Bob 1 at centre of screen
+		   Do
+			For IMAGE=1 To Length(1) : Rem Create simple animation
+			  Rem Move Bob 1 with the mouse
+			  Bob 1,X Screen(X Mouse),Y Screen(Y Mouse),IMAGE
+			  For W=0 To 3 : Wait Vbl : Next W
+			  Rem Display image number on screen
+			  Locate 0,0 : Print "Image ";I Bob(1);" ";
+		   	Next IMAGE
+         	   Loop
+                ~~~
+                '''
+            ]
+            "i_bob$":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "priority_reverse_on": //TODO Same text as priority_reverse_off
+            [
+                The PRIORITY REVERSE ON command changes around the entire priority table based on Bob numbers. Not only does it give a lower Bob number priority over a higher Bob number, when used with PRIORITY ON it also gives
+priority to a Bob with the lowest y-coordinate. As you would expect, PRIORITY REVERSE OFF sets the priority
+system back to normal.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "priority_reverse_off": //TODO Same text as priority_reverse_on
+            [
+                The PRIORITY REVERSE ON command changes around the entire priority table based on Bob numbers. Not only does it give a lower Bob number priority over a higher Bob number, when used with PRIORITY ON it also gives
+priority to a Bob with the lowest y-coordinate. As you would expect, PRIORITY REVERSE OFF sets the priority
+system back to normal.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "is_bob":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "get_bob":
+            [
+                This command grabs a selected part from the current screen and copies it straight into the Object Bank. After giving the image number to be created, set the area to be grabbed from the top left-hand corner to the bottom right-hand coordinates. If your chosen image number already exists, the existing image will be replaced by the new picture, otherwise the new picture will be added to the bank.
+""
+An optional screen number may be given immediately after the GET BOB command, allowing an image to be
+grabbed from a specific screen. Here is an example:
+                '''
+                ~~~                
+		   Curs Off : Cls 0 : Double Buffer : Flash Off
+		   Text 50,10, "AOZ Basic!"
+		   Get Bob 1,50,0 To 250,20
+		   For B=0 To 180
+		     Bob 1,50,B,1
+		     Wait Vbl
+		   Next B
+                ~~~
+                '''
+GET BOB is an extremely useful command, allowing any section of a screen to be loaded into a Bob, and then
+manipulated with the AMAL system. You can even write your own object editor from start to finish! It is also
+possible to create and modify Bob images from AOZ Basic. This allows, you to produce stand-alone
+program listings that will run without the need for external image files. Try the next example:
+                '''
+                ~~~                
+		   Double Buffer : Flash Off : Curs Off
+		   Rem Draw an expanding circle and grab it as a Bob
+		   For C=1 To 15
+			    Ink 5 :Circle 16,16,C: Paint 16,16
+			    Get Bob C,0,0 To 32,32
+			    Cls 0,0,0 To 32,32
+		   Next C
+		   Rem Animate new Bob image
+		   Do
+			    Add IMAGE,1
+			    If IMAG  15 Then IMAGE=1
+			    For W=0 To 4: Wait Vbl : Next W: Rem Slow down animation
+			    Rem Assign next image in sequence to Bob 1
+			    Bob 1,X Screen(X Mouse),Y Screen(Y Mouse),IMAGE
+		   Loop
+                ~~~
+                '''
+            ]
+            "bob_add":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bob_move":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bob_move_x":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "bob_move_y":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_move_off":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_move_on":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_move_freeze":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_movon":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_anim":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_anim_off":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_anim_on":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_anim_freeze":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_collide_with":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+	    "bob_collide":
+            [
+                "TODO"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+        }
+    }
+}

@@ -1,0 +1,16 @@
+<i>Key Speed</i>
+<b>Key Speed</b> xxxxxxx
+=
+During editing, a character or cursor movement is repeated for as long as its key is held down. This can be
+frustrating if it causes unwanted characters or cursor movements. KEY SPEED lets you change the repeat rate while
+a key is held down, to your own particular preference. State the time-lag you want to use between pressing a key
+and the start of the repeat sequence, measured in 50ths of a second.Follow this by the delay-speed between each character you type, also in 50ths of a second. This line will slow
+everything down:
+@code
+Key Speed 50,50: Rem One second delay
+@code
+The following setting may well prevent you from editing at all!"
+@code
+Key Speed 1,1: Rem Ridiculously fast
+@code
+

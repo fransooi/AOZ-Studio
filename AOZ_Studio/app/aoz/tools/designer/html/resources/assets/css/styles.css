@@ -1,0 +1,149 @@
+.ui_designer__layer1 {
+	z-index: 951 !important;
+}
+
+.ui_designer__layer2 {
+	z-index: 952 !important;
+}
+
+.ui_designer__layer3 {
+	z-index: 953 !important;
+}
+
+.ui_designer__layer4 {
+	z-index: 954 !important;
+}
+
+.ui_designer__layer5 {
+	z-index: 955 !important;
+}
+
+.ui_iframe_no_events {
+	pointer-events: none;
+}
+
+.ui_adornment {
+	position: absolute;
+	display: 'none';
+}
+
+.ui_adornment_label {
+	z-index: 950;
+	color: #ababab;
+}
+
+.ui_noselect {
+-webkit-touch-callout: none;
+  -webkit-user-select: none;
+   -khtml-user-select: none;
+	 -moz-user-select: none;
+	  -ms-user-select: none;
+		  user-select: none;
+}
+
+.ui_adornment_right {
+   position: absolute;
+   right: -10px;
+   top: 0px;
+   bottom: 0px;
+   width: 10px;
+   z-index: 950;
+   border-left: 3px dashed darkseagreen;
+}
+
+.ui_adornment_left {
+   position: absolute;
+   left: -10px;
+   top: 0px;
+   bottom: 0px;
+   width: 10px;
+   z-index: 950;
+   border-right: 3px dashed darkseagreen;
+}
+
+.ui_adornment_bottom {
+   position: absolute;
+   left: 0px;
+   bottom: -10px;
+   right: 0px;
+   height: 10px;
+   z-index: 950;
+   border-top: 3px dashed darkseagreen;
+}
+
+.ui_adornment_top {
+   position: absolute;
+   left: 0px;
+   top: -10px;
+   right: 0px;
+   height: 10px;
+   z-index: 950;
+   border-bottom: 3px dashed darkseagreen;
+}
+
+.ui_adornment_delete {
+	position: absolute;
+	top: -37px;
+	left: 0px;
+	font-size: 25px;
+	z-index: 950;
+	cursor: pointer;
+}
+
+.ui_adornment_duplicate {
+	position: absolute;
+	top: -34px;
+	left: 31px;
+	font-size: 20px;
+	z-index: 950;
+	cursor: pointer;
+}
+
+.ui_adornment_horizontal_center {
+	position: absolute;
+	top: -34px;
+	left: 62px;
+	font-size: 20px;
+	z-index: 950;
+	cursor: pointer;
+	transform: rotate(90deg);
+	color: #ababab;
+}
+
+.ui_adornment_vertical_center {
+	position: absolute;
+	top: -34px;
+	left: 93px;
+	font-size: 20px;
+	z-index: 950;
+	cursor: pointer;
+	color: #ababab;
+}
+
+.ui-code-tag {
+	color: #D48D5C
+}
+
+.ui-code-value {
+	color: #9351D7
+}
+
+.ui-code-key {
+	color: #96CBFE
+}
+
+.ui-code-label {
+	color: #C5C8C6
+}
+
+.ui-code-quote {
+	color: #E4BD68
+}
+
+.ui-code-op {
+	color: #CC6666
+}
+
+.ui-code-comment {
+	color: #19A256
+}

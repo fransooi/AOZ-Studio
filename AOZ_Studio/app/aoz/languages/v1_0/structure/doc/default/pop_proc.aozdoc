@@ -1,0 +1,28 @@
+<i>Pop proc</i>
+<b>Pop proc</b> xxxxxxx
+=
+The POP PROC instruction provides you with a fast getaway, if you ever find yourself in need of escape.
+
+Try this:
+@code
+ESCAPE
+Procedure ESCAPE
+For PRISON=1 To 1000000000
+If PRISON=10 Then Pop Proc
+Print "I am abandoned."
+Next PRISON
+End Proc
+Print "I'm free!"
+@code
+AOZ also allow you to return values with POP PRO, which might proove handy in some cases.
+@code
+Print "1 + 2 = "; REALLY$[ 1, 2 ]
+
+Procedure REALLY$[ a, b ]
+result = a + b
+If result = 3 Then Pop Proc[ "Yes!" ]
+End Proc[ "No!" ]
+@code
+
+Please note that to have procedure return string, their name must end with the $ character.
+

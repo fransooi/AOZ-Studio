@@ -1,0 +1,15 @@
+<i>Doke</i>
+<b>Doke</b> xxxxxxx
+=
+The DOKE command moves a number from 0 to 65535 into the memory location at the specified address.
+
+The address should be resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset to the address. Normal computer memory is inaccessible.
+
+This example reserves a memory bank and poke random numbers in it...
+@code
+Reserve As Work 10, 1000
+For A = 0 To Length( 10 ) Step 2
+Doke Start( 10 ) + A, Rnd( 65536 )
+Next
+@code
+

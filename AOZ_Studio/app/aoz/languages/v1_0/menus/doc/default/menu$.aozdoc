@@ -1,0 +1,29 @@
+<i>Menu$</i>
+<b>Menu$</b> xxxxxxx
+=
+To create a simple menu, its title line must first be defined.
+Each heading in a title line created with MENU$ must be assigned its own number.
+
+The title at the left-hand edge of the title line is represented by 1, the next title by 2, and so on, from left to right.
+
+The characters in your title string hold the name of the numbered title. This example sets up a menu title line offering two titles, and you should note the use of the spaces to separate titles when they appear in the title line:
+@code
+Menu$(1)," Action"
+Menu$(2)," Mouse"
+@code
+The second type of usage of MENU$ defines a set of options that will be displayed in the vertical menu bar. The
+brackets after MENU$ contain two parameters, the first is the number of the menu heading that your option is to be
+displayed beneath, followed by the option number you want to install in the vertical menu bar. All options are
+numbered downwards from the top of the menu, starting from 1. The option string holds the name of your new
+option, and can consist of any text you choose. The following lines could be added to the last example above:
+@code
+Rem Action menu has one option
+Menu$(1,1)=" Quit " : Rem Ensure three spaces after Quit
+Rem Mouse menu has three options
+Menu$(2,1)="Arrow " : Rem Ensure five spaces after Arrow
+Menu$(2,2)="Cross-hair"
+Menu$(2,3)="Clock " : Rem Ensure five spaces after Clock
+@code
+That specifies your list of alternatives for the "Action" and "Mouse" menus. Before this program can be run, it must
+first be activated.
+

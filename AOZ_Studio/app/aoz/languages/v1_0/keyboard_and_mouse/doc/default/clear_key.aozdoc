@@ -1,0 +1,11 @@
+<i>Clear Key</i>
+<b>Clear Key</b> xxxxxxx
+=
+When an appropriate character is entered from the keyboard, its Ascii code is placed in an area of memory called
+the keyboard buffer. This buffer is then examined by the INKEY$ function in order to report on key presses.
+CLEAR KEY completely erases this buffer and re-sets the keyboard, making it a very useful command at the
+beginning of a program when the keyboard buffer may be filled with unwanted information. CLEAR KEY can also
+be called immediately before a WAIT KEY command, to make sure that the program waits for a fresh key-press
+before proceeding.
+
+

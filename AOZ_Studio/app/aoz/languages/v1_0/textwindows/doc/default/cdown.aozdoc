@@ -1,0 +1,5 @@
+<i>CDown</i>
+<b>CDown</b> xxxxxxx
+=
+This instruction will force a scrolling of all text up if the cursor is already on the last line and scrolling is enabled.
+

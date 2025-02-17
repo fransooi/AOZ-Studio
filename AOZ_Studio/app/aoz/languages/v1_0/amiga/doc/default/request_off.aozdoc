@@ -1,0 +1,7 @@
+<i>Request OFF</i>
+<b>Request OFF</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+If this instruction is used, AOZ Studio will automatically select the [CANCEL] button of the requester, and the actual requester will not be displayed. This is ideal for error trapping Within a program.
+

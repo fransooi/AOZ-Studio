@@ -1,0 +1,435 @@
+// #######################################################################
+// Firebase Authentication Demo V1.0
+// By Phil Bell
+// Created April 2022
+// phil@aozwithphil.com
+// ############################################################################
+// Uses The Google Firebase Platform for authentication and data storage
+// The Google Firestore Database is a NoSQL cloud database
+//
+// Login to your Firebase console here (you can create a free account)
+// https://console.firebase.google.com/
+//
+// Check out the Firebase documentation here:
+// https://firebase.google.com/docs/firestore
+//
+// Download the following guide for help with setting up a Firebase project
+// https://aozwithphil.com/download/AOZFirebaseQuickStartGuide.pdf
+// ############################################################################
+
+#useAssetsResources:False
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#fps:false
+#clean:true
+
+Break Off: Curs Off
+
+BUSY_STATE = false
+
+// Initialise Firebase
+// *********************************************************************
+// ** IMPORTANT !! DO NOT USE THESE CREDENTIALS IN YOUR OWN PROJECTS  **
+// *********************************************************************
+Firebase Init apiKey$ = "AIzaSyAFtkfhfu9lfZA_DEJWoVVF8j_0CNPFm2M", authDomain$ = "authenticationdemo-fa54d.firebaseapp.com", projectId$ = "authenticationdemo-fa54d", storageBucket$ = "authenticationdemo-fa54d.appspot.com", messagingSenderId$ = "457664453279", appId$ = "1:457664453279:web:0b17ce6b6d0cb6536da0aa"
+
+If FirebaseAuth AuthState() = false
+	// User is not signed in
+	Goto SIGN_IN
+End If
+
+MAIN:
+	UI Cls
+	SignedInUI
+	DisplayUserDetails
+	Do
+		If FirebaseAuth AuthState() = false
+			// User is not signed in or has signed out
+			Goto SIGN_IN
+		End If
+
+		// Show an overlay when Firebase is busy
+		If Firebase IsBusy() = true And BUSY_STATE = false
+			BUSY_STATE = true
+			UI TextBlock "txtBusyBackground", x=0, y=0, width=1920, height=1080, content$="", group$="ui_busy"
+			UI Image "imgBusy", x=1920/2+25, y=30, width=50, height=50, src$="resources/assets/loading.gif", group$="ui_busy"
+		End If
+
+		// Hide the overlay
+		If Firebase IsBusy() = false And BUSY_STATE = true
+			BUSY_STATE = false
+			UI Cls "ui_busy"
+		End If
+
+		Wait Vbl
+	Loop
+
+SIGN_IN:
+	UI Cls
+	LoginUI
+	UI Focus "txtEmail"
+	HTML Element "txtEmail", OnKeyDown$ = "ON_SIGN_IN_KEY_DOWN"
+	HTML Element "txtPassword", OnKeyDown$ = "ON_SIGN_IN_KEY_DOWN"
+
+	// Wait here until the user is signed in
+	Do
+		If FirebaseAuth AuthState() = true
+			Goto MAIN
+		End If
+
+		Wait Vbl
+	Loop
+
+Procedure ON_USE_BUILT_IN_UI_CLICK[ID$]
+	UI Cls
+	UI TextBlock "lblTitle", x=40, y=20, width=467, height=81, fontSize=29, content$="Firebase Authentication Demo"
+	UI TextBlock "lblInfo", x=40, y=100, height=250, content$="NOTE !!! Additional configuration is required in the Authentication section in the Firebase console for the specified providers.</br></br>ONLY google, github, email and anonymous providers have been configured for this demo application.", class$="text-muted"
+	UI Button "btnBack", x=40, y=350, width=150, height=50, content$="Back", class$="btn btn-secondary", onClick$="ON_BACK_CLICK"
+
+	// NOTE !!!
+	// Additional configuration is required in the Authentication section in the Firebase console for the specified providers
+	// ONLY google,github,email,anonymous have been configured for this demo application
+	// signInFlow$ is optional, remove if you dont want to signin flow to be displayed in a popup window
+	FirebaseAuth SignInWithBuiltInUI provider$="google,github,email,anonymous,twitter,facebook,microsoft,apple", signInFlow$="popup"
+End Proc
+
+Procedure ON_BACK_CLICK[ID$]
+	FirebaseAuth HideBuiltInUI
+	UI Cls
+	LoginUI
+	UI Focus "txtEmail"
+	HTML Element "txtEmail", OnKeyDown$ = "ON_SIGN_IN_KEY_DOWN"
+	HTML Element "txtPassword", OnKeyDown$ = "ON_SIGN_IN_KEY_DOWN"
+End Proc
+
+Procedure ON_REGISTER_KEY_DOWN[KEYCODE]
+	If KEYCODE = 13
+		ON_REGISTER_CLICK
+	End If
+End Proc
+
+Procedure ON_REGISTER_CLICK[ID$]
+	If UI Value$("txtFullname") = ""
+		UI Popup "ErrorPopup", content$="Please enter your fullname", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtFullname"
+		Pop Proc
+	End If
+
+	If UI Value$("txtEmail") = ""
+		UI Popup "ErrorPopup", content$="Please enter your email", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtEmail"
+		Pop Proc
+	End If
+
+	If UI Value$("txtPassword") = ""
+		UI Popup "ErrorPopup", content$="Please enter your password", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtPassword"
+		Pop Proc
+	End If
+
+	FirebaseAuth CreateUser displayName$ = UI Value$("txtFullname"), email$ = UI Value$("txtEmail"), password$ = UI Value$("txtPassword"), onCompleted$="ON_CREATE_USER_COMPLETED"
+End Proc
+
+Procedure ON_CREATE_USER_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		DisplayUserDetails
+	End If
+End Proc
+
+Procedure ON_SIGN_IN_KEY_DOWN[KEYCODE]
+	If KEYCODE = 13
+		ON_SIGN_IN_CLICK
+	End If
+End Proc
+
+Procedure ON_SIGN_IN_CLICK[ID$]
+	If UI Value$("txtEmail") = ""
+		UI Popup "ErrorPopup", content$="Please enter your email", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtEmail"
+		Pop Proc
+	End If
+
+	If UI Value$("txtPassword") = ""
+		UI Popup "ErrorPopup", content$="Please enter your password", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtPassword"
+		Pop Proc
+	End If
+
+	// Sign in using the provided email and password
+	FirebaseAuth SignIn email$ = UI Value$("txtEmail"), password$ = UI Value$("txtPassword"), onCompleted$="ON_SIGN_IN_COMPLETED"
+End Proc
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	End If
+End Proc
+
+Procedure ON_SHOW_REGISTER_UI_CLICK[ID$]
+	UI Cls
+	RegisterUI
+	UI Focus "txtFullname"
+	HTML Element "txtEmail", OnKeyDown$ = "ON_REGISTER_KEY_DOWN"
+	HTML Element "txtPassword", OnKeyDown$ = "ON_REGISTER_KEY_DOWN"
+	HTML Element "txtFullname", OnKeyDown$ = "ON_REGISTER_KEY_DOWN"
+End Proc
+
+Procedure ON_SHOW_SIGN_IN_CLICK[ID$]
+	UI Cls
+	LoginUI
+	UI Focus "txtEmail"
+	HTML Element "txtEmail", OnKeyDown$ = "ON_SIGN_IN_KEY_DOWN"
+	HTML Element "txtPassword", OnKeyDown$ = "ON_SIGN_IN_KEY_DOWN"
+End Proc
+
+Procedure ON_SIGNOUT_CLICK[ID$]
+    FirebaseAuth SignOut
+End Proc
+
+Procedure DisplayUserDetails
+	UI Value "lblEmail", FirebaseAuth UserEmail$()
+	UI Value "lblFullname", FirebaseAuth UserDisplayName$()
+
+	verified = FirebaseAuth UserEmailVerified()
+
+	If verified = true
+		UI Value "lblEmailVerified", "Yes"
+		UI Hide "btnSendVerificationEmail"
+	Else
+		UI Value "lblEmailVerified", "No"
+	End If
+
+	UI Value "txtEmail", FirebaseAuth UserEmail$()
+	UI Value "txtDisplayName", FirebaseAuth UserDisplayName$()
+
+	profile_url$ = FirebaseAuth UserPhotoUrl$()
+
+	If profile_url$ <> ""
+		UI Image "imgUserProfileImage", src$ = FirebaseAuth UserPhotoUrl$()
+	End If
+End Proc
+
+Procedure ON_UPDATE_EMAIL_CLICK[ID$]
+    FirebaseAuth UpdateEmail email$ = UI Value$("txtEmail"), onCompleted$="ON_UPDATE_EMAIL_COMPLETED"
+End Proc
+
+Procedure ON_UPDATE_EMAIL_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Email successfully updated", placement$="top-center", delay=3000, class$="text-white bg-success"
+		DisplayUserDetails
+	End If
+End Proc
+
+Procedure ON_UPDATE_PASSWORD_CLICK[ID$]
+    FirebaseAuth UpdatePassword password$ = UI Value$("txtPassword"), onCompleted$="ON_UPDATE_PASSWORD_COMPLETED"
+End Proc
+
+Procedure ON_UPDATE_PASSWORD_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Password successfully updated", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+
+Procedure ON_FORGOT_PASSWORD_CLICK[ID$]
+    UI Cls
+	ForgotPasswordUI
+	UI Focus "txtEmail"
+	HTML Element "txtEmail", OnKeyDown$ = "ON_FORGOT_PASSWORD_KEY_DOWN"
+End Proc
+
+Procedure ON_FORGOT_PASSWORD_KEY_DOWN[KEYCODE]
+	If KEYCODE = 13
+		ON_SEND_PASSWORD_RESET
+	End If
+End Proc
+
+Procedure ON_SEND_PASSWORD_RESET[ID$]
+	If UI Value$("txtEmail") = ""
+		UI Popup "ErrorPopup", content$="Please enter your email", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtEmail"
+		Pop Proc
+	End If
+
+	FirebaseAuth SendPasswordResetEmail email$ = UI Value$("txtEmail"), onCompleted$="ON_SEND_PASSWORD_EMAIL_COMPLETED"
+End Proc
+
+Procedure ON_SEND_PASSWORD_EMAIL_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Password recovery email has been sent", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+
+Procedure ON_UPDATE_DISPLAY_NAME_CLICK[ID$]
+	If UI Value$("txtDisplayName") = ""
+		UI Popup "ErrorPopup", content$="Please enter your display name", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtDisplayName"
+		Pop Proc
+	End If
+
+	FirebaseAuth UpdateDisplayName displayName$ = UI Value$("txtDisplayName"), onCompleted$ = "ON_UPDATE_DISPLAY_NAME_COMPLETED_CONFIRM"
+End Proc
+
+Procedure ON_UPDATE_DISPLAY_NAME_COMPLETED_CONFIRM[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		DisplayUserDetails
+		UI Popup "SuccessPopup", content$="Your display name has been updated", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+
+Procedure ON_DELETE_USER_CLICK[ID$]
+	UI Confirm "Delete user?", "Are you sure?", closeButton$="No", confirmButton$="Yes", onConfirm$="CONFIRM_DELETE_USER"
+End Proc
+
+Procedure CONFIRM_DELETE_USER
+	FirebaseAuth DeleteUser onCompleted$="DELETE_USER_COMPLETED"
+End Proc
+
+Procedure DELETE_USER_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	End If
+End Proc
+
+Procedure ON_SEND_EMAIL_VERIFICATION_CLICK[ID$]
+    FirebaseAuth SendEmailVerification onCompleted$ = "ON_SEND_VERIFICATION_COMPLETED"
+End Proc
+
+Procedure ON_SEND_VERIFICATION_COMPLETED[ERROR$, ERROR_CODE]
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Verification email has been sent", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+
+Procedure ON_UPLOAD_PROFILE_IMAGE_CLICK[ID$]
+	// Opens a file selector
+    Firebase SelectFile onSelected$ = "FILE_SELECTED"
+End Proc
+
+Procedure FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file is an image
+	If Instr(TYPE$, "image") >= 0
+
+		// Check the selected file size is not greater than 10Mb
+		If SIZE >= 10485760
+			UI Popup "ErrorPopup", content$="File too large, must be 10Mb or less", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		Else
+			// Set the Firebase storage path
+			storagePath$ = "ProfileImages/" + FirebaseAuth UserID$() + "_" + NAME$
+
+			// Upload the file to Firebase storage
+			Firebase UploadFile fileRef$ = FILE_REF$, storagePath$ = storagePath$, onCompleted$ = "ON_FILE_UPLOADED"
+		End If
+
+	Else
+		UI Popup "ErrorPopup", content$="Not a valid image file", placement$="top-center", delay=3000, class$="text-white bg-danger"
+	End If
+End Proc
+
+Procedure ON_FILE_UPLOADED[ERROR$, FILE_REF$, DOWNLOAD_URL$, STORAGE_PATH$, SIZE, TYPE$, NAME$]
+	// Remove the file ref from memory as we no longer need it
+	Firebase FileDispose FILE_REF$
+
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		FirebaseAuth UpdatePhotoUrl photoUrl$ = DOWNLOAD_URL$, onCompleted$ = "ON_UPDATE_PHOTO_COMPLETED"
+	End If
+End Proc
+
+Procedure ON_UPDATE_PHOTO_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		DisplayUserDetails
+	End If
+End Proc
+
+
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure LoginUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtEmail", x=721, y=340, width=478, class$="form-control"
+UI TextBox "txtPassword", x=722, y=440, width=476, type$="password", class$="form-control"
+UI Button "btnSignIn", x=1040, y=560, width=150, height=50, content$="Sign In", class$="btn btn-success", onClick$="ON_SIGN_IN_CLICK"
+UI TextBlock "lblEmail", x=720, y=300, width=117, content$="Email", class$="text-light"
+UI TextBlock "lblPassword", x=720, y=400, width=129, content$="Password", class$="text-light"
+UI Button "btnForgotPassword", x=720, y=500, width=232, height=36, padding=0, content$="Forgot Password", class$="btn-link btn text-start", onClick$="ON_FORGOT_PASSWORD_CLICK"
+UI Button "btnRegister", x=1100, y=500, width=90, height=36, padding=0, content$="Register", class$="btn-link btn text-end", onClick$="ON_SHOW_REGISTER_UI_CLICK"
+UI TextBlock "lblTitle", x=726, y=220, width=467, height=81, fontSize=29, content$="Firebase Authentication Demo", class$="text-light text-center"
+UI Button "UIButton0", x=722, y=680, width=475, height=50, content$="Click to use built in UI to sign in", class$="btn btn-secondary", onClick$="ON_USE_BUILT_IN_UI_CLICK"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure RegisterUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtFullname", x=721, y=340, width=478, class$="form-control"
+UI TextBox "txtEmail", x=720, y=440, width=478, class$="form-control"
+UI TextBox "txtPassword", x=720, y=540, width=476, type$="password", class$="form-control"
+UI Button "btnRegister", x=1040, y=640, width=150, height=50, content$="Register", class$="btn btn-success", onClick$="ON_REGISTER_CLICK"
+UI Button "btnBackToSignIn", x=700, y=600, width=90, height=36, padding=0, content$="Sign In", class$="btn-link btn text-end", onClick$="ON_SHOW_SIGN_IN_CLICK"
+UI TextBlock "lblEmail", x=720, y=400, width=117, content$="Email", class$="text-light"
+UI TextBlock "lblPassword", x=720, y=500, width=129, content$="Password", class$="text-light"
+UI TextBlock "lblTitle", x=726, y=220, width=467, height=81, fontSize=29, content$="Register", class$="text-light text-center"
+UI TextBlock "lblFullName", x=720, y=300, width=117, content$="Full Name", class$="text-light"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure SignedInUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "lblTitle", x=40, y=10, width=467, height=81, fontSize=29, content$="Firebase Authentication Demo", class$="text-light"
+UI Button "btnSignOut", x=540, y=240, width=150, height=50, content$="Sign Out", class$="btn btn-primary", onClick$="ON_SIGNOUT_CLICK"
+UI TextBlock "lblFullnameLabel", x=40, y=240, width=185, content$="Display Name", class$="text-light"
+UI TextBlock "lblEmailLabel", x=40, y=280, width=185, content$="Email", class$="text-light"
+UI TextBlock "lblFullname", x=200, y=240, width=316, content$="#", class$="text-light"
+UI TextBlock "lblEmail", x=200, y=280, width=316, content$="#", class$="text-light"
+UI TextBlock "UITextBlock0", x=40, y=440, width=467, height=70, fontSize=29, content$="Update Email", class$="text-light"
+UI Button "btnUpdateEmail", x=540, y=520, width=150, height=50, content$="Update", class$="btn btn-success", onClick$="ON_UPDATE_EMAIL_CLICK"
+UI TextBox "txtEmail", x=40, y=520, width=480, class$="form-control"
+UI TextBlock "UITextBlock1", x=40, y=600, width=467, height=70, fontSize=29, content$="Update Password", class$="text-light"
+UI TextBox "txtPassword", x=40, y=680, width=480, type$="password", class$="form-control"
+UI Button "btnUpdatePassword", x=540, y=680, width=150, height=50, content$="Update", class$="btn btn-success", onClick$="ON_UPDATE_PASSWORD_CLICK"
+UI TextBlock "UITextBlock2", x=40, y=760, width=467, height=70, fontSize=29, content$="Update Display Name", class$="text-light"
+UI TextBox "txtDisplayName", x=40, y=840, width=480, type$="text", class$="form-control"
+UI Button "btnUpdateDisplayName", x=540, y=840, width=150, height=50, content$="Update", class$="btn btn-success", onClick$="ON_UPDATE_DISPLAY_NAME_CLICK"
+UI Button "btnDeleteAccount", x=700, y=240, width=150, height=50, content$="Delete User", class$="btn btn-danger", onClick$="ON_DELETE_USER_CLICK"
+UI TextBlock "UITextBlock3", x=40, y=360, width=185, content$="Email Verified", class$="text-light"
+UI TextBlock "lblEmailVerified", x=200, y=360, width=316, content$="#", class$="text-light"
+UI Button "btnSendVerificationEmail", x=540, y=360, width=328, height=50, content$="Send Verification Email", class$="btn btn-success", onClick$="ON_SEND_EMAIL_VERIFICATION_CLICK"
+UI Image "imgUserProfileImage", x=40, y=100, width=100, height=100, src$="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAIAAABZ+cloAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVJaROwg4pChdrIgKuIoVSyChdJWaNXB5NIvaGJIUlwcBdeCgx+LVQcXZ10dXAVB8APEzc1J0UVK/F9SaBHjwXE/3t173L0DhGaNqWbPOKBqlpFJJsR8YUUMvCKIAYQRRUxipp7KLuTgOb7u4ePrXZxneZ/7c4SVoskAn0g8y3TDIl4nnt60dM77xBFWkRTic+Ixgy5I/Mh12eU3zmWHBZ4ZMXKZOeIIsVjuYrmLWcVQiaeIo4qqUb6Qd1nhvMVZrdVZ+578haGitpzlOs0RJLGIFNIQIaOOKmqwEKdVI8VEhvYTHv5hx58ml0yuKhg55rEBFZLjB/+D392apckJNymUAHpfbPtjFAjsAq2GbX8f23brBPA/A1dax7/RBGY+SW90tOgR0L8NXFx3NHkPuNwBhp50yZAcyU9TKJWA9zP6pgIweAsEV93e2vs4fQBy1NXSDXBwCMTKlL3m8e6+7t7+PdPu7wepk3K9I4Jo0QAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+UKEQ0nD2rqNG0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAACb0lEQVRIx8VWS08TURQ+d1oBUyIJDWLsQly4cMESN0bjwrgyDdHEpb/CH6CufSXVFRijiWKMRBKND2RhKIJ9maG2hVb6fsgwnc7Q18x0Zu51ISW19HFN2nhWc+/Md7+cc75vzkWX7dPT9ksnJ04AAAABQPWHFoEASZLU7m1T8LzwYm7BfP7s1LWrdkoMABTEAiGUHyPd0Bmb7Rj96f8YZGzMykB/A/WbAP4fAepRY8wt9qrbTGKe43MDxy+OnLpQF26PMkBEZ7Yeo2qYqPxu5Hl1O9zjEhG1hGrc/lIR4z0mQIcshLHsLwcs4/SKpMvANEAmrgNzGAANjZ8btk1S+AnWk7kbbz7dXXQWZbV7k8noaTxy26qppsFhGqMkBfHeVy8G4GRlKRC5MjXZXabENGgaOkJzelFWHctuXF8u/IznS5WeGU0z8JMVD6eoDdWCxWCksR+dCPJV5cEqO+sJqrrRsqvv2JCHLzTtfoilOanUnSApFm85fV5h98t2/tWPMGm2C3yPp+fD0ZbS+RgIk3oSTEtVsLmdm6usWNP3ABl+JZ5p5MiIxUcuFrWR5lIqmy1IrQkwoM9biTu+kIZJo8JnAtGosIcpK7WHy64axh3K+96/SQ4SaBi/ZDeebiYPugYDOLwhUVYNQp6teTNVuXP/nTkuxYt/+aCs6TOegE/YbYcRatqsL3hUk9d+5Wk09ta/cWbEYv6jLb4iO1z+eEXpjFkXS2I2TSnib1we5QUzAIoJ0n1PUNJ0qj8OoR0UCMCdypndae418RukT3MfmGgsYRDcp4kPpbIZuB3scqFRKy2K48DQaW46jKyQdPY3y604RoGcD/YAAAAASUVORK5CYII="
+UI Button "btnUploadProfileImage", x=180, y=150, width=150, height=50, content$="Upload", class$="btn btn-primary", onClick$="ON_UPLOAD_PROFILE_IMAGE_CLICK"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure ForgotPasswordUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtEmail", x=720, y=340, width=468, class$="form-control"
+UI Button "btnBackToSignIn", x=720, y=400, width=90, height=36, padding=0, content$="Sign In", class$="btn-link btn text-start", onClick$="ON_SHOW_SIGN_IN_CLICK"
+UI TextBlock "lblEmail", x=720, y=300, width=117, content$="Email", class$="text-light"
+UI TextBlock "lblTitle", x=720, y=220, width=467, height=61, fontSize=29, content$="Send Password Reset Email", class$="text-light text-center"
+UI Button "btnSendPasswordReset", x=1040, y=440, width=150, height=50, content$="Send", class$="btn btn-success", onClick$="ON_SEND_PASSWORD_RESET"
+End Proc

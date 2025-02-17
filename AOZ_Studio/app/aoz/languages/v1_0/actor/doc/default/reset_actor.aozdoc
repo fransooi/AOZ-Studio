@@ -1,0 +1,9 @@
+<i>instruction: reset all the properties of an Actor</i>
+<b>Reset Actor</b> number
+<b>Reset Actor</b> name$
+=
+@code
+Cls 0
+Actor 1, x=100, y=50, image$="magic"
+Reset Actor 1
+@code

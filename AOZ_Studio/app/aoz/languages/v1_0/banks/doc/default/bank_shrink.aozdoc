@@ -1,0 +1,15 @@
+<i>Bank Shrink</i>
+<b>Bank Shrink</b> xxxxxxx
+=
+This instruction does not erase a bank at all, but shrinks it! BANK SHRINK will not work with Object or Icon banks, but it is used to reduce the length of a previously reserved memory bank to the specified smaller length. The excess memory will be returned for use by the main program without complications.
+
+This feature is very useful if you create a bank by poking it into memory, and wish to save it with a more suitable
+size. For example:
+@code
+Reserve As Data 10,1000000: Rem Very large bank
+Poke$ Start(10)-8,"My Bank" : Rem Rename bank 8 bytes
+Poke$ Start(10),"This is a small bank!" : Rem Poke some data
+Bank Shrink 10 To 100: Rem Shrink bank to 100 bytes
+Save "My_Bank.Abk",10
+@code
+

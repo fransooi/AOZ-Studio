@@ -1,0 +1,11 @@
+<i>Reserve As Work</i>
+<b>Reserve As Work</b> xxxxxxx
+=
+This allocates a temporary workspace of the requested length from fast memory, if it is available.
+
+The work data will be erased every time the program is run from the Editor, and it will be discarded when the listing is saved onto disc. A quick check can be made to see if the data area has been successfully assigned to fast memory, using the FAST FREE function, like this:
+@code
+Reserve As Work 10,1000
+@code
+
+

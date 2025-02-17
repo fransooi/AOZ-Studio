@@ -1,0 +1,7 @@
+<i>instruction: stop AMAL program</i>
+<b>Amal Off</b>
+<b>Amal Off</b> number
+=
+AMAL ON is used to activate all AMAL programs.
+=
+If an optional number is given, then only that AMAL routine will be activated. Similarly, AMAL OFF stops all AMAL programs from executing, by erasing them from memory. They can only be re-activated by using the AMAL command again. By specifying an individual AMAL program number, only that program is stopped.

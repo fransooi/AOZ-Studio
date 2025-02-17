@@ -1,0 +1,23 @@
+<i>Get Fonts</i>
+<b>Get Fonts</b> xxxxxxx
+=
+This instruction has no effect in AOZ and is left for compatibility with AMOS applications.
+
+(extracted from the AMOSPro manual)
+
+The GET FONTS command creates an internal list of all available fonts on the System disc, and it should always be
+called at least once before any changes in settings are made. In practice, you will probably want to use this
+instruction at the beginning of a program, so that SET FONT may be used freely at any later point.
+
+It is very important to remember that if you are distributing run-only or compiled programs to be used by other
+people, and these programs make use of alternative fonts, then the required font files must be included.
+@code
+Get Fonts
+For F=0 To 10
+Set Font F : T$="AOZ Studio Font: "+Str$(F)
+Text 0,100,T$
+Wait Key : Cls
+Next F
+@code
+
+

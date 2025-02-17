@@ -1,0 +1,19 @@
+<i>Else</i>
+<b>Else</b> xxxxxxx
+=
+ELSE is also understood when making decisions, as to what action should be taken, depending on conditions. So the
+last example could be changed to something like this:
+
+@code
+If NIGHT+1=DAY Then Goto BED Else Shoot
+@code
+The alternative choice of statements in this sort of structure must be a list of one or more AOZ
+instructions. Also remember to include a separate GOTO command if you want to jump to a label or a numbered
+line, otherwise the label will be treated as a procedure name and it could possibly generate an error.
+
+For example:
+@code
+If NIGHT=1 Then Goto BED: Rem This is perfect
+If NIGHT=1 Then BED: Rem This looks for a BED procedure
+@code
+

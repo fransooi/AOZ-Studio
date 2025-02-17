@@ -1,0 +1,12 @@
+<i>UI Hide</i>
+<b>UI Hide</b> xxxxxxx
+=
+The UI Hide instruction is used to hide a UI element. You can make the element appear on the screen again by using the UI Show instruction.
+@code
+// Add a text box that we will delete
+UI TextBox "MyTextBlock"
+UI Hide "MyTextBlock"
+Wait Key
+UI Show "MyTextBlock"
+@code
+

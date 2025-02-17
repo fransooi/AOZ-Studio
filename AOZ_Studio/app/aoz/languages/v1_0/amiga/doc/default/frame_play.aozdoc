@@ -1,0 +1,44 @@
+<i>Frame Play</i>
+<b>Frame Play</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+Use this function to display animations on screen at the appropriate points in your programs. Specify the memory address or bank number containing an IFF animation sequence that has already been loaded by FRAME LOAD. Please note that addresses must be even and that the first bytes must be a valid IFF Frame definition. Next specify the number of frames that you want to play.
+
+The optional screen parameter is the identifier of a new screen to be created for the animation, and it can be used to automatically define a screen as the first frame of the animation to be displayed. If this screen number is omitted, an attempt will be made to use the current screen.
+
+Please note that your new screen will not be set up for double buffering, and you should activate this directly from
+your program with the DOUBLE BUFFER command, if required. Also, the IFF animation will be displayed on the
+logical screen, and when using double buffering SCREEN SWAP must be employed, otherwise the animation will
+run invisibly in the background!
+
+Once the FRAME PLAY function has been called, the start address of the next frame in the sequence will be
+returned, and this address can be used to display the following frame of the animation.
+For example:
+@code
+Rem Play the first frame in Bank 10 using screen 0
+F=Frame Play(10,1,0)
+Double Buffer : Rem activate non automatic double buffer
+Rem Display next frame
+F=Frame Play(F,1)
+@code
+When the end of the animation sequence has been reached, your F variable points to the last frame of the animation.
+Because the exact number of frames is returned to the FRAME LOAD function, FRAME PLAY can be enclosed in
+a loop for simplicity, like this:
+@code
+Open In 1,"AMOSPro_Tutorialiff_Anim/AMOS.Anim"
+L=Frame Load(1 To 10,1000)
+Close
+Rem Play first frame from Bank 0 and define new screen 0
+Do
+P=Frame Play(10,1,0)
+Double Buffer
+For X=2 To L-1 : Rem Play sequence to the end
+P=Frame Play(P,1) : Rem Play next frame
+Screen Swap : Rem Make animation visible
+Wait Vbl : Wait Vbl : Wait Vbl
+Next X
+Loop
+@code
+
+

@@ -1,0 +1,87 @@
+{
+    rexx_commands:
+    { 
+        name: "REXX Commands"
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "rexx_open": //TODO
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "arexx_open":
+            [
+                The AREXX OPEN instruction sets up an AREXX communication port, ready for immediate use. Before opening this channel, AREXX must be installed in memory using the REXXMAST command. If you are in any doubt as to
+the current availability of AREXX, its status can be checked by the AREXX EXIST function, explained below.
+
+            ]
+            "rexx_close": //TODO
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "arexx_close":
+            [
+                Use this command to close an open AREXX communications port. If a message has been received via the port, but is waiting for a response, a "Message not answered" error will be generated. If you then leave the AMOS
+Professional program without responding, the port will be closed with an error code of 20, which is fatal! Please see
+below, for a further explanation of these error code values
+
+            ]
+            "rexx_wait": //TODO
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "rexx_answer": //TODO
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "arexx_wait":
+            [
+                This command halts an AOZ Studio program until a message arrives from an AREXX program. This
+operation can be aborted at any time as usual, by pressing [Ctrl]+[C] to return to the AOZ Studio Editor.
+
+            ]
+            "rexx$": //TODO
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "rexx": //TODO
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            
+        }
+    }
+}

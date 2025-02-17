@@ -1,0 +1,9 @@
+<i>instruction: decrement an integer variable by 1</i>
+<b>Dec</b> variable
+=
+This command subtracts 1 to an integer (whole number) variable, using a single instruction to perform the expression variable = variable - 1 very quickly.
+=
+For example:
+@code
+V=10 : Dec V : Print V
+@code

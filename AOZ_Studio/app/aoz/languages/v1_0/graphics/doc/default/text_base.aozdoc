@@ -1,0 +1,8 @@
+<i>Text Base</i>
+<b>Text Base</b> xxxxxxx
+=
+This function is used to get the reference position of the current font's baseline, given as the number of pixels
+between the top of the character, and the point that it will be printed on the screen. It is similar to the hot-spot of an
+Object.
+
+

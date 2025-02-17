@@ -1,0 +1,8 @@
+<i>Lib Base</i>
+<b>Lib Base</b> xxxxxxx
+=
+LIB BASE is used to return the base address of the selected library. This can be used in conjunction with the
+STRUC function to manipulate the internal data structures directly. Obviously, the normal PEEK and POKE
+functions can be used for this purpose as well.
+
+

@@ -1,0 +1,1291 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Sprite Instruction Set
+ * By Francois Lionet
+ *
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 30/01/2020
+ */
+#need_javascript_file:"createjs/createjs.min.js"
+#need_javascript_file:"createjs/plugins/RelativePlugin.js"
+#need_javascript_file:"createjs/plugins/RotationPlugin.js"
+#need_javascript_file:"createjs/plugins/MotionGuidePlugin.js"
+#need_javascript_file:"createjs/plugins/MovieClipPlugin.js"
+#need_javascript_file:"createjs/plugins/ndgmr.Collision.js"
+#need_module: "collisions"
+#need_module: "assets"
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Animate Sprite
+@description:Instructions and functions to display moveable objects on the top of the display (Sprites)
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+	this.aoz.sprites = this;
+	this.contextName = this.aoz.currentContextName;
+	this.context = new AOZContext( this.aoz, this.contextName, { sorted: true } );
+	this.banks = this.aoz.banks;
+	this.utilities = aoz.utilities;
+
+	this.toUpdate = false;
+	this.updateOn = true;
+	this.priorityOn = false;
+	this.priorityReverseOn = false;
+
+	this.keys = {};
+	this.gamepads = {};
+	this.stage = undefined;
+	this.canvas = undefined;
+	createjs.RelativePlugin.install();
+	createjs.MotionGuidePlugin.install();
+	createjs.RotationPlugin.install();
+
+	this.canvas = document.createElement( 'canvas' );
+	this.canvas.setAttribute( 'id', 'cjsCanvas' );
+	this.canvas.width = this.aoz.manifest.default.screen.width;
+	this.canvas.height = this.aoz.manifest.default.screen.height;
+	this.canvas.setAttribute( 'style', 'position: absolute; left: 0px; top: 0px; display: block; width: ' + this.aoz.currentScreen.vars.width + "px; height: " + this.aoz.currentScreen.vars.height + "px" );
+	this.bobParams = {};
+	this.stage = new createjs.Stage( "cjsCanvas" );
+	createjs.Ticker.interval = 10;
+	createjs.Ticker.framerate = 60;
+
+	var self = this;
+
+	this.gamepadHandler = function( event, connecting )
+	{
+		var gamepad = event.gamepad;
+
+		if( connecting )
+		{
+			self.gamepads[ gamepad.index ] = gamepad;
+		}
+		else
+		{
+			delete self.gamepads[ gamepad.index ];
+		}
+	}
+
+	window.addEventListener("gamepadconnected", function(e)
+	{
+		self.gamepadHandler( e, true );
+	}, false );
+
+	window.addEventListener("gamepaddisconnected", function(e)
+	{
+		self.gamepadHandler( e, false );
+	}, false );
+
+	this.sprite = function( index, position, image, tags, contextName )
+	{
+		var sprite = this.context.getElement( this.contextName, index );
+		if ( !sprite )
+		{
+			sprite = new Sprite( this.aoz, this, tags );
+			this.context.setElement( this.contextName, sprite, index );
+		}
+		sprite.set( position, image, '#update' );
+	};
+	this.destroy = function( index, contextName )
+	{
+		if ( typeof index == 'undefined' )
+		{
+			this.context.parseAll( this.contextName, function( sprite )
+			{
+				aoz.removeFromSynchro( sprite );
+			} );
+			this.context.deleteRange( this.contextName );
+		}
+		else
+		{
+			this.aoz.removeFromSynchro( this.context.getElement( this.contextName, index ) );
+			this.context.deleteElement( this.contextName, index );
+		}
+		this.setModified();
+	};
+	this.shadowOff = function( index, contextName )
+	{
+		if ( typeof index == 'undefined' )
+		{
+			this.context.parseAll( this.contextName, function( sprite )
+			{
+				sprite.setShadow({color:null});
+			} );
+		}
+		else
+		{
+			aoz.sprites.context.getElement( aoz.sprites.contextName,aoz.checkIndex(index),'sprite_not_defined' ).setShadow({color:null});
+		}
+		this.setModified();
+	};
+	this.setModified = function()
+	{
+		this.modified++;
+		this.aoz.renderer.setModified();
+	};
+	this.get = function( index, contextName, errorMessage )
+	{
+		return this.context.getElement( this.contextName, index, errorMessage );
+	};
+	this.getNumber = function()
+	{
+		return this.context.getNumberOfElements( this.contextName );
+	};
+	this.getHighestIndex = function()
+	{
+		return this.context.getHighestElementIndex( this.contextName );
+	};
+	this.getLowestIndex = function()
+	{
+		return this.context.getLowestElementIndex( this.contextName );
+	};
+	this.update = function( force )
+	{
+		if ( force || ( this.updateOn && this.modified ) )
+		{
+			this.modified = 0;
+
+			var done = false;
+			this.context.parseAll( this.contextName, function( sprite )
+			{
+				done |= sprite.update( { force: force } );
+			} );
+			if ( done )
+				this.sortPriority();
+		}
+	};
+	this.sortPriority = function()
+	{
+		if ( this.priorityOn )
+		{
+			if ( this.priorityReverseOn )
+			{
+				this.context.sort( this.contextName, function( b1, b2 )
+				{
+					if ( b1.vars.y == b2.vars.y )
+						return 0;
+					return ( b1.vars.y > b2.vars.y ) ? -1 : 1;
+				} );
+			}
+			else
+			{
+				this.context.sort( this.contextName, function( b1, b2 )
+				{
+					if ( b1.vars.y == b2.vars.y )
+						return 0;
+					return ( b1.vars.y < b2.vars.y ) ? -1 : 1;
+				} );
+			}
+		}
+	};
+	this.updateBank = function( newBank, newBankIndex )
+	{
+		var update = false;
+		this.context.parseAll( this.contextName, function( sprite )
+		{
+			update |= sprite.updateBank( newBank, newBankIndex, this.contextName );
+		} );
+		if ( update )
+			this.setModified();
+	};
+	this.setUpdate = function( yes_no )
+	{
+		this.updateOn = yes_no;
+	};
+	this.setLimits = function( index, rectangle, contextName )
+	{
+		if ( typeof index != 'undefined' )
+		{
+			this.context.getElement( this.contextName, index, 'sprite_not_defined' ).setLimits( rectangle );
+		}
+		else
+		{
+			this.context.parseAll( this.contextName, function( sprite )
+			{
+				sprite.setLimits( rectangle );
+			} );
+		}
+	};
+	this.setPriority = function( on_off )
+	{
+		this.priorityOn = on_off;
+		this.setModified();
+	};
+	this.setPriorityReverse = function( on_off )
+	{
+		this.priorityReverseOn  = on_off;
+		this.setModified();
+	};
+}
+
+/**api
+@name:Sprite
+@description:Changes the image of a sprite
+@param:index:index:Index of the sprite in the list of sprites
+@param:*x:integer:Horizontal position of the sprite in the screen
+@param:*y:integer:Vertical position of the sprite in the screen
+@param:image:index:Index of the image in the "Images" bank
+@compatible: aoz, stos, amos
+@content:
+The SPRITE command assigns an image to a Sprite, and displays it at the selected hardware coordinates.
+
+The Sprite number can range from 0 to 63. Normally, Sprite number zero is not available because it is already
+allocated to the mouse pointer. To ensure that you have the maximum number of Sprites at your disposal, remove the
+mouse pointer from the screen with HIDE ON. Sprite identification numbers from 0 to 7 refer to the eight hardware
+Sprites whose limitations have already been explained. You will probably want to make use of the AMOS
+Professional computed Sprites in your programs instead, and these are assigned the numbers from 8 to 63.
+
+The hardware coordinates hx and hy set the position at which the Sprite will be displayed. Since Sprites are totally
+independent from the current screen, normal screen coordinates cannot be used for this purpose. Instead, all Sprites
+are positioned by special hardware coordinates as used by the mouse pointer and the SCREEN DISPLAY command.
+Hardware coordinates can be converted from normal screen coordinates by the X HARD and Y HARD functions,
+which are explained later.
+
+The position of the Sprite is measured from a single spot related to that Sprite, known as the "hot spot". This is
+usually taken to be the top left-hand corner of the Sprite, but it can be placed anywhere you like using the HOT
+SPOT command. Hot spots are explained in detail near the end of this Chapter.
+
+When the Sprite has been allocated an identification number and given its display coordinates, you must select an
+image for the Sprite to display. Images are created using the Object Editor (there is a guided tour of this process in
+Chapter 13.2) and deposited in the Object Bank, which is normally memory bank 1. Each image in this bank is
+assigned its own number, starting from one. To select an image for a Sprite to display, simply give the appropriate
+image number. Sprite images may be installed into your programs using the LOAD command, like this:
+~~~
+Load "Sprites.Abk"
+~~~
+Once images have been installed in this way they will be saved along with your AOZ Studio programs
+automatically.
+
+The image number and coordinate parameters can be omitted after a SPRITE command, but the appropriate commas
+must be included.
+
+For example:
+~~~
+Load "AMOSPro Tutorial:Objects/Sprites.Abk"
+Flash Off : Get Sprite Palette
+Curs Off : Cls 0
+Sprite 8,200,100,1
+Wait Key
+Sprite 8,,150,1
+Wait Key
+Sprite 8,250,,1
+Wait Key
+Sprite 8,,,2
+~~~
+api*/
+Instruction Sprite, index=(index), image=(index)
+{
+	#errors
+	#addToFilesystem:"image:%image"
+	aoz.sprites.sprite(%index,{},aoz.checkIndex(%image));
+}
+End Instruction
+Instruction Sprite, index = (index), x, y, image=(index)
+{
+	#errors
+	#addToFilesystem:"image:%image"
+	aoz.sprites.sprite(%index,{x:%x,y:%y},aoz.checkIndex(%image));
+}
+End Instruction
+
+/**api
+@name:Sprite
+@description:Create or change a sprite, and return it's object
+@param:index:index:Index of the sprite in the list of sprites
+@param:*x:integer:Horizontal position of the sprite in the screen
+@param:*y:integer:Vertical position of the sprite in the screen
+@param:image:index:Index of the image in the "Images" bank
+@compatible: aoz
+@content:
+The SPRITE function assigns an image to a Sprite, and displays it at the selected (hardware) coordinates.
+
+This example demonstrate the use of object-orientation with the Sprite function.
+~~~
+MYSPRITE@ = Sprite( 1, 100, 100, 1 )
+MYSPRITE@Add Circular Movement, Ray = 200
+Wait Key
+~~~
+api*/
+Function Sprite, index = (index)
+{
+	#errors
+	#returns:"object"
+}
+End Function({aoz.sprites.context.getElement( aoz.sprites.contextName,aoz.checkIndex(%index),'sprite_not_defined')})
+Function Sprite, index = (index), x, y, image = (index)
+{
+	#errors
+	#returns:"object"
+	#addToFilesystem:"image:%image"
+	aoz.sprites.sprite(%index,{x:%x,y:%y},%image);
+}
+End Function({aoz.sprites.context.getElement(aoz.sprites.contextName,aoz.checkIndex(%index),'sprite_not_defined')})
+
+
+/**api
+@name:Sprite Show
+@description:Make a sprite visible on screen
+@param:*index:index:Index of the sprite in the list of active sprites
+@compatible: aoz, stos, amos
+@content:
+All sprites will be made visible if you ommit to specify the index of the sprite to show.
+api*/
+Instruction Sprite Show, index=(index)
+{
+	#errors
+	aoz.sprites.context.getElement(aoz.sprites.contextName,%index,'sprite_not_defined' ).setVisible(true,'#update');
+}
+End Instruction
+
+/**api
+@name:Sprite Hide
+@description:Make a sprite invisible
+@param:*index:index:Index of the sprite in the list of active sprites
+@compatible: aoz, stos, amos
+@content:
+All sprites will be made invisible if you ommit to specify the index of the sprite to show.
+api*/
+Instruction Sprite Hide, index=(index)
+{
+	#errors
+	aoz.sprites.context.getElement(aoz.sprites.contextName,%index,'sprite_not_defined').setVisible(false,'#update');
+}
+End Instruction
+
+/**api
+@name:Sprite Off
+@description:Destroys all or one sprite
+@param:*index:index:Index of the sprite to destroy. If absent, will destroy all the sprites at once
+@compatible: aoz, stos, amos
+@content:
+The SPRITE OFF command removes all sprites from your display, and all current Sprite movements are aborted.
+To re-start them, you have to re-create them with a SPRITE instruction or function.
+api*/
+Instruction Sprite Off, index=(index)
+{
+	#errors
+	aoz.sprites.destroy(%index);
+}
+End Instruction
+
+/**api
+@name:Sprite Priority
+@description:Turns on or off automatic sorting of the Z-order of the sprites
+@param:onOff:boolean:True to turn priority sorting on, False to stop it
+@compatible: aoz, stos, amos
+@content:
+When SPRITE PRIORITY ON is used, Sprites with the highest y-coordinates take priority on the screen.
+It is usually best to set hot spots at the bottom of the Sprite to exploit this priority, and some superb perspective effects can be created.
+
+All that is needed to re-set the original sprite number priorities is to use the SPRITE PRIORITY OFF command.
+api*/
+Instruction Sprite Priority, onOff
+{
+	#errors
+	aoz.sprites.setPriority(%onOff);
+}
+End Instruction
+Instruction Sprite Priority On
+{
+	#errors
+	aoz.sprites.setPriority(true);
+}
+End Instruction
+Instruction Sprite Priority Off
+{
+	#errors
+	aoz.sprites.setPriority(false);
+}
+End Instruction
+
+/**api
+@name:Sprite Update Off
+@description:Turns off the automatic sprite coordinate update system. After it, all "Sprite" instruction will no longer have a visible effect until an "Sprite Update" instruction is used
+@compatible: aoz
+@content:
+The SPRITE UPDATE family of commands provide total control of Sprite movements. Normally, when a Sprite is
+moved its position is updated automatically during the next vertical blank period. Please see WAIT VBL if this
+needs explaining. However, when many Sprites are moved with the SPRITE command, updates will happen before
+all of the Sprites have been successfully repositioned, which can result in jerky patterns of movement. In these
+circumstances, the automatic updating system can be turned off with a SPRITE UPDATE OFF command.
+
+When the Sprites have been moved successfully, a call to SPRITE UPDATE will reposition any Sprites that have
+been moved since the last update. Alternatively, SPRITE UPDATE ON returns to the default status of automatic
+updating.
+
+api*/
+Instruction Sprite Update Off
+{
+	aoz.sprites.setUpdate(false);
+}
+End Instruction
+
+/**api
+@name:Sprite Update On
+@description:Turns on the automatic sprite coordinate update system. After it, the effect of all "Sprite" instructions will be visible on display
+@compatible: aoz
+@content:
+The SPRITE UPDATE family of commands provide total control of Sprite movements. Normally, when a Sprite is
+moved its position is updated automatically during the next vertical blank period. Please see WAIT VBL if this
+needs explaining. However, when many Sprites are moved with the SPRITE command, updates will happen before
+all of the Sprites have been successfully repositioned, which can result in jerky patterns of movement. In these
+circumstances, the automatic updating system can be turned off with a SPRITE UPDATE OFF command.
+
+When the Sprites have been moved successfully, a call to SPRITE UPDATE will reposition any Sprites that have
+been moved since the last update. Alternatively, SPRITE UPDATE ON returns to the default status of automatic
+updating.
+
+api*/
+Instruction Sprite Update On
+{
+	aoz.sprites.setUpdate(true);
+}
+End Instruction
+
+/**api
+@name:Sprite Update
+@description:Enforce a refresh of all the sprites on screen: all the modification to the coordinates and images of the sprite are reflected immediately on the screen
+@compatible: aoz
+@content:
+SPRITE UPDATE performs all Bob movements in a single, mighty burst, so all objects are moved at the same instant in your program.
+
+The resulting movement effects are now incredibly smooth, even with dozens of objects on screen at once. SPRITE UPDATE is extremely easy to use, as the following technique explains.
+- First, turn off the automatic system with SPRITE UPDATE OFF
+- Execute your main loop as normal.
+- Now call a SPRITE UPDATE command at the point when objects are to be moved and drawn on screen.
+- Finally, wait for the updates to be completed, by using WAIT VBL.
+
+SPRITE UPDATE is used as the standard technique in the vast majority of AOZ arcade games.
+
+If you need to restore the re-drawing system to its default status, SPRITE UPDATE ON sets the situation back to normal.
+api*/
+Instruction Sprite Update
+{
+	aoz.sprites.update();
+}
+End Instruction
+
+/**api
+@name:Sprite Scale
+@description:Changes the scale (zoom) of a sprite
+@param:index:index:Index of the sprite in the list of active sprites
+@param:scaleX#:float:Horizontal scale, 1 displays the Bob at original size, 0.5 reduces it by half, 2 multiplies by two etc. Negative values will mirror the sprite horizontally
+@param:scaleY#:float:Vertical scale, 1 displays the Bob at original size, 0.5 reduces it by half, 2 multiplies by two etc. Negative values will mirror the sprite vertically
+@compatible: aoz
+@content:
+This instruction allows you to zoom any sprite instantly and adapt the size of it's image to your game.
+The scale also affects collision detection, and the collisions will only be generated on the new surface.
+
+Sprite Scale also works with negative value... in case of a negative scale value, the bob will be mirrored in this direction. Hot Spot are also affected by this instruction.
+
+The next example displays a bob on the screen and zooms it until it is bigger than the screen...
+~~~
+Load "AMOSPro_Tutorial:Objects/Sprites.abk" 	// Load images from disc
+Cls 0 											// Set up screen
+Sprite 1, 100, 100, 2 							// Display Sprite at position
+
+For S# = 1 To 100
+	Sprite Scale 1, S#, S#
+	Wait Vbl
+Next
+~~~
+api*/
+Instruction Sprite Scale, index=(index), scaleX#, scaleY#
+{
+	#errors
+	aoz.sprites.context.getElement( aoz.sprites.contextName,%index,'sprite_not_defined' ).setScale({x:%scaleX#,y:%scaleY#});
+}
+End Instruction
+
+/**api
+@name:Sprite Rotate
+@description:Rotates a sprite around it's hot-spot
+@param:index:index:Index of the sprite in the list of active sprites
+@param:angle#:angle:Angle to rotate with, either in degrees or radian depending on the use of the "Degree" or "Radian" instruction. AOZ use radians by default
+@compatible: aoz
+@content:
+This instruction allows you to rotate any sprite instantly...
+
+A positive angle rotates the sprite clockwise and a negative angle will rotate it counter-clockwise.
+The rotation also affects collision detection, and the collisions will only be generated on the rotated object.
+
+The next example displays a bob on the screen and rotates it slowly..
+~~~
+Degree										// Switch to degrees
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load images from disc
+Cls 0 										// Set up screen
+Sprite 1, 100, 100, 2 						// Display Sprite at position
+
+For A = 0 To 360
+	Sprite Rotate 1, A
+	Wait Vbl
+Next
+~~~
+api*/
+Instruction Sprite Rotate, index=(index), angle#
+{
+	#errors
+	aoz.sprites.context.getElement( aoz.sprites.contextName,aoz.checkIndex(%index),'sprite_not_defined' ).setAngle({z:(%angle#)*aoz.degreeRadian},'#update');
+}
+End Instruction
+
+/**api
+@name:Sprite Skew
+@description:Distorts a sprite horizontally or vertically
+@param:index:index:Index of the sprite in the list of active Sprites
+@param:skewX#:float:Horizontal skew, values should be experimented. 1 displays the sprite in original proportions
+@param:skewY#:float:Vertical skew, values should be experimented. 1 displays the sprite in original proportions
+@compatible: aoz
+@content:
+This instruction allows you to generate interesting distortion effects.
+
+The next example displays a sprite on the screen and demonstrates the effect with random values...
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load Bob images from disc
+Cls 0 										// Set up screen
+Sprite 1, 100, 100, 2 						// Display Sprite at position
+
+Do
+	Sprite Skew 1, Rnd() * 2, Rnd() * 2
+	Wait Vbl
+Next
+~~~
+api*/
+Instruction Sprite Skew, index=(index), skewX#, skewY#
+{
+	#errors
+	aoz.sprites.context.getElement( aoz.sprites.contextName,%index,'sprite_not_defined' ).setSkew({x:%skewX#,y:%skewY#},'#update');
+}
+End Instruction
+
+/**api
+@name:Sprite Alpha
+@description:Set the global transparency of a sprite, also called "Alpha"
+@param:index:index:Index of the sprite in the list of active sprites
+@param:alpha#:float:Value of Alpha, from 1 (fully opaque) to 0 (fully transparent)
+@content:
+This instruction allows you to turn any opaque sprite into a semi-transparent image. The sprite will completely disappear from display with an Alpha value of 0, but will remain active (like a ghost object which can be useful for collision detection)...
+
+The next example displays a sprite on the screen and slowly fades it away...
+~~~
+Curs Off : Cls 0 					// Set up screen
+Sprite 1, 670,450, "gameover.png" 	// Display sprite at a new position
+do
+	For A# = 1 To 0 Step -0.01 		// Define alpha fade from 1 to 0 in 100 steps
+		Sprite Alpha 1, A#			// Set new alpha level
+		Wait Vbl					// Wait, and re-draw sprite with new alpha level.
+	Next A#
+loop
+~~~
+api*/
+Instruction Sprite Alpha, index=(index), alpha#
+{
+	#errors
+	aoz.sprites.context.getElement( aoz.sprites.contextName,aoz.checkIndex(%index),'sprite_not_defined' ).setAlpha(%alpha#);
+}
+End Instruction
+/**api
+@name:Sprite Shadow
+@description:Display a shadow beneath the sprite.
+@param:index:index:Index of the sprite in the list of active sprites
+@param:offsetX:float:A float specifying the distance that shadows will be offset horizontally. Positive values are to the right, and negative to the left.
+@param:offsetY:float:Value of Y offset of shadow from sprite.
+@param:blur:float:A non-negative float specifying the level of shadow blur, where 0 represents no blur and larger numbers represent increasingly more blur. This value doesn't correspond to a number of pixels,
+@param:rgba:The RGBA colour value for the shadow. eg: $FF000077 would be Red with 50% opacity.
+@content:
+his instruction allows you to add a shadow to any sprite image. With a bit of imagination, shadow can be used to create other effects, such as add a glow to an image. See second example below.
+Note, if the offsetX and offsetY are both zero, no shadow will be displayed.
+
+The next example displays a series of images on the screen and applies a semi transparent shadow to them...
+~~~
+Curs Off : Cls 6 									// Set up screen, blue background
+For f=1 to 10
+	Sprite f,f*170,450-f*5, "ship.png" 				// Display sprite at a new position
+	Sprite Shadow f,10+f*2,40+f*5,10+f*2,$000000aa		// Define shadow with increasing offset and shadow blur.
+	Wait 0.3
+Next f
+End
+~~~
+This example show how Sprite Shadow can be used to add a 'Glow' to a Sprite, and also how to turn off shadows.
+~~~
+Curs Off : Cls 0							// Set up screen, black background
+For f=1 to 10
+	Sprite f,f*170,450, "ship.png" 			// Display sprite at a new position
+	Sprite Shadow f,0,0.01,f*4,$00ffffff		// Define shadow 'glow' with increasing shadow blur, which increases the 'glow'.
+	Wait 0.2
+Next f
+Print "Press Any Key to Turn Off Shadows"	// Display a message
+Wait Key									// Wait for key press
+For f=1 to 10
+	Sprite Shadow f,0,0						// Set shadow offsets to zero
+	Wait 0.5
+Next f
+End
+~~~
+api*/
+Instruction Sprite Shadow, index=(index), offsetX#, offsetY#, blur#, rgba
+{
+	#errors
+	aoz.sprites.context.getElement( aoz.sprites.contextName,aoz.checkIndex(%index),'sprite_not_defined' ).setShadow({x:%offsetX#,y:%offsetY#,blur:%blur#,color:%rgba});
+}
+End Instruction
+/**api
+@name:Sprite Shadow Off
+@description:Turns off one or all sprite shadows by setting the offsets to zero.
+@param:index:index:Index of the sprite in the list of active sprites (optional)
+@content:
+This instruction removes the shadow from one (specified by index) or all of the sprites (if index in omitted).
+The blur and colour of each indivual shadow is remembered, so the shadow can be switched back on by just changing one or both of the offset values.
+
+This example show how Sprite Shadow Off can be used to turn off individual sprite shadows or all sprite shadows at once.
+~~~
+Curs Off : Cls 1								// Set up screen, black background
+For f=1 to 10
+	Sprite f,f*170,450, "ship.png" 				// Display sprite at a new position
+	Sprite Shadow f,0,0.01,f*4,$000000ff		// Define shadow 'glow' with increasing shadow blur, which increases the 'glow'.
+	Wait 0.2
+Next f
+Print "Press Any Key to Turn Off FIRST 5 Shadows individually"	// Display a message
+Wait Key										// Wait for key press
+For f=1 to 5
+	Sprite Shadow Off f							// Turn off shadow of Sprite number f
+	Wait 0.5
+Next f
+Cls 1
+Print "Press Any Key to Turn Off ALL REMAINING Shadows"	// Display a message
+Wait Key										// Wait for key press
+Sprite Shadow Off								// Turn off shadow of all sprites
+End
+~~~
+api*/
+Instruction Sprite Shadow Off, index=(index)
+{
+	#errors
+	aoz.sprites.shadowOff(%index);
+}
+End Instruction
+/**api
+@name:X Sprite
+@description:Returns the horizontal coordinate of the sprite
+@param:index:index:Index of the sprite in the list of active Sprites
+@return:integer:Horizontal coordinate
+@compatible: aoz, stos, amos
+@content:
+This function returns the current x-coordinate of the Sprite whose index is given in brackets.
+Positions are given in hardware coordinates in Amiga emulation.
+
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Cls 0
+Do
+    // Move Sprite 1 with mouse
+    Sprite 1, X Screen( X Mouse ), Y Screen( Y Mouse ),1
+
+    // Print new location on screen
+    Locate 0,0 : Print X Sprite(1);" ";Y Sprite(1);" ";
+Loop
+~~~
+api*/
+Function X Sprite, index=(index)
+{
+	#errors
+}
+End Function( {aoz.sprites.context.getElement(aoz.sprites.contextName,%index,'sprite_not_defined' ).get_x()} )
+
+/**api
+@name:Y Sprite
+@description:Returns vertical coordinate of the sprite
+@param:index:index:Index of the sprite in the list of active sprites
+@return:integer:Vertical coordinate
+@compatible: aoz, stos, amos
+@content:
+This function returns the current vertical coordinate of the Sprite whose index is given in brackets.
+Positions are given in hardware coordinates in Amiga emulation.
+
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Cls 0
+Do
+    // Move Sprite 1 with mouse
+    Sprite 1, X Screen( X Mouse ), Y Screen( Y Mouse ),1
+
+    // Print new location on screen
+    Locate 0,0 : Print X Sprite(1);" ";Y Sprite(1);" ";
+Loop
+~~~
+api*/
+Function Y Sprite, index=(index)
+{
+	#errors
+}
+End Function( {aoz.sprites.context.getElement( aoz.sprites.contextName,%index,'sprite_not_defined' ).get_y()} )
+
+/**api
+@name:I Sprite
+@description:Returns the index of the current image displayed by a Sprite
+@param:index:index:Index of the sprite in the list of active sprites
+@return:integer:Index of the image in the "image" bank
+@compatible: aoz, stos, amos
+@content:
+This function returns the current image number being used by the specified Sprite. If the Sprite is not displayed, a
+value of zero will be returned.
+api*/
+Function I Sprite, index=(index)
+{
+	#errors
+}
+End Function( {aoz.sprites.context.getElement( aoz.sprites.contextName,%index,'sprite_not_defined' ).get_image()} )
+
+Function I Sprite$, index=(index)
+{
+	#errors
+}
+End Function( {(''+aoz.sprites.context.getElement( aoz.sprites.contextName,%index,'sprite_not_defined' ).get_image())} )
+
+/**api
+@name:Is Sprite
+@description:Checks if a sprite is defined without generating an error
+@return:boolean:true if the sprite exists, false if not.
+@compatible: aoz
+@content:
+Use this function to check if a sprite exists before modifying it...
+~~~
+Load "AMOSPro_Tutorial:Objects/Sprites.abk"
+Sprite 1, 100, 100, 1
+If Is Sprite( 2 ) Then Print "This should not be printed!"
+If Is Sprite( 1 ) Then Print "This should be printed!"
+~~~
+api*/
+Function Is Sprite, index=(index)
+{
+	#errors
+}
+End Function( {( aoz.sprites.context.getElement(aoz.sprites.contextName,%index) != null)} )
+
+
+/**api
+@name:Get Sprite
+@description:Captures a portion of the current screen, create a transparency mask out of true black (RGB #000000) and add the image to the Images bank. (Deprecated, use "Get Image")
+@param:*screenIndex:index:Index of the screen to grab the image from
+@param:imageIndex:index:Index of the image to insert in the Images bank
+@param:x1:integer:Horizontal coordinate of the top-left corner of the capture area
+@param:y1:integer:Vertical coordinate of the top-left corner of the capture area
+@param:x2:integer:Horizontal coordinate of the bottom-right corner of the capture area
+@param:y2:integer:Vertical coordinate of the bottom-right corner of the capture area
+@examples:instructions:i_28
+@compatible: aoz, stos, amos
+@content:
+Use this command to grab images directly from the screen and transform them into Sprites. Simply define the new
+image number, then give the coordinates, from top left-hand to bottom right-hand corner, of the rectangular area to
+be loaded into the Sprite Bank. The image will be grabbed from the current screen unless an optional screen number
+is specified.
+
+Provided that the given coordinates lie inside of existing screen borders, there are no limitations to the area that can
+be grabbed in this way.
+
+If there is no existing Sprite with the selected number, it will be created automatically. Similarly, the Sprite Bank
+will be reserved by AOZ Studio, if it is not already defined.
+
+It should be noted that the GET BOB instruction is identical to GET SPRITE, making them interchangeable.
+
+api*/
+Instruction Get Sprite, imageIndex=(index), x1, y1 To x2, y2, tags$
+{
+	#errors
+	aoz.currentScreen.getImage('images',%imageIndex,{x:%x1,y:%y1,x2:%x2,y2:%y2},%tags$);
+}
+End Instruction
+
+Instruction Get Sprite, screenIndex=(index), imageIndex=(index), x1, y1 To x2, y2, tags$
+{
+	#errors
+	aoz.getScreen(%screenIndex).getImage('images',%imegIndex,{x:%x1,y:%y1,x2:%x2,y2:%y2},%tags$);
+}
+End Instruction
+
+Instruction Get Sprite, imageIndex=(index), x, y, width, height, tags$
+{
+	#errors
+	aoz.currentScreen.getImage('images',%imageIndex,{x:%x,y:%y,width:%width,height:%height},%tags$);
+}
+End Instruction
+
+Instruction Get Sprite, screenIndex=(index), imageIndex=(index), x, y, width, height, tags$
+{
+	#errors
+	aoz.getScreen(%screenIndex).getImage('images',%imageIndex,{x:%x,y:%y,width:%width,height:%height},%tags$);
+}
+End Instruction
+
+/**api
+@name:Get Sprite Palette
+@description:Copy the colour palette from the Images bank to the current screen. (Deprecated, use "Get Images Palette")
+@param:mask:integer:Mask of bits where each bit set to one represent a colour to capture and 0 a colour to ignore, up to 32 (optional)
+@compatible: aoz, stos, amos
+@content:
+This command copies the colour values used by your Sprite and Bob images and loads them into the current screen.
+
+Here is an example:
+~~~
+Load "AMOSPro Tutorial:Objects/Sprites.Abk"
+Curs Off : Flash Off : Cls 0
+Get Sprite Palette
+Rem Set computed Sprite at hardware coords 128,50 using image 1
+Sprite 8,128,50,1
+Wait Key
+~~~
+The optional mask parameter allows the colour selection to be limited. Each colour is represented by a single digit in
+a 32-digit bit mask. If the appropriate digit is set to 1, the colour is copied from the Object Bank. Any colours to be
+omitted (masked) should have their digit set to 0. The following example copies colours 0 to 3 from the Object Bank
+into the screen:
+~~~
+Get Sprite Palette %0000000000001111
+~~~
+Because the mask is entered as a normal number, either hexadecimal or decimal modes can also be used:
+~~~
+Get Sprite Palette $FFFF0000
+~~~
+Please note that the GET BOB PALETTE and GET OBJECT PALETTE instructions perform an identical task to
+the GET SPRITE PALETTE command.
+api*/
+Instruction Get Sprite Palette, mask = -1
+{
+	#errors
+	aoz.currentScreen.getImagePalette('images',%mask);
+}
+End Instruction
+
+// Animation and movements
+/////////////////////////////////////////////////////////////////////
+
+/**api
+@name:Ins Sprite
+@description:Inserts an empty image in the Images bank (deprecated, use "Ins Image")
+@param:position:integer:Position to insert at
+@compatible: aoz, stos, amos
+@examples:instructions:i_28
+@content:
+INS SPRITE inserts a blank image at the numbered position in the current image Bank.
+All of the images after this numbered position will then be moved down one place in the numerical order. The second version of this command
+allows you to create several spaces in a single operation, by giving the range of new gaps between the first and last
+image numbers that you specify.
+
+Any of these new image spaces are completely empty, and so cannot be allocated to a Bob or displayed directly on
+screen while they are still blank. An actual image must first be grabbed into the Object Bank, using a GET SPRITE
+or GET BOB command. If this is not done, the appropriate error message will be given as soon as you try to access
+the empty image.
+
+Both DEL BOB and INS BOB are provided to be used with the GET BOB and GET SPRITE commands. They
+allow you to modify and adjust your Bob images from inside AOZ Studio programs, with complete
+freedom. They may be used to create numerous special effects such as interactive screen animations and animated
+brushes.
+api*/
+Instruction Ins Sprite, position
+{
+	#errors
+	aoz.banks.insertImage('images',%position]);
+}
+End Instruction
+
+Instruction Ins Sprite, start To end
+{
+	#errors
+	aoz.banks.insertImageRange('images',%start,%end);
+}
+End Instruction
+
+/**api
+@name:Del Sprite
+@description:Delete an image in the Images bank (deprecated, use "Del Image")
+@param:imageIndex:integer:Index of the image to delete
+@examples:instructions:i_28
+@compatible: aoz, stos, amos
+@content:
+The DEL SPRITE command permanently deletes one or more Sprite images from the Object Bank. To erase a single image, simply give the image number to be deleted, like this:
+~~~
+Del Sprite 2
+~~~
+Whenever an image is deleted, all the subsequent images in the Bank are moved up one place in the numerical order. For instance, if the Bank originally contained four images, the above example would remove image number 2 from memory, leaving a gap between images 1 and 3. This gap would be filled immediately, as the old image numbers 3 and 4 were shunted up one place, to become the new image numbers 2 and 3.
+
+If more than one image is to be removed from the Bank, you can set the range from the first image to the last after a DEL SPRITE command. The following example would delete Sprite images 4,5,6 and 7:
+~~~
+Del Sprite 4 To 7
+~~~
+After the last image has been deleted from the Object Bank, the entire Bank is erased automatically.
+
+api*/
+Instruction Del Sprite, imageIndex
+{
+	#errors
+	aoz.banks.deleteImage('images',%imageIndex);
+}
+End Instruction
+
+/**api
+@name:Del Sprite
+@description:Delete a range of images from the image bank (deprecated, use "Del Image To")
+@param:start:integer:Position of deletion
+@param:end:integer:End position of deletion
+@examples:instructions:i_28
+@compatible: aoz, stos, amos
+@content:
+The following example would delete Sprite images 4,5,6 and 7:
+~~~
+Del Sprite 4 To 7
+~~~
+After the last image has been deleted from the Object Bank, the entire Bank is erased automatically.
+api*/
+Instruction Del Sprite, start To end
+{
+	#errors
+	aoz.banks.deleteImageRange('images',%start,%end);
+}
+End Instruction
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+
+/**api
+@name:Sprite Move
+@description:Defines the movement of a sprite horizontally and vertically. The sprite starts to move immediately. For finer control please use the "Channel" and "Move" instructions.
+@param:index:index:Index of the sprite
+@param:movementX$:string:Horizontal movement definition string
+@param:movementY$:string:Vertical movement definition string
+@compatible: aoz
+@content:
+The instruction has been added to AOZ to allow you to declare movement in just one instruction instead of two, namely "Sprite Move X" and "Sprite Move Y".
+
+Each string contains the definition of the movement for it's axe. The syntax of the string is identical to the one used in "Sprite Move X" and "Sprite Move Y".
+api*/
+Instruction Sprite Move, index=(index), movementX$="", movementY$=""
+{
+	var channelNumber = aoz.moduleAnimations.channelBaseSprites + %index;
+	aoz.checkAnimationChannel(channelNumber,"movement",%index,"Sprite",true);
+	aoz.moduleAnimations.move( channelNumber, %movementX$, %movementY$ );
+	aoz.moduleAnimations.setMoveState( 'on', channelNumber );
+}
+End Instruction
+
+/**api
+@name:Sprite Move X
+@description:Defines the horizontal movement of a sprite. The sprite starts to move immediately. For finer control please use the "Channel" and "MoveX" instructions.
+@param:index:index:Index of the sprite
+@param:movement$:string:Movement definition string
+@compatible: aoz
+@content:
+The SPRITE MOVE X command defines a list of horizontal movements to be performed on the bob specified by the given index.
+
+The number is followed by a "movement string" containing a series of
+instructions which control the speed and direction of the Object. These movement commands are enclosed by
+brackets, and are entered as the following three parameters, separated by commas.
+
+The speed parameter sets a delay between each step of the movement, given in 50ths of a second. Speed can vary
+from a value of 1 for very fast, all the way to 32767 for incredibly slow. This is followed by a step value, setting the
+number of pixels the Object is to be moved during each operation. A positive value moves the Object to the right,
+and a negative number to the left. The apparent speed of the Object will depend on the relationship between the
+speed and the step values, varying from slow and smooth, to rapid but jerky movements.
+
+A speed value of about 10 (or -10) is recommended. The last parameter is a count value, which determines the number of times the movement
+is to be repeated. Values range between 1 and 32767, with the additional value of zero causing an indefinite
+repetition.
+
+It is vital to add an L (loop) instruction to the movement string after these parameters, if you want to force a jump to
+the start of the string, forcing the entire sequence to be run again.
+
+Here is an example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Sprites.Abk" :Get Sprite Palette
+Sprite 1,360,100,1
+Sprite Move X 1,"(1,1,60)(1,-5,60)L"
+Sprite Move On
+Wait Key
+~~~
+An alternative ending to the movement string is to use the E option, followed by the value of an x-coordinate.
+
+This stops the Object when it reaches the specified coordinate value, which must be less than (or equal to) the
+original horizontal target destination. Try changing the third line of the last example to this:
+~~~
+Sprite Move X 1,"(1,-5,30)E100"
+~~~
+api*/
+Instruction Sprite Move X, index=(index), movement$
+{
+	aoz.checkAnimationChannel(%index,"movement",%index,"Sprite",undefined,true);
+	aoz.moduleAnimations.moveX( %index, %movement$ );
+	aoz.moduleAnimations.setMoveState( 'on', %index );
+}
+End Instruction
+
+/**api
+@name:Sprite Move Y
+@description:Defines the horizontal movement of a sprite. The sprite starts to move immediately. For finer control please use the "Channel" and "Move Y" instructions.
+@param:index:integer:Index of the sprite
+@param:movement$:string:Vertical movement definition string
+@compatible: aoz
+@content:
+This command operates in the same way as "SPRITE MOVE X", and controls vertical movement.
+The syntex of the movement string is explained in the "Sprite Move X" instruction and is the same vertically.
+
+Positive values for the step parameter control downward movements, and a negative value will result in an upward movement.
+
+Here is an example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Sprite 1,228,50,1
+Sprite Move Y 1,"(1,1,180)(1,-1,180)L" : Rem Loop Sprite
+Sprite Move On : Wait Key
+~~~
+api*/
+Instruction Sprite Move Y, index=(index), movement$
+{
+	aoz.checkAnimationChannel(%index,"movement",%index,"Sprite",undefined,true);
+	aoz.moduleAnimations.moveY(%index,%movement$);
+	aoz.moduleAnimations.setMoveState( 'on', %index );
+}
+End Instruction
+
+/**api
+@name:Sprite Move Off
+@description:Stops the movement of one or all the sprites.
+@param:index:index:Index of the sprite
+@compatible: aoz
+@content:
+This command suspends the movement of all or the specified Bobs on screen. Frozen Objects may be re-animated using the
+"SPRITE MOVE ON" command.
+api*/
+Instruction Sprite Move Off
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'off' );
+	aoz.setMoveState( undefined, 'sprite', 'off' );
+}
+End Instruction
+Instruction Sprite Move Off, index=(index)
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'off', %index );
+	aoz.setMoveState( %index, 'sprite', 'off' );
+}
+End Instruction
+
+/**api
+@name:Sprite Move On
+@description:Start the movement of one or all the sprites.
+@param:index:index:Index of the bob
+@content:
+Before any movement patterns can be executed, they must be activated by a SPRITE MOVE ON command. All movements
+will begin at once unless an optional number is given, in which case only that particular animation sequence will be
+activated. SPRITE MOVE OFF has the opposite effect, halting all animations, or a single sequence specified by its number.
+api*/
+Instruction Sprite Move On
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'on' );
+	aoz.setMoveState( undefined, 'sprite', 'on' );
+}
+End Instruction
+Instruction Sprite Move On, index=(index)
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'on', %index );
+	aoz.setMoveState( %index, 'sprite', 'on' );
+}
+End Instruction
+
+/**api
+@name:Sprite Move Freeze
+@description:Pause the movement of one or all the sprites.
+@param:*index:index:Index of the sprite
+@compatible: aoz
+@content:
+This command suspends the movement of all Objects on screen. Frozen Objects may be re- animated using the
+"SPRITE MOVE ON" command. If an optional Object number is given after "SPRITE MOVE FREEZE", then only that bob will be frozen.
+api*/
+Instruction Sprite Move Freeze
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'pause' );
+	aoz.setMoveState( undefined, 'sprite', 'pause' );
+}
+End Instruction
+Instruction Sprite Move Freeze, index=(index)
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'pause', %index );
+	aoz.setMoveState( %index, 'sprite', 'pause' );
+}
+End Instruction
+
+/**api
+@name:Sprite Moveon
+@description:Indicates if the movement of one sprite is completed or not.
+@param:index:index:Index of the bob
+@return:boolean:string:True if the bob is moving, False if not
+@compatible: aoz
+@content:
+Use the SPRITE MOVON function to check whether a particular Object is being moved by a "SPRITE MOVE X" or "SPRITE MOVE Y"
+command. A value of True is returned while the bob is in motion, otherwise False is given for static
+bobas. Please note that BOB MOVON does not search for patterns generated by AMAL.
+api*/
+Function Sprite Movon
+{
+	#errors
+}
+End Function( {aoz.moduleAnimations.moveOn('sprite');} )
+Function Sprite Movon, index=(index)
+{
+	#errors
+}
+End Function( {aoz.moduleAnimations.moveOn('sprite', %index);} )
+
+
+// Filters
+/**api
+@name:Sprite Filter
+@description:Set or add a graphical filter to a sprite
+@param:index:index:Index of the sprite in question.
+@param:filterName$:string:Name of the filter to use (see list)
+@param:value1#:number:First value to use, a percentage or a number of pixels, depending on the filter
+@param:value2#:number:Second value to use, a percentage or a number of pixels, , depending on the filter
+@param:value3#:number:Third value to use, a percentage or a number of pixels, , depending on the filter
+@param:value4#:number:Fourth value to use, a percentage or a number of pixels (or a color), depending on the filter
+@content:
+This instruction applies one of the filters offered by Javascript and Aoz to the given sprite. The name, so the effect
+f the filter is specified in the first parameter, filterName$, and can be one of the following list,
+allong with the first, second third and fourth parameter, which value and type depend on the filter itself.
+
+- "blur": Applies a Gaussian blur to the sprite. The parameter defines the value of the standard deviation
+  to the Gaussian function, i.e., how many pixels on the screen blend into each other;
+  thus, a larger value will create more blur. A value of 0 leaves the input unchanged.
+
+- "brightness": Applies a linear multiplier to the sprite, making it appear brighter or darker.
+  A value under 100% darkens the image, while a value over 100% brightens it.
+  A value of 0% will create an image that is completely black, while a value of 100% leaves the input unchanged.
+
+- "contrast": Adjusts the contrast of the sprite. A value of 0% will create a drawing that is completely black.
+  A value of 100% leaves the drawing unchanged.
+
+- "grayscale": Converts the sprite to grayscale. A value of 100% is completely grayscale.
+  A value of 0% leaves the drawing unchanged.
+
+- "hue-rotate": Applies a hue rotation on the sprite. The value is expressed in degrees. 0 leaves the input unchanged.
+
+- "invert": Inverts the sprite. A value of 100% means complete inversion.
+  A value of 0% leaves the drawing unchanged.
+
+- "opacity": Applies transparency to the sprite. A value of 0% means completely transparent.
+  A value of 100% leaves the drawing unchanged.
+
+- "saturate": Saturates the sprite. A value of 0% means completely un-saturated.
+  A value of 100% leaves the drawing unchanged.
+
+- "sepia": Converts the sprite to sepia. A value of 100% means completely sepia.
+  A value of 0% leaves the drawing unchanged.
+
+- "drop-shadow": Applies a drop shadow effect to the sprite. A drop shadow is effectively a blurred,
+  offset version of the drawing's alpha mask drawn in a particular color, composited below the
+  drawing. This function takes four arguments:
+
+  1. Specifies the horizontal distance of the shadow, in pixels. Can be positive (the shadow will be on
+    the right of the graphic), can be negativbe, it will be on the left.
+  2. Specifies the vertical distance of the shadow, in pixels. Can be positiove (the shadow will lower than the
+     graphic), can be negative (the shadow will be higher).
+  3. The larger this value, the bigger the blur, so the shadow becomes bigger and lighter.
+     Negative values are not allowed.
+  4. The color of the shadow, in RGBA hexadecimal form, $RRGGBBAA (with AA handling the transparency
+     of the shadow)
+
+Multiple filters can be used at the same time. For example, it is possible to display a blurred sepia version
+of a sprite, with two Set Filter commands in chain before the actual drawing. Use sprite Filter Del to remove
+one or all filters.
+
+Please note tha tthe drop-shadow effect cannnot be applied to a screen. If you try, it will not generate
+an error but will have no effect.
+
+~~~
+Sprite Filter index$="lucie", "sepia", 100
+Sprite Filter index$="lucie", "blur", 14
+~~~
+
+Please note that like every complex graphical operation, Filters dans slow down the display or the drawing,
+specially complex filters like blur or drop-shadows that can massively slow down the dislay if applied on hundreds
+of sprites at the same time. It is suggested to only uise filters at key points, or key graphics like your main
+character and not everywhere.
+
+api*/
+Instruction Sprite Filter, index=(index), name$='', param1#=0, param2#=0, param3#=0, param4#=0
+{
+	#errors
+	aoz.sprites.context.getElement(aoz.sprites.contextName,aoz.checkIndex(%index),'sprite_not_defined').setFilter({name:%name$,parameters:[%param1#,%param2#,%param3#,%param4#]});
+}
+End Instruction
+
+/**api
+@name:Sprite Filter Del
+@description:Remove a specific or all filters applied to a sprite.
+@param:index:index:Index of the sprite
+@param:filterName$:string:Name of the filter to use (see list in the Sprite Filter instruction)
+@content:
+This instruction if used without parameters will restore the display of the sprite to normal.
+If you specify the name of a filter, and if this filter is used, then it will be removed,
+preserving eventual other filters already in place.
+api*/
+Instruction Sprite Filter Del, index=(index), name$
+{
+	#errors
+	aoz.sprites.context.getElement(aoz.sprites.contextName,%index,'sprite_not_defined').delFilter({name:%name$});
+}
+End Instruction
+
+/**api
+@name:Sprite Filter$
+@description:Returns the CSS string used by Javascript in the context.filter property.
+@param:index:index:Index of the sprite
+@return:string:The CSS string
+@content:
+This function is intended to be used by advanced developers, and returns the actual string
+to set in the Javascript context before drawing.
+api*/
+Function Sprite Filter$, index=(index)
+{
+	#errors
+}
+End Function( {aoz.sprites.context.getElement(aoz.sprites.contextName,%index,'sprite_not_defined').getFilterString()} )
+
+/**api
+@name:Sprite Filter
+@description:Return the current value of a filter for s sprite
+@param:index:index:Index of the sprite
+@param:name$:The name of the filter in question
+@param:paramNumber:integer:Optional parameter indicating the number of the parameter to return. 1 as a default (used by most filters), 1 to 4 for the drop-shadow filter.
+@return:number:The current value of the given filter
+api*/
+Function Sprite Filter, index=(index), name$, position=1
+{
+	#errors
+}
+End Function( {aoz.sprites.context.getElement(aoz.sprites.contextName,%index,'sprite_not_defined').getFilter({name:%name$,position:%position})} )

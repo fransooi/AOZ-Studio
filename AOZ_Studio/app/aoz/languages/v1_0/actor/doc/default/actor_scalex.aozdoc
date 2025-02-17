@@ -1,0 +1,11 @@
+<i>function:returns the factor X of the scaling</i>
+value=<b>Actor ScaleX</b>(number)
+value=<b>Actor ScaleX</b>(name$)
+=
+@code
+Cls 0
+Actor 1, ScaleX=1.5, ScaleY=1.2, image$="magic"
+Print Str$( Actor ScaleX( 1 ) )
+@code
+Display "1.5" on the screen
+

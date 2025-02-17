@@ -1,0 +1,7 @@
+<i>Sprite Move On</i>
+<b>Sprite Move On</b> xxxxxxx
+=
+Before any movement patterns can be executed, they must be activated by a SPRITE MOVE ON command. All movements
+will begin at once unless an optional number is given, in which case only that particular animation sequence will be
+activated. SPRITE MOVE OFF has the opposite effect, halting all animations, or a single sequence specified by its number.
+

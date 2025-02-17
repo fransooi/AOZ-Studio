@@ -1,0 +1,9 @@
+<i>Menu To Bank</i>
+<b>Menu To Bank</b> xxxxxxx
+=
+Use this command to save your menu along with its entire structure of branch definitions to the numbered bank.
+Once the menu has been stored in the selected memory bank, it will automatically be saved along with your Basic
+program. By storing your menu definitions in a memory bank, the size of your program listings are reduced
+significantly, freeing valuable space in the editor memory. If the bank number you select already exists, the
+appropriate error message will be given.
+

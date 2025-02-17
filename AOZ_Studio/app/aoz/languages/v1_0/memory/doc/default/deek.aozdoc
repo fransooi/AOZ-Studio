@@ -1,0 +1,19 @@
+<i>Deek</i>
+<b>Deek</b> xxxxxxx
+=
+The DEEK function returns a single 16-bit word from an address in memory. Value is read in little-endian in PC mode and big-endian in Amiga mode
+
+The address is resolved in AOZ by using the "Start" function to get the address of a bank (magical number) and adding the offset. Normal computer memory is inaccessible.
+
+This example reserves and fill a memory bank with random numbers, and then print then out...
+@code
+Reserve As Work 10, 1000
+For A = 0 To Length( 10 ) Step 2
+Doke Start( 10 ) + A, Rnd( 65536 )
+Next
+Wait Key
+For A = 0 To Length( 10 ) Step 2
+Print Deek Start( 10 ) + A; " ";
+Next
+@code
+

@@ -1,0 +1,19 @@
+<i>View Offset X</i>
+<b>View Offset X</b> xxxxxxx
+=
+This function allows you to retreive the current horizontal offset of the view..
+@code
+// Scrolling the map in diagonal
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+Do
+Offset View "MapView", View Offset X( "MapView" ) + 1, View Offset Y( "MapView" ) + 1
+Redraw View "MapView", 0				// Clear the view rectangle first and then displays the map
+Wait Vbl
+Next
+@code
+

@@ -1,0 +1,1737 @@
+// #################################################################
+// ASCII-MAN Reloaded V1.4
+// By Phil Bell
+// Created 14 March 2020
+// phil@aozwithphil.com
+// #################################################################
+// Change Log
+// #################################################################
+// Date: 	05 Apr 2021
+// Author: 	Phil Bell
+// Version: 1.4
+// Desc:	Renamed variables px and py to pxsc and pysc in
+//			CHECK_COLLISIONS: code section.
+//			Added DisplayValue[] procedure to display values using
+//			images instead of plain text.
+//			Updated DRAW_HUD: to use DisplayValue[]
+// #################################################################
+
+// All game play is based on the information in the following article
+// https://www.gamasutra.com/view/feature/3938/the_pacman_dossier.php?print=1
+
+// Features:
+
+// Player speeds up when cornering
+// Frightened duration state reduces as levels progress
+// Ghosts can not re enter ghost house
+// Player can not enter ghost house
+// Ghost and Player speed changes as per the level and when in frightened state
+// Game phases change from scatter to chase as per original game
+// There are 4 locations where ghosts can not turn up (13, 8) (16, 8) (13, 15) (16, 15), except when frightened
+// Ghosts can not make a U turn
+// Ghosts speed reduces when entering a tunnel
+// Captured ghosts must return to the ghost house to be revived
+// Frightened duration decreases 1 second per level from 15 seconds in level 1
+// Ghosts prefer up, down, left, right when in frightened mode or if only 1 direction is available
+// When ghosts are targeting a location, it turns to the location with the shortest distance to the target
+// Player points: Dot = 10, Super Pill = 50, Ghosts = 200 for first, then doubles for each after that, resets when frightened duration finishes
+// Fruit bonus - 2 per level, one when player has eaten 70 dots, another at 170, bonus stays in maze for 10 seconds
+// Ghosts are released from the ghost house as follows, Blinky starts each level outside the ghost house
+//      Level 1: Pinky - straight away, Inky after player collects 30 dots, Clyde after a further 60 dots collected
+//      Level 2: Pinky - straight away, Inky straight away, Clyde after 50 dots collected
+//      Level 3+ All ghosts leave as soon as the level starts
+//      When the player loses a life, Pinky leaves after 7 dots, Inky after a further 10, Clyde after a further 15
+// If the player does not collect any dots for 5 seconds, the next ghost is released
+
+// Ghosts target there home designated maze corner when in scatter mode
+    // Red      Blinky  Top Right
+    // Pink     Pinky   Top Left
+    // Orange   Clyde   Bottom Left
+    // Cyan     Inky    Bottom Right
+
+// Ghost behaviours when in scatter phase:
+    // Red      Blinky      Agressive find and chase the player
+    // Pink     Pinky       Ambush, target is 4 tiles in front of the player direction
+    // Orange   Clyde       If player is more than 8 tiles away then target the player, else patrol scatter location (bottom left)
+    // Cyan     Inky        Inky uses the most complex targeting scheme of the four ghosts in chase phase.
+    //                      He uses the players current tile/orientation and Blinky's current tile to calculate his final target.
+
+// Ghost speed
+    //LEVEL	    NORM	FRIGHT	TUNNEL
+    //1	        75%	    50%	    40%
+    //2 - 4	    85%	    55%	    45%
+    //5 - 20	95%	    60%	    50%
+    //21+	    95%	    -	    50%
+
+// Player speed
+    //LEVEL	    NORM	NORM DOTS	FRIGHT	FRIGHT DOTS
+    //1	        80%	    71%	        90%	    79%
+    //2 - 4	    90%	    79%	        95%	    83%
+    //5 - 20	100%	87%	        100%	87%
+    //21+	    90%	    79%
+
+// Game phases
+    //   Mode	    Level 1	   Levels 2-4  Levels 5+
+    // 1 Ready      4          4            4
+    // 2 Scatter	7	       7	        5
+    // 3 Chase	    20	       20	        20
+    // 4 Scatter	7	       7	        5
+    // 5 Chase	    20	       20	        20
+    // 6 Scatter	5	       5	        5
+    // 7 Chase	    20	       1033	        1037
+    // 8 Scatter	5	       1/60	        1/60
+    // 9 Chase 	    indefinite indefinite	indefinite
+
+#manifest:"aoz"
+#fullScreen:true
+#splashScreen:false
+#googleFont:"baloo"
+#fps:false
+
+DWIDTH = 1920
+DHEIGHT = 1080
+
+Load Asset "2.Collect.wav", 2
+Load Asset "8.GetReady.wav", 8
+Load Asset "9.Siren.wav", 9
+Load Asset "24.Die.wav", 24
+Load Asset "28.Dot.wav", 28
+Load Asset "29.Game Over.wav", 29
+Load Asset "30.Dead.wav",30
+Load Asset "31.LevelComplete.wav", 31
+
+Screen Open 0, DWIDTH, DHEIGHT,32,Lowres
+Curs Off: Flash Off
+Cls 0
+
+//Volume 80
+
+SCRXOFF = (DWIDTH / 2) - (896 / 2)      // Sets the screen X offset, 896 is the width of the maze image
+SCRYOFF = 80
+
+// Maximum dimensions of the maze
+MAP_MAX_X = 29
+MAP_MAX_Y = 30
+
+// Used to store the layout of the maze, used to test for player/ghost movements, dot/super pill collections, tunnels etc
+Dim TILEMAP(MAP_MAX_X + 1, MAP_MAX_Y + 1)
+MAPCELLWIDTH = 32                       // Width in pixels of each map cell
+MAPCELLHIGHT = 32                       // Height in pixels of each map cell
+
+// Used to store the available vectors (directions) in each map cell
+// Direction values : 1 = Up, 2 = Right, 4 = Down, 8 = Left
+// This is generated using the TILEMAP data
+Dim MAZE_GRAPH(MAP_MAX_X + 1, MAP_MAX_Y + 1)
+
+// Constants
+NORMAL_GAME_SPEED# = 4
+
+// Globals
+PD = 0                                  // Player direction (0=not moving, 1=up, 2=right, 4=down, 8=left)
+PDO = 0                                 // PLayer old direction
+PR = 0                                  // Player bob rotation
+PFA = 117                               // Player bob image/frame
+ND = 0                                  // Player new direction
+PX = 14                                 // Players start X location in the maze
+PY = 23                                 // Players start Y location in the maze
+PCX = 0                                 // Player X position in the current cell
+PCY = 0                                 // Player Y position in the current call
+PLAYER_NORM_SPEED# = 0                  // The normal speed
+PLAYER_NORM_DOTS_SPEED# = 0             // The speed to add when easting dots in norm speed
+PLAYER_FRIGHT_DOTS_SPEED# = 0           // The speed to add when eating dots when ghosts are frightened
+PLAYER_FRIGHT_SPEED# = 0                // The speed when ghosts are frightened
+PSX# = 0                                // Player horizontal speed
+PSY# = 0                                // Player vertical speed
+LEVEL = 1                               // Game level
+LIVES = 3                               // Player lives
+SCORE = 0                               // The current score for the player
+HISCORE = 0                             // Tracks the high score
+DOT_COUNT = 0                           // Total dots in the maze at the start of a level
+GAME_PHASE = 0                          // 0 = Ready, 1 = Chase, 2 = Scatter, 3 = Frightened
+GAME_PHASE_COUNTER = 0                  // Game phase index - see UPDATE_GAME_PHASE:
+NEXT_GAME_PHASE_TIME# = 0               // Next game phase trigger time, moves on to the next game phase
+GAME_PHASE_OLD_TIME# = 0                // Used to store the current phase time when switching to frightened phase
+GAME_OLD_PHASE = 0                      // Stores the previous phase when switching to frighteneed phase
+PLAYER_STATE = 0                        // 0 = normal, 1 = dead, 2 = level complete
+
+// Helper/reusables
+GRAPH_VALUE = 0
+CANMOVE = 0
+GHOST_GRAPH_VALUE = 0
+GHOST_CURRENT_DIRECTION = 0
+Dim DIRS(4)                             // Used in a sub routine called fequently so initialsed here to avoid performance hit
+DIRS(0) = 1                             // Used to get a random direction for a frightened ghost
+DIRS(1) = 2
+DIRS(2) = 4
+DIRS(3) = 8
+Global DIRS()
+
+// Ghost variables
+GHOST_COUNT = 4                         // Number of ghosts
+Dim GHOSTX(4): Dim GHOSTY(4)            // Ghost maze location
+Dim GHOST_SCATTER_TARGETX(4)            // Red (Top Right), Pink (Top Left), Cyan (Bottom Right), Orange (Bottom Left)
+Dim GHOST_SCATTER_TARGETY(4)
+Dim GHOSTD(4)                           // Current direction
+Dim GHOSTSTARTX(4): Dim GHOSTSTARTY(4)  // Home start maze position
+Dim GHOSTSTATE(4)                       // 0 = in maze, 1 = frightened, 2 = captured, 3 = Home, 4 = Released
+Dim GHOSTTYPE(4)                        // 0 = Blinky 1 = Pinky (pink) 2 = Inky (cyan) 3 = Clyde (orange)
+Dim GHOSTRELEASECOUNTER(4)              // Number of dots to be collected before the ghost can leave the ghost house
+Dim GHOSTSPEED#(4)                      // The current speed of the ghost
+Dim GHOSTCY(4)
+Dim GHOSTCX(4)
+Dim GHOSTFA(4)                          // Animation frame
+Dim GHOSTFAT#(4)                         // Animation frame time
+
+GHOSTNORMSPEED# = 0                     // Speed when in normal state
+GHOSTFRIGHTSPEED# = 0                   // Speed when frightened
+GHOSTTUNNELSPEED# = 0                   // Speed when in tunnel
+GHOSTPOINTS = 0                         // Tracks how many points to award to the player, double points per ghost per super pill
+GHOST_REVERSE_DIRECTION = 0
+RESET_REVERSE = 0
+GF = 0                                  // Ghost animation frame
+LAST_DOT_COUNTER = 0                    // Used to track if player hasnt collected any dots, ghosts are released after 5 seconds if no dots collected
+GHOST_RELEASE_TIME# = 0                 // Used for the timing loop for releasing ghosts from the ghost house, loop triggers every second
+
+// Ghost home locations
+GHOSTTYPE(0) = 0                        // 0 = Blinky (red) Top Right
+GHOST_SCATTER_TARGETX(0) = MAP_MAX_X + 7
+GHOST_SCATTER_TARGETY(0) = -2
+GHOSTTYPE(1) = 1                        // 1 = Pinky (pink) Top Left
+GHOST_SCATTER_TARGETX(1) = 2
+GHOST_SCATTER_TARGETY(1) = -2
+GHOSTTYPE(2) = 2                        // 2 = Inky (Cyan) Bottom Right
+GHOST_SCATTER_TARGETX(2) = MAP_MAX_X
+GHOST_SCATTER_TARGETY(2) = MAP_MAX_Y + 2
+GHOSTTYPE(3) = 3                        // 3 = Clyde (Orange) Bottom Left
+GHOST_SCATTER_TARGETX(3) = 0
+GHOST_SCATTER_TARGETY(3) = MAP_MAX_Y + 2
+
+// Bonus (Fruits), the index correlates to each level, so first level is index 1. Levels 13+ is always bonus 13
+// 2 bonuses are added per level, 1st when the player collects 70 dots, the second at 170
+Dim BONUSSCORE(14)
+Dim BONUSIMG(14)
+BONUSX = 14:BONUSY = 17                 // The maze location of the bonus, always just below the ghost house
+BONUSINMAZE = 0                         // 0 = false, 1 = true
+REMOVE_BONUS_TIME# = 0                  // The time when the bonus will be removed if not collected, bonuses are on screen for 10 seconds
+
+BONUSIMG(1) = 81: BONUSSCORE(1) = 100          // C
+BONUSIMG(2) = 82: BONUSSCORE(2) = 300          // S
+BONUSIMG(3) = 83: BONUSSCORE(3) = 500          // P
+BONUSIMG(4) = 83: BONUSSCORE(4) = 500          // P
+BONUSIMG(5) = 84: BONUSSCORE(5) = 700          // A
+BONUSIMG(6) = 84: BONUSSCORE(6) = 700          // A
+BONUSIMG(7) = 85: BONUSSCORE(7) = 1000         // G
+BONUSIMG(8) = 85: BONUSSCORE(8) = 1000         // G
+BONUSIMG(9) = 86: BONUSSCORE(9) = 2000         // X
+BONUSIMG(10) = 86: BONUSSCORE(10) = 2000       // X
+BONUSIMG(11) = 87: BONUSSCORE(11) = 3000       // B
+BONUSIMG(12) = 87: BONUSSCORE(12) = 3000       // B
+BONUSIMG(13) = 88: BONUSSCORE(13) = 3000       // K
+
+Degree
+
+Bob 20, 0, 0, PFA                           // Player (bobnumber, x, y image)
+// Bob 10, 0, 0, 31                         // Blinky
+// Bob 11, 0, 0, 41                         // Pinky
+// Bob 12, 0, 0, 51                         // Inky
+// Bob 13, 0, 0, 61                         // Clyde
+// Bob 14, 0, 0, 81                         // Bonus
+// Bob 15, 0, 0, 98                         // Gameover, Ready, Well Done
+
+Bob Off 20
+
+// Player
+For i = 110 to 120
+    Hot Spot i, $11
+Next i
+
+For i = 130 to 140
+    Hot Spot i, $11
+Next i
+
+// Ghosts
+For i = 30 to 37
+    Hot Spot i, $11
+Next i
+
+For i = 40 to 47
+    Hot Spot i, $11
+Next i
+
+For i = 50 to 57
+    Hot Spot i, $11
+Next i
+
+For i = 60 to 67
+    Hot Spot i, $11
+Next i
+
+Hot Spot 70, $11
+Hot Spot 71, $11
+Hot Spot 72, $11
+
+// Bonuses
+For i = 81 to 88
+    Hot Spot i, $11
+Next
+
+// Explosion
+For i = 20 to 24
+    Hot Spot i, $11
+Next
+
+Hot spot 2, 2, 2    // Dot
+Hot spot 3, $11    // Super Pill
+Hot spot 4, $11    // background image, used to paint over the Dot and Pills when collected
+
+Gosub SHOW_INTRO
+Gosub RESET_MAP_DATA
+Gosub SET_GRAPH_DATA
+
+
+START_LEVEL:
+    // Start level entry point, the level is setup based on the current value of the LEVEL variable
+    Cls
+    Gosub SETUP_FOR_NEW_LEVEL
+
+MAIN_GAME_LOOP:
+Do
+    Gosub UPDATE_GAME_PHASE
+    Gosub UPDATE_BONUS
+    Gosub RELEASE_THE_GHOSTS
+    Gosub SET_GHOST_ANIMATION
+    Gosub MOVE_GHOSTS
+    Gosub MOVE_PLAYER
+    Gosub CHECK_COLLISIONS
+
+    // Player has been captured by a ghost
+    If PLAYER_STATE = 1
+       Goto PLAYER_DEAD
+    End If
+
+    // Player has collected all the dots
+    If PLAYER_STATE = 2
+       Goto LEVEL_COMPLETE
+    End If
+
+    Wait Vbl
+Loop
+
+SHOW_INTRO:
+    Cls
+    Paste Bob SCRXOFF + 220, 120, 100
+    Bob 30, SCRXOFF + 110, 210, 104
+
+    y = 470: yy = 410: sy = -2: syy = 2
+    f = 0
+
+    Do
+        Bob 10, SCRXOFF + 250, SCRYOFF + y, 30 + f
+        Bob 11, SCRXOFF + 400, SCRYOFF + yy, 40 + f
+        Bob 12, SCRXOFF + 550, SCRYOFF + y, 50 + f
+        Bob 13, SCRXOFF + 700, SCRYOFF + yy, 60 + f
+
+        Add y, sy
+        Add yy, syy
+
+        If y > 470 or y < 410
+            sy = -sy
+        End If
+        If yy > 470 or yy < 410
+            syy = -syy
+        End If
+
+        Inc f
+        If f = 8: f = 0: End If
+
+        A$ = Inkey$
+
+        If A$ <> "" Or Fire(0) : Bob Off 30: Return: End If
+        Wait 0.01
+        Wait Vbl
+    Loop
+
+Return
+
+CHECK_COLLISIONS:
+
+    // Check for collisions between player, ghosts and bonuses
+    c = Bob Col (20, 10 to 14)
+
+    If c = 1
+        // Get the player x,y position in screen pixels
+
+        pxsc = SCRXOFF + PCX + (PX * MAPCELLWIDTH)
+        pysc = SCRYOFF + PCY + (PY * MAPCELLWIDTH)
+
+        // Check each ghost for a collision
+        For i = 0 to GHOST_COUNT - 1
+            // Did the player collide with the ghost
+            If col(i + 10) = true
+                // Get the distance between the player and the ghost
+                gx = SCRXOFF + GHOSTCX(i) + (GHOSTX(i) * MAPCELLWIDTH)
+                gy = SCRYOFF + GHOSTCY(i) + (GHOSTY(i) * MAPCELLHIGHT)
+
+                xx = ABS(pxsc - gx)
+                yy = ABS(pysc - gy)
+
+                // Calculate the distance
+                distance = (xx * xx) + (yy * yy)
+
+                // Here we can control how much the player and ghost images can overlap
+                // before we decide its a collision
+                if distance < 800
+                    // Is the ghost in frightend state
+                    If GHOSTSTATE(i) = 1
+                        // Set ghost state to returning to ghost house
+                        GHOSTSTATE(i) = 2
+                        // double the points for each ghost/ resets when a super pill is eaten (200, 400, 800, 1600)
+                        GHOSTPOINTS = GHOSTPOINTS * 2
+                        // add the points to the players score
+                        SCORE = SCORE + (GHOSTPOINTS)
+                        Gosub DRAW_HUD
+                        Play Audio 24
+                        Gosub DRAW_PLAYER
+                    Else
+                        If GHOSTSTATE(i) = 0
+                            // Player caught by a ghost
+                            // 0 = normal, 1 = dead, 2 = level complete
+                            // Setting the player state here forces the main game loop to jump to PLAYER_DEAD
+                            PLAYER_STATE = 1
+                            // If no dots are collected for more than 5 seconds, the next ghost is released
+                            LAST_DOT_COUNTER = 0
+                            // Set times for the 3 ghosts in the ghost house to be release
+                            GHOSTRELEASECOUNTER(1) = 7
+                            GHOSTRELEASECOUNTER(2) = 10
+                            GHOSTRELEASECOUNTER(3) = 15
+                        End If
+                    End If
+                End If
+            End If
+        Next i
+
+        // Check bonus collision
+        If col(14) = true
+            BONUSINMAZE = 0
+            REMOVE_BONUS_TIME# = 0
+            Bob Off 14
+            Play Audio 2
+            // Add score, clamp the level to 13, all bonuses after level 13 are the same
+            SCORE = SCORE + BONUSSCORE(MIN(LEVEL, 13))
+            Gosub DRAW_HUD
+        End If
+    End If
+Return
+
+UPDATE_BONUS:
+    If BONUSINMAZE = 1
+        // Remove the bonus if the bonus duration has expired
+        If Timer > REMOVE_BONUS_TIME#
+            BONUSINMAZE = 0
+            Bob Off 14
+        End If
+    End If
+Return
+
+UPDATE_GAME_PHASE:
+
+    //   GAME_PHASE_COUNTER
+    //   Mode	    Level 1	   Levels 2-4  Levels 5+
+    // 1 Ready      4          4            4
+    // 2 Scatter	7	       7	        5
+    // 3 Chase	    20	       20	        20
+    // 4 Scatter	7	       7	        5
+    // 5 Chase	    20	       20	        20
+    // 6 Scatter	5	       5	        5
+    // 7 Chase	    20	       1033	        1037
+    // 8 Scatter	5	       1/60	        1/60
+    // 9 Chase 	    indefinite indefinite	indefinite
+
+    // Game phase checks
+    If Timer > NEXT_GAME_PHASE_TIME#
+        // The game phase counter is paused while in the frightened phase
+        // Frightened state has finished so change the state back to its previous state
+        If GAME_PHASE = 3
+            // GHOSTSTATE 0 = in maze, 1 = frightened, 2 = captured, 3 = Home, 4 = Released
+            For i = 0 To GHOST_COUNT - 1
+                // Set each ghost state back to normal
+                If GHOSTSTATE(i) <> 3
+                    GHOSTSTATE(i) = 0
+                End If
+            Next i
+            // Restore previous game phase
+            GAME_PHASE = GAME_OLD_PHASE
+            // Add the amount of time passed since we changed to frightened
+            NEXT_GAME_PHASE_TIME# = Timer + (Timer - GAME_PHASE_OLD_TIME#)
+            // Set player speed back to normal
+            PLAYER_SPEED# = PLAYER_NORM_SPEED#
+            // Reset the ghost points
+            GHOSTPOINTS = 100
+            Return
+        End If
+
+        Inc GAME_PHASE_COUNTER
+
+        If GAME_PHASE_COUNTER = 1 //
+            Gosub DRAW_PLAYER_READY
+            // Set the time for the next game phase
+            NEXT_GAME_PHASE_TIME# = 0
+            Return
+        End If
+
+        // Always in chase after the 9th phase
+        If GAME_PHASE_COUNTER = 9
+            // Chase
+            GAME_PHASE = 1
+            // Set flag to reverse the ghost direction in the move ghost routine
+            GHOST_REVERSE_DIRECTION = 1
+            NEXT_GAME_PHASE_TIME# = 1
+            Return
+        End If
+
+        // If phase <= 5
+        If GAME_PHASE_COUNTER <= 5
+            // Switch to scatter phase if in chase phase or no phase is set, eg start of a level
+            If GAME_PHASE = 1 or GAME_PHASE = 0
+                // Scatter
+                GAME_PHASE = 2
+
+                // Only reverse direction when going to scatter mode in level 1
+                If LEVEL = 1 and GAME_PHASE_COUNTER > 2
+                // Set flag to reverse the ghost direction in the move ghost routine
+                    GHOST_REVERSE_DIRECTION = 1
+                End If
+
+                // Set duration in scatter phase based on the current level
+                If LEVEL < 5
+                    NEXT_GAME_PHASE_TIME# = Timer + 7
+                Else
+                    NEXT_GAME_PHASE_TIME# = Timer + 20
+                End If
+            else
+                // Switch to Chase phase for 5 seconds
+                GAME_PHASE = 1
+                // Set flag to reverse the ghost direction in the move ghost routine
+                GHOST_REVERSE_DIRECTION = 1
+                NEXT_GAME_PHASE_TIME# = Timer + 5
+            End If
+            Return
+        End If
+
+        // Phase 6 is scatter for 5 seconds
+        If GAME_PHASE_COUNTER = 6
+            // Scatter
+            GAME_PHASE = 2
+            // Set flag to reverse the ghost direction in the move ghost routine
+            GHOST_REVERSE_DIRECTION = 1
+            NEXT_GAME_PHASE_TIME# = Timer + 5
+            Return
+        End If
+
+        // Phase 7 is chase, for level 1 its for 20 seconds, else 1033 seconds (17 minutes)
+        If GAME_PHASE_COUNTER = 7
+            // Chase
+            GAME_PHASE = 1
+            // Set flag to reverse the ghost direction in the move ghost routine
+            GHOST_REVERSE_DIRECTION = 1
+            // Set the duration based on the level
+            If LEVEL = 1
+                NEXT_GAME_PHASE_TIME# = Timer + 20
+            else
+                NEXT_GAME_PHASE_TIME# = Timer + 1033
+            End If
+            Return
+        End If
+
+        // Phase 8 is scatter, level 1 for 5 seconds else 1/60 second (causes the ghost to just change direction)
+        If GAME_PHASE_COUNTER = 8
+            // Scatter
+            GAME_PHASE = 2
+            // Set flag to reverse the ghost direction in the move ghost routine
+            GHOST_REVERSE_DIRECTION = 1
+            // Set the duration based on the level
+            If LEVEL = 1
+                NEXT_GAME_PHASE_TIME# = Timer + 5
+            else
+                NEXT_GAME_PHASE_TIME# = Timer + 0.017
+            End If
+            Return
+        End If
+    End If
+Return
+
+RELEASE_THE_GHOSTS:
+    If Timer > GHOST_RELEASE_TIME#
+        // Trigger every second
+        GHOST_RELEASE_TIME# = Timer + 1
+
+        // keep a track of when the player last collected a dot
+        Inc LAST_DOT_COUNTER
+
+        // Release a ghost if no dots collected for more than 5 seconds
+        If LAST_DOT_COUNTER > 5
+            // Release the first ghost in the ghost house
+            // 0 = in maze, 1 = frightened, 2 = captured, 3 = Home, 4 = Release
+            For i = 0 To GHOST_COUNT - 1
+                If GHOSTSTATE(i) = 3
+                    GHOSTSTATE(i) = 4
+                    GHOSTSPEED#(i) = GHOSTNORMSPEED#
+                    LAST_DOT_COUNTER = 0
+                    // exit the for loop here
+                    i = GHOST_COUNT - 1
+                End If
+            Next i
+        Else
+            // If in the ghost house with a zero release counter then the ghost can exit
+            // In levels 1 and 2 ghosts are released as per there individual dot counters
+            // After level 3 all the ghosts have there counters set to zero
+            For i = 0 To GHOST_COUNT - 1
+                If GHOSTSTATE(i) = 3 AND GHOSTRELEASECOUNTER(i) = 0
+                    GHOSTSTATE(i) = 4
+                    GHOSTSPEED#(i) = GHOSTNORMSPEED#
+                    // exit for loop here, the next ghost will be released in the next loop
+                    i = GHOST_COUNT - 1
+                End If
+            Next i
+        End If
+
+    End If
+Return
+
+DRAW_PLAYER_READY:
+    Play Audio 8
+    for i = 1015 to SCRYOFF + 490 step -25
+        Bob 15, SCRXOFF + 340, i, 98
+        Wait Vbl
+    NExt i
+    Wait 2
+    for i = SCRYOFF + 490 to 1015 step 25
+        Bob 15, SCRXOFF + 340, i, 98
+        Wait Vbl
+    NExt i
+    Bob Off 15
+Return
+
+LEVEL_COMPLETE:
+    Inc LEVEL
+    Play Audio 31
+    for i = 1015 to SCRYOFF + 490 step -25
+        Bob 15, SCRXOFF + 280, i, 97
+        Wait Vbl
+    NExt i
+    Wait 2
+    for i = SCRYOFF + 490 to 1015 step 25
+        Bob 15, SCRXOFF + 280, i, 97
+        Wait Vbl
+    NExt i
+    Bob Off 15
+    Goto START_LEVEL
+
+GAME_OVER:
+    LEVEL = 1
+    for i = 1015 to SCRYOFF + 405 step -25
+        Bob 15, SCRXOFF + 275, i, 99
+        Wait Vbl
+    Next i
+    Play Audio 29
+    Gosub REMOVE_BOBS
+	Repeat Until Key State <> 0 or Fire(0)
+//    Wait Key
+    Sam Stop 29
+    Bob Off 15
+    Gosub SHOW_INTRO
+    Goto START_LEVEL
+
+REMOVE_BOBS:
+    For i = 10 to 14
+        Bob Off i
+    Next
+Return
+
+PLAYER_DEAD:
+    Play Audio 30
+
+    For f = 20 to 23
+        Bob 20, SCRXOFF + PCX + (PX * MAPCELLWIDTH), SCRYOFF + PCY + (PY * MAPCELLHIGHT), f
+        Wait 0.08
+    Next f
+
+    Bob Off 20
+
+    Dec LIVES
+    Gosub DRAW_LIVES
+
+    If LIVES = 0
+        Goto GAME_OVER
+    End If
+
+    // Remove the bonus when player is caught
+    REMOVE_BONUS_TIME# = 0
+    BONUSINMAZE = 0
+    Bob Off 14
+
+    PLAYER_STATE = 0
+
+    // It takes 5.5 seconds before game play restarts so add this to the next phase time
+    NEXT_GAME_PHASE_TIME# = NEXT_GAME_PHASE_TIME# + 8.5
+
+    Wait 1.5
+
+    Gosub DRAW_MAZE
+    Gosub RESET_PLAYER
+    Gosub RESET_GHOSTS_TO_HOME
+    Gosub DRAW_PLAYER
+    Gosub DRAW_GHOSTS
+    Gosub DRAW_HUD
+
+    Gosub DRAW_PLAYER_READY
+    Goto MAIN_GAME_LOOP
+
+SETUP_FOR_NEW_LEVEL:
+    Gosub RESET_PLAYER
+    Gosub RESET_MAP_DATA
+
+    // Game Phases 0 = Ready, 1 = Chase, 2 = Scatter, 3 = Frightened
+    GAME_PHASE = 0   // **** change to 0 ******
+    GAME_PHASE_COUNTER = 0
+    PLAYER_STATE = 0
+    NEXT_GAME_PHASE_TIME# = 0
+    GHOSTPOINTS = 100
+    DOTS_COLLECTED = 0
+
+    If LEVEL = 1
+        LIVES = 3
+        SCORE = 0
+        PLAYER_NORM_SPEED# = (NORMAL_GAME_SPEED# / 100) * 80
+        PLAYER_NORM_DOTS_SPEED# = (NORMAL_GAME_SPEED# / 100) * 71
+        PLAYER_FRIGHT_SPEED# = (NORMAL_GAME_SPEED# / 100) * 90
+        PLAYER_FRIGHT_DOTS_SPEED# = (NORMAL_GAME_SPEED# / 100) * 79
+    End If
+
+    If (LEVEL > 1 and LEVEL < 5)
+        PLAYER_NORM_SPEED# = (NORMAL_GAME_SPEED# / 100) * 90
+        PLAYER_NORM_DOTS_SPEED# = (NORMAL_GAME_SPEED# / 100) * 79
+        PLAYER_FRIGHT_SPEED# = (NORMAL_GAME_SPEED# / 100) * 95
+        PLAYER_FRIGHT_DOTS_SPEED# = (NORMAL_GAME_SPEED# / 100) * 83
+    End If
+
+    If LEVEL >=5 and LEVEL <= 20
+        PLAYER_NORM_SPEED# = NORMAL_GAME_SPEED#
+        PLAYER_NORM_DOTS_SPEED# = (NORMAL_GAME_SPEED# / 100) * 87
+        PLAYER_FRIGHT_SPEED# = NORMAL_GAME_SPEED#
+        PLAYER_FRIGHT_DOTS_SPEED# = (NORMAL_GAME_SPEED# / 100) * 87
+    End If
+
+    If LEVEL > 20
+        PLAYER_NORM_SPEED# = (NORMAL_GAME_SPEED# / 100) * 90
+        PLAYER_NORM_DOTS_SPEED# = (NORMAL_GAME_SPEED# / 100) * 79
+        PLAYER_FRIGHT_SPEED# = NORMAL_GAME_SPEED#           // N/A as frightened duration is only for 1 frame
+        PLAYER_FRIGHT_DOTS_SPEED# = NORMAL_GAME_SPEED#      // N/A as frightened duration is only for 1 frame
+    End If
+
+    PSX# = PLAYER_NORM_SPEED#
+    PSY# = PLAYER_NORM_SPEED#
+
+    // Reset ghosts to ghost home locations, in the ghost house except blinky
+    Gosub RESET_GHOSTS_TO_HOME
+
+    LAST_DOT_COUNTER = 0
+    GHOST_RELEASE_TIME# = 0
+
+    For i = 0 To GHOST_COUNT - 1
+        GHOSTSTARTX(i) = GHOSTX(i)
+        GHOSTSTARTY(i) = GHOSTY(i)
+        GHOSTRELEASECOUNTER(i) = 0
+
+        // Ghost speed
+        //LEVEL	    NORMAL  FRIGHTENED	TUNNEL
+        //1	        75%	    50%	        40%
+        //2 - 4	    85%	    55%	        45%
+        //5 - 20	95%	    60%	        50%
+        //21+	    95%	    N/A	        50%
+
+        // Set the ghost speeds
+        If LEVEL = 1
+            GHOSTNORMSPEED# = (NORMAL_GAME_SPEED# / 100) * 75
+            GHOSTFRIGHTSPEED# = (NORMAL_GAME_SPEED# / 100) * 50
+            GHOSTTUNNELSPEED# = (NORMAL_GAME_SPEED# / 100) * 40
+            // Number of dots to be collected before the ghost can be releassed from the ghost house
+            // After level 2 all ghosts are released as soon as the level starts
+            // When a player loses a life, ghosts are released in steps, Blinky 0, Pinky, 7, Inky 10, Clyde 15
+            If i = 2: GHOSTRELEASECOUNTER(i) = 30: End If
+            If i = 3: GHOSTRELEASECOUNTER(i) = 60: End If
+        End If
+
+        If LEVEL = 2
+            If i = 3: GHOSTRELEASECOUNTER(i) = 50: End If
+        End If
+
+        // Levels 2 to 3
+        If (LEVEL > 1 and LEVEL < 5)
+            GHOSTNORMSPEED# = (NORMAL_GAME_SPEED# / 100) * 85
+            GHOSTFRIGHTSPEED# = (NORMAL_GAME_SPEED# / 100) * 55
+            GHOSTTUNNELSPEED# = (NORMAL_GAME_SPEED# / 100) * 45
+        End if
+
+        // Levels 5 to 20
+        If LEVEL >=5 and LEVEL < 20
+            GHOSTNORMSPEED# = (NORMAL_GAME_SPEED# / 100) * 95
+            GHOSTFRIGHTSPEED# = (NORMAL_GAME_SPEED# / 100) * 60
+            GHOSTTUNNELSPEED# = (NORMAL_GAME_SPEED# / 100) * 50
+        End If
+
+        // Levels 20 and above
+        If LEVEL > 20
+            GHOSTNORMSPEED# = (NORMAL_GAME_SPEED# / 100) * 95
+            GHOSTFRIGHTSPEED# = NORMAL_GAME_SPEED# // N/A as frightened duration is only for 1 frame
+            GHOSTTUNNELSPEED# = (NORMAL_GAME_SPEED# / 100) * 50
+        End If
+
+        GHOSTSPEED#(i) = GHOSTNORMSPEED#
+    Next
+
+    Gosub DRAW_MAZE
+    Gosub DRAW_GHOSTS
+    Gosub DRAW_PLAYER
+    Gosub DRAW_HUD
+    Gosub DRAW_LIVES
+Return
+
+RESET_PLAYER:
+    PD = 0                                  // Player direction (0=not moving, 1=up, 2=right, 3=down, 4=left)
+    PX = 14                                 // Players start X location in the maze
+    PY = 23                                 // Players start Y location in the maze
+    PCX = 0
+    PCY = 0
+    PFA = 117
+    PR = 0
+Return
+
+// Set the ghosts back to the starting locations in the ghost house
+// Blinky does not start in the ghost house
+// 0 = in maze, 1 = frightened, 2 = captured, 3 = Home
+RESET_GHOSTS_TO_HOME:
+    GHOSTX(0) = 13
+    GHOSTY(0) = 11
+    GHOSTD(0) = 8
+    GHOSTCY(0) = 0
+    GHOSTCX(0) = 0
+    GHOSTSTATE(0) = 0
+    GHOSTFA(0) = 32
+
+    GHOSTX(1) = 13
+    GHOSTY(1) = 14
+    GHOSTD(1) = 1
+    GHOSTCY(1) = 0
+    GHOSTCX(1) = 0
+    GHOSTSTATE(1) = 3
+    GHOSTFA(1) = 45
+
+    GHOSTX(2) = 14
+    GHOSTY(2) = 14
+    GHOSTD(2) = 1
+    GHOSTCY(2) = 0
+    GHOSTCX(2) = 0
+    GHOSTSTATE(2) = 3
+    GHOSTFA(2) = 56
+
+    GHOSTX(3) = 16
+    GHOSTY(3) = 14
+    GHOSTD(3) = 1
+    GHOSTCY(3) = 0
+    GHOSTCX(3) = 0
+    GHOSTSTATE(3) = 3
+    GHOSTFA(3) = 60
+Return
+
+MOVE_GHOSTS:
+    // Update all the ghost positions as per the game phase and individual behaviours
+    GTX = 0
+    GTY = 0
+    // Used to reset the GHOST_REVERSE_DIRECTION flag at the end of the for next loop
+    RESET_REVERSE = 0
+
+NEXT_GHOST:
+    For g = 0 To GHOST_COUNT - 1
+
+        // GHOSTSTATE 0 = in maze, 1 = frightened, 2 = captured, 3 = Home, 4 = Released
+
+        // Check if ghost is entering a new map cell, if so we need to pick a direction
+        If (GHOSTCX(g) < GHOSTSPEED#(g) and GHOSTCX(g) > -GHOSTSPEED#(g)) and (GHOSTCY(g) < GHOSTSPEED#(g) and GHOSTCY(g) > -GHOSTSPEED#(g))
+
+            // If ghost is set to be released then position them at the top of the ghost house in the up direction
+            If GHOSTSTATE(g) = 4
+                GHOSTSPEED#(g) = GHOSTNORMSPEED#
+                GHOSTSTATE(g) = 0
+                GHOSTX(g) = 15
+                GHOSTY(g) = 12
+                GHOSTD(g) = 1
+                GHOSTCX(g) = 0
+                GHOSTCY(g) = 0
+            End If
+
+            // Get the current direction of the ghost
+            GHOST_CURRENT_DIRECTION = GHOSTD(g)
+
+            // Get the available directions in the current map cell
+            GHOST_GRAPH_VALUE = MAZE_GRAPH(GHOSTX(g), GHOSTY(g))
+
+            // Remove the opposite direction so the ghost can not do a u-turn
+            // This gosub Updates the GHOST_GRAPH_VALUE variable
+            Gosub REMOVE_GHOST_REVERSE_DIRECTION
+
+            // If arrived at the ghost house, then put the ghost in start position
+            If GHOSTSTATE(g) = 2 and GHOSTY(g) = 11 and GHOSTX(g) > 12 and GHOSTX(g)  < 17
+                // Ghost has arrived back to start so put it in the ghost house
+                GHOSTX(g) = GHOSTSTARTX(g)
+                GHOSTY(g) = GHOSTSTARTY(g)
+                GHOSTCX(g) = 0
+                GHOSTCY(g) = 0
+
+                GHOSTD(g) = 2
+
+                // Set ghost state to in ghost house
+                GHOSTSTATE(g) = 3
+
+                // Put blinky inside the ghost house, as his start location is just outside the ghost house
+                If g = 0: GHOSTY(g) = GHOSTSTARTY(g) + 3: End If
+
+                Goto UPDATE_GHOST_POSITION
+            End If
+
+            // If ghost is captured and returning to ghost house then set target back to its start location
+            If GHOSTSTATE(g) = 2
+                // Speed up
+                GHOSTSPEED#(g) = 8
+                // If only one direction available then change to that direction
+                If GHOST_GRAPH_VALUE = 1 or GHOST_GRAPH_VALUE = 2 or GHOST_GRAPH_VALUE = 4 or GHOST_GRAPH_VALUE = 8
+                    GHOSTD(g) = GHOST_GRAPH_VALUE
+                else
+                    // Get the direction to the desired target location
+                    GETDIRECTION_TO_TARGET[GHOST_GRAPH_VALUE, GHOSTX(g), GHOSTY(g), GHOSTSTARTX(g), GHOSTSTARTY(g)]
+                    GHOSTD(g) = Param
+                End If
+                Goto UPDATE_GHOST_POSITION
+            End If
+
+            // If ghost is in the ghost house then use the frightened state for the movement
+            If GHOSTSTATE(g) = 3
+                // Set speed to normal
+                GHOSTSPEED#(g) = GHOSTNORMSPEED#
+                // If only one direction available then change to that direction
+                If GHOST_GRAPH_VALUE = 1 or GHOST_GRAPH_VALUE = 2 or GHOST_GRAPH_VALUE = 4 or GHOST_GRAPH_VALUE = 8
+                    GHOSTD(g) = GHOST_GRAPH_VALUE
+                else
+                    GET_FRIGHTENED_DIRECTION[GHOST_GRAPH_VALUE]
+                    GHOSTD(g) = Param
+                End If
+                Goto UPDATE_GHOST_POSITION
+            End If
+
+            // Has the flag been set to reverse the ghost direction
+            // Occurs on specific game phase changes, dont reverse if ghost in the ghost house
+            If GHOST_REVERSE_DIRECTION = 1 and GHOSTSTATE(i) <> 3
+                GET_OPPOSITE_DIRECTION[GHOST_CURRENT_DIRECTION]
+                GHOST_GRAPH_VALUE = Param
+                RESET_REVERSE = 1
+                Goto DO_SCATTER
+            End If
+
+            // If ghost is in frightened state then move as required
+            If GHOSTSTATE(g) = 1
+                // Set ghost speed
+                GHOSTSPEED#(g) = GHOSTFRIGHTSPEED#
+                // If only one direction available then change to that direction
+                If GHOST_GRAPH_VALUE = 1 or GHOST_GRAPH_VALUE = 2 or GHOST_GRAPH_VALUE = 4 or GHOST_GRAPH_VALUE = 8
+                    GHOSTD(g) = GHOST_GRAPH_VALUE
+                else
+                    // Ghost prefer direction in order of up, down, left, right when frightened
+                    GET_FRIGHTENED_DIRECTION[GHOST_GRAPH_VALUE]
+                    GHOSTD(g) = Param
+                End If
+                Goto UPDATE_GHOST_POSITION
+            End If
+
+            // Can only move left or right when in a map tile number 8 - see maze data or comments at the top of program listing
+            tile = TILEMAP(GHOSTX(g), GHOSTY(g))
+            If tile = 8 and GHOSTSTATE(g) < 3
+                // Set possible moves to left and right
+                GHOST_GRAPH_VALUE = 10
+                // If moving left or right, remove the current direction, else the current direction
+                // will be down, so the ghost will choose left or right
+                If GHOST_CURRENT_DIRECTION = 8 or GHOST_CURRENT_DIRECTION = 2
+                    Gosub REMOVE_GHOST_REVERSE_DIRECTION
+                End If
+            End If
+
+            // Ghost has been released while game phase is in frightened state
+            If GAME_PHASE = 3
+                If GHOSTSTATE(g) = 0
+                    Goto DO_SCATTER
+                End If
+            End If
+
+            // GAME_PHASE 0 = Ready, 1 = Chase, 2 = Scatter, 3 = Frightened
+            IF GAME_PHASE = 1
+                // Set ghost speed to normal
+                GHOSTSPEED#(g) = GHOSTNORMSPEED#
+
+                // If only one direction available then change to that direction or continue on current path
+                If GHOST_GRAPH_VALUE = 1 or GHOST_GRAPH_VALUE = 2 or GHOST_GRAPH_VALUE = 4 or GHOST_GRAPH_VALUE = 8
+                    GHOSTD(g) = GHOST_GRAPH_VALUE
+                else
+                    // Blinky (Red) - Target is the player location
+                    If GHOSTTYPE(g) = 0
+                        GTX = PX
+                        GTY = PY
+                    Else
+                        // Pinky (pink) - Ambush, target is 4 tiles in front of the player direction
+                        If GHOSTTYPE(g) = 1
+                            // Target 4 tiles in front of the player current direction
+                            If PD = 1                           // Player moving Up
+                                GTX = PX: GTY = PY - 4
+                            Else
+                                If PD = 4                       // PLayer moving Down
+                                    GTX = PX: GTY = PY + 4
+                                Else
+                                    If PD = 8                   // Player moving Left
+                                        GTY = PY: GTX = PX - 4
+                                    else                        // Player moving Right
+                                        GTY = PY: GTX = PX + 4
+                                    End If
+                                End If
+                            End If
+                        else
+                            // Inky (cyan) - Targets an offset based on Blinky distance to the player
+                            If GHOSTTYPE(g) = 2
+                                If PD = 1                           // Player moving Up
+                                    GTX = PX: GTY = PY + ABS(GHOSTY(0) - (PY - 2) * 2
+                                Else
+                                    If PD = 4                        // Player moving Down
+                                        GTX = PX: GTY = PY + ABS(GHOSTY(0) - (PY + 2)) * 2
+                                    Else
+                                        If PD = 8                   // Player moving Left
+                                            GTY = PY: GTX = PX - ABS(GHOSTX(0) - (PX - 2)) * 2
+                                        else
+                                                                    // Player moving Right
+                                            GTY = PY: GTX = PX + ABS(GHOSTX(0) - (PX + 2)) * 2
+                                        End If
+                                    End If
+                                End If
+                            Else
+                                // 3 = Clyde (orange)
+                                If GHOSTTYPE(g) = 3
+                                    // If player is more than 8 tiles away then target the player
+                                    xx = ABS(PX - GHOSTX(g))
+                                    yy = ABS(PY - GHOSTY(g))
+                                    distance = (xx * xx) + (yy * yy)
+
+                                    If distance < 64
+                                        // Target scatter/home location
+                                        GTX = GHOST_SCATTER_TARGETX(g)
+                                        GTY = GHOST_SCATTER_TARGETY(g)
+                                    else
+                                        // Target the player location
+                                        GTX = PX
+                                        GTY = PY
+                                    End If
+                                End If
+                            End If
+                        End If
+                    End If
+
+                    // Get the direction to the desired target location
+                    GETDIRECTION_TO_TARGET[GHOST_GRAPH_VALUE, GHOSTX(g), GHOSTY(g), GTX, GTY]
+                    GHOSTD(g) = Param
+                End If
+                Goto UPDATE_GHOST_POSITION
+            End If
+
+            If GAME_PHASE = 2
+DO_SCATTER:
+                // Set ghost speed
+                GHOSTSPEED#(g) = GHOSTNORMSPEED#
+
+                // If only one direction available then change to that direction
+                If GHOST_GRAPH_VALUE = 1 or GHOST_GRAPH_VALUE = 2 or GHOST_GRAPH_VALUE = 4 or GHOST_GRAPH_VALUE = 8
+                    GHOSTD(g) = GHOST_GRAPH_VALUE
+                else
+                    // Target scatter locations (Blinky = Top Right, Pinky = Top Left, Inky = Bottom Right, Clyde = Bottom Left)
+                    GTX = GHOST_SCATTER_TARGETX(g)
+                    GTY = GHOST_SCATTER_TARGETY(g)
+                    // Get the direction to the desired target location
+                    GETDIRECTION_TO_TARGET[GHOST_GRAPH_VALUE, GHOSTX(g), GHOSTY(g), GTX, GTY]
+                    GHOSTD(g) = Param
+                End If
+                Goto UPDATE_GHOST_POSITION
+            End If
+        End If
+
+UPDATE_GHOST_POSITION:
+
+        //Check if ghost is in a tunnel
+        tile = TILEMAP(GHOSTX(g), GHOSTY(g))
+        If tile = 5
+            // Set ghost speed
+            GHOSTSPEED#(g) = GHOSTTUNNELSPEED#
+        Else
+            // Check if moving through a tunnel exit, reposition to opposite side
+            If tile = 6
+                GHOSTX(g) = 28
+            Else
+                If tile = 7
+                    GHOSTX(g) = 1
+                End If
+            End If
+        End If
+
+        // Right
+        If GHOSTD(g)  = 2
+            ADD GHOSTCX(g), Int(GHOSTSPEED#(g))
+            MOVE_TOWARD_ZERO[GHOSTCY(g), GHOSTSPEED#(g)]
+            GHOSTCY(g) = Param
+        Else
+            // Left
+            If GHOSTD(g)  = 8
+                ADD GHOSTCX(g), Int(-GHOSTSPEED#(g))
+                MOVE_TOWARD_ZERO[GHOSTCY(g), GHOSTSPEED#(g)]
+                GHOSTCY(g) = Param
+            Else
+                // Up
+                If GHOSTD(g)  = 1
+                    ADD GHOSTCY(g), Int(-GHOSTSPEED#(g))
+                    MOVE_TOWARD_ZERO[GHOSTCX(g), GHOSTSPEED#(g)]
+                    GHOSTCX(g) = Param
+                else
+                    // Down
+                    If GHOSTD(g)  = 4
+                        ADD GHOSTCY(g), Int(GHOSTSPEED#(g))
+                        MOVE_TOWARD_ZERO[GHOSTCX(g), GHOSTSPEED#(g)]
+                        GHOSTCX(g) = Param
+                    End If
+                End If
+            End If
+        End If
+
+        // Keep track of where the ghost is in the cell and update tile map location
+        If GHOSTCX(g) <= -15: Add GHOSTCX(g), 32: Dec GHOSTX(g): End If
+        If GHOSTCX(g) >= 16: Add GHOSTCX(g), -32: Inc GHOSTX(g): End If
+        If GHOSTCY(g) <= -15: Add GHOSTCY(g), 32: Dec GHOSTY(g): End If
+        If GHOSTCY(g) >= 16: Add GHOSTCY(g), -32: Inc GHOSTY(g): End If
+
+        // Update the screen and check player location
+        Gosub DRAW_GHOSTS
+    Next g
+
+    // Reset the reverse ghost flag
+    If GHOST_REVERSE_DIRECTION = 1 and RESET_REVERSE = 1
+        GHOST_REVERSE_DIRECTION = 0
+    End If
+Return
+
+SET_GHOST_ANIMATION:
+    For i = 0 To GHOST_COUNT - 1
+        If Timer > GHOSTFAT#(i)
+            Inc GHOSTFA(i)
+            GHOSTFAT#(i) = Timer + 0.1
+            If GHOSTFA(i) = 30 + (i * 10) + 8: GHOSTFA(i) = 30 + (i * 10): End If
+        End If
+    Next i
+Return
+
+DRAW_GHOSTS:
+
+    For i = 0 To GHOST_COUNT - 1
+        // GHOSTSTATE 0 = in maze, 1 = frightened, 2 = captured, 3 = Home, 4 = Release
+        If GHOSTSTATE(i) = 0 or GHOSTSTATE(i) = 3
+            GF = GHOSTFA(i)
+        Else
+            If GHOSTSTATE(i) = 1
+                GF = 70
+            else
+                If GHOSTSTATE(i) = 2
+                    GF = 72
+                End If
+            End If
+
+            // Change colour of ghost when they are about to change back to normal state (4 seconds or less)
+            If GAME_PHASE = 3 and NEXT_GAME_PHASE_TIME# - Timer < 4
+                // Alternate between 2 colours
+                If GHOSTSTATE(i) = 1
+                    If RND(10) >= 5
+                        GF = 70
+                    Else
+                        GF = 71
+                    End If
+                End If
+            End If
+        End If
+
+        Bob i + 10, SCRXOFF + GHOSTCX(i) + (GHOSTX(i) * MAPCELLWIDTH), SCRYOFF + GHOSTCY(i) + (GHOSTY(i) * MAPCELLHIGHT), GF
+    Next i
+Return
+
+REMOVE_GHOST_REVERSE_DIRECTION:
+
+RDCANMOVE = 0
+    // Dont remove if only one direction available
+    If GHOST_GRAPH_VALUE = 1 or GHOST_GRAPH_VALUE = 2 or GHOST_GRAPH_VALUE = 4 or GHOST_GRAPH_VALUE = 8
+        Return
+    Else
+        // GHOST_GRAPH_VALUE and GHOST_CURRENT_DIRECTION must be set before calling this subroutine
+        // Remove the ghost opposite direction so it cant turn back on itself
+        If GHOST_CURRENT_DIRECTION = 2
+            // Make sure the opposite direction is available to be removed
+            RDCANMOVE = (GHOST_GRAPH_VALUE and 8)
+            If RDCANMOVE > 0
+                GHOST_GRAPH_VALUE = GHOST_GRAPH_VALUE - 8
+            End If
+        Else
+            If GHOST_CURRENT_DIRECTION = 4
+                RDCANMOVE = (GHOST_GRAPH_VALUE and 1)
+                If RDCANMOVE > 0
+                    GHOST_GRAPH_VALUE = GHOST_GRAPH_VALUE - 1
+                End If
+            Else
+                If GHOST_CURRENT_DIRECTION = 8
+                    RDCANMOVE = (GHOST_GRAPH_VALUE and 2)
+                    If RDCANMOVE > 0
+                        GHOST_GRAPH_VALUE = GHOST_GRAPH_VALUE - 2
+                    End If
+                Else
+                    If GHOST_CURRENT_DIRECTION = 1
+                        RDCANMOVE = (GHOST_GRAPH_VALUE and 4)
+                        If RDCANMOVE > 0
+                            GHOST_GRAPH_VALUE = GHOST_GRAPH_VALUE - 4
+                        End If
+                    End If
+                End If
+            End If
+        End If
+    End If
+Return
+
+MOVE_PLAYER:
+    PDO = PD
+    ND = 0
+    // Left
+    If Key State(37) Or jLeft(0)
+        ND = 8
+    Else
+        // Right
+        If Key State(39) Or jRight(0)
+            ND = 2
+        Else
+            // Up
+            If Key State(38) Or jUp(0)
+                ND = 1
+            else
+                // Down
+                If Key State(40) Or JDown(0)
+                    ND = 4
+                End If
+            End If
+        End If
+    End If
+
+    // Is the direction changing
+    If ND > 0 and ND <> PD
+        // Player does not need to be in the center of a map cell to turn
+        // This allows the player to cut corners, ghosts are unable to do this
+        If (ND = 2 and PCX <= 0) or (ND = 8 and PCX >= 0) or (ND = 1 and PCY >= 0) or (ND = 4 and PCY <= 0)
+            // Check the new direction
+            GRAPH_VALUE = MAZE_GRAPH(PX, PY)
+            CANMOVE = (GRAPH_VALUE and ND)
+            // ok to change direction
+            If CANMOVE > 0
+                PD = ND
+                Gosub SET_PLAYER_ANIMIATION
+            End If
+        else
+            // PLayer has reversed direction so no need to check if its valid
+            If PD > 0 and PD = 1 and ND = 4 or PD = 4 and ND = 1 or PD = 8 and ND = 2 or PD = 2 and ND = 8
+                PD = ND
+                Gosub SET_PLAYER_ANIMIATION
+            End If
+        End If
+    End If
+
+    // Check if the player is moving into a new cell
+    If (PCX < PSX# and PCX > -PSX#) and (PCY < PSY# and PCY > -PSY#)
+        // Moving into a new cell so check if its a valid location
+        GRAPH_VALUE = MAZE_GRAPH(PX, PY)
+        CANMOVE = (GRAPH_VALUE and PD)
+        // Hit a wall so stop the player movement
+        If CANMOVE = 0
+            PD = 0
+            PCX = 0
+            PCY = 0
+        End If
+    End If
+
+    // Right
+    If PD = 2
+        ADD PCX, Int(PSX#)
+        MOVE_TOWARD_ZERO[PCY, PSY#]
+        PCY = Param
+    Else
+        // Left
+        If PD = 8
+            ADD PCX, Int(-PSX#)
+            MOVE_TOWARD_ZERO[PCY, PSY#]
+            PCY = Param
+        else
+            // Up
+            If PD = 1
+                ADD PCY, Int(-PSY#)
+                MOVE_TOWARD_ZERO[PCX, PSX#]
+                PCX = Param
+            else
+                // Down
+                If PD = 4
+                    ADD PCY, Int(PSY#)
+                    MOVE_TOWARD_ZERO[PCX, PSX#]
+                    PCX = Param
+                End If
+            End If
+        End If
+    End If
+
+    // Keep track of where the player is in the cell and update tile map location
+    If PCX <= -15: Add PCX, 32: Dec PX: Gosub CHECK_PLAYER_POSITION: End If
+    If PCX >= 16: Add PCX, -32: Inc PX: Gosub CHECK_PLAYER_POSITION: End If
+    If PCY <= -15: Add PCY, 32: Dec PY: Gosub CHECK_PLAYER_POSITION: End If
+    If PCY >= 16: Add PCY, -32: Inc PY: Gosub CHECK_PLAYER_POSITION: End If
+
+    // Check if player has exited the maze at one of the tunnel exits
+    If TILEMAP(PX, PY) = 6
+        PX = 28
+    Else
+        If TILEMAP(PX, PY) = 7
+            PX = 1
+        End If
+    End If
+
+    Gosub DRAW_PLAYER
+Return
+
+ADD_BONUS:
+    BONUSINMAZE = 1
+    Bob 14, SCRXOFF + (BONUSX * MAPCELLWIDTH), SCRYOFF + (BONUSY * MAPCELLHIGHT), BONUSIMG(MIN(LEVEL, 13))
+    REMOVE_BONUS_TIME# = Timer + 10
+Return
+
+CHECK_PLAYER_POSITION:
+    // Check if player has eaten a dot
+    If TILEMAP(PX, PY) = 2
+        // Reduce the amount of dots so we know when the level is completed
+        Dec DOT_COUNT
+        // Increment the number of dots collected
+        Inc DOTS_COLLECTED
+
+        // Remove the dot from the maze and reward the player with points
+        Paste Bob SCRXOFF + (PX * MAPCELLWIDTH), SCRYOFF + (PY * MAPCELLHIGHT), 4
+        TILEMAP(PX, PY) = 0
+        SCORE = SCORE + 10
+        Gosub DRAW_HUD
+
+        // Set the player speed
+        If GAME_PHASE = 3 // Frightened
+            PSX# = PLAYER_FRIGHT_DOTS_SPEED#
+            PSY# = PLAYER_FRIGHT_DOTS_SPEED#
+        Else
+            PSX# = PLAYER_NORM_DOTS_SPEED#
+            PSY# = PLAYER_NORM_DOTS_SPEED#
+        End If
+
+        // Check if a bonus fruit should be added
+        If DOTS_COLLECTED = 70 or DOTS_COLLECTED = 170
+            Gosub ADD_BONUS
+        End If
+
+        Play Audio 28
+
+        // // Used to check how long its been since the player collected a dot
+        // // The next ghost in the ghost house will be release after 5 seconds if not collected any dots
+        LAST_DOT_COUNTER = 0
+
+        // Reduce the dot counter for the first ghost that has a counter value > zero
+        For i = 0 To GHOST_COUNT - 1
+            If GHOSTSTATE(i) = 3 AND GHOSTRELEASECOUNTER(i) > 0
+                Dec GHOSTRELEASECOUNTER(i)
+                i = GHOST_COUNT - 1
+            End If
+        Next i
+    else
+        // Check if player has eaten super pill
+        If TILEMAP(PX, PY) = 3
+            // Remove the from the maze and reward the player with points
+            Play Audio 9
+            TILEMAP(PX, PY) = 0
+            Paste Bob SCRXOFF + (PX * MAPCELLWIDTH), SCRYOFF + (PY * MAPCELLHIGHT), 4
+            SCORE = SCORE + 50
+            GHOSTPOINTS = 100
+            Gosub DRAW_HUD
+
+            // Change player speed to the frightened speed for the level
+            PSX# = PLAYER_FRIGHT_SPEED#
+            PSY# = PLAYER_FRIGHT_SPEED#
+            // Store the current game phase and time if not already frightened
+            If GAME_PHASE <> 3
+                GAME_PHASE_OLD_TIME# = NEXT_GAME_PHASE_TIME#
+                GAME_OLD_PHASE = GAME_PHASE
+                // Set the game state to frightened
+                GAME_PHASE = 3
+            End If
+
+            // Set the ticker time for the frightened state, reduces for each level (min = 1/60 second)
+            // After level 15 it is reduced to 1 frame
+            NEXT_GAME_PHASE_TIME# = Timer + MAX(0.017, 16 - LEVEL)
+
+            If LEVEL < 5
+                GHOST_REVERSE_DIRECTION = 1
+            End If
+
+            // GHOSTSTATE : 0 = normal, 1 = frightened, 2 = returning to start position, 3 home, 4 = Release
+            For i = 0 To GHOST_COUNT - 1
+                If GHOSTSTATE(i) = 0
+                    GHOSTSTATE(i) = 1
+                End If
+            Next
+            Gosub DRAW_GHOSTS
+        Else
+            If GAME_PHASE = 3 // Frightened
+                PSX# = PLAYER_FRIGHT_SPEED#
+                PSY# = PLAYER_FRIGHT_SPEED#
+            Else
+                PSX# = PLAYER_NORM_SPEED#
+                PSY# = PLAYER_NORM_SPEED#
+            End If
+        End If
+    End If
+
+    // // Check if player has eaten all the dots, level complete
+    If DOT_COUNT = 0
+         PLAYER_STATE = 2
+    End If
+Return
+
+DRAW_HUD:
+	Cls 0,523,429 to 687,475 : Cls 0,1259,429 to 1412,475 : Cls 0,523,623 to 671,669
+	Set font "baloo",40 : ink 1
+    IF SCORE > HISCORE: HISCORE = SCORE: End If
+
+	DisplayValue[530, 420, 5, SCORE]
+	DisplayValue[1265, 420, 5, HISCORE]
+	DisplayValue[575, 610, 2, LEVEL]
+Return
+
+Procedure DisplayValue[x, y, requiredLength, value]
+	// Draw the "blanks"
+	For i = 0 To requiredLength - 1
+		Paste Bob x + i * 32, y, 9
+	Next i
+
+	// Draw the digits
+	v$ = Str$(value): vLen = Len(v$)
+
+	For i = 0 To vLen - 1
+		s$ = Mid$(v$, i + 1, 1)
+		If Asc(s$) >= 48
+			Paste Bob x + (requiredLength - vLen + i) * 32, y, (Asc(s$) -38) + minusAdjust
+		End If
+	Next i
+End Proc
+
+DRAW_LIVES:
+    Ink 0 : Bar (SCRXOFF + 32 ), (SCRYOFF - (MAPCELLHIGHT * 2)) - 8, 140, 64
+    For i = 1 to 3
+        If i <= LIVES
+            Paste Bob (SCRXOFF + 32 ) + (i * (MAPCELLWIDTH + 5)), (SCRYOFF - MAPCELLHIGHT), 117
+        End If
+    Next
+Return
+
+DRAW_MAZE:
+    Gosub REMOVE_BOBS
+
+    // Draw background maze image
+    Paste Bob SCRXOFF + 16, SCRYOFF - 16, 103
+    Paste Bob SCRXOFF + 220, SCRYOFF - 85, 100
+
+    Ink 5
+    Set Font "baloo", 30
+    Text SCRXOFF + 58, 410, "Score"
+    Text SCRXOFF + 793, 410, "High"
+    Text SCRXOFF + 58, 605, "Level"
+
+    i = 0
+    For y = 0 to MAP_MAX_Y
+        For x = 0 To MAP_MAX_X
+            i = TILEMAP(x, y)
+            If i = 2 or i = 3
+                Paste Bob SCRXOFF + (x * MAPCELLWIDTH), SCRYOFF + (y * MAPCELLHIGHT), i
+            End If
+        Next x
+        Wait 0.001
+    Next y
+Return
+
+// The values that represent the directions are:-
+// 1 = Up, 2 = Right, 4 = Down, 8 = Left
+// If the value was 6, (2 right + 4 down) that means we can only
+// move right and down from that location and 15 means all directions.
+// We can then easily test a direction value (1,2,4,8) against this using the AND operator
+SET_GRAPH_DATA:
+    GRAPH_VALUE = 0
+    tile = 0
+
+    For y = 0 to MAP_MAX_Y
+        For x = 0 To MAP_MAX_X
+            // Get the tile number from the tile map
+            tile = TILEMAP(x, y)
+
+            GRAPH_VALUE = 0
+            // Only set the values for valid locations in the maze (tile < 10) or ghost house
+            If tile < 10 or tile = 12
+                If TILEMAP(x + 1, y) < 10: GRAPH_VALUE = GRAPH_VALUE + 2: End If      // Right Cell
+                If x > 0 and TILEMAP(x - 1, y) < 10: GRAPH_VALUE = GRAPH_VALUE + 8: End If      // Left Cell
+                If TILEMAP(x, y + 1) < 10: GRAPH_VALUE = GRAPH_VALUE + 4: End If      // Down Cell
+                If TILEMAP(x, y - 1) < 10: GRAPH_VALUE = GRAPH_VALUE + 1: End If      // Up Cell
+            End If
+
+            MAZE_GRAPH(x, y) = GRAPH_VALUE
+        Next x
+    Next y
+Return
+
+RESET_MAP_DATA:
+// 0		Empty
+// 1		N/A
+// 2		Dot
+// 3		Super Dot
+// 4		N/A
+// 5		Tunnel
+// 6		Left Tunnel Exit
+// 7		Right Tunnel Exit
+// 8		No up turn for ghosts
+// 9		N/A
+// 10		Wall
+// 11		Outside Maze
+// 12		Ghost House
+
+    // Read the map data into the TILEMAP array
+    Restore TILE_MAP_DATA
+    DOT_COUNT = 0
+    For y = 0 to MAP_MAX_Y
+        For x = 0 To MAP_MAX_X
+            Read TILEMAP(x, y)
+            If TILEMAP(x, y) = 2: Inc DOT_COUNT: End If
+        Next x
+    Next y
+Return
+
+
+// ***********************************************
+// Procedures
+// ***********************************************
+Procedure MOVE_TOWARD_ZERO[V, SP#]
+    If V < 0
+        If ABS(V) > SP#
+            Add V, Int(SP#)
+        Else
+            V = 0
+        End If
+    else
+        If V > SP#
+            Add V, Int(-SP#)
+        else
+            V = 0
+        End If
+
+    End If
+End Proc[V ]
+
+Procedure GET_FRIGHTENED_DIRECTION[GraphValue]
+    D = 0
+    can_move = 0
+
+    // try a random direction first
+    D = DIRS(RND(3))
+    can_move = (GraphValue and D)
+    If can_move = 0
+        // If ghost cant move in random direction then get first possible direction in the order of up, down left right
+        can_move = (GraphValue and 1)
+        If can_move > 0
+            D = 1
+        Else
+            can_move = (GraphValue and 4)
+            If can_move > 0
+                D = 4
+            else
+                can_move = (GraphValue and 8)
+                If can_move > 0
+                    D=8
+                Else
+                    can_move = (GraphValue and 2)
+                    If can_move > 0
+                        D=2
+                    End If
+                End If
+            End If
+        End If
+    End If
+End Proc[D]
+
+// Gets the shortest direction from the available directions to a given target
+Procedure GETDIRECTION_TO_TARGET[StartGraphValue, StartX, StartY, TargetX, TargetY]
+    D = 0
+    min_distance = 9999
+    distance = 0
+    can_move = 0
+
+    // In the case that two directions have the same distance, we prefer directions in this order:
+    // up, left, down, right. Up is the most preferred direction
+
+    // Check the cell one position up from the start location
+    can_move = (StartGraphValue and 1)
+    If can_move > 0
+        xx = ABS(StartX - TargetX)
+        yy = ABS((StartY - 1) - TargetY)
+        distance = (xx * xx) + (yy * yy)
+
+        If distance < min_distance
+            D = 1
+            min_distance = distance
+        End If
+    End If
+
+    // Check the cell one position down from the start location
+    can_move = (StartGraphValue and 4)
+    If can_move > 0
+        xx = ABS(StartX - TargetX)
+        yy = ABS((StartY + 1) - TargetY)
+        distance = (xx * xx) + (yy * yy)
+
+        If distance < min_distance
+            D = 4
+            min_distance = distance
+        End If
+    End If
+
+    // Check the cell one position to the left of the start location
+    can_move = (StartGraphValue and 8)
+    If can_move > 0
+        xx = ABS((StartX - 1) - TargetX)
+        yy = ABS(StartY - TargetY)
+        distance = (xx * xx) + (yy * yy)
+
+        If distance < min_distance
+            D = 8
+            min_distance = distance
+        End If
+    End If
+
+    // Check the cell one position to the right of the start location
+    can_move = (StartGraphValue and 2)
+    If can_move > 0
+        xx = ABS((StartX + 1) - TargetX)
+        yy = ABS(StartY - TargetY)
+        distance = (xx * xx) + (yy * yy)
+
+        If distance < min_distance
+            D = 2
+            min_distance = distance
+        End If
+    End If
+End Proc[D]
+
+// Reverses the given direction
+Procedure GET_OPPOSITE_DIRECTION[D]
+    // 1 = Up, 2 = Right, 4 = Down, 8 = Left
+    OD = 0
+    If D = 1
+            OD = 4
+        Else
+            If D = 2
+                OD = 8
+            Else
+                If D = 4
+                    OD = 1
+                Else
+                    If D = 8
+                        OD = 2
+                    End If
+                End If
+            End If
+        End If
+End Proc[OD]
+
+SET_PLAYER_ANIMIATION:
+    If PD = 1
+        PFA = 110: PR = -90
+        IF PDO = 8: PFA = 130: PR = 90: End If
+    else
+        If PD = 4
+            PFA = 110: PR = 90
+            If PDO = 8: PFA = 130: PR = -90: End If
+        Else
+            If PD = 8
+                PFA = 130: PR = 0
+            else
+                If PD = 2
+                    PFA = 110: PR = 0
+                End If
+            End If
+        End If
+    End If
+Return
+
+DRAW_PLAYER:
+
+    Bob 20, SCRXOFF + PCX + (PX * MAPCELLWIDTH), SCRYOFF + PCY + (PY * MAPCELLHIGHT), PFA
+
+    Bob Rotate 20, PR
+    If PD > 0
+        Inc PFA
+        If PFA = 121: PFA = 110: End If
+        If PFA = 141: PFA = 130: End If
+    End If
+Return
+
+// ***********************************************
+// Maze Data
+// ***********************************************
+TILE_MAP_DATA:
+
+Data 11	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,10	,10	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,10	,11
+Data 11	,10	,2	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,2	,10	,11
+Data 11	,10	,3	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,3	,10	,11
+Data 11	,10	,2	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,2	,10	,11
+Data 11	,10	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,10	,11
+Data 11	,10	,2	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,2	,10	,11
+Data 11	,10	,2	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,2	,10	,11
+Data 11	,10	,2	,2	,2	,2	,2	,2	,10	,10	,2	,2	,2	,2	,10	,10	,2	,2	,2	,2	,10	,10	,2	,2	,2	,2	,2	,2	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,0	,10	,10	,0	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,0	,10	,10	,0	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,0	,0	,0	,8	,0	,0	,8	,0	,0	,0	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,0	,10	,12	,12	,12	,12	,12	,12	,10	,0	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,0	,10	,0	,0	,0	,0	,0	,0	,10	,0	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 6	,5	,5	,5	,5	,5	,5	,2	,0	,0	,0	,10	,0	,0	,0	,0	,0	,0	,10	,0	,1	,1	,2	,5	,5	,5	,5	,5	,5	,7
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,0	,10	,0	,0	,0	,0	,0	,0	,10	,0	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,0	,10	,10	,10	,10	,10	,10	,10	,10	,0	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,0	,10	,10	,10	,10	,10	,10	,10	,10	,0	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,2	,10	,10	,0	,10	,10	,10	,10	,10	,10	,10	,10	,0	,10	,10	,2	,10	,10	,10	,10	,10	,10	,11
+Data 11	,10	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,10	,10	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,10	,11
+Data 11	,10	,2	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,2	,10	,11
+Data 11	,10	,2	,10	,10	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,2	,10	,10	,10	,10	,2	,10	,11
+Data 11	,10	,3	,2	,2	,10	,10	,2	,2	,2	,2	,2	,2	,8	,0	,0	,8	,2	,2	,2	,2	,2	,2	,10	,10	,2	,2	,3	,10	,11
+Data 11	,10	,10	,10	,2	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,2	,10	,10	,10	,11
+Data 11	,10	,10	,10	,2	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,2	,10	,10	,10	,11
+Data 11	,10	,2	,2	,2	,2	,2	,2	,10	,10	,2	,2	,2	,2	,10	,10	,2	,2	,2	,2	,10	,10	,2	,2	,2	,2	,2	,2	,10	,11
+Data 11	,10	,2	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,2	,10	,11
+Data 11	,10	,2	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,2	,10	,10	,2	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,2	,10	,11
+Data 11	,10	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,10	,11
+Data 11	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,10	,11

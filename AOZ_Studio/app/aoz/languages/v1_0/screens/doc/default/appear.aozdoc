@@ -1,0 +1,24 @@
+<i>Appear</i>
+<b>Appear</b> xxxxxxx
+=
+This command creates a fade between two pictures. Choose the number of the source screen where the original
+picture comes from, then the number of the destination screen whose picture it fades into.
+
+Next determine a value that will cause the desired effect, by setting the number of pixel points on the screen, ranging
+from 1 pixel all the way up to every pixel in the display.
+
+Normally APPEAR affects the whole of your screen area, but there is an optional parameter that causes only part of
+the screen to be faded. Because screens are drawn from top to bottom, set the area to be faded by adding the range
+of the number of pixels from the top of the screen.
+
+For example:
+@code
+Load "AMOSPro_Tutorial:Objects/Bobs.Abk"
+Paste Bob 100,0,1
+Wait 100
+Screen Open 1,320,90,16
+Appear 0 To 1,1,28800
+@code
+That example fades the top part of your default screen into the newly opened Screen 1. Obviously, the appearance of
+fades will vary, depending on the screen mode being used.
+

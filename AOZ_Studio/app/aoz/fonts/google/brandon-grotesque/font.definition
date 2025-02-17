@@ -1,0 +1,79 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ 
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ 
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ - Google Font Definition
+ *
+ */	
+<FONT_FACE-START>
+@font-face {
+    font-family: 'brandon-grotesque';
+    src: url('../fonts/brandon-gl.woff2') format('woff2'),
+        url('../fonts/brandon-gl.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'brandon-grotesque';
+    src: url('../fonts/brandon-gb.woff2') format('woff2'),
+        url('../fonts/brandon-gb.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'brandon-grotesque';
+    src: url('../fonts/brandon-gr.woff2') format('woff2'),
+        url('../fonts/brandon-gr.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'brandon-grotesque';
+    src: url('../fonts/brandon-gm.woff2') format('woff2'),
+        url('../fonts/brandon-gm.woff') format('woff');
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'brandon-grotesque';
+    src: url('../fonts/brandon-gb.woff2') format('woff2'),
+        url('../fonts/brandon-gb.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'brandon-grotesque';
+    src: url('../fonts/brandon-glitalic.woff2') format('woff2'),
+        url('../fonts/brandon-glitalic.woff') format('woff');
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'brandon-grotesque';
+    src: url('../fonts/brandon-grotesque-thinitalic.woff2') format('woff2'),
+        url('../fonts/brandon-grotesque-thinitalic.woff') format('woff');
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+<FONT-FACE-END>

@@ -1,0 +1,5 @@
+<i>Map Width</i>
+<b>Map Width</b> xxxxxxx
+=
+Please note that this function returns the width of the MAP and not the map view. Use "View Width" to get the width of the view.
+

@@ -1,0 +1,8 @@
+<i>Priority On</i>
+<b>Priority On</b> xxxxxxx
+=
+When PRIORITY ON is used, Bobs with the highest y-coordinates take priority on the screen.
+It is usually best to set hot spots at the bottom of Bobs to exploit this priority, and some superb perspective effects can be created.
+
+All that is needed to re-set the original Bob number priorities is to use the PRIORITY OFF command.
+

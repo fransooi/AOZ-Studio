@@ -1,0 +1,325 @@
+{
+    memory_commands:
+    { 
+        name: "" //TODO
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "poke":
+            [
+                The POKE command moves a number from 0 to 255 into the memory location at the specified address. Take great
+care with this instruction! Only POKE addresses that you completely understand, such as the contents of an AMOS
+Professional memory bank. Random poking will provoke your Amiga into taking horrible reprisals!
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "doke":
+            [
+                Use the DOKE command to copy a two-byte number between 0 and 65535 into the memory location at a specified
+even address. Only DOKE into places where you are certain of safety, because indiscriminate use of this command
+will almost certainly crash your Amiga!
+
+            ]
+            "loke":
+            [
+                LOKE copies a four-byte number into the memory location at a specified address. As before, the address must be an
+even location, and this command must be used with the greatest of care to avoid crashing the computer.
+
+            ]
+            "poke$":
+            [
+                Use the POKE$ command to take a source string and copy it directly to a chosen memory location, one character at
+a time. The address parameter holds the address of the first byte to be loaded with the new string data.The copying operation will continue until the last character of the source string is reached, and the end address will
+be as follows:
+                '''
+                ~~~                
+		address+Len(string$)-1
+                ~~~
+                '''
+                The address may be odd or even, and can be anywhere in the Amiga's memory space. As always, mistakes with the
+address can crash your computer! Here is an example of the correct technique:
+                '''
+                ~~~                
+		   Reserve As Data 10,1000: Rem Reserve a memory bank
+		   NAME=Start(10)-8 : Rem Get the address of the name
+		   T$="Testbank" : Rem Choose a new name of up to 8 characters
+		   Poke$ NAME,Left$(T$,8) : Rem Poke the first 8 characters into the name
+                ~~~
+                '''
+            ]
+            "peek$":
+            [
+                PEEK$ reads the maximum number of characters specified in the length parameter, into a new string. If this is not a
+sensible value, the length is assumed to be 65500. The address parameter is the location of the first character to be
+read.
+""
+There is an optional stop$ parameter, and if this is included, AOZ Studio will stop in its tracks the moment a
+specified stop$ character is encountered in the memory area. You will then be left with a string of characters up to
+the final stop$. Here is an example using PEEKS:
+                '''
+                ~~~                
+		   Reserve As Data 10,1000 : Rem Reserve a memory bank
+		   NAME=Start(10)-8 : Rem Get the address of the name
+		   Print Peek$(NAME,8)
+                ~~~
+                '''
+            ]
+            "peek":
+            [
+                The PEEK function returns a single 8-bit byte from an address in memory.
+
+            ]
+            "deek":
+            [
+                DEEK reads a two-byte "word" at a specified address. This address must be even, or an address error will be
+generated.
+
+            ]
+            "leek":
+            [
+                The LEEK function returns a four-byte "long word" stored at the specified even address. The result will be in
+exactly the same format as a standard AOZ Studio integer. This may result in negative values being returned
+in certain circumstances, such as if bit 31 of your number is set to 1. The correct value can be calculated by making
+use of DEEK, then loading the result into a floating point number, like this:
+                '''
+                ~~~                
+		   A=$FFFFFFFE
+		   Print Leek(Varptr(A))
+		   A#=Deek(Varptr(A))*65535.0+Deek(Varptr(A)+2)
+		   Print A#
+                ~~~
+                '''
+            ]
+            "free":
+            [
+                For an example of a function in operation, the FREE function checks how many "bytes" of memory are currently
+available to hold your variables, and it can be used to make a report, like this:
+                '''
+                ~~~                
+		   Print "The number of bytes available is:;Free
+                ~~~
+                '''
+                Now use the FREE function with the SET BUFFER command (which is explained earlier in this Chapter) as
+follows:
+                '''
+                ~~~                
+		   Set Buffer 13
+		   Print "The number of bytes now available is:;Free		
+                ~~~
+                '''
+            ]
+            "cheep_free": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "fill":
+            [
+                The FILL instruction packs an area of memory specified from start to finish. This area is filled with multiple copies
+of a specified four-byte pattern. The addresses of the start and finish determine the size and position of the memory
+block, and they must both be even.
+""
+The fill pattern is a standard four-byte integer, but if you need to fill the area with multiple copies of a single byte,
+this value can be calculated as follows, where V will contain the required value of your fill command:
+
+                '''
+                ~~~                
+		   BYTE=255 : Rem This can be any number from 0 to 255
+		   V=0
+		   Poke Varptr(V),BYTE : Poke Varptr(V)+1,BYTE
+		   Poke Varptr(V)+2,BYTE : Poke Varptr(V)+3,BYTE
+		   Print V
+                ~~~
+                '''
+            ]
+            "copy":
+            [
+                The COPY command is used to move large sections of the Amiga's memory rapidly from one place to another.
+Specify the start and finish locations of the data to be moved, then give the destination of the position of memory
+area which is to be loaded with the data. Addresses may be odd or even, and special care should be taken to ensure
+that the destination area points to somewhere safe!
+
+            ]
+            "hunt":
+            [
+                HUNT is really a low level version of the familiar INSTR$ command. It searches the memory area defined by the
+given start and finish addresses, looking for the first occurrence of the characters held in your specified string.
+If the search is successful, the position of the first character in memory is returned, otherwise a value of zero will be
+given. When using this function, take great care in selecting the start and finish points for the search.
+
+            ]
+            "btst":
+            [
+                The BTST function tests a single binary bit in a given value. Specify the number of the bit to be tested, from 0 to 31,
+then give the chosen variable or expression. If the given value is an expression, it will be used as an address, so the
+bit will then be checked at LEEK(value) instead. Note that only bits 0 to 7 can be tested by this system, and that
+AOZ Studio will take your bit number and perform an automatic AND operation with 7, to ensure that it lies
+in the correct range.
+If the test is successful, a value of -1 (True) is returned, otherwise a zero (False) is given. For example:
+                '''
+                ~~~                
+		   B=%1010
+		   Print Btst(3,B)
+		   Print Btst(2,B)
+                ~~~
+                '''
+            ]
+            "exec":
+            [
+                The EXEC instruction executes the specified CLI command, via the named output. Output refers to the name of an
+AmigaDos device, and is held in inverted commas. If these are empty , NIL: will be used, otherwise the name of
+the output device must end with a colon.
+""
+CUR: specifies that the current CLI window is to be used. If this window does not exist, because AMOS
+Professional was booted from the Workbench, then the EXEC command cannot operate. If "CON: is used, then a
+CLI window is opened under the Workbench screen, if possible. Any other Amiga device can be specified, as long
+as it is interactive, and it will be opened before the CLI command is sent, and closed again after the command has
+been sent, unless it is the current CLI window.
+""
+For example, to execute an external program copied into the C: directory of AOZ Studio, and wait for its
+completion, this could be used:
+                '''
+                ~~~                
+		   Amos To Back : Rem Reveal the Workbench
+		   Rem Now launch the program in a small CLI window
+		   Exec "Program Name","CON:0/0/160/48/Program Name"
+		   Amos To Front : Rem Return to AMOS Pro after the program
+                ~~~
+                '''
+            ]
+            "set_stack":
+            [
+                When AOZ Studio procedures call themselves, an "Out of stack space" error message will be generated
+after about fifty loops. Use the SET STACK instruction by specifying the new number of procedure calls that an be
+made.
+""
+Keeping track of procedures
+To help you find the starting positions of procedures in a very long program, there is a simple short-cut that uses just
+two keys.
+""
+By pressing [Alt] and [Down Arrow] together, the edit cursor automatically jumps to the next procedure definition
+in your program. To jump to the previous procedure, press [Alt] and [Up Arrow] together. This shortcut works
+equally well with labels and line numbers!
+""
+If you are using several procedures on the same line, you can avoid the risk of a procedure being confused with a
+label by adding an extra space at the end of each statement. For example:
+                '''
+                ~~~                
+		   HEY: HEY: HEY: Rem Perform HEY procedure three times
+		   HEY: HEY: HEY: Rem Define label HEY and perform HEY procedure twice
+                ~~~
+                '''
+            ]
+            "set_equate_bank":
+            [
+                This command allocates a memory bank for use by the automatic equate system. It should be called up before the
+first equate in your program, preferably near the beginning. Specify the bank number to be used for your equates,
+ranging from 1 to 65535. Any existing bank of the same number will be erased when the equates are installed in
+memory, without warning, so take care!
+
+            ]
+            "call":
+            [
+                The CALL instruction is used to run a machine code program straight from the Amiga's memory. You can specify
+either an absolute memory location or the number of a memory bank, previously installed using the PLOAD
+command.
+""
+On entry to the program, registers D0 to D7 and A0 to A2 will be loaded from values stored in the DREG and
+AREG functions. The assembly language program can change any 68000 registers it chooses. At the start of the
+routine, register A3 will point to the optional parameter list, which is explained next, and A5 will contain the address
+of the AOZ Studio data zone. When the routine has completed its task, you can return to Basic with a RTS.
+""
+After the memory location or bank number, a list of optional parameters may be given in the form of a list of
+values. These values will be taken from the AOZ Studio Basic program and pushed onto the A3 stack by the
+CALL command. They must be removed in reverse order, so the last value in the list will be the first on the stack.
+The format of a parameter depends on what type of variable they are, as follows:
+""
+Integers. The parameter holds a long word, containing a normal AOZ Studio number. It can be grabbed with
+a line such as this:
+
+                '''
+                ~~~                
+		Move.l (a3)+,d0
+                ~~~
+                '''
+Single precision numbers. These are stored in Fast Floating Point format, and are held in one long word. To load
+such a number into register d0, use the following:
+
+                '''
+                ~~~                
+		Move.l (a3)+,d0
+                ~~~
+                '''
+
+Double precision numbers. These are stored in IEEE double precision format, and are held as two long words. To
+load a double precision variable into registers d0 and dl, you could use this:
+                '''
+                ~~~                
+		Move.l (a3)+,d0 * Top half
+		Move.l (a3)+,d1 * Bottom half
+                ~~~
+                '''
+Strings. The stack contains the Address of the string in memory. All strings begin with a single word that holds their
+length. For example:
+
+                '''
+                ~~~                
+
+		; Grab the string. Each string is stored at an EVEN address,
+		; starting with the length of the string, and then the string itself
+		Move.l (a3)+,a2 	* Address of the string
+		Move.w (a2)+,d2 	* Length of the string
+
+                ~~~
+                '''
+            ]
+            "execall":
+            [
+                The EXECALL function performs a call to the Amiga's EXEC library, with the specified offset value. On entry, D0
+to D7 and A0 to A2 must be loaded with the control settings required by the function. A value is returned holding
+the contents of D0.
+
+            ]
+            "gfxcall":
+            [
+                This executes a function directly from the Graphics library, taking the parameters from the DREG and AREG
+arrays. The function offset parameter enters the offset to the function you wish to call, and can also be set using the
+LVO function, if required.
+
+            ]
+            "doscall":
+            [
+                DOSCALL executes a function directly from the DOS library, with the offset to the appropriate function being
+specified in brackets. The selected command is executed straight from an AOZ Studio program, without the
+need to open the DOS library in your program. This is useful for single calls to an important routine.
+""
+The offset value can either be a simple number or a named function using the LVO command. As with LIB CALL,
+the control registers first need to be set up carefully. These values should be placed into D0 to D7 and A0 to A3,
+with the aid of the AREG and DREG functions. After the command has been executed, the result will be given as
+the return value in D0. Please note that the contents of the other registers will not be loaded back into AREG and
+DREG.
+
+            ]
+            "intcall":
+            [
+                The INTCALL function calls a command directly from the Intuition library. Before using this function, it is vital to
+load the appropriate control parameters into the registers D0 to D7 and A0 to A3. This can be done with the AREG
+and DREG variables from an AOZ Studio program. When the function has been executed, the contents of
+D0 will be returned back to your program as the result. Please note that this function is particularly dangerous,
+unless you are familiar with the Intuition library.
+
+            ]
+           
+        }
+    }
+}

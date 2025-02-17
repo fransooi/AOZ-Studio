@@ -1,0 +1,15 @@
+<i>UI Prompt$</i>
+<b>UI Prompt$</b> xxxxxxx
+=
+@code
+// Display a default prompt popup box
+UI Prompt$
+
+// Override the defaults and call a procedure if the user pressed the confirm button
+UI Prompt$ "Enter new value", value$="test", onConfirm$="CONFIRM_EVENT", closeButton$="Cancel", confirmButton$="OK"
+
+Procedure CONFIRM_EVENT[VALUE$]
+Print VALUE$
+End Proc
+@code
+

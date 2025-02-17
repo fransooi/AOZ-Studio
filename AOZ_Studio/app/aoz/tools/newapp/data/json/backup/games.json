@@ -1,0 +1,56 @@
+{
+	"games":
+	[
+		{
+			"name": "SpiderInvaders",
+			"path": "game_spiderinvaders",
+			"title":
+			{
+				"fr": "Spider Invaders",
+				"en": "Spider Invaders"
+			},
+			"description":
+			{
+				"fr": "Eliminez les araignées qui ont envahi le chateau en leur tirant dessus.<br><br>Notions appliquées : <ul><li>Utilisation de Actor</li><li>Tir de missile</li><li>Collisions de sprites</li><li>Déplacements des ennemis</li></ul>",
+				"en": "Eliminate the spiders that have invaded the castle by shooting them.<br><br>Applied concepts:<ul><li>Use of Actor</li><li>Missile firing</li><li>Sprite collisions</li><li>Enemy movement</li></ul>"
+			},
+			"pages":
+			[
+			]
+		},
+		{
+			"name": "AOZSteroids",
+			"path": "game_aozsteroids",
+			"title":
+			{
+				"fr": "AOZSteroids",
+				"en": "AOZSteroids"
+			},
+			"description":
+			{
+				"fr": "Des astéroïds apparaissent sur l'écran. Détruisez-les avnt qu'ils ne vous percutent.<br><br>Notions appliquées : <ul><li>Utilisation de Actor</li><li>Rotation de sprite</li><li>Tir directionnel</li><li>Collisions de sprites</li><li>Déplacements des ennemis</li></ul>",
+				"en": "Asteroids appear on the screen. Destroy them before they hit you.<br><br>Applied concepts:<ul><li>Use of Actor</li><li>Sprite rotation</li><li>Directional shooting</li><li>Sprite collisions</li><li>Enemy movement</li></ul>"
+			},
+			"pages":
+			[
+			]
+		},
+		{
+			"name": "BrickBreaker",
+			"path": "game_brickbreaker",
+			"title":
+			{
+				"fr": "Casse-briques",
+				"en": "Brick Breaker"
+			},
+			"description":
+			{
+				"fr": "Un grand classique. Envoyez la balle contre un mur de briques afin de le détruire.<br><br>Notions appliquées : <ul><li>Utilisation de Actor</li><li>Tir directionnel</li><li>Collisions de sprites</li></ul>",
+				"en": "Classic. Send the ball against a brick wall to destroy it.<br><br>Applied concepts:<ul><li>Use of Actor</li><li>Directional shooting</li><li>Sprite collisions</li></ul>"
+			},
+			"pages":
+			[
+			]
+		}
+	]
+}

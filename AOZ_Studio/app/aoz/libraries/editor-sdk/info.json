@@ -1,0 +1,20 @@
+{
+	"path": "editor-sdk",
+	"name":
+	{
+		"fr": "Accès aux fonctions de l'éditeur",
+		"en": "Access to the editor's functions"
+	},
+	
+	"description":
+	{
+		"fr": "Accédez aux fonctionnalités de l'éditeur depuis votre programme AOZ. Cette bibliothèque est uniquement utilisable pour les programmes exécutés dans l'éditeur.",
+		"en": "Access the editor features from your AOZ program. This library can only be used for programs running in the editor."
+	},
+	
+	"copyright" : "(c)2022 AOZ Studio",
+	"author": "Baptiste Bideaux",
+	"version": "1.0-0",
+	"licence": "GPLv3",
+	"dependencies":[]
+}

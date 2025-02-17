@@ -1,0 +1,35 @@
+<i>Tile X</i>
+<b>Tile X</b> xxxxxxx
+=
+The coordinate returned is the actual coordinate of the top-left corner of the tile on display. It takes into account all the parameters of the view (position and size) as well as the width of the tiles in the tileset.
+
+It means that you can safely use it to over-impose a bob or a sprite as in this example.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+XOFFSET = 0
+YOFFSET = 0
+ENNEMYTILE = 1112
+Do
+If JLeft( 1 ) Then XOFFSET = XOFFSET - 1
+If JRight( 1 ) Then XOFFSET = XOFFSET + 1
+If JUp( 1 ) Then YOFFSET = YOFFSET - 1
+If JDown( 1 ) Then YOFFSET = YOFFSET + 1
+Offset View "MapView", XOFFSET, YOFFSET
+Redraw View "MapView"
+
+// If the is an ennemy tile in the display, use a bob to display the ennemy...
+// The bob will automatically follow the scrolling.
+ENNEMYINDEX = Tile First( "MapView", ENNEMYTILE )
+If ENNEMYINDEX >= 0
+Bob "myennemy", Tile X( "MapView", ENNEMYINDEX ), Tile Y( "MapView", ENNEMYINDEX )
+Else
+Bob Off "myennemy"
+End If
+Wait Vbl
+Loop
+@code
+

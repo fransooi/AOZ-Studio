@@ -1,0 +1,28 @@
+Instruction Toast, Text$, Type$="primary", ShowTop = False, Duration = 3000, CallBack$=""
+{
+	#errors
+	if( Metro == undefined )
+	{
+		throw "metro_ui_lib_not_loaded";
+	}
+
+	var options =
+	{
+	    callback: Metro.noop,
+	    timeout: %Duration,
+	    distance: 20,
+	    showTop: %ShowTop,
+	    clsToast: ""
+	}
+
+	if( %CallBack$ != '' )
+	{
+ 		options.callback = function()
+		{
+			application.aoz.runProcedure( %CallBack$, {} );
+		}
+	}
+
+	Metro.toast.create( %Text$, null, null, null, options );
+}
+End Instruction

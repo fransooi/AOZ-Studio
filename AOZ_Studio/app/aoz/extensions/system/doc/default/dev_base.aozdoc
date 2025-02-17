@@ -1,0 +1,7 @@
+<i>Dev Base</i>
+<b>Dev Base</b> xxxxxxx
+=
+This function returns the base address of the IO structure assigned to the current device. The structure can now be
+manipulated directly, using the STRUC commands, as required.
+
+

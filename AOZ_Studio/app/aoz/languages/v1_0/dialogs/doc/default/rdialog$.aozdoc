@@ -1,0 +1,6 @@
+<i>RDialog$</i>
+<b>RDialog$</b> xxxxxxx
+=
+Use this function to return a string of text Assigned to a zone. If the selected zone does not contain any text, an empty string will be presented. Please see the Interface EDit command for more details
+
+

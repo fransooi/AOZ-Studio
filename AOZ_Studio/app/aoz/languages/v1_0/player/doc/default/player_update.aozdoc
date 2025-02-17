@@ -1,0 +1,18 @@
+<i>Player Update</i>
+<b>Player Update</b> xxxxxxx
+=
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+NAME$ = ""
+Input "Enter Player Name: "; NAME$
+If NAME$ <> ""
+Player Update playerName$=NAME$
+
+If Player ErrorCode() <> 0
+Print Player ErrorMessage$()
+Else
+Print "The player name has been updated"
+End If
+End If
+@code
+

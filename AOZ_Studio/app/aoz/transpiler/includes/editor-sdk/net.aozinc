@@ -1,0 +1,13 @@
+#loadAssetFile: "aozjs/editor-sdk/js/net.js"
+
+/**
+Downloads a file from an URL
+URL$ is the url of the file
+PATH$ if the path of destination
+PROCNAME$ is the name of the AOZ procedure to control the doiwnloading progression
+*/
+Procedure DOWNLOAD_URL[ URL$, PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.net.downloadURL( '" + URL$ + "', '" + PATH$ + "','" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc

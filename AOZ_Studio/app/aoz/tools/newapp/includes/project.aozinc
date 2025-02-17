@@ -1,0 +1,92 @@
+Procedure EDIT_PROJECT
+	TYPE$ = JSON Asset Property$( JSON_ID, CTX$ + "[" + Trim$( Str$( CUR_TEMP ) ) + "].type" )
+	COPYSOURCE$ = TEMPPATH$ + "/data/" + CTX$ + "/" + JSON Asset Property$( JSON_ID, CTX$ + "[" + Trim$( Str$( CUR_TEMP ) ) + "].path" )
+
+	Load Asset TEMPPATH$ + "/data/" + CTX$ + "/" + JSON Asset Property$( JSON_ID, CTX$ + "[" + Trim$( Str$( CUR_TEMP ) ) + "].path" ) + "/edit/edit.js", "edit_js"
+End Proc
+
+Procedure LOAD_PAGES
+
+	NBPAGE = JSON Asset Property( JSON_ID, CTX$ + "[" + Trim$( Str$( CUR_TEMP ) ) + "].pages.length" )
+	CURPAGE = -1
+	If NBPAGE > 0
+		For R = 1 To NBPAGE
+			Load Asset TEMPPATH$ + "/data/" + CTX$ + "/" + JSON Asset Property$( JSON_ID, CTX$ + "[" + Trim$( Str$( CUR_TEMP ) ) + "].path" ) + "/edit/html/page" + Trim$( Str$( R ) ) + ".html", "page" + Trim$( Str$( R ) )
+		Next R
+	End If
+	JS Execute "client.initProperties();"
+	REQUEST$ = "show_properties"
+
+End Proc
+
+Procedure PROJECT_FOLDER
+	PROJECT_PATH$ = ""
+	TIT$ = "Choisissez le dossier de destination du nouveau projet AOZ."
+	If LANG$ = "en" Then TIT$ = "Choose the destination folder for the new AOZ project."
+	JS Execute "client.openDirectoriesDialog( '" + TIT$ + "' )"
+
+	If RESPONSE$ <> "-1"
+		PROJECT_PATH$ = RESPONSE$
+	End If
+
+End Proc
+
+Procedure COPY_PROJECT
+	COPYDEST$ = PROJECT_PATH$
+	JS Execute "client.copyProject( '" + COPYSOURCE$ + "', '" + COPYDEST$ + "' )"
+End Proc
+
+Procedure OPEN_PROJECT
+	JS Execute "client.openProject( '" + PROJECT_PATH$ + "' )"
+End Proc
+
+Procedure SHOW_PROPERTIES
+	CODE$ = ""
+	CAT_NAME$= ""
+	If NBPAGE > 0
+		// Install DOM components
+		For R = 1 To NBPAGE
+			If CURPAGE = -1
+				CURPAGE = R - 1
+			End If
+
+			CAT_SELECTED$ = ""
+			If CURPAGE = ( R - 1 ) Then CAT_SELECTED$ = "selected"
+
+			CAT_ID$ = "C" + Trim$( Str$( R ) )
+			CAT_TITLE_ID$ = "CT" + Trim$( Str$( R ) )
+			CAT_TITLE$ = JSON Asset Property$( JSON_ID, CTX$ + "[" + Trim$( Str$( CUR_TEMP ) ) + "].pages[" + Str$( R - 1 ) + "].title." + LANG$ )
+			CODE$ = CODE$ + HTML Code$( "category" )
+		Next R
+		HTML Element "categories", Content$ = CODE$
+
+		// Install listeners
+		For R = 1 To NBPAGE
+			If CURPAGE = (R - 1)
+				HTML Element "C" + Trim$( Str$( R ) ), Enable = False
+			End If
+			HTML Element "C" + Trim$( Str$( R ) ), OnClick$="CLICK_PAGE"
+		Next R
+	Else
+		HTML Element "categories", Content$ = CODE$
+	End If
+	CAT_TITLE$ = JSON Asset Property$( JSON_ID, CTX$ + "[" + Trim$( Str$( CUR_TEMP ) ) + "].pages[" + Str$( CURPAGE ) + "].title." + LANG$ )
+	HTML Element "templates", Content$ = HTML Code$( "page" + Trim$( Str$( CURPAGE + 1 ) ) )
+	JS Execute "client.showProperties()"
+
+	HTML Element "btn_create", Visible = True
+
+End Proc
+
+Procedure CLICK_PAGE[ EVENT$, INDEX$ ]
+	JS Execute "client.valideProperties()"
+	CURPAGE = Val( Right$( INDEX$, 1 ) ) - 1
+End Proc
+
+Procedure CHANGE_PAGE
+	REQUEST$ = "show_properties"
+End Proc
+
+Procedure SAVE_PROJECT
+	Console Log "Save Project in " + PROJECT_PATH$
+End Proc

@@ -1,0 +1,10 @@
+<i>instruction: Set the gravity value of the Physic World</i>
+value=<b>Set Gravity</b> X = (float), Y = (float)
+=
+@code
+Cls 0
+Set Gravity Y=0.1
+Actor 1, Image$ = "ground.png", X = 0, Y = 500, Physic$ = "platform"
+Actor 2, Image$="magicfly.png", X = 100, Y = 0, Physic$="ball"
+Wait Key
+@code

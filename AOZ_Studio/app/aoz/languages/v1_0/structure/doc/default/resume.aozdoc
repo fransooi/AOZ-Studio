@@ -1,0 +1,9 @@
+<i>Resume</i>
+<b>Resume</b> xxxxxxx
+=
+Used on its own, RESUME will jump back to the statement which caused the error and try it again. To return to the
+instruction immediately after the one that caused the error, use RESUME NEXT. Alternatively, to jump to a specific
+point in your main program, simply follow RESUME with a reference to a chosen label or a normal line number.
+
+Warning: if you do not correct the cause of error, a new error will be generated, resumed, and your computer could go in a never-ending loop.
+

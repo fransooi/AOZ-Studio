@@ -1,0 +1,34 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ 
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ 
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ - Google Font Definition
+ *
+ */	
+<FONT_FACE-START>
+/* roboto-mono-100 - latin-ext_greek_greek-ext_cyrillic_latin_cyrillic-ext */
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 500;
+  src: local('Roboto Mono Thin'), local('RobotoMono-Thin'),
+       url('%GOOGLE_FONTS%/roboto mono/roboto-mvleeer.woff2') format('woff2') /* Super Modern Browsers */
+}
+
+/* roboto-mono-100italic - latin-ext_greek_greek-ext_cyrillic_latin_cyrillic-ext */
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: italic;
+  font-weight: 500;
+  src: local('Roboto Mono Thin Italic'), local('RobotoMono-ThinItalic'),
+       url('%GOOGLE_FONTS%/roboto mono/roboto-mvleeei.woff2') format('woff2') /* Super Modern Browsers */
+}
+<FONT_FACE-END>

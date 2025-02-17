@@ -1,0 +1,414 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Information Instruction Set
+ * By Brian Flanagan
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author Brian Flanagan
+ * @date first pushed on 14/08/2020
+ *
+ */
+#need_extension: "net"
+
+//
+// Initialization
+//
+{
+}
+
+/**doc
+@name: Information Commands
+@description: Functions for returning application and system information.
+@author: Brian Flanagan
+doc*/
+
+/**api
+@name: OS Name$
+@author: Brian Flanagan
+@description: Function that returns the OS currently in use (abbreviated)
+@returns: String containing the simple OS name.  ("macOS", "Windows", "Linux", "UNIX", etc.)
+@compatible: aoz
+@content:
+api*/
+
+Function "OS Name$"
+{
+	var AV=navigator.appVersion;
+	var result="unknown";
+	if 		(AV.indexOf("Mac")!=-1)		{ result="macOS"; }
+	else if (AV.indexOf("Win")!=-1)		{ result="Windows"; }
+	else if (AV.indexOf("Linux")!=-1)	{ result="Linux"; }
+	else if (AV.indexOf("X11")!=-1)		{ result="UNIX"; }
+	else 								{ result=AV; } // Return whole string if unrecognized
+}
+End Function( { result } )
+
+/**api
+@name: Manifest$
+@author: Brian Flanagan
+@description: Function that returns the name of the selected manifest platform.
+@returns: String containing the current platform name.  ("amiga","aoz", etc.)
+@compatible: aoz
+@content:
+api*/
+Function Manifest$
+{
+
+}
+End Function( { aoz.manifest.compilation.platform  } )
+
+/**api
+@name: Browser Name$
+@author: Brian Flanagan
+@description: Function that returns the simple name of the browser in which an AOZ application is running.
+@returns: String containing the current browser name.  ("Chrome","Firefox", "Safari", etc.)
+@compatible: aoz
+@content:
+
+api*/
+Function Browser Name$
+{
+	var UA=navigator.userAgent;
+	var result = UA; // If unrecognized, return entire userAgent so user can write their own detection.
+ 	var ua=UA.toLowerCase();
+ 	isMSIE=			ua.indexOf('msie') >=0;		// Internet Explorer 8-10
+ 	isExplorer=		ua.indexOf('explorer') >=0;	// Internet Explorer 11
+ 	isEdge=			ua.indexOf(' edg\/') >= 0;
+ 	isFirefox=		ua.indexOf('firefox') >= 0;
+ 	isOpera=		ua.indexOf(' opr\/') >= 0;
+ 	isChromium=		ua.indexOf(' chromium') >=0;	// Windows, OS/X, Linux, Android
+ 	isMaxthon=		ua.indexOf(' maxthon') >=0;	// Maxthon SHOULD WE BLOCK IT, or at least WARN the user about it?!  (Major security issue!)
+ 	isChrome=		ua.indexOf('chrome') >= 0 && ua.indexOf(' opr\/') < 0 && ua.indexOf(' edg\/') < 0;
+ 	isSafari=		ua.indexOf('safari\/') >= 0 && ua.indexOf('chrome') < 0 && ua.indexOf(' opr\/') < 0;
+	// Popular Linux browsers
+	isSeamonkey=	ua.indexOf(' seamonkey') >=0;
+ 	isMidori=		ua.indexOf(' midori') >=0;
+ 	isKonquerer=	ua.indexOf(' konquerer') >=0;
+ 	isPaleMoon=		ua.indexOf(' palemoon') >=0;
+ 	isFalkon=		ua.indexOf(' falkon') >=0;
+ 	isW3M=			ua.indexOf('w3m') >=0;
+	// Mobile Browsers
+	isOperaMini=	ua.indexOf(' opera mini') >=0;	// Android & Blackberry
+	isUCBrowser=	ua.indexOf('ucbrowser') >=0;	// Android
+
+ 	if (isMSIE)			result='MSIE'; // 8-10
+ 	if (isExplorer)		result='Explorer'; // 11
+ 	if (isEdge)			result='Edge';
+ 	if (isFirefox)		result='Firefox';
+ 	if (isOpera)		result='Opera';
+ 	if (isChromium) 	result='Chromium';
+ 	if (isMaxthon)		result='Maxthon';
+ 	if (isSafari)		result='Safari';
+ 	if (isChrome)		result='Chrome';
+	// Popular Linux Browsers
+ 	if (isSeamonkey)	result='Seamonkey';
+ 	if (isMidori)		result='Midori';
+ 	if (isKonquerer)	result='Konquerer';
+ 	if (isPaleMoon)		result='Pale Moon';
+	if (isFalkon)		result='Falkon';	
+ 	if (isW3M)			result='W3M';
+	// Mobile Browsers
+	if (isUCBrowser)	result='UCBrowser';	// Android
+	if (isOperaMini)	result='Opera Mini';	// Android & Blackberry
+}
+End Function( { result } )
+
+/**api
+@name: Browser Language$
+@author: Brian Flanagan
+@description: Function that returns the language used by the client browser.
+@returns: String containing the current browser language.  ("en-US","en-GB", "fr-FR", "fr-CA", "fr-BE", "fs-CH", etc.)
+@compatible: aoz
+@content:
+api*/
+Function Browser Language$
+{
+	result = navigator.language;
+}
+End Function( { result } )
+
+/**api
+@name: Browser Version$
+@author: Brian Flanagan
+@description: Function that returns the version of the client browser.
+@returns: String containing the current browser version.
+@compatible: aoz
+@content:
+api*/
+Function Browser Version$
+{
+   result = navigator.appVersion;
+}
+End Function( { result } )
+
+/**api
+@name: Browser Agent$
+@author: Brian Flanagan
+@description: Function that returns the full userAgent of the client browser.
+@returns: String containing the current browser userAgent.
+@compatible: aoz
+@content:
+api*/
+Function Browser Agent$
+{
+   result = navigator.userAgent;
+}
+End Function( { result } )
+
+/**api
+@name: Browser Engine$
+@author: Brian Flanagan
+@description: Function that returns the code engine on which the browser is running.
+@returns: String containing the current browser product.
+@content:
+api*/
+Function Browser Engine$
+{
+	result=navigator.product;
+}
+End Function ( { result } )
+
+
+/**api
+@name: Browser Ancestor$
+@author: Brian Flanagan
+@description: Function that returns the browser's ancestral name.
+@returns: String containing the current browser appName.
+@content:
+api*/
+Function Browser Ancestor$
+{
+	result=navigator.appName;
+}
+End Function ( { result } )
+
+/**api
+@name: Browser CodeName$
+@author: Brian Flanagan
+@description: Function that returns the code name for the browser.
+@returns: String containing the current browser appCodeName.
+@content:
+api*/
+Function Browser CodeName$
+{
+	result=navigator.appCodeName;
+}
+End Function ( { result } )
+
+/**api
+@name: Browser Online$
+@author: Brian Flanagan
+@description: Function that returns a boolean, true if application is online.
+@returns: String containing the current browser online status.
+@content:
+api*/
+Function Browser Online
+{
+	result=navigator.onLine;
+}
+End Function ( { result } )
+
+Function Java Enabled
+{
+	result=navigator.javaEnabled();
+}
+End Function ( { result } )
+/**api
+@name: Browser Platform$
+@author: Brian Flanagan
+@description: Function that returns the OS platform where the browser is running.
+@returns: String containing a description of the current client OS.
+@content:
+api*/
+Function Browser Platform$
+{
+	result=navigator.platform;
+}
+End Function ( { result } )
+
+/**api
+@name: Geo Latitude
+@author: Brian Flanagan
+@description: Function that returns the geographic Latitude of the device.
+@returns: Floating point containing the latitue.
+@content:
+Geo Latitude returns the current Latitude.
+
+api*/
+
+Function "Geo Latitude"
+{
+	result=0.0;
+	/*
+	if (navigator.geolocation)
+	{
+		navigator.geolocation.getCurrentPosition(gotPos);
+	}
+	else
+	{
+		alert('Geolocation not supported.');
+	}
+// console.log(result);
+
+	function gotPos(pos)
+	{
+// console.log(pos);
+		result=pos.coords.latitude
+	}
+	*/
+}
+End Function ( 0.0 ) // { result } )
+
+/**api
+ @name: Geo Longitude
+ @author: Brian Flanagan
+ @description: Function that returns the geographic Latitude of the device.
+ @returns: Floating point containing the latitue.
+ @content:
+ Geo Longitude returns the longitude of the current geographic location in decimal degrees.
+
+api*/
+
+Function "Geo Longitude"
+{
+	result=0.0;
+	/*
+	if (navigator.geolocation)
+	{
+		navigator.geolocation.getCurrentPosition(gotPos);
+//		if (pos) result=pos.coords.longitude;
+	}
+	else
+	{
+		alert('Geolocation not supported')
+	}
+//	console.log(result);
+
+	function gotPos(pos)
+	{
+//	console.log(pos);
+		result=pos.coords.longitude
+	}
+	*/
+}
+End Function ( 0.0 ) // { result } )
+
+/*	navigator object:
+
+	appCodeName		\
+	appName			 > Don't know if these need to be returned, but may be used by Browser Name$ & Browser Version$
+	appVersion		/
+	cookieEnabled	Cookies	Enabled		Returns boolean: True if cookies are enabled.
+	geolocation		Geo coordinates			> Returns coordinates objects consisting of below:
+						Geo Latitude			\
+						Geo Longitude			 \
+						Geo Altitude			  \
+						Geo Heading					> coordinates
+						Geo Speed 				  /
+						Geo Accuracy 			 /
+						Geo Altitude Accuracy	/
+					Geo Position 			Returns position object consisting of below:
+						Geo Position Coords	Returns coordinates object at a particular time.
+						Geo Position Time 	Returns DOM Timestamp of position.
+	language		Browser Language$
+	onLine			Browser Online$
+	platform		Browser Platform$
+	product			Browser Engine$
+	userAgent		Browser Agent$		Returns full userAgent string.
+					Browser Name$		Returns short name of browser in use.
+						(Function may also use appCodeName, appName, appVersion to determine.)
+					Browser Version$ 	Returns version of browser in use.
+	javaEnabled()	Java Enabled
+
+	taintEnabled()	Deprecated.
+
+	FireFox:
+		Ancestor:	Netscape
+		CodeName:	Mozilla
+		Engine:		Gecko
+		appVersion:	5.0 (Macintosh)
+		Version:	79.0 (from userAgent)
+
+	Edge:
+		Ancestor:	Netscape
+		CodeName:	Mozilla
+		Engine:		Gecko
+		appVersion:	most of Agent$
+		Version:	84.0.522.61
+
+	Vivaldi:
+		Ancestor:	Netscape
+		CodeName:	Mozilla
+		Engine:		Gecko
+		appVersion:	most of Agent$
+		Version:	84.0.4147.108 (chrome)
+
+	Seamonkey:
+		Ancestor:	Netscape
+		CodeName:	Mozilla
+		Engine:		Gecko
+		appVersion:	5.0 (Macintosh)
+		Version:	2.53.3 (from userAgent)
+
+	Chrome:
+		Ancestor:	Netscape
+		CodeName:	Mozilla
+		Engine:		Gecko
+		appVersion:	most of Agent$
+		Version:	84.0.4147.125 (from userAgent)
+
+	Opera:
+		Ancestor:	Netscape
+		CodeName:	Mozilla
+		Engine:		Gecko
+		appVersion:	most of Agent$
+		Version:	70.0.3728.106
+
+	Safari:
+		Ancestor:	Netscape
+		CodeName:	Mozilla
+		Engine:		Gecko
+		appVersion:	most of Agent$
+		Version:	605.1.15 (from userAgent)
+
+Vivaldi Unique Features for possible detection:
+	Notes
+	SpeeDial
+	Screenshot Site
+	Special Tabs
+	Wired Ads
+*/
+
+/**api
+@name:Open URL
+@description:Open a URL in window
+@param:URL$:string:Address will be opened into a window ( "www.aoz.studio" by example )
+@param:*WIN$:string:Name of the window to display this URL ('_self' by default )
+@exception:URL missing.
+@content:
+api*/
+Instruction Open URL, url$ = "https://aoz.studio", window$
+{
+	#errors
+	aoz.NET.openUrl( %url$, %window$ );
+}
+End Instruction

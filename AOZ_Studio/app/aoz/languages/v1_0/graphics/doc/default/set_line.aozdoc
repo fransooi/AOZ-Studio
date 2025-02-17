@@ -1,0 +1,14 @@
+<i>Set Line</i>
+<b>Set Line</b> xxxxxxx
+=
+This command sets the style of all straight lines that are subsequently drawn. Theoretically, the 16-bit mask can
+generate values for different patterns between 0 and 65535, but here is a more practical example:
+@code
+Cls : Ink 2
+Set Line $F0F0
+Box 50,100 To 150,140
+Set Line %1100110011001100
+Box 60,110 To 160,160
+@code
+
+

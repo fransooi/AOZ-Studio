@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<title>AOZ Studio User Guide</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="pragma" content="no-cache">		
+		<meta http-equiv="expires" content="-1">
+		<style>
+			img
+			{
+				width: 100%;
+			}
+		</style>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0,viewport-fit=cover">
+	</head>
+	
+	<body>
+	</body>
+	
+	<script type="text/javascript">
+		window.addEventListener( 'keydown', function( event )
+		{
+			event.preventDefault();
+		}, false );	
+		var page = 1;
+		var count = 225;
+		
+		for( r = page; r < ( count + 1 ); r++ )
+		{
+			var file = 'AOZ_Studio-User_Guide-_English-page-'
+			if( r < 100 )
+			{
+				file = file + '0';
+			}
+			
+			if( r < 10 )
+			{
+				file = file + '0';
+			}			
+
+			file = file + '' + r + '.jpg';
+			
+			var img = document.createElement( 'img' );
+			img.src = 'pages/guide/' + file;
+			document.body.appendChild( img );
+		}
+		
+	</script>

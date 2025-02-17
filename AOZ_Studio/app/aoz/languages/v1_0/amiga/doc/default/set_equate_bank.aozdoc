@@ -1,0 +1,11 @@
+<i>Set Equate Bank</i>
+<b>Set Equate Bank</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This command allocates a memory bank for use by the automatic equate system. It should be called up before the
+first equate in your program, preferably near the beginning. Specify the bank number to be used for your equates,
+ranging from 1 to 65535. Any existing bank of the same number will be erased when the equates are installed in
+memory, without warning, so take care!
+
+

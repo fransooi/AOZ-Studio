@@ -1,0 +1,155 @@
+{
+    system_commands:
+    { 
+        name: "System Commands"
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "dev_open":
+            [
+                The DEV OPEN command opens a communication port and prepares the device for use by AOZ
+programs. If this device is not already installed, it will be loaded from the "DEVS" folder of your current start-up
+disc automatically. Floppy disc users may be requested to swap discs at this point.
+""
+The selected device will now remain active during the course of the program, and will only be closed if a DEV
+CLOSE command is called, or a RUN command is used to clear the variable area, or a CLEAR operation is
+undertaken.
+""
+The specified channel number should be from zero to 4, the "name.device" parameter enters the name of the device
+to be initialised in normal AmigaDOS format, and IOlength specified the length of the IO structure to be created for
+the device. If in doubt, use a value of 256, which should be sufficient for most devices. The final flags parameter
+sets the status of the device flags if applicable. Please refer to your system documentation for details.
+""
+DEV OPEN performs the following operations:
+""
+- Firstly, a communication port is created and initialised.
+- Next, an IO Ext structure is opened, ready for communication.
+- Lastly, the OPEN DEVICE function is executed with the new structure.
+            ]
+            "dev_close":
+            [
+                Use this command to close one or more open devices.
+Memory used by the IO structure will be returned back to AOZ and the message port is released for
+subsequent use. If the channel number is omitted, all active devices are closed simultaneously, otherwise the single
+specified device is closed down. Note that if a specified channel is not already open, no error will be reported.
+            ]
+            "dev_base":
+            [
+                This function returns the base address of the IO structure assigned to the current device. The structure can now be
+manipulated directly, using the STRUC commands, as required.
+
+            ]
+            "dev_do":
+            [
+                The DEV DO instruction executes a DoIO operation via the specified channel. Obviously the correct internal
+structure parameters must be set using a STRUC command, before this operation is called. The specified channel
+number refers to a previously opened device channel. The command number holds the number of the IO command
+you wish to Do. This command may be entered directly by name, using the EQU function explained earlier. You are
+warned to take great care when using this instruction!"
+
+            ]
+            "dev_send":
+            [
+                This calls the SendIO command from Exec, and runs your operation using the Amiga's multi- tasking system. The
+new process will run invisibly in the background, and your AOZ program will continue from the next
+instruction immediately.
+
+            ]
+            "dev_abort":
+            [
+                This instruction executes an AbortIO and a WaitIO command, clearing all pending action from the specified device
+channel. It can be used to exit directly from a multi-tasking operation, without waiting for it to complete.
+ 
+            ]
+            "dev_check":
+            [
+                Use this function to perform a CheckIO on the specified channel. The resulting value is passed back to AOZ Studio.
+
+            ]
+            "dev_next":
+            [
+                This is used in conjunction with the DEV FIRST$ function to get the next device in the current device list that
+satisfies the specified search path. Once the last device has been found, an empty string will be returned.
+                '''
+                ~~~                
+		   Print Dev First$("**")
+		   Do
+		   	A$=Dev Next$
+		   	If A$= Then End
+			Print A$
+		   Loop
+                ~~~
+                '''
+            ]
+            "dev_first$":
+            [
+                This function is similar to DIR FIRST$. A string is returned identifying the first device that satisfies a chosen search
+path in the current device list.
+""
+DEV FIRST$("**") will list everything, DEV FIRST$("D/**") will only list disks, and DEV FIRST$(A/**") is used
+if you only want to list assigns.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "lib_open":
+            [
+                The LIB OPEN command calls the OPEN LIBRARY function from EXEC. If the library is external, it will be
+loaded into memory from the "Libs: folder of your current start-up disc. If a problem is encountered, you will be
+helped by the relevant error message from AOZ, and the error can easily be intercepted using a
+TRAP command.
+""
+After the library has been initialised successfully, it remains open until the program is run again from the Editor, or
+your variables are re-set using a CLEAR command, or a LIB CLOSE command is called.
+""
+Three parameters are needed for a LIB OPEN instruction. The number of a new AOZ channel, to be
+used to refer to this library throughout the AOZ program. Then the name of the library that is to be
+opened, given in standard Commodore format. Lastly, the minimum version number of the library that is to be
+installed in memory should be specified. If you are unsure of this parameter, use a value of zero.
+
+            ]
+            "lib_close":
+            [
+                Used on its own, the LIB CLOSE command closes all open libraries in a single operation. If an optional Channel
+number is included, an individual library may be closed. Please note that if a selected library does not exist, no error
+will be reported!"
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "lib_call":
+            [
+                This important function acts as the gateway to all the functions in the selected library. It calls the required function
+and returns the result to your AOZ program.
+""
+The function offset parameter holds the offset value to the library function that you wish to execute, and if it is
+entered directly this value must be exact. Any mistakes will crash the computer. Alternatively, you are recommended
+to use a safer method via the LVO function to call the command by name, which is explained below.
+""
+Before calling this function, the appropriate parameter values need to be loaded into the Address and Data registers,
+using the AREG and DREG commands. The precise format of these parameters depends on the function in question,
+and should be checked from the appropriate reference manual.
+""
+After the function has been successfully executed, any return values will be available for immediate use from the
+AREG and DREG variables. Note that AREG only allows the registers from A0 to A3 to be accessed. (Registers
+A4, A5 and A6 are not used by the libraries at all.)"
+
+            ]
+            "lib_base":
+            [
+                LIB BASE is used to return the base address of the selected library. This can be used in conjunction with the
+STRUC function to manipulate the internal data structures directly. Obviously, the normal PEEK and POKE
+functions can be used for this purpose as well.
+
+            ]
+           
+        }
+    }
+}

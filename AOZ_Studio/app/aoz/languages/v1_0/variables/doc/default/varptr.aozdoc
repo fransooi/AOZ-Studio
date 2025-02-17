@@ -1,0 +1,94 @@
+<i>function: read the address of a variable</i>
+address=<b>Varptr</b>(variable)
+=
+This useful function returns the location of any AOZ variable in the memory. Programmers familiar with C should find it very similar to the & (ampersand) operator in that language.
+=
+VARPTR provides back-door access to your variables, and with careful use you are able to get to them directly, without having to rely on standard routines. This is especially valuable with procedures, because if procedures are loaded with the address of a variable instead of its actual value, that variable can be changed from inside the procedure. For example:
+@code
+TEST=0
+Rem Correct use of square brackets
+ANSWER[Varptr(Test)] : Rem Load ADDRESS of variable into AD parameter
+Print TEST
+Procedure ANSWER[AD]
+Loke AD,42 : Rem Copy new value into variable, by back door!
+End Proc
+@code
+=
+There should be few problems encountered when reading the variables, but changing them is a very hazardous process!
+=
+The slightest error made in your address calculations will crash AOZ Studio, so it is vital to <b>save your programs before attempting to change your variables in this way.</b>
+=
+With machine code programs, VARPTR can also be used to manipulate entire strings or arrays directly. Each type of variable is stored in its own individual format, as listed below.
+=
+<b>Integers</b> are held as a simple group of four bytes. They can be read from your Basic program using LEEK, and altered by LOKE. Here is an example of this (dangerous) method:
+@code
+ ANSWER=43 : Rem Load a variable
+ AN=Varptr(ANSWER) : Rem Find address of variable
+ Loke AN,LEEK(AN)-1 : Rem Equivalent to ANSWER=ANSWER-1
+ Print ANSWER
+@code
+=
+<b>Floating point numbers</b> are stored as four bytes, using the special Fast-Floating point format. However, if DOUBLE PRECISION is being used, floating point numbers are held as a group of eight bytes in IEEE double precision format.
+=
+<b>Strings</b> are stored' as a series of characters in standard Ascii format. The address given by VARPTR points to the first character in the string, and this can be examined with PEEK or replaced using POKE. Note that the length of the string is contained in two bytes immediately before the string. This means that it can be loaded into Basic using a line like this:
+@code
+Print Deek(Varptr(A$)-2) : Rem Equivalent to Print Len(A$)
+@code
+=
+One application of this function is to return the Ascii value of a single character in an AMOS Professional string. The standard method is to make use of the ASC and MID$ functions, like this:
+@code
+A=Asc(Mid$(A$),C,1) : Rem Return Ascii code of character C in A$
+@code
+=
+Using VARPTR, that could be replaced by the following line:
+@code
+A=Peek(Varptr(A$)+C)
+@code
+=
+To avoid danger, special precautions must be taken before new values are poked into a string. During the course of a program, the address of a string may change many times, so it is vital to load the current address of a string using VARPTR immediately before that string is used.
+=
+AOZ Studio regularly reorganises all strings in memory, using a "garbage collection" process. This frees valuable space needed for variables, and is essential for the smooth running of the system. But if you wish to pass the address of a string as a procedure garbage collection can play havoc. The obvious solution is to collect the garbage before the address is calculated, using a simple line like this:
+@code
+X=Free
+@code
+=
+The address of the string can now be established, and passed to the procedure. So providing strings themselves are not used in the procedure, you should remain safe.
+=
+Another hazard can be encountered if you try to POKE values straight into a string.
+Try
+@code
+A$="123456789": Rem Define a string of characters
+For C=0 To Len(A$)-1
+AD=Varptr(A$) : Rem Get the address
+V=Peek(AD+C) : Rem Get Ascii value of current element
+Poke AD+C,V+1 : Rem Add 1 to it
+Next C
+Print A$
+@code
+=
+When you return to the Editor, you will discover that your listing has been changed!- AOZ Studio is trying to save space by storing your string in the program listing, rather than the standard variable "buffer". This problem can be solved by loading the first character into the start of the string, then adding the remaining characters later.
+Here is how:
+@code
+A$="1" : Rem Set up the first character
+A$=A$+"23456789" : Rem Now add remaining characters
+@code
+This fools AOZ Studio into creating a separate copy of the string in the variable buffer.
+=
+<b>Numerical arrays</b> are stored as a simple list of values, with each dimension stored in turn. Look at the following array:
+@code
+Dim TEST(3,3)
+@code
+That array is held in the following order:
+@code
+0,0 0,1 0,2 0,3
+1,0 1,1 1,2 1,3
+2,0 2,1 2,2 2,3
+3,0 3,1 3,2 3,3
+@code
+=
+So to return the address of the first value of the array, you would use this:
+@code
+Varptr TEST(0,0)
+@code
+=
+<b>String arrays</b> are more complex, because their length needs to change whenever one of their elements is assigned to a new value. The only way of ensuring total safety is to avoid them altogether! If you ignore this advice and try to access them using VARPTR, you are risking real danger.

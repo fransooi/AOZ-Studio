@@ -1,0 +1,227 @@
+// #######################################################################
+// Firebase Realtime Updates Demo V1.0
+// By Phil Bell
+// Created April 2022
+// phil@aozwithphil.com
+// ############################################################################
+// Uses The Google Firebase Platform for authentication and data storage
+// The Google Firestore Database is a NoSQL cloud database
+//
+// Login to your Firebase console here (you can create a free account)
+// https://console.firebase.google.com/
+//
+// Check out the Firebase documentation here:
+// https://firebase.google.com/docs/firestore
+//
+// Download the following guide for help with setting up a Firebase project
+// https://aozwithphil.com/download/AOZFirebaseQuickStartGuide.pdf
+// ############################################################################
+
+#useAssetsResources:False
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#fps:false
+#clean:true
+#googleFont:"permanent marker"
+
+//Load CSS "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+Break Off: Curs Off
+Load Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+
+QUERY_REF_A$ = ""
+QUERY_REF_B$ = ""
+
+Global QUERY_REF_A$, QUERY_REF_B$
+
+// Initialise Firebase
+// *********************************************************************
+// ** IMPORTANT !! DO NOT USE THESE CREDENTIALS IN YOUR OWN PROJECTS  **
+// *********************************************************************
+Firebase Init apiKey$ = "AIzaSyD13zvHwKlihbU3Bj32gQHDDgMSjf68-_w", authDomain$ = "realtimeupdates-59b27.firebaseapp.com", projectId$ = "realtimeupdates-59b27", storageBucket$ = "realtimeupdates-59b27.appspot.com", messagingSenderId$ = "139654432937", appId$ = "1:139654432937:web:d9e080f7f79cc78ef301b8"
+
+If FirebaseAuth AuthState() = false
+	// User is not signed in
+	Goto SIGN_IN
+End If
+
+MAIN:
+	DisplaySignedInUI
+	SubscribeToFirebaseData
+	Do
+		If FirebaseAuth AuthState() = false
+			// User is not signed in or has signed out
+			Goto SIGN_IN
+		End If
+
+		Wait Vbl
+	Loop
+
+SIGN_IN:
+	UI Cls
+	// Uses a built in user interface to sign in and also registers new users
+	// Additional configuration is required in the Authentication section in the Firebase console for the specified providers
+	// signInFlow$ is optional, remove if you dont want to signin flow to be displayed in a popup window
+	FirebaseAuth SignInWithBuiltInUI signInFlow$="popup", provider$="google,email"
+
+	// Wait here until the user is signed in
+	Do
+		If FirebaseAuth AuthState() = true
+			Goto MAIN
+		End If
+
+		Wait Vbl
+	Loop
+
+Procedure SubscribeToFirebaseData
+	// Get a reference to a new collection query
+	QUERY_REF_A$ = Firebase NewQuery$ (collection$ = "collectionA", onData$="ON_TEST_A_DATA")
+
+	// Order the documents
+	Firebase QueryAddOrderBy queryRef$ = QUERY_REF_A$, field$ = "testText", direction$ = "asc"
+
+	// Listen to the results of a query, The onData$ event will called every time
+	// the query results change (that is, when a document is added, removed, or modified)
+	Firebase QuerySubscribe QUERY_REF_A$
+
+	// Create and subscribe to a second query
+	QUERY_REF_B$ = Firebase NewQuery$ (collection$ = "collectionB", onData$="ON_TEST_B_DATA")
+	Firebase QueryAddOrderBy queryRef$ = QUERY_REF_B$, field$ = "testText", direction$ = "asc"
+	Firebase QuerySubscribe QUERY_REF_B$
+End Proc
+
+Procedure ON_TEST_A_DATA[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	// Procedure is called when changes are detected in the collection
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		DisplayTestAData
+	End If
+End Proc
+
+Procedure ON_TEST_B_DATA[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	// Procedure is called when changes are detected in the collection
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		DisplayTestBData
+	End If
+End Proc
+
+Procedure DisplayTestAData
+	DOCUMENT_COUNT = Firebase QueryGetDocumentCount(QUERY_REF_A$)
+
+	If DOCUMENT_COUNT > 0
+		For row = 0 To DOCUMENT_COUNT -1
+			// Get the Firebase document ID for a specific row in the query results
+			// We then use the document ID to access the document fields
+			docId$ = Firebase QueryGetDocumentID$(QUERY_REF_A$, row)
+
+			// Read the document fields using the Firebase document ID as a reference
+			testText$ = Firebase QueryGetString$(QUERY_REF_A$, docId$, "testText")
+
+			// Set the id for the button to the Firebase document ID, when the delete button is clicked we can use the ID$ to delete the document
+			UI Button docId$, x=20, y=340 + row * 50, width=50, height=50, content$="", iconClass$="bi bi-trash-fill", class$="btn text-danger", onClick$="ON_DELETE_TEST_A_CLICK"
+			UI TextBlock "lblTestTextA" + docId$, x=80, y=340 + row * 50, width=320, content$=testText$, class$="text-light"
+		Next row
+	End If
+End Proc
+
+Procedure DisplayTestBData
+	DOCUMENT_COUNT = Firebase QueryGetDocumentCount(QUERY_REF_B$)
+	If DOCUMENT_COUNT > 0
+		For row = 0 To DOCUMENT_COUNT -1
+			docId$ = Firebase QueryGetDocumentID$(QUERY_REF_B$, row)
+			testText$ = Firebase QueryGetString$(QUERY_REF_B$, docId$, "testText")
+			UI Button docId$, x=800, y=340 + row * 50, width=50, height=50, content$="", iconClass$="bi bi-trash-fill", class$="btn text-danger", onClick$="ON_DELETE_TEST_B_CLICK"
+			UI TextBlock "lblTestTextB" + docId$, x=860, y=340 + row * 50, width=320, content$=testText$, class$="text-light"
+		Next row
+	End If
+End Proc
+
+Procedure ON_DELETE_TEST_A_CLICK[ID$]
+	UI Cls
+	DisplaySignedInUI
+	DisplayTestBData
+	Firebase DocumentDelete collection$ = "collectionA", docId$ = ID$
+End Proc
+
+Procedure ON_DELETE_TEST_B_CLICK[ID$]
+	UI Cls
+	DisplaySignedInUI
+	DisplayTestAData
+	Firebase DocumentDelete collection$ = "collectionB", docId$ = ID$
+End Proc
+
+Procedure DisplaySignedInUI
+	SignedInUI
+	UI Value "lblEmail", FirebaseAuth UserEmail$()
+	UI Value "lblFullname", FirebaseAuth UserDisplayName$()
+
+	photo$ = FirebaseAuth UserPhotoUrl$()
+
+	If photo$ <> ""
+		UI Image "imgPhotoUrl", src$=FirebaseAuth UserPhotoUrl$()
+	Else
+		UI Hide "imgPhotoUrl"
+	End If
+End Proc
+
+Procedure ON_SIGNOUT_CLICK[ID$]
+    FirebaseAuth SignOut
+End Proc
+
+Procedure ON_ADD_TEST_A[ID$]
+	// Create a new Firebase document (held in memory) and return a reference to it, this can then be used to access the document fields
+	docRef$ = Firebase NewDocument$()
+
+	// Set the document field values
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "testText", value$ = UI Value$("txtTestA")
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+
+	// Add the document to the Firebase 'testA' collection, the collection is created if it doesnt already exist
+	Firebase DocumentAdd collection$ = "collectionA", docRef$ = docRef$, onCompleted$ = "ON_ADD_COMPLETED"
+
+	// Remove the document from memory
+	Firebase DocumentDispose docRef$
+
+	UI Value "txtTestA", ""
+End Proc
+
+Procedure ON_ADD_TEST_B[ID$]
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "testText", value$ = UI Value$("txtTestB")
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+	Firebase DocumentAdd collection$ = "collectionB", docRef$ = docRef$, onCompleted$ = "ON_ADD_COMPLETED"
+	Firebase DocumentDispose docRef$
+	UI Value "txtTestB", ""
+End Proc
+
+Procedure ON_ADD_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	End If
+End Proc
+
+
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure SignedInUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "lblTitle", x=40, y=40, width=467, height=81, fontSize=29, content$="Real Time Updates Demo", class$="text-light"
+UI Button "btnSignOut", x=540, y=180, width=150, height=50, content$="Sign Out", class$="btn btn-primary", onClick$="ON_SIGNOUT_CLICK"
+UI TextBlock "lblFullnameLabel", x=40, y=160, width=185, content$="Display Name", class$="text-light"
+UI TextBlock "lblEmailLabel", x=40, y=200, width=185, content$="Email", class$="text-light"
+UI TextBlock "lblFullname", x=200, y=160, width=316, content$="#", class$="text-light"
+UI TextBlock "lblEmail", x=200, y=200, width=316, content$="#", class$="text-light"
+UI TextBox "txtTestA", x=40, y=280, width=475
+UI Button "btnAddTestA", x=540, y=280, width=150, height=50, content$="Add", class$="btn btn-success", onClick$="ON_ADD_TEST_A"
+UI TextBox "txtTestB", x=820, y=280, width=475
+UI Button "btnAddTestB", x=1320, y=280, width=150, height=50, content$="Add", class$="btn btn-success", onClick$="ON_ADD_TEST_B"
+UI Image "imgPhotoUrl", x=40, y=100, width=50, height=50, src$="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAIAAABZ+cloAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVJaROwg4pChdrIgKuIoVSyChdJWaNXB5NIvaGJIUlwcBdeCgx+LVQcXZ10dXAVB8APEzc1J0UVK/F9SaBHjwXE/3t173L0DhGaNqWbPOKBqlpFJJsR8YUUMvCKIAYQRRUxipp7KLuTgOb7u4ePrXZxneZ/7c4SVoskAn0g8y3TDIl4nnt60dM77xBFWkRTic+Ixgy5I/Mh12eU3zmWHBZ4ZMXKZOeIIsVjuYrmLWcVQiaeIo4qqUb6Qd1nhvMVZrdVZ+578haGitpzlOs0RJLGIFNIQIaOOKmqwEKdVI8VEhvYTHv5hx58ml0yuKhg55rEBFZLjB/+D392apckJNymUAHpfbPtjFAjsAq2GbX8f23brBPA/A1dax7/RBGY+SW90tOgR0L8NXFx3NHkPuNwBhp50yZAcyU9TKJWA9zP6pgIweAsEV93e2vs4fQBy1NXSDXBwCMTKlL3m8e6+7t7+PdPu7wepk3K9I4Jo0QAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+UKEQ0nD2rqNG0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAACb0lEQVRIx8VWS08TURQ+d1oBUyIJDWLsQly4cMESN0bjwrgyDdHEpb/CH6CufSXVFRijiWKMRBKND2RhKIJ9maG2hVb6fsgwnc7Q18x0Zu51ISW19HFN2nhWc+/Md7+cc75vzkWX7dPT9ksnJ04AAAABQPWHFoEASZLU7m1T8LzwYm7BfP7s1LWrdkoMABTEAiGUHyPd0Bmb7Rj96f8YZGzMykB/A/WbAP4fAepRY8wt9qrbTGKe43MDxy+OnLpQF26PMkBEZ7Yeo2qYqPxu5Hl1O9zjEhG1hGrc/lIR4z0mQIcshLHsLwcs4/SKpMvANEAmrgNzGAANjZ8btk1S+AnWk7kbbz7dXXQWZbV7k8noaTxy26qppsFhGqMkBfHeVy8G4GRlKRC5MjXZXabENGgaOkJzelFWHctuXF8u/IznS5WeGU0z8JMVD6eoDdWCxWCksR+dCPJV5cEqO+sJqrrRsqvv2JCHLzTtfoilOanUnSApFm85fV5h98t2/tWPMGm2C3yPp+fD0ZbS+RgIk3oSTEtVsLmdm6usWNP3ABl+JZ5p5MiIxUcuFrWR5lIqmy1IrQkwoM9biTu+kIZJo8JnAtGosIcpK7WHy64axh3K+96/SQ4SaBi/ZDeebiYPugYDOLwhUVYNQp6teTNVuXP/nTkuxYt/+aCs6TOegE/YbYcRatqsL3hUk9d+5Wk09ta/cWbEYv6jLb4iO1z+eEXpjFkXS2I2TSnib1we5QUzAIoJ0n1PUNJ0qj8OoR0UCMCdypndae418RukT3MfmGgsYRDcp4kPpbIZuB3scqFRKy2K48DQaW46jKyQdPY3y604RoGcD/YAAAAASUVORK5CYII="
+End Proc

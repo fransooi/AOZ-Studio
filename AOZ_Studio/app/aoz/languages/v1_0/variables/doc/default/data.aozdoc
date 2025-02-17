@@ -1,0 +1,38 @@
+<i>structure: place a list of data items in a program</i>
+<b>Data</b> list
+=
+A DATA statement lets you include whole lists of useful information in your programs. Each item in the list must be separated by a comma, like this:
+@code
+Data 1,2,3,4
+@code
+=
+Also each DATA instruction must be the only statement on the current line, because anything that follows it will beignored! Prove that with the following line:
+@code
+Read A$: Print A$
+Data "I am legal" : Print "But I am not!"
+@code
+=
+Data can be "read" into one or more variables, and unlike many Basic languages, AOZ allows you to include expressions as part of your data. So the following lines of code are all equally acceptable:
+@code
+Data $FF50,$890
+Data %11111111,%110011010110
+Data A
+Label: Data A+3/2.0-Sin(B)
+Data "AOZ"+" Studio"
+@code
+=
+Examine those lines, and note that the A at Label will be input as the contents of variable A, and not the character A. The expression will be evaluated using the latest value of A.
+=
+Data statements may be placed at any position in your program, but any data stored inside an AOZ procedure will not be accessible from the main program. Each procedure can have its own individual set of data statements, which are completely independent from the rest of the program.
+=
+For example:
+@code
+EXAMPLE
+Read A$: Print A$
+=
+Data "I am Main Program Data"
+Procedure EXAMPLE
+Read B$: Print B$
+Data "I am Procedure Data only"
+End Proc
+@code

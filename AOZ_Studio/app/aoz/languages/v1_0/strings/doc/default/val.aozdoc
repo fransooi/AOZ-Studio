@@ -1,0 +1,11 @@
+<i>Val</i>
+<b>Val</b> xxxxxxx
+=
+To perform the reverse task to STR$, the VAL function converts a list of decimal digits stored in a string, changing
+them into a number. If this process fails for any reason, a value of zero will be returned.
+
+For example:
+@code
+X=Val("1234") : Print X
+@code
+

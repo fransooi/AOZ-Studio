@@ -1,0 +1,10 @@
+<i>instruction:Delete an actor</i>
+<b>Del Actor</b> number
+<b>Del Actor</b> name$
+=
+@code
+Cls 0
+Actor 1, x=100, y=50, image$="magic"
+Del Actor 1
+@code
+

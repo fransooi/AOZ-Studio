@@ -1,0 +1,9 @@
+<i>Cop Movel</i>
+<b>Cop Movel</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This is a special option from AOZ Studio Basic, which generates a matched pair of MOVE commands in
+the new copper list. These load a 32-bit (long word) value into the selected address, exactly like a normal LOKE
+instruction.
+

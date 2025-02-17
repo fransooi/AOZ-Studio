@@ -1,0 +1,21 @@
+<i>Tile Test</i>
+<b>Tile Test</b> xxxxxxx
+=
+This very handy function detects the value of the tile at a specific position on screen. You can use it for example when the user click on the map, as in this example.
+@code
+
+// Display the index of the tile under the mouse
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"
+Do
+I = Tile Test( "MapView", X Mouse, Y Mouse )
+If I >= 0
+Print "Tile "; I; " is under the mouse"
+End If
+Wait Vbl
+Loop
+@code
+

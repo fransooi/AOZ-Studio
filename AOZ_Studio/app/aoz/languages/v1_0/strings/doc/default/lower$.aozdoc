@@ -1,0 +1,15 @@
+<i>Lower$</i>
+<b>Lower$</b> xxxxxxx
+=
+This works in the same way as UPPER$, but translates all the characters in a string into nothing but lower case
+(small) letters. These sorts of text conversions are particularly useful for interpreting user-input in interactive data
+programs and adventure games, because input can be converted into a standard format which is understood by your
+programs.
+
+For example:
+@code
+Input "Do you want to continue? (Yes or No)";ANSWER$
+ANSWER$=Lower$(ANSWER$) : If ANSWER$="no" Then Edit
+Print "OK. Continuing with your program"
+@code
+

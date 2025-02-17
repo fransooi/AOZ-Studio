@@ -1,0 +1,59 @@
+{
+	"categories":
+	[
+		{
+			"title":
+			{
+				"fr": "Applications",
+				"en": "Applications"
+			},
+			"json_id": 2,
+			"context": "templates"
+		},
+		{
+			"title":
+			{
+				"fr": "Sites Internet",
+				"en": "Websites"
+			},
+			"json_id": 2,
+			"context": "web"
+		},
+		{
+			"title":
+			{
+				"fr": "Jeux et Multimédia",
+				"en": "Games and Multimedia"
+			},
+			"json_id": 2,
+			"context": "games"
+		},
+		{
+			"title":
+			{
+				"fr": "Robots et cartes",
+				"en": "Robots and boards"
+			},
+			"json_id": 2,
+			"context": "robot"
+		},
+		{
+			"title":
+			{
+				"fr": "Rétro",
+				"en": "Retro"
+			},
+			"json_id": 2,
+			"context": "retro"
+		},
+		{
+			"title":
+			{
+				"fr": "Autres",
+				"en": "Others"
+			},
+			"json_id": 2,
+			"context": "others"
+		}					
+	]
+}

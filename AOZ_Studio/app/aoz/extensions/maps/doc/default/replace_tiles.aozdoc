@@ -1,0 +1,5 @@
+<i>Replace Tiles</i>
+<b>Replace Tiles</b> xxxxxxx
+=
+This instruction only performs the change in the copy of the map that is refered to by the view: it will not affect the map itself.
+

@@ -1,0 +1,7 @@
+<i>Scan$</i>
+<b>Scan$</b> xxxxxxx
+=
+The scan-code parameter refers to the scan-code of a key that is to be used in one of your macro definitions. There
+is also an optional mask parameter, which sets special keys such as [Ctrl] and [Alt], and the format is the same as
+for "KEY SHIFT".
+

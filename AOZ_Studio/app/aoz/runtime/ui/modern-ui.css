@@ -1,0 +1,40 @@
+.modern.auth-ui {
+  background-color: #17455e;
+  border: solid #4d879a;
+  border-width: 24px 16px 24px 60px;
+  box-sizing: content-box;
+  color: white;
+  width: 320px; }
+  .modern.auth-ui > h2 {
+    margin-top: 2px; }
+  .modern.auth-ui > ul.fieldset > li:not(.remember-me) {
+    margin: 12px 14px 12px -36px;
+    width: 326px; }
+    .modern.auth-ui > ul.fieldset > li:not(.remember-me) > input {
+      color: white;
+      padding: 0 10px 0 44px; }
+      .modern.auth-ui > ul.fieldset > li:not(.remember-me) > input::placeholder {
+        color: #ffdd99; }
+    .modern.auth-ui > ul.fieldset > li:not(.remember-me) > label {
+      background: linear-gradient(65deg, #ffc600 60%, #ffab00 60%) -161px 0 no-repeat, #ffab00;
+      border: 1px solid #847532;
+      transform: skew(-25deg); }
+  .modern.auth-ui > ul.actions > li > button {
+    color: white; }
+  .modern.auth-ui > ul .close > button,
+  .modern.auth-ui > ul .remember-me > input {
+    background-color: #8da4b0;
+    border-color: #ffab00; }
+    .modern.auth-ui > ul .close > button::before,
+    .modern.auth-ui > ul .remember-me > input::before {
+      background-color: #17455e; }
+  .modern.auth-ui.forgot-password h2 {
+    margin-top: 40px; }
+  .modern.auth-ui > .messages > li {
+    border: 1px solid; }
+    .modern.auth-ui > .messages > li.error {
+      background-color: #f40;
+      border-color: #620; }
+    .modern.auth-ui > .messages > li.information {
+      background-color: #4b0;
+      border-color: #150; }

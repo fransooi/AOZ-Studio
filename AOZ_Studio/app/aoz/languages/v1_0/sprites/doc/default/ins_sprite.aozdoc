@@ -1,0 +1,18 @@
+<i>Ins Sprite</i>
+<b>Ins Sprite</b> xxxxxxx
+=
+INS SPRITE inserts a blank image at the numbered position in the current image Bank.
+All of the images after this numbered position will then be moved down one place in the numerical order. The second version of this command
+allows you to create several spaces in a single operation, by giving the range of new gaps between the first and last
+image numbers that you specify.
+
+Any of these new image spaces are completely empty, and so cannot be allocated to a Bob or displayed directly on
+screen while they are still blank. An actual image must first be grabbed into the Object Bank, using a GET SPRITE
+or GET BOB command. If this is not done, the appropriate error message will be given as soon as you try to access
+the empty image.
+
+Both DEL BOB and INS BOB are provided to be used with the GET BOB and GET SPRITE commands. They
+allow you to modify and adjust your Bob images from inside AOZ Studio programs, with complete
+freedom. They may be used to create numerous special effects such as interactive screen animations and animated
+brushes.
+

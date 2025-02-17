@@ -1,0 +1,18 @@
+<i>Field$</i>
+<b>Field$</b> xxxxxxx
+=
+FIELD$ should be used immediately after OPEN RANDOM to define a record that will be used for a random access
+file. After selecting the channel number, give the maximum number of
+characters you will cater for in a field, followed by its name, then repeat the process as necessary.
+
+For example:
+@code
+Field 1,20 As SURNAME$,15 As FIRSTNAME$,10 As TEL$
+@code
+You can now place some records in the strings that have been set up by the FIELD command, like this:
+@code
+SURNAME$="Professional"
+FIRSTNAME$="AMOS"
+TEL$="0625859333"
+@code
+

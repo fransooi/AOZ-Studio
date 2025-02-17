@@ -1,0 +1,7 @@
+<i>Update Off</i>
+<b>Update Off</b> xxxxxxx
+=
+UPDATE OFF turns off the automatic re-drawing system, so that any Bob or Sprite commands will appear to be completely ignored. In actual fact, they are still going on invisibly, in the background.
+Any other graphical command (like drawing in the screens, moving or rotating them) will be preserved: Update Off only affects graphical objects.
+
+

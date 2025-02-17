@@ -1,0 +1,23 @@
+<i>Screen Scale</i>
+<b>Screen Scale</b> xxxxxxx
+=
+@code
+Degree
+
+// Open a screen and put some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Set the hot-spot of the screen to it's center
+Screen Hot Spot 0, $11
+
+// Make the screen zoom out
+For Z# = 1 To 0 Step -0.01
+Screen Scale 0, Z#, Z#
+Wait Vbl
+Next
+@code
+Warning: on software renderers this instruction may slow down the application
+

@@ -1,0 +1,18 @@
+<i>structure:detect if a variable has been defined</i>
+<b>=Is Defined</b>(a)
+<b>=Is Defined</b>(a#)
+<b>=Is Defined</b>(a$)
+=
+As in Javascript, AOZ allow you to detect if a variable has been defined. This function will only work if you use the tag "autoVariables" TODO.
+=
+@code
+#autoVariables: False
+Print Is Defined( A$ )			// Will print "False"
+Print A$						// Will generate an error
+@code
+=
+@code
+#autoVariables: True
+Print Is Defined( A$ )			// Will print "True"
+Print A$						// Will not generate an error as A$ was automatically defined as "" by the AOZ transpiler.
+@code

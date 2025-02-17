@@ -1,0 +1,10 @@
+<i>Shoot</i>
+<b>Shoot</b> xxxxxxx
+=
+The SHOOT command generates a simple sound effect in exactly the same way as Boom.
+For example:
+@code
+Shoot : Wait 25: Shoot : Print "Ouch!"
+@code
+
+

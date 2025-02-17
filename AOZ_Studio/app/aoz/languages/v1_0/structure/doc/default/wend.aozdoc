@@ -1,0 +1,20 @@
+<i>Wend</i>
+<b>Wend</b> xxxxxxx
+=
+This commands, associated with WEND provides a convenient way of making the program repeat a group of instructions all the time
+a particular condition is true. WHILE marks the start of this loop, and the condition is checked for TRUE
+from this starting position through to the end position, which is marked by a WEND. The condition is then
+checked again at every turn of the loop, until it is no longer true.
+
+For example:
+@code
+BLAZES:
+Print "Please type in the number 9"
+Input X
+While X=9
+Cls : Print X : Wait 50 : Goto BLAZES
+Wend
+Print "That is not a 9!"
+@code
+You are free to use AND, OR and NOT to qualify the conditions to be checked.
+

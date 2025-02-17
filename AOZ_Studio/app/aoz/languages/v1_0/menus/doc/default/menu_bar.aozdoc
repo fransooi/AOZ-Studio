@@ -1,0 +1,28 @@
+<i>Menu Bar</i>
+<b>Menu Bar</b> xxxxxxx
+=
+This instruction displays.the selected menu items as a vertical bar whose width is automatically set to the length of the largest item in the menu. As a default, this option is used for levels 2 to 8 of your menu, and it must be used during the program's initialisation. There will be no effect if it is called after the menu has been activated.
+
+When followed by a list of bracketed parameters, MENU BAR can also be used to change the style of your menus
+once they have been installed. Here is an example of a customised menu layout:
+@code
+FLAG=0
+SET_MENU
+Do
+If Choice and Choice(1)=2 and Choice(2)=1 Then CHANGE
+Loop
+
+Procedure SET_MENU
+Menu$(1)="Try me first " : Menu$(2)="Select me " : Rem Four spaces
+Menu$(1,1)="1 am useless " : Rem Five spaces
+Menu$(2,1)="Please select me!"
+Menu On
+End Proc
+Procedure CHANGE
+Shared FLAG
+Menu Del
+If FLAG=0 Then Menu Bar 1: FLAG=1 Else Menu Tline 1: Flag=0
+SET_MENU
+End Proc
+@code
+

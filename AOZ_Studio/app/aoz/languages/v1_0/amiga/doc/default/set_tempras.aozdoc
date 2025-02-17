@@ -1,0 +1,25 @@
+<i>Set Tempras</i>
+<b>Set Tempras</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This command allows the AOZ programmer to adjust the amount of memory used by the various
+graphics operations. You are warned that improper usage can cause your computer to crash! The address and size of
+the graphics buffer can be changed as explained below.
+
+The buffer address can be either an address or a memory bank, and the memory reserved for this buffer should
+always be Chip RAM. After allocating the buffer area at the start of your program, there is no need to keep on
+reserving and restoring it, which means that the execution of your programs can be speeded up by up to 5%!
+
+The buffer size is the number of bytes you want to reserve for the buffer area, ranging from 256 to 65536. To
+calculate the amount of memory you need for a particular object, enclose the object in a rectangular box and apply
+the following formula:
+@code
+Memory area = Width/8*Height
+@code
+If you are intending to use the PAINT command, make sure that your shape is closed, otherwise additional memory
+may be called for, causing the system to crash.
+
+The buffer area can be restored to its original value by calling SET TEMPRAS with no parameters.
+
+

@@ -1,0 +1,33 @@
+<i>Timer</i>
+<b>Timer</b> xxxxxxx
+=
+The TIMER reserved variable containing the number of seconds since it was reset. It is a floating point number on modern machines and the precision will reach 0.001
+
+On old machine, TIMER is an integer number increase by 1 every 1/50th of seconds
+
+This example will make things clear...
+
+@code
+Timer = 0
+Print "Please press a key when you want"...
+Wait Key
+Print Timer			// If you wait for exactly one second, it will print "1"
+@code
+
+In Amiga emulation:
+@code
+#manifest: "Amiga"
+
+Timer = 0
+Print "Please press a key when you want"...
+Wait Key
+Print Timer			// If you wait for exactly one second, it will print "50"
+@code
+
+You can use Timer as a seed for the randomize instruction, providing that you do not set the value of the time when you application starts.
+~~
+Randomize Timer
+@code
+The best place to use this technique is immediately after the user has entered some data into the computer. Even a
+simple key-press to start a game will work perfectly, and generate truly random numbers.
+

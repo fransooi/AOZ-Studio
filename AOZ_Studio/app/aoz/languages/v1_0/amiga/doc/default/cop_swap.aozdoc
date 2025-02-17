@@ -1,0 +1,8 @@
+<i>Cop Swap</i>
+<b>Cop Swap</b> xxxxxxx
+=
+The COP SWAP command switches over the logical and physical copper lists. The new copper list will now be flicked into place, and the results will be shown after the next vertical blank period. For example:
+@code
+Cop Swap : Wait Vbl
+@code
+

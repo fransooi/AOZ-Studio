@@ -1,0 +1,686 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Sfxr Extension
+ *
+ * Implementation of the SFXR library
+ *
+ *
+ * @author FL
+ * @date first pushed on 27/05/2022
+ */
+#noWarning:"instruction_not_implemented"
+#need_javascript_file:"sfxr/sfxr.js"
+#useSounds:true
+
+{
+	this.play_done = false;
+	this.sfxIndex = 0;
+	this.sfx = {};
+	this.addSfx = function( index, args )
+	{
+		var params = this.getParams( args );
+		this.sfx[ 'params_' + index ] = params;
+	};
+	this.delSfx = function( index )
+	{
+		if ( !this.sfx[ 'params_' + index ] )
+			throw { error: 'sfx_not_defined', parameter: index };
+		this.sfx = this.aoz.utilities.cleanObject( this.sfx, this.sfx[ 'params_' + index ] );
+	};
+	this.mutateSfx = function( index )
+	{
+		var params = this.sfx[ 'params_' + index ];
+		if ( !params )
+			throw { error: 'sfx_not_defined', parameter: index };
+		params.mutate();
+	};
+	this.toB58 = function( index )
+	{
+		var params = this.sfx[ 'params_' + index ];
+		if ( !params )
+			throw { error: 'sfx_not_defined', parameter: index };
+		return params.toB58();
+	};
+	this.toJSON = function( index )
+	{
+		var params = this.sfx[ 'params_' + index ];
+		if ( !params )
+			throw { error: 'sfx_not_defined', parameter: index };
+		return JSON.stringify( params );
+	};
+	this.sfxToVoice = function( voice, index )
+	{
+		var params = this.sfx[ 'params_' + index ];
+		if ( !params )
+			throw { error: 'sfx_not_defined', parameter: index };
+
+		var sfx = new SoundEffect( params );
+		var buffer = this.normalize( sfx.getRawBuffer()[ "buffer" ], params.sample_size );
+		var audio = this.aoz.sounds.audioContext.createBuffer( 2, buffer.length, params.sample_rate );
+		var audioBuffer0 = audio.getChannelData( 0 );
+		var audioBuffer1 = audio.getChannelData( 1 );
+		for ( var p = 0; p < buffer.length; p++ )
+		{			
+			audioBuffer0[ p ] = buffer[ p ];
+			audioBuffer1[ p ] = buffer[ p ];
+		}	
+		this.aoz.sounds.addSfx( index, audio );
+		this.aoz.sounds.callVoices( 'setType', voice, [ { type: 'sfx', index: index } ] );
+	};
+	this.play = function( voice, note, args, options )
+	{
+		var params = this.getParams( args );
+		var sfx = new SoundEffect( params );
+		var buffer = this.normalize( sfx.getRawBuffer()[ "buffer" ], params.sample_size );
+		var audio = this.aoz.sounds.audioContext.createBuffer( 2, buffer.length, params.sample_rate );
+		var audioBuffer0 = audio.getChannelData( 0 );
+		var audioBuffer1 = audio.getChannelData( 1 );
+		for ( var p = 0; p < buffer.length; p++ )
+		{			
+			audioBuffer0[ p ] = buffer[ p ];
+			audioBuffer1[ p ] = buffer[ p ];
+		}	
+
+        this.play_done = false;
+		options = typeof options == 'undefined' ? {} : options;
+        options.duration = typeof options.duration == 'undefined' ? 0 : options.duration;
+		options.type = 'sfx';
+		options.index = 'temp' + this.sfxIndex++;
+		this.aoz.sounds.addSfx( options.index, audio );
+        if ( options.duration > 0 )
+        {
+			if ( this.aoz.platform == 'amiga' )         // If Amiga, time in 1/50th of seconds
+				options.duration /= 50;
+            var self = this;
+			options.callback = function( response, data, extra )
+			{
+				if ( response == 'end' )
+				{
+					self.play_done = true;
+					self.aoz.sounds.delSfx( options.index );
+				}
+			};
+        	this.aoz.sounds.callVoices( 'playNote', voice, [ note, options ] );
+			return {type:12,waitThis:aoz.extensionSfxr,callFunction:"play_wait",waitFunction:"play_wait",args:[]};
+		}
+		else
+		{
+            this.play_done = true;
+        	this.aoz.sounds.callVoices( 'playNote', voice, [ note, options ] );
+			this.aoz.sounds.delSfx( options.index );
+			return undefined;
+        }
+    };
+    this.play_wait = function()
+    {
+        return this.play_done;
+    };
+	this.normalize = function( buffer, bitsPerChannel )
+	{
+  		var normalized = new Float32Array( buffer.length );
+  		for ( var b = 0; b < buffer.length; b++ ) 
+		{
+    		normalized[ b ] = 2.0 * buffer[ b ] / pow( 2, bitsPerChannel ) - 1.0;
+  		}
+  		return normalized;
+	}
+	this.getParams = function( args )
+	{
+		var params = new Params();
+		/*if ( typeof args.sfx == 'string' )
+		{
+			params.fromB58( args.sfx );
+		}
+		else 
+		*/
+		if ( typeof args.json == 'string' )
+		{
+			var struct;
+			try
+			{
+				struct = JSON.parse( args.json );
+			}
+			catch( e )
+			{
+				throw { error: 'illegal_function_call', parameter: args.json };
+			}
+			params.fromJSON( struct );
+		}
+		else if ( typeof args.sfx != 'undefined' )
+		{
+			var params = this.sfx[ 'params_' + args.sfx ];
+			if ( !params )
+				throw { error: 'sfx_not_defined', parameter: args.sfx };
+			params = this.sfx[ 'params_' + args.sfx ];
+		}
+		else if ( typeof args.type == 'string' )
+		{
+			switch ( args.type.toLowerCase() )
+			{
+				case 'pickupcoin':
+					params.pickupCoin();
+					break;
+				case 'lasershoot':
+					params.laserShoot();
+					break;
+				case 'explosion':
+					params.explosion();
+					break;
+				case 'powerup':
+					params.powerUp();
+					break;
+				case 'hithurt':
+					params.hitHurt();
+					break;
+				case 'jump':
+					params.jump();
+					break;
+				case 'blipselect':
+					params.blipSelecr();
+					break;
+				case 'synth':
+					params.synth();
+					break;
+				case 'tone':
+					params.tone();
+					break;
+				case 'click':
+					params.click();
+					break;
+				case 'random':
+					params.random();
+					break;
+				default:
+					throw { error: 'sfx_type_not_defined', parameter: args.type };
+			}
+		}
+		if ( typeof args.wave_type != 'undefined' )
+		{
+			var types = { square: 0, sawtooth: 1, sine: 2, noise: 3 };
+			if ( typeof args.wave_type != 'string' )
+				throw { error: 'type_mismatch', parameter: args.wave_type };
+			if ( typeof types[ args.wave_type.toLowerCase() ] == 'undefined' )
+				throw { error: 'illegal_function_call', parameter: args.wave_type };
+			args.wave_type = types[ args.wave_type ];
+		}
+		for ( var p in params )
+		{
+			if ( params.hasOwnProperty( p ) && typeof args[ p ] != 'undefined' )
+			{
+				params[ p ] = args[ p ];
+			}
+		}
+		return params;
+	}
+	this.setSfxProperty = function( index, property, value )
+	{
+		var params = this.sfx[ 'params_' + index ];
+		if ( !params )
+			throw { error: 'sfx_not_defined', parameter: index };
+		var prop = 'p_' + property;
+		if ( prop.endsWith( '$' ) )
+		{
+			if ( typeof value != 'string' )
+				throw { error: 'type_mismatch', parameter: value };
+			prop = prop.substring( 0, prop.length - 1 );
+		}
+		else if ( typeof value == 'string' )
+			throw { error: 'type_mismatch', parameter: value };
+
+		if ( typeof params[ prop ] == 'undefined' )
+			throw { error: 'effect_property_not_found', parameter: property };
+		params[ prop ] = value;
+	}
+	this.getSfxProperty = function( index, property )
+	{
+		var params = this.sfx[ 'params_' + index ];
+		if ( !params )
+			throw { error: 'sfx_not_defined', parameter: index };
+		var prop = 'p_' + property;
+		if ( prop.endsWith( '$' ) )
+			prop = prop.substring( 0, prop.length - 1 );
+		if ( typeof params[ prop ] == 'undefined' )
+			throw { error: 'effect_property_not_found', parameter: property };
+
+		return params[ prop ];
+	}
+}
+
+/**doc
+@name:Aoz Sfx extension
+@description:The Aoz Sfx extension interfaces with the famous sfxr.js library. This library allows you to synthesise in a very simple manner impressive game sound effects that have the great advantage of taking no memory space.
+@description:Aoz Studio also provides an Sound Maker accessory with a simple interface for the creation of the sounds.
+@description:Sounds are generated on-the-go in a fast and efficent manner. Sfx can also be assigned to Aoz sound voices and played with the Play instruction.
+@keywords:sounds
+@author:Francois Lionet
+@since:Beta 15
+@last:1.0.0.0
+doc*/
+
+
+/**api
+@name:Sfx To
+@description:Assign Sfx to sound voice channel
+@param:voice:integer:The number of the voice to assign to
+@param:index:sfx:The index of the Sfx to assign (must be previoulsy created with the Sfx Create instruction)
+@compatible: aoz
+@content:
+This command has the effect of assigning a sound effect previously created to the given voice.
+After this instruction, the "Play" command will use the instrument / sound effet defined 
+with the Sfx Create instruction.
+
+Please note that you must re-assign the sound effect to the voice if you mutate it with the Sfx Mutate instruction.
+
+~~~
+Sfx Create "myLaser", type$ = "laserShot", 
+Sfx To 1, "myLaser"
+For N = 1 To 80
+	Play voice = 1, note = N, duration = 0.25
+Next
+~~~
+api*/
+Instruction Sfx To, voice, sfx=(index)
+{
+    #errors
+	aoz.extensionSfxr.sfxToVoice( %voice, %sfx );
+}
+End Instruction
+
+/**api
+@name:Sfx Del
+@description:Delete a previously created sound effect
+@param:index:index:The index of the Sfx to delete
+@compatible: aoz
+@content:
+~~~
+Sfx Create "myLaser", type$ = "laserShot", 
+Sfx To 1, "myLaser"
+For N = 1 To 80
+	Play voice = 1, note = N, duration = 0.25
+Next
+Sfx Del "myLaser"
+~~~
+api*/
+Instruction Sfx Del, Sfx=(index)
+{
+	#errors
+	aoz.extensionSfxr.delSfx(%index);
+}
+End Instruction
+
+/**api
+@name:Sfx Mutate
+@description:Applies slight random changes to the parameters of a sound
+@param:index:index:The index of the Sfx to change
+@compatible: aoz
+@content:
+This instruction modifies the parameters of the sound effect while keeping it's 
+nature, explosion, laser shot, power up etc... It might return approximates versions
+of the sound, some unuseable, but many times useable.
+
+Once the correct sound found, you can save it in text form with the Sfx Json$ function,
+or assign it to a voice with the Sfx To instruction.
+~~~
+Sfx Create "myLaser", type$ = "laserShot", 
+For N = 1 To 80
+	Sfx To voice = 1, index = "myLaser"
+	Sfx Mutate "myLaser"
+	Play voice = 1, note = N, duration = 0.25
+Next
+Sfx Del "laserShot" 
+~~~
+api*/
+Instruction Sfx Mutate, index=(index)
+{
+	#errors
+	aoz.extensionSfxr.mutateSfx(%index);
+}
+End Instruction
+/*
+Function Sfx$, index=(index)
+{
+	#errors	
+}
+End Function({aoz.extensionSfxr.toB58(%index)})
+*/
+
+/**api
+@name:Sfx Json$
+@description:Returns the JSON string containing the parameters of the given sound
+@param:index:index:The index of the Sfx to get the parameter from
+@compatible: aoz
+@content:
+To recreate the sound from the data, use the Sfx Create (or Sfx Play) with the 
+parameter "json$" set to the string.
+~~~
+Print "Press the S key to print the Json string"
+Sfx Create "myLaser", type$ = "laserShot", 
+For N = 1 To 80
+	Sfx To voice = 1, Sfx$ = "myLaser"
+	Play voice = 1, note = N, duration = 0.25
+	If Inkey$ = "s" 
+		Print Sfx Json$( "myLaser" )
+		End
+	End If
+	Sfx Mutate 1
+Next
+~~~
+api*/
+Function Sfx Json$, index=(index)
+{
+	#errors	
+}
+End Function({aoz.extensionSfxr.toJSON(%index)})
+
+/**api
+@name:Sfx Play
+@description:Plays a given sound effect
+@param:string:type$: the type of Sfx to play, from the list "PickupCoin", "LaserShoot", "Explosion", "PowerUp", "HitHurt", "Jump", "BlipSelect", "Synth", "Tone", "Click", "Random"
+@param:index:sfx:The index of a previouly created sound effect. This parameter will have precedence over the "type$" parameter if both are defined.
+@param:string:json$:A string containing the definition of an Sfx, previously saved with the =Sfx Json$ function. This parameter has precedence on both previous parameters.
+@param:string:wave$:A string containing the shape of the signal to generate. It can have the values "Square", "SawTooth", "Sine", "Noise"
+@param:float:duration:If not defined (by default), the instruction will not wait for the sound to end. If you use the value 0 (or negative), it will wait for the sound to complete. If none of these values, the duration parameter represents the time to wait when playing the sound, in seconds
+@param:float:attack#:Length of the attack of the effect, in seconds.
+@param:float:sustain#:Length of the sustain period of the effect
+@param:float:punch#:Power of the punch effect of the attack of the sound, in second
+@param:float:decay#:Duration of the sustain perdid of the sound
+@param:float:base_freq#:Start frequency of the synthetiser, in Hz
+@param:float:freq_limit#:Minimal frequency cutoff
+@param:float:freq_ramp#:Frequency slide (from -1 to 1)
+@param:float:freq_dramp#:Frequency delta (from -1 to 1)
+@param:float:vib_strength#:Vibrato strengh (from 0 to 1)
+@param:float:vib_speed#:Vibrato speed (from 0 to 1)
+@param:float:arp_mod#:Arpegio change amount (from -1 to 1)
+@param:float:arp_speed#:Arpegio speed (from 0 to 1)
+@param:float:duty#:Square wave duty (proportion of time signal is high vs. low, from 0 to 1)
+@param:float:duty_ramp#:Duty sweep (from 0 to 1)
+@param:float:repeat_speed#:Repeat speed (from 0 to 1)
+@param:float:pha_offset#:Flanger offset (from 0 to 1)
+@param:float:pha_ramp#:Flanger sweep (from 0 to 1)
+@param:float:lpf_freq#:Low-pass filter cutoff frequency
+@param:float:lpf_ramp#:Low-pass filter cutoff sweep (from -1 to 1)
+@param:float:lpf_resonance#:Low-pass filter resonance (from 0 to 1)
+@param:float:hpf_freq#:High-pass filter cutoff
+@param:float:hpf_ramp#:High-pass filter cutoff sweep (from -1 to 1)
+@compatible: aoz
+@content:
+This instruction represents the simplest way to play a sound effect. The sound is played
+directly on the first voice of the sound engine, or on the voice if specified.
+
+If you want to create a sound in a simple way, use the "type$" parameter alone. It defined
+the genre of the sound effect to create. Random value are assigned so the sound will be different
+each time. You can, after the "type$" parameter is defined, define any other of the more refined
+parameters: they will replace the ones generated at random.
+
+The length in time of the sound effect is not predictable and depends on the values chosen.
+
+The Json$ parameter accepts a string generated by the Sound Effect engine itself with the Sfx Json$ function.
+It will play the exact same effect as the one defined when saving the string.
+~~~
+Sfx Create "myLaser", type$ = "laserShot", 
+Sfx Play Sfx$="myLaser"		// Play the previously defined sound effect
+Wait Key
+
+Sfx Play "Explosion", vibstrengh = 1, vibspeed = 0.5			// Play an explosion with a vibrato
+Wait Key
+
+Sfx Play "PowerUp", duration = 0			// Play an explosion, waiting for the effect to be completed
+Print "Done!
+~~~
+api*/
+Instruction Sfx Play, type$ = "pickupCoin", sfx=(any), json$, wave_type$, attack#, sustain#, punch#, decay#, base_freq#, freq_limit#, freq_ramp#, freq_dramp#, vib_strength#, vib_speed#, arp_mod#, arp_speed#, duty#, duty_ramp#, repeat_speed#, pha_offset#, pha_ramp#, lpf_freq#, lpf_ramp#, lpf_resonance#, hpf_freq#, hpf_ramp#, sample_rate, sample_size, voice, duration
+{
+    #errors
+    return aoz.extensionSfxr.play( %voice, undefined, 
+	{ 
+		sfx: %sfx,
+		type: %type$,
+		json: %json$,
+		wave_type: %wave_type$,
+		p_env_attack: %attack#,
+		p_env_sustain: %sustain#,
+		p_env_punch: %punch#,
+		p_env_decay: %decay#,
+		p_base_freq: %base_freq#,
+		p_freq_limit: %freq_limit#,
+		p_freq_ramp: %freq_ramp#,
+		p_freq_dramp: %freq_dramp#,
+		p_vib_strength: %vib_strength#,
+		p_vib_speed: %vib_speed#,
+		p_arp_mod: %arp_mod#,
+		p_arp_speed: %arp_speed#,
+		p_duty: %duty#,
+		p_duty_ramp: %duty_ramp#,
+		p_repeat_speed: %repeat_speed#,
+		p_pha_offset: %pha_offset#,
+		p_pha_ramp: %pha_ramp#,
+		p_lpf_freq: %lpf_freq#,
+		p_lpf_ramp: %lpf_freq#,
+		p_lpf_resonance: %lpf_resonance#,
+		p_hpf_freq: %hpf_freq#,
+		p_hpf_ramp: %hpf_ramp#,
+		sample_rate: %sample_rate,
+		sample_size: %sample_size
+	}, { duration: %duration } );
+}
+End Instruction
+
+/**api
+@name:Sfx Create
+@description:Creates a sound effect
+@param:index:index:The index of the new sound effect to create
+@param:index:sfx:If defined, represents the index of a previously created sound effect from which the parameters will be copied
+@param:string:type$: the type of Sfx to create, from the list "PickupCoin", "LaserShoot", "Explosion", "PowerUp", "HitHurt", "Jump", "BlipSelect", "Synth", "Tone", "Click", "Random"
+@param:string:json$:A string containing the definition of a solund effect, previously saved with the =Sfx Json$ function. This parameter has precedence on the previous parameters.
+@param:string:wave_type$:A string containing the shape of the signal to generate. It can have the values "Square", "SawTooth", "Sine", "Noise"
+@param:float:attack#:Length of the attack of the effect, in seconds.
+@param:float:sustain#:Length of the sustain period of the effect
+@param:float:punch#:Power of the punch effect of the attack of the sound, in second
+@param:float:decay#:Duration of the sustain perdid of the sound
+@param:float:base_freq#:Start frequency of the synthetiser, in Hz
+@param:float:freq_limit#:Minimal frequency cutoff
+@param:float:freq_ramp#:Frequency slide (from -1 to 1)
+@param:float:freq_dramp#:Frequency delta (from -1 to 1)
+@param:float:vib_strength#:Vibrato strengh (from 0 to 1)
+@param:float:vib_speed#:Vibrato speed (from 0 to 1)
+@param:float:arp_mod#:Arpegio change amount (from -1 to 1)
+@param:float:arp_speed#:Arpegio speed (from 0 to 1)
+@param:float:duty#:Square wave duty (proportion of time signal is high vs. low, from 0 to 1)
+@param:float:duty_ramp#:Duty sweep (from 0 to 1)
+@param:float:repeat_speed#:Repeat speed (from 0 to 1)
+@param:float:pha_offset#:Flanger offset (from 0 to 1)
+@param:float:pha_ramp#:Flanger sweep (from 0 to 1)
+@param:float:lpf_freq#:Low-pass filter cutoff frequency
+@param:float:lpf_ramp#:Low-pass filter cutoff sweep (from -1 to 1)
+@param:float:lpf_resonance#:Low-pass filter resonance (from 0 to 1)
+@param:float:hpf_freq#:High-pass filter cutoff
+@param:float:hpf_ramp#:High-pass filter cutoff sweep (from -1 to 1)
+@compatible: aoz
+@content:
+This instruction creates a sound effect and keeps it in memory until it is played.
+
+Sound effect take little memory and are only created when played. This instruction only stores
+the parameters of the sound effect in an internal list.
+
+Once created, the value of the parameters of the effect can be modified with the "mutate"
+instruction, or individually with the Sfx Set instruction.
+~~~
+// Create a high-pitch laser
+Sfx Create "myLaser", type$ = "laserShot", basefreq = 0.8		
+Sfx Play Sfx$="laserShot"		// Play the previously defined sound effect
+Wait Key
+
+// Make it slightly different and play it again
+Sfx Mutate "myLaser"			
+Sfx Play Sfx$="myLaser"
+Wait Key
+~~~
+api*/
+Instruction Sfx Create, index=(index), type$ = "random", sfx=(any), json$, wave_type$ = "square", attack#, sustain#, punch#, decay#, base_freq#, freq_limit#, freq_ramp#, freq_dramp#, vib_strength#, vib_speed#, arp_mod#, arp_speed#, duty#, duty_ramp#, repeat_speed#, pha_offset#, pha_ramp#, lpf_freq#, lpf_ramp#, lpf_resonance#, hpf_freq#, hpf_ramp#, sample_rate, sample_size
+{
+    #errors
+    aoz.extensionSfxr.addSfx( %index, 
+	{ 
+		sfx: %sfx,
+		json: %json$,
+		type: %type$,
+		wave_type: %wave_type$,
+		p_env_attack: %attack#,
+		p_env_sustain: %sustain#,
+		p_env_punch: %punch#,
+		p_env_decay: %decay#,
+		p_base_freq: %base_freq#,
+		p_freq_limit: %freq_limit#,
+		p_freq_ramp: %freq_ramp#,
+		p_freq_dramp: %freq_dramp#,
+		p_vib_strength: %vib_strength#,
+		p_vib_speed: %vib_speed#,
+		p_arp_mod: %arp_mod#,
+		p_arp_speed: %arp_speed#,
+		p_duty: %duty#,
+		p_duty_ramp: %duty_ramp#,
+		p_repeat_speed: %repeat_speed#,
+		p_pha_offset: %pha_offset#,
+		p_pha_ramp: %pha_ramp#,
+		p_lpf_freq: %lpf_freq#,
+		p_lpf_ramp: %lpf_freq#,
+		p_lpf_resonance: %lpf_resonance#,
+		p_hpf_freq: %hpf_freq#,
+		p_hpf_ramp: %hpf_ramp#,
+		sample_rate: %sample_rate,
+		sample_size: %sample_size
+	} );
+}
+End Instruction
+
+/**api
+@name:Sfx Set
+@description:Set the value of one of the properties of a sound effect
+@param:index:sfx:The index of the previously created sound effect
+@param:string:property$:A string containing the name of the parameter
+@param:any:value:The string or the floating point value to set
+@compatible: aoz
+@content:
+This instruction allow to you to modify a sound effect after it's creation.
+
+The property$ string can take the following values: 
+- "wave_type$":The shape of the wave used by the synthetiser, can be "Square", "Sine", "SawTooth" or "Noise"
+- "attack":Length of the attack of the effect, in seconds.
+- "sustain":Length of the sustain period of the effect
+- "punch":Power of the punch effect of the attack of the sound, in second
+- "decay":Duration of the sustain perdid of the sound
+- "base_freq":Start frequency of the synthetiser (from 0 to 1)
+- "freq_limit":Minimal frequency cutoff (from 0 to 1)
+- "freq_ramp":Frequency slide (from -1 to 1)
+- "freq_dramp":Frequency delta (from -1 to 1)
+- "vib_strength":Vibrato strengh (from 0 to 1)
+- "vib_speed":Vibrato speed (from 0 to 1)
+- "arp_mod":Arpegio change amount (from -1 to 1)
+- "arp_speed":Arpegio speed (from 0 to 1)
+- "duty":Square wave duty (proportion of time signal is high vs. low, from 0 to 1)
+- "duty_ramp":Duty sweep (from 0 to 1)
+- "repeat_speed":Repeat speed (from 0 to 1)
+- "pha_offset":Flanger offset (from 0 to 1)
+- "pha_ramp":Flanger sweep (from 0 to 1)
+- "lpf_freq":Low-pass filter cutoff frequency
+- "lpf_ramp":Low-pass filter cutoff sweep (from -1 to 1)
+- "lpf_resonance":Low-pass filter resonance (from 0 to 1)
+- "hpf_freq":High-pass filter cutoff (from 0 to 1)
+- "hpf_ramp":High-pass filter cutoff sweep (from -1 to 1)
+
+~~~
+// Create a high-pitch laser
+Sfx Create "myLaser", type$ = "laserShot", base_freq# = 0.8		
+Sfx Play Sfx$="laserShot"		// Play the previously defined sound effect
+Wait Key
+
+// Convert it to low-pitch
+Sfx Set "myLaser", "base_freq", 0.4
+Sfx Play Sfx$="myLaser"
+Wait Key
+~~~
+api*/
+Instruction Sfx Set, sfx=(index), property$, value=(any)
+{
+    #errors
+    aoz.extensionSfxr.setSfxProperty( %sfx, %property$, %value );
+}
+End Instruction
+
+/**api
+@name:Sfx Get
+@description:Return the value of one of the properties of a sound effect
+@param:index:sfx:The index of the previously created sound effect
+@param:string:property$:A string containing the name of the parameter
+@param:any:value:The string or the floating point value to set
+@return:float:The value of the given parameter
+@compatible: aoz
+@content:
+The property$ string can take the following values: 
+- "type$":The name of the generic form of the sound effect (use the Sfx Get$ version of this function for this parameter)
+- "wave_type$":The name of the wave used by the synthetiser (use the Sfx Get$ version of this function for this parameter)
+- "attack":Length of the attack of the effect.
+- "sustain":Length of the sustain period of the effect
+- "punch":Power of the punch effect of the attack of the sound
+- "decay":Duration of the sustain perdid of the sound
+- "base_freq":Start frequency of the synthetiser
+- "freq_limit":Minimal frequency cutoff
+- "freq_ramp":Frequency slide
+- "freq_dramp":Frequency delta
+- "vib_strength":Vibrato strengh
+- "vib_speed":Vibrato speed
+- "arp_mod":Arpegio change amount
+- "arp_speed":Arpegio speed
+- "duty":Square wave duty
+- "duty_ramp":Duty sweep
+- "repeat_speed":Repeat speed
+- "pha_offset":Flanger offset
+- "pha_ramp":Flanger sweep
+- "lpf_freq":Low-pass filter cutoff frequency
+- "lpf_ramp":Low-pass filter cutoff sweep
+- "lpf_resonance":Low-pass filter resonance
+- "hpf_freq":High-pass filter cutoff
+- "hpf_ramp":High-pass filter cutoff sweep
+~~~
+// Create a high-pitch laser
+Sfx Create "myLaser", type$ = "laserShot", basefreq = 0.8		
+Sfx Play Sfx$="laserShot"
+
+// Print some of its values
+Print Sfx Get( "myLaser", "base_freq#" )
+Print Sfx Get$( "myLaser", "type$" )
+Wait Key
+~~~
+Will print:
+~~~
+0.8
+laserShot
+~~~
+api*/
+Function Sfx Get, sfx=(index), property$
+{
+    #errors
+}
+End Function({aoz.extensionSfxr.getSfxProperty( %sfx, %property$ )})
+Function Sfx Get$, sfx=(index), property$
+{
+    #errors
+}
+End Function({aoz.extensionSfxr.getSfxProperty( %sfx, %property$ )})

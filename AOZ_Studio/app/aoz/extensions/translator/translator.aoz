@@ -1,0 +1,241 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/**@file
+ *
+ * The AOZ Translate Extension, at first using Google Translate
+ * By Francois Lionet
+ *
+ * @author FL
+ * @date first pushed on 22/01/2021
+ *
+ */
+
+#basicRemarks:false
+
+/**doc
+@name:Translate Commands
+@description:Instructions and functions to translate texts
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+	this.state = 'disconnected';
+	this.apiKey = "";
+	this.apiURL = "https://www.googleapis.com/language/translate/v2/";
+	this.translations = {};
+
+	this.error = null;
+	this.loadDone = false;
+	this.translate = function( args$ )
+	{
+		debugger;
+
+		var text$ = args[ 0 ];
+		var sourceLang$ = args[ 1 ];
+		var destinationLang$ = args[ 2 ];
+		var tags$ = args[ 3 ];
+		if ( typeof text$ == 'undefined' )
+			throw 'illegal_function_call';
+		if ( text$ === '' )
+			return;
+
+		var self = this;
+		this.error = null;
+		this.loadDone = false;
+		this.doTranslate( text$, sourceLang$, destinationLang$, function( response, data, extra )
+		{
+			if ( response )
+			{
+				self.result = data;
+			}
+			else
+			{
+				self.result = '';
+				self.error = data;
+			}
+			self.loadDone = true;
+		} );
+	};
+
+	this.doTranslate = function( text$, source = 'en', target = 'fr', callback, extra )
+	{
+		if ( typeof text$ == 'undefined' )
+			throw 'illegal_function_call';
+		if ( text$ === '' )
+			return;
+		if ( !callback )
+			throw 'illegal_function_call';
+
+		var isString = false;
+		if ( typeof texts == 'string' )
+		{
+			texts = [ texts ];
+			isString = true;
+		}
+
+		var pos;
+		var urls = [];
+		var textNumber = 0;
+		do
+		{
+			var url = apiURL;
+			url += "?key=" + apiKey;
+			url += "&target=" + target;
+			url += "&source=" + source;
+		url += "&format=text";
+			for ( var t = textNumber; t < texts.length; t++ )
+		{
+				var uri = encodeURI( texts[ t ] );
+				while ( ( pos = uri.indexOf( '#' ) ) >= 0 )
+					uri = uri.substring( 0, pos ) + '%23' + uri.substring( pos + 1 );
+				if ( url.length + uri.length >= 2000 && t != textNumber )
+					break;
+				url += "&q=" + uri;
+			}
+			textNumber = t;
+			urls.push( url );
+		} while( textNumber < texts.length )
+
+		var self = this;
+		var count = 10;
+		var numberOfRequests = urls.length;
+		var responses = [];
+		for ( var u = 0; u < urls.length; u++ )
+		{
+			this.sendRequest( urls[ u ], doneRequest, u );
+		}
+		function doneRequest( response, data, extra )
+		{
+			var responseNumber = extra;
+			if ( response )
+			{
+				var request = data;
+				var response = JSON.parse( request.responseText );
+				if ( isString )
+				{
+					callback( url, response.data.translations[ 1 ].translatedText, extra );
+				}
+				else
+				{
+					responses[ responseNumber ] = response.data.translations;
+					numberOfRequests--;
+					if ( numberOfRequests == 0 )
+					{
+						var result = '';
+						for ( var r = 0; r < responses.length; r++ )
+						{
+							var response = responses[ r ];
+							for ( var t = 0; t < response.length; t++ )
+							{
+								result += response[ t ].translatedText;
+							}
+						}
+						callback( true, result, extra );
+					}
+		}
+	}
+			else
+			{
+				console.log( 'Resending translation request', count );
+				if ( --count > 0 )
+					this.sendRequest( data, doneRequest, responseNumber );
+				else
+					callback( false, 'translation_failed', extra );
+			}
+		}
+	}
+	this.sendRequest = function( url, callback, extra )
+	{
+		var self = this;
+		var request = new XMLHttpRequest();
+		request.onload = function()
+		{
+			if ( this.status >= 200 && this.status < 400 )
+			{
+				var json = JSON.parse( this.responseText );
+				callback( true, json, extra );
+			}
+		}
+		request.onerror = function()
+		{
+			callback( false, 'communication_error', extra );
+		}
+		request.open( 'GET', url, true );
+		request.send()
+	}
+	this.wait = function()
+	{
+		if ( this.error )
+			throw { error: this.error, param: this.errorParam };
+		return this.loadDone;
+	}
+
+	// Auto translation of application output...
+	this.getTranslatedText = function( text, sourceLang, destinationLang, tags, callback, extra )
+	{
+		var hash = this.utilities.getHash( text );
+
+		var sourceArray = this.translations[ destinationLang ];
+		if ( !sourceArray )
+			sourceArray = this.translations[ destinationLang ] = {};
+		var translatedText = sourceArray[ hash ];
+		if ( translatedText )
+		{
+			if ( callback )
+				callback( true, translatedText, extra );
+			return translatedText;
+		}
+		this.doTranslate( text, sourceLang, destinationLang, tags, function( response, data, extra )
+		{
+			if ( response )
+				sourceArray[ extra ] = data;
+			if ( callback )
+				callback( response, data, extra );
+			if ( !response )
+				console.log( 'Translation failed, error ' + data );
+		}, hash );
+		return undefined;
+	}
+}
+
+Class Translator
+
+	#class:"Translator"
+
+	Method Translate Text$, text$, sourceLang$ = "fr", destinationLang$ = "en", tags$ = ""
+	{
+		#errors
+		#waiting
+		#noVariableInit:true
+		return{type:12,waitThis:aoz.extensionTranslator,callFunction:"translate",waitFunction:"wait",args:[vars.text$, vars.sourceLang$, vars.destinationLang$, vars.tags$ ]};
+	}
+	End Method( { aoz.extensionTranslator.result } )
+
+End Class
+
+Function Translate Text$, text$, sourceLang$ = "fr", destinationLang$ = "en", tags$ = ""
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.extensionTranslator,callFunction:"translate",waitFunction:"wait",args:[%text$, %sourceLang$, %destinationLang$, %tags$ ]};
+}
+End Function( { aoz.extensionTranslator.result } )
+

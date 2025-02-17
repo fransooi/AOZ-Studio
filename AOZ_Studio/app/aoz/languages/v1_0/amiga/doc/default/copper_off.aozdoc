@@ -1,0 +1,51 @@
+<i>Copper Off</i>
+<b>Copper Off</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+If you ignore the warning in the last paragraph and use this instruction, the automatic copper generation that forms
+the backbone of the AMOS Professional system is turned off. From now on, you are on your own!
+
+You should now understand that AMOS Professional actually holds two separate copper lists in memory, and the
+principle is very similar to the logical and physical screens of the DOUBLE BUFFER system.
+
+The logical copper list is the list being created from AMOS Professional Basic, and it is completely invisible. The
+physical list holds the copper instructions that are generating the current TV display. It cannot be accessed from
+AMOS Professional at all, as this would corrupt the display completely. As a default, these copper lists are limited
+to 12k in length, which is the equivalent to approximately six thousand instructions. This limit may be increased
+using an option from the Interpreter set-up dialogue box.
+
+Copper lists can be defined in one of three ways:
+
+- The first method is to enter the copper list using a combination of the COP MOVE and COP WAIT instructions,
+from AMOS Professional Basic.
+- The second way is to find the address of the logical copper list, using COP LOGIC. This can then be manipulated
+directly using DEEK and DOKE, allowing minor modifications to be made to the existing screen without having to
+generate a completely new copper list at all. This is perfect for the creation of rainbow effects.
+- The third alternative is for assembly language buffs. Copper lists can be generated using machine code, and as
+before, the current address is available via the COP LOGIC function. Note that this address will change during the
+course of a program, and it must be entered every time the machine code routine is called.
+
+### Recommended Procedures
+If you want to create copper lists from beginning to end, you must take personal control over the hardware Sprites,
+the display positioning, the location of screens, and their sizes. You must then ensure that the resulting screens have
+the correct amount of memory, before loading the appropriate registers with the addresses of the required bitmaps.
+This can be achieved with the LOGBASE function.
+
+Additionally, if you intend to use DOUBLE BUFFER, a separate copper list must be produced for both the logical
+and physical screens. Here is the procedure:
+
+- Define the copper list for the first screen.
+- Switch copper lists using the COP SWAP command.
+-Swap between the logical and physical screens with SCREEN SWAP.
+- Define a copper list for the second screen.
+
+Providing that all is well, you may access your screens using -all of the normal AMOS Professional drawing
+commands, including SCREEN COPY, DRAW, PRINT and PLOT. As well as this, there should be no problems
+using Blitter Objects.
+
+However, multiple screens and Sprites are only supported by the standard AMOS Professional copper system, so
+you cannot use SCREEN OPEN, SCREEN DISPLAY, RAINBOWS or any of the SPRITE commands. If you need
+to generate such effects, you will have to program them for yourself! For those of you who wish to give up now, the
+following command may be useful.
+

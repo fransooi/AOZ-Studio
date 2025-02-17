@@ -1,0 +1,6 @@
+<i>Every Off</i>
+<b>Every Off</b> xxxxxxx
+=
+EVERY ON should be used before the relevant sub-routine or procedure has finished executing.
+EVERY OFF is the default condition, and is used to disable the automatic calling process altogether.
+

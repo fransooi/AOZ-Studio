@@ -1,0 +1,20 @@
+<i>Resize Tiles</i>
+<b>Resize Tiles</b> xxxxxxx
+=
+This simple instruction enables you to zoom in or out the map inside of the view.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"
+Wait Key
+
+Resize Tiles "MapView", 16, 16				// Zoom out
+Redraw View "MapView"
+Wait Key
+
+Resize Tiles "MapView", 128, 128			// Zoom in
+Redraw View "MapView"
+@code
+

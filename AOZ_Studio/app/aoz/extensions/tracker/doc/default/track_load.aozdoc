@@ -1,0 +1,6 @@
+<i>Track Load</i>
+<b>Track Load</b> xxxxxxx
+=
+Use this command to load a specified BassoonTracker module into the memory bank number of your choice. Any existing
+data in this bank will be erased before the module is loaded, and the new bank will be called "BassoonTracker".
+

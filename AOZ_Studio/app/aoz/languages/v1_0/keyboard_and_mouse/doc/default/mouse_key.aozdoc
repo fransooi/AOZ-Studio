@@ -1,0 +1,21 @@
+<i>Mouse Key</i>
+<b>Mouse Key</b> xxxxxxx
+=
+The MOUSE KEY function checks whether one of the mouse buttons has been pressed and makes a report in the form of a binary pattern made up of these elements:
+@code
+Pattern 	Report
+Bit 0 		Left mouse button
+Bit 1 		Right mouse button
+Bit 2 		Third mouse button if it exists
+@code
+As usual, the numbers zero and one make up the report, with a one displayed when the relevant button is held down,
+otherwise a zero is shown. Try this routine:
+@code
+Curs Off
+Do
+Locate 0,0
+M = Mouse Key : Print "Bit Pattern ";Bin$(M,8);" Number ";M
+Loop
+@code
+
+

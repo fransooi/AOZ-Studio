@@ -1,0 +1,24 @@
+<i>Save Variables</i>
+<b>Save Variables</b> xxxxxxx
+=
+This function saves the values and the names of a list of variables into an encoded ASCII file on disk.
+
+You can recover the variables later with the "Load Variables" instructions.
+
+You can save the content of an array by ommiting the dimensions when you save it:
+@code
+Dim A$( 10 ), B( 10, 10 )
+For X = 0 To 10
+A$( X ) = Str$( X )
+For Y = 0 To 10
+B( X, Y ) = X * 10 + Y
+Next
+Next
+
+// The next line only saves two values, "5" and 12
+Save Variables "C:\Temp\myVariables_values.txt", A$( 5 ), B( 1, 2 )
+
+// The next line saves the whole arrays
+Save Variables "C:\Temp\myVariables_arrays.txt", A$(), B()
+@code
+

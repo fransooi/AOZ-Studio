@@ -1,0 +1,11 @@
+<i>Font$</i>
+<b>Font$</b> xxxxxxx
+=
+This function is used to examine an existing font list and make a report, giving details of the specified font.
+The report is given as a string of 38 characters, holding the following information: the name of the font, its physical
+height in pixels and its status set to either Disc or Rom. For example:
+@code
+Get Fonts : Set Font 2
+Print Font$(2)
+@code
+

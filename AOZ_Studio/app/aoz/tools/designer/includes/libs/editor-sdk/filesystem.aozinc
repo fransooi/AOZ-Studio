@@ -1,0 +1,100 @@
+Load Asset "resources/assets/libs/editor-sdk/js/filesystem.js", "sdk-fs"
+FS_BUFFER$ = "" : FS_ERROR = False : FS_EXIST = False : FS_EXT$ = "" : FS_CANREAD = False : FS_CANWRITE = False
+Global FS_BUFFER$, FS_ERROR, FS_EXIST, FS_EXT$, FS_CANREAD, FS_CANWRITE
+
+/**
+Reads a file and store its content in the FS_BUFFER$ AOZ variable
+PATH$ if the path of the file to read
+*/
+Procedure READ_FILE[ PATH$ ]
+	JS Execute "application.editorSDK.filesystem.readFile( '" + PATH$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Writes a file
+PATH$ is the path of the file to write
+CONTENT$ is the datas to write
+*/
+Procedure WRITE_FILE[ PATH$, CONTENT$ ]
+	JS Execute "application.editorSDK.filesystem.writeFile( '" + PATH$ + "', '" + CONTENT$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Removes a file
+PATH$ is the path of the file to remove
+*/
+Procedure REMOVE_FILE[ PATH$ ]
+	JS Execute "application.editorSDK.filesystem.removeFile( '" + PATH$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Renames a file
+PATH$ is the path of the file to rename
+NEWNAME$ is the new name of the file
+*/
+Procedure RENAME_FILE[ PATH$, NEWNAME$ ]
+	JS Execute "application.editorSDK.filesystem.renameFile( '" + PATH$ + "', '" + NEWNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Copies a file
+SOURCE$ is the path of the file to copy
+TARGET_PATH$ is the path of the destination
+*/
+Procedure COPY_FILE[ SOURCE$, TARGET_PATH$ ]
+	JS Execute "application.editorSDK.filesystem.copyFile( '" + SOURCE$ + "', '" + TARGET_PATH$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Checks if a file exists and store True or False in the FS_EXISTS AOZ variable
+PATH$ is the path of the file to rename
+*/
+Procedure EXISTS_FILE[ PATH$ ]
+	JS Execute "application.editorSDK.filesystem.existsFile( '" + PATH$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Check if a file is readable and store True or False in the FS_CANREAD AOZ variable
+PATH$ is the path of the file to rename
+*/
+Procedure CAN_READ_FILE[ PATH$ ]
+	JS Execute "application.editorSDK.filesystem.canRead( '" + PATH$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+    Alias of CAN_READ_FILE
+*/
+Procedure IS_READABLE[ PATH$ ]
+    CAN_READ_FILE[ PATH$ ]
+End Proc
+
+/**
+Check if a file is writable and store True or False in the FS_CANREAD AOZ variable
+PATH$ is the path of the file to rename
+*/
+Procedure CAN_WRITE_FILE[ PATH$ ]
+	JS Execute "application.editorSDK.filesystem.canWrite( '" + PATH$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+    Alias of CAN_WRITE_FILE
+*/
+Procedure IS_WRITABLE[ PATH$ ]
+    CAN_WRITE_FILE[ PATH$ ]
+End Proc

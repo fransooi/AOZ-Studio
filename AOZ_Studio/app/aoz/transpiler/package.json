@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "atob": "^2.1.2",
+    "btoa": "^1.2.1",
+    "checksum": "^1.0.0",
+    "chokidar": "^3.5.3",
+    "date-and-time": "^2.3.1",
+    "form-data": "^4.0.0",
+    "get-user-locale": "^1.4.0",
+    "hjson": "^3.2.2",
+    "lodash": "^4.17.21",
+    "md5": "^2.3.0",
+    "mkdirp": "^1.0.4",
+    "pkg": "^5.6.0",
+    "pngjs": "^6.0.0",
+    "read-ini-file": "^3.0.1",
+    "systeminformation": "^5.11.14",
+    "tmp": "^0.2.1",
+    "ws": "^8.8.1"
+  }
+}

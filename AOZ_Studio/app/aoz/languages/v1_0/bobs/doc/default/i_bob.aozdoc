@@ -1,0 +1,20 @@
+<i>I Bob</i>
+<b>I Bob</b> xxxxxxx
+=
+I BOB returns the number of the image currently assigned to the specified Bob number.
+If the Bob number you want to examine does not exist, an illegal function error will be given, so it is vital to define the Bob correctly before calling I BOB.
+Here is an example:
+@code
+Load "AMOSPro Tutorial:Objects/Bobs.abk"
+Bob 1,160,100,1 		// Display Bob 1 at centre of screen
+Do
+For IMAGE=1 To Length(1)
+// Move Bob 1 with the mouse
+Bob 1,X Screen(X Mouse),Y Screen(Y Mouse),IMAGE
+For W=0 To 3 : Wait Vbl : Next W
+// Display image number on screen
+Locate 0,0 : Print "Image ";I Bob(1);" ";
+Next IMAGE
+Loop
+@code
+

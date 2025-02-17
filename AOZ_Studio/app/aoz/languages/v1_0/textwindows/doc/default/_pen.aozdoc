@@ -1,0 +1,10 @@
+<i> Pen</i>
+<b> Pen</b> xxxxxxx
+=
+@code
+Pen 2
+Print Pen			// Will print 2
+Pen 3
+Print Pen			// Will print 3
+@code
+

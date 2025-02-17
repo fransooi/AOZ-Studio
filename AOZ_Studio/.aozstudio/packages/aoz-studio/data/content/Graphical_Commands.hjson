@@ -1,0 +1,404 @@
+{
+    graphical_commands:
+    { 
+        name: //TODO
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "cls":
+            [
+                The CLS command erases.all or part of the current screen. Used on its own, the contents of the current screen are deleted and replaced by the current paper colour. Any windows that may have been set up will also be cleared in this way.
+""
+By specifying the index number of a particular colour after the CLS command, the clearing operation will be carried
+out using that colour.
+""
+A rectangular part of the current screen can also be cleared, leaving the rest of the screen intact. This is achieved by adding the coordinates of the block to be filed with the specified colour, from the top left-hand corner, to the bottom right. For example:
+
+                '''
+                ~~~                
+		   Cls: Circle 100,98,98: Cls 0,50,50 To 150,150
+                ~~~
+                '''
+            ]
+            "plot":
+            [
+                This is the simplest drawing command of all, and plots a single pixel of ink colour between graphic coordinates 0,0
+and 319,199. When followed by specific x,y-coordinates, the current ink colour will be plotted at this new position.
+You are allowed to omit either the x or the y- coordinate, provided the comma is left in the correct position. If an
+optional colour index number is added the new colour will be used for this and all subsequent drawing operations.
+For example:
+                '''
+                ~~~                
+		   Cls: Curs Off
+		   Do
+			Plot Rnd(319),Rnd(199),Rnd(15)
+		   Loop
+                ~~~
+                '''
+            ]
+            "point":
+            [
+                Use this function to find the index number of the colour occupying your chosen coordinates, like this:
+                '''
+                ~~~                
+		Cls : Plot 160,100
+		Print "The colour is ";Point(160,100)
+                ~~~
+                '''
+            ]
+            "draw":
+            [
+                Line drawing is extremely simple. Pick two sets of graphic coordinates, and draw your line from one to the other. To
+draw a line from the current position of the graphics cursor, use DRAW TO followed by a single set of coordinates.
+For example:
+                '''
+                ~~~                
+		   Cls: Ink 2
+		   Draw 50,50 To 250,150
+		   Draw To 275,175
+                ~~~
+                '''
+Line styles
+Changing the appearance of straight lines is very simple with AOZ. Each line pattern is held in the
+form of a binary number made up of 16 bits, with zeros setting blank spaces in the current background colour, and
+ones setting the solid parts of the pattern in the current ink colour. So a normal solid line can be imagined as having
+all its bits set to one, like this:
+                '''
+                ~~~                
+		%01111111111111111
+                ~~~
+                '''
+            ]
+            "ellipse":
+            [
+                An ellipse is drawn in a similar way. After the x,y-coordinates have set the centre location, two radii must be given,
+one to set the horizontal width and the second to set the height of the ellipse. Coordinates may be omitted as usual,
+providing the commas remain in place. For example:
+                '''
+                ~~~                
+		   Ellipse 100,100,50,20
+		   Ellipse ,,20,50
+                ~~~
+                '''
+            ]
+            "circle":
+            [
+                To draw circles, a pair of coordinates sets the position of the centre point around which the shape is to be drawn,
+followed by the radius of the circle (the distance between the centre point and the circumference or rim of the
+circle.) If the x,y-coordinates are omitted, the circle will be drawn from the current graphic cursor position.For example:
+                '''
+                ~~~                
+		   Cls : Curs Off : Ink 3
+		   Gr Locate 160,100
+		   Circle ,,45 : Wait 100: Flash Off
+		   Do
+			Ink Rnd(15) : X=Rnd(250) : Y=Rnd(150) : R=Rnd(90)+1
+			Circle X,Y,R
+		   Loop
+                ~~~
+                '''
+            ]
+            "bar":
+            [
+                This is used to draw solid bars of colour by the familiar method of setting the top left-hand and bottom right-hand graphic coordinates.
+
+            ]
+            "box":
+            [
+                Boxed outlines are drawn at settings determined by the top left-hand and bottom right-hand coordinates, as in the last example.
+
+            ]
+            "paint":
+            [
+                The PAINT command allows you to fill any section of your screen with a solid block of colour. You may also fill
+areas with various patterns previously selected with the SET PATTERN command, which is explained later. Decide
+which area is to be filled, and follow the PAINT command by a set of coordinates located anywhere inside the
+section of screen you want to paint with the current ink colour. Try this, which if all goes well should result in the
+Japanese national flag:
+                '''
+                ~~~                
+		   Palette 0,$F00
+		   Circle 160,100,50
+		   Paint 50,50
+                ~~~
+                '''
+The optional mode setting can be set to either zero or one. A value of 0 ends your PAINT operation at the first pixel
+encountered of the current border colour. A mode of 1 stops the painting operation at any colour which is different
+from the existing ink colour. If there are any gaps in the boundaries of the sections you wish to fill, colour will leak
+out and stain the adjoining area.
+            ]
+            "polygon":
+            [
+                This can be regarded as creating a solid version of the POLYLINE command, and your shape will begin at the
+current graphic coordinates if you commence the command in its POLYGON TO form. Provided that your single
+statement does not exceed the maximum allowed line length of 255 characters, there is no limit to the number of
+pairs of coordinates you can use. Try this example:
+                '''
+                ~~~                
+		   Do
+		   	Ink Rnd(15)
+		   	X1=Rnd(250) : Y1=Rnd(150) : H=Rnd(200) : W=Rnd(150)
+		   	Polygon X1,Y1 To X1+W,Y1 To X1+W/2,Y1+H To X1,Y1
+		   Loop
+                ~~~
+                '''
+            ]
+            "polyline":
+            [
+                The POLYLINE is identical to DRAW except that it accepts multiple coordinate settings at the same time. In this
+way, complex many-sided outlines can be drawn with a single statement. In its POLYLINE TO form, drawing
+begins at the current graphic cursor position. For example:
+                '''
+                ~~~                
+		   Circle 160,100,95
+		   Polyline 160,6 To 100,173 To 250,69 To 71,69 To 222,173 To 160,6
+                ~~~
+                '''
+            ]
+            "gr_locate":
+            [
+                The graphics cursor sets the starting point for most drawing operations. To establish this point, use GR LOCATE to
+position the graphics cursor at your chosen coordinates.For example:
+                '''
+                ~~~                
+		   X=150 : Y=10
+		   For R=3 To 87 Step 3
+			Gr Locate X,Y+R
+			Circle ,,R
+		   Next R
+                ~~~
+                '''
+            ]
+            "text_length":
+            [
+                This function returns the number of pixels that make up the width of the characters in the current font, in a given
+string. This can vary for the same string, depending on the font in use. Furthermore, there are special fonts which
+assign different widths for each character in the same character set, known as "proportional" fonts. Here is a simple
+example:
+                '''
+                ~~~                
+		   TS="Centred Text"
+		   L=Text Length(T$)
+		   Text 160-L/2,100,T$
+                ~~~
+                '''
+            ]
+            "text_base":
+            [
+                This function is used to get the reference position of the current font's baseline, given as the number of pixels
+between the top of the character, and the point that it will be printed on the screen. It is similar to the hot-spot of an
+Object.
+
+            ]
+            "text":
+            [
+                This command is used to print text at the specified graphical coordinates. All coordinates are measured relative to
+the "baseline" of the current character set, which can be found using the TEXT BASE function, explained next.
+Normally, the baseline is the notional line on which all characters sit, and the "tails" of certain characters (like g,j,p,q
+and y) drop below this baseline. The next example demonstrates how text can be placed at any pixel position on the
+screen:
+                '''
+                ~~~                
+		   Do
+		   	Ink Rnd(15)+1,Rnd(15) : Text Rnd(320)+1,Rnd(198)+1,"AOZ"
+		   Loop
+                ~~~
+                '''
+            ]
+            "set_paint":
+            [
+                This is a simple command that toggles outlines off and on for any shapes drawn using the POLYGON and BAR
+instructions. Follow SET PAINT with a mode value of 1, and borders will appear in the previous ink colour. If the
+mode is set by a zero, the default setting applies, with no borders shown. For example:
+                '''
+                ~~~                
+		   Ink 0,1,2 : Set Paint 1
+		   Bar 5,5 To 200,100
+		   Set paint 0: Bar 210,75 To 310,190
+                ~~~
+                '''
+In the last example, the INK command carried additional parameters. These optional settings follow the usual colour
+number, and are used to determine paper and border colours. In other words, they can set the colours to be used for
+fill patterns and outlines of bars and polygons. Remember to include any commas for unused options, as follows:
+                '''
+                ~~~                
+		   Ink 3: Rem Set ink colour
+		   Ink ,,5: Rem Set border outline only
+		   Ink 0,8,2: Rem Set ink, fill colour and border
+		   Ink 6,13: Rem Set ink and background fill colour
+                ~~~
+                '''
+            ]
+            "set_pattern":
+            [
+                Use this command to select from a range of pattern styles. The default status fills shapes with the current ink colour,
+and is set with a zero, like this:
+                '''
+                ~~~                
+		   Set Pattern 0
+                ~~~
+                '''
+If SET PATTERN is followed by a positive number from 1 to 34, shapes are filled from a ready- made selection of
+patterns.View them now, by running this routine:
+                '''
+                ~~~                
+		   Do
+		   	For N=0 To 34
+			   Set Pattern N
+			   Ink 0,1,2: Set Paint 1
+			   Bar 50,50 To 150,150
+			   Locate 0,0: Print N ;" "
+			   Wait 50
+		        Next N
+		   Loop
+                ~~~
+                '''
+If SET PATTERN is followed by a negative number, shapes will be filled with a pattern grabbed from a Sprite or
+Bob image, taken from the Object Bank (memory bank 1). Because these patterns can be very complex, AMOS
+Professional will simplify them automatically, as follows.
+""
+The width of the image is clipped to 16 pixels, and the height is rounded to the nearest power of two (2, 4, 8, 16, 32
+and so on.)
+""
+The original colours of the image are discarded, and the pattern is drawn using the current ink and paper colours.
+Two-colour patterns are drawn as monochrome images.
+""
+If multi-coloured images are required using the original Object colours, the INK must first be set up, as follows:
+                '''
+                ~~~                
+		   Ink 15,0
+		   Set Pattern -1
+		   Paint 100,100
+                ~~~
+                '''
+That example fills the screen area around the given coordinates with any of the Object colours, except the
+transparent colour zero. The colour index number 15 acts as a mask, defining which colours are to be used, and sets
+the range from 1 to 15. If the INK command is changed to the following line, the Object will be drawn with the
+normally transparent colour filled by colour 1:
+                '''
+                ~~~                
+		   Ink 15,1
+                ~~~
+                '''
+Before making use of sprite images as fill patterns, remember to use GET SPRITE PALETTE to avoid messy
+displays. Here is an example:
+                '''
+                ~~~                
+		   Flash Off : Cls 0
+		   Load "AMOSPro_Tutorial:Objects/Pattern.Abk"
+		   Get Sprite Palette
+		   Box 1,1 To 319,199
+		   Ink 15,0
+		   Set Pattern -1
+		   Paint 102,102
+                ~~~
+                '''
+
+            ]
+            "set_line":
+            [
+                This command sets the style of all straight lines that are subsequently drawn. Theoretically, the 16-bit mask can
+generate values for different patterns between 0 and 65535, but here is a more practical example:
+                '''
+                ~~~                
+		   Cls : Ink 2
+		   Set Line $F0F0
+		   Box 50,100 To 150,140
+		   Set Line %1100110011001100
+		   Box 60,110 To 160,160
+                ~~~
+                '''
+            ]
+            "ink":
+            [
+                used to specify which colour is to be used for subsequent drawing, and the number of the colour register is set like
+this:
+                '''
+                ~~~                
+		   Cls: Ink 5
+		   Draw To 319,199
+                ~~~
+                '''
+The INK instruction can also be used to set patterns for filling shapes, as well as colours for borders around shapes,
+and this will be explained later.
+            ]
+            "gr_writing":
+            [
+                This command is used to set the various modes used for drawing lines, shapes, filled shapes and graphical text.
+Settings are made using a bit pattern, whose values give the following results:
+                '''
+                ~~~                
+		Bit 0 = 0 only draw graphics using the current ink colour.
+		Bit 0 = 1 replace any existing graphics with new graphics (default condition).
+		Bit 1 = 1 change old graphics that overlap with new graphics, using XOR.
+		Bit 2 = 1 reverse ink and paper colours, creating inverse video effect.
+                ~~~
+                '''
+The normal drawing state is where new graphics overwrite old graphics, like this:
+                '''
+                ~~~                
+		   Ink 2,5 : Text 100,80, "NORMAL TEXT"
+		   Wait 100 : Gr Writing 1
+		   Text 10 ,80, "REPLACE"
+                ~~~
+                '''
+                Try the next example for some simple demonstrations of alternative settings:
+                '''
+                ~~~                
+		   Ink 2,5 : Text 100,80,"NORMAL TEXT"
+		   Wait 100 : Gr Writing 0
+		   Text 100,80, "MERGED"
+		   Wait 100 : Gr Writing 4
+		   Text 100,90, "STENCIL"
+		   Wait 100 : Gr Writing 5
+		   Text 100,100, "REVERSE"
+                ~~~
+                '''
+            ]
+            "clip":
+            [
+                This command is used to set an invisible rectangular boundary on the screen, using the normal top left-hand corner
+to bottom right-hand corner coordinates. All subsequent drawing operations will be clipped off when they reach
+these boundaries. To toggle the command and restore the normal screen display area, use CLIP and omit the
+coordinates. Areas that are preserved outside of the clipped zone can be used for items such as borders and control
+panels. For example:
+                '''
+                ~~~                
+		   Clip 150,5 To 280,199
+		   For R=4 To 96 Step 4
+			Gr Locate 150,R+5
+			Ellipse ,,R+9,R
+		   Next R
+                ~~~
+                '''
+            ]
+            "set_tempras":
+            [
+                This command allows the AOZ programmer to adjust the amount of memory used by the various
+graphics operations. You are warned that improper usage can cause your computer to crash! The address and size of
+the graphics buffer can be changed as explained below.
+""
+The buffer address can be either an address or a memory bank, and the memory reserved for this buffer should
+always be Chip RAM. After allocating the buffer area at the start of your program, there is no need to keep on
+reserving and restoring it, which means that the execution of your programs can be speeded up by up to 5%!
+""
+The buffer size is the number of bytes you want to reserve for the buffer area, ranging from 256 to 65536. To
+calculate the amount of memory you need for a particular object, enclose the object in a rectangular box and apply
+the following formula:
+                '''
+                ~~~                
+		Memory area = Width/8*Height
+                ~~~
+                '''
+If you are intending to use the PAINT command, make sure that your shape is closed, otherwise additional memory
+may be called for, causing the system to crash.
+""
+The buffer area can be restored to its original value by calling SET TEMPRAS with no parameters.
+            ]
+            
+        }
+    }
+}

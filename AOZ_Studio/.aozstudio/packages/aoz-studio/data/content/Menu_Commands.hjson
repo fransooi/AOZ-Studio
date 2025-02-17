@@ -1,0 +1,377 @@
+{
+    menu_commands:
+    { 
+        name: "" // TODO
+        intro:""
+        conclusion:""
+        commands:
+        {
+
+
+            "on_menu_del":
+            [
+                Use ON MENU DEL to erase the internal list of labels or procedures created by the range of ON MENU
+commands. You are warned that this command can only be used after menus have been deactivated by ON MENU
+OFF.
+
+            ]
+            "on_menu_on":
+            [
+                To activate the automatic menu system created by the ON MENU PROC, GOSUB or GOTO commands, simply
+give the ON MENU ON command. After a subroutine has been accessed in this way, the system is automatically
+disabled. Therefore you must reactivate the system with ON MENU ON before returning to the main program.
+
+            ]
+            "on_menu_off":
+            [
+                
+To suspend the automatic menu system, ON MENU OFF is used. This can be vital if your program is executing a
+procedure which must be performed without interruptions, such as loading and saving information to disc. Menus
+are reactivated using ON MENU ON.
+
+            ]
+            "menu_to_bank":
+            [
+Use this command to save your menu along with its entire structure of branch definitions to the numbered bank.
+Once the menu has been stored in the selected memory bank, it will automatically be saved along with your Basic
+program. By storing your menu definitions in a memory bank, the size of your program listings are reduced
+significantly, freeing valuable space in the editor memory. If the bank number you select already exists, the
+appropriate error message will be given.
+            ]
+            "bank_to_menu":
+            [
+                Follow BANK TO MENU with the number of the memory bank where your menu data is stored. The menu will be restored to its exact state when originally saved, so the restoration process may take a few seconds. To activate the restored menu, call MENU ON.
+
+            ]
+            "menu_on":
+            [
+                Use this command to initialise the menu previously defined by a MENU$, and the menu line will appear when the right mouse button is pressed. To activate the previous example, add the following lines:
+                '''
+                ~~~                
+		   Menu On
+		   Wait Key
+                ~~~
+                '''
+Trigger the menu and its options now, and use the left mouse button to re-locate the title bar. Now that this simple
+menu has been activated, the selected options must be read and reported back to the system.
+            ]
+            "menu_off":
+            [
+                This command temporarily turns a menu off, making it inactive. The menu can be reactivated at any time with the MENU ON command.
+
+            ]
+            "menu_mouse_on": //Same as menu_mouse_off
+            [
+                Use these commands to toggle the display of all menus starting from the current position of the mouse cursor. The mouse coordinates are added to the MENU BASE to calculate the menu position, so it is possible to lace a menu at a fixed distance from the mouse pointer.
+
+            ]
+            "menu_mouse_off": //Same as menu_mouse_on
+            [
+                Use these commands to toggle the display of all menus starting from the current position of the mouse cursor. The mouse coordinates are added to the MENU BASE to calculate the menu position, so it is possible to lace a menu at a fixed distance from the mouse pointer.
+
+            ]
+            "menu_base":
+            [
+                Use this command to move the starting point of the first level in your menu hierarchy to the absolute screen coordinates at x,y. All subordinate menu items will now be displayed relative to this starting point.
+
+            ]
+            "set_menu":
+            [
+                SET MENU sets the screen position of the top left-hand corner of the menu item whose parameters are given in brackets. These coordinates are measured relative to the previous level, so the starting point for the entire menu can be set by the MENU BASE command. All levels of the menu below this single item will also be moved by your SET MENU command. The coordinates can be negative as well as positive, so you are free to position items
+anywhere on screen.
+
+            ]
+            "menu_key":
+            [
+                Any key can be assigned to an item in a previously defined menu, provided that the item specified is at the bottom level of the menu. In other words, keyboard shortcuts cannot be used to select sub-menus because each command must correspond to a single option in the menu.
+
+In its simplest form, define the single item parameters as usual, by giving their hierarchy numbers in brackets after MENU KEY. Then assign the item TO a string containing a single character. Any additional characters in this string will be ignored.
+
+Because each key on the Amiga keyboard is assigned its own scancode, this code can be made use of for those keys
+that have no Ascii equivalents, the so-called control keys. Here is a simple routine to print out scancodes:
+
+                '''
+                ~~~                
+		   Do
+			Repeat
+			   A$=inkey$
+			Until A$<>
+			Z=Scancode
+			Print Z
+		   Loop
+                ~~~
+                '''
+The following scancodes can also be used with the MENU KEY command, instead of a character string:
+                '''
+                ~~~                
+		Scancode 	Keys
+		80 to 89 	Function keys [Fl] to [F10]
+		95 		[Help]
+		69 		[Esc]
+                ~~~
+                '''
+An optional bitmap can also be added, to check for control key combinations such as [Ctrl] + [A]. Here are the
+alternatives:
+                '''
+                ~~~                
+		Bit 	Key Tested 	Notes
+		0 	left [Shift]) 	only one [Shift] key can be tested at a time
+		1 	right [Shift] 	only one [Shift] key can be tested at a time
+		2 	[Caps Lock] 	either ON or OFF
+		3 	[Ctrl]
+		4 	left [Alt]
+		5 	right [Alt] 	this is the [Commodore] key on some keyboards
+		6 	left [Amiga]
+		7 	right [Amiga]
+                ~~~
+                '''
+If more than a single bit is set in this pattern, several keys must be pressed at the same time in order to call up the associated menu item. Any of these keyboard shortcuts can be erased by using MENU KEY with no parameters. For
+example:
+                '''
+                ~~~                
+		   Menu Key(1,10) : Rem Erase shortcut assigned to item (1,10)
+                ~~~
+                '''
+Here is an example that checks for key presses of the Amiga's ten function keys:
+                '''
+                ~~~                
+		   Menu$(1)="Function Keys"
+		   For A=1 To 10
+			OPT$="F"+Str$(A)+" "
+			Menu$(1,A)=OPT$
+			Menu Key(1,A) To 79+A
+		   Next A
+		   Menu On
+		   Do
+			If Choice Then Print "You have pressed Function Key ";Choice(2)
+		   Loop
+                ~~~
+                '''
+            ]
+            "menu_bar":
+            [
+                This instruction displays.the selected menu items as a vertical bar whose width is automatically set to the length of the largest item in the menu. As a default, this option is used for levels 2 to 8 of your menu, and it must be used during the program's initialisation. There will be no effect if it is called after the menu has been activated.
+""
+When followed by a list of bracketed parameters, MENU BAR can also be used to change the style of your menus
+once they have been installed. Here is an example of a customised menu layout:
+                '''
+                ~~~ 
+		   FLAG=0
+		   SET_MEN
+		   Do
+			If Choice and Choice(1)=2 and Choice(2)=1 Then CHANGE
+		   Loop
+		   Procedure SET_MEN
+			Menu$(1)="Try me first " : Menu$(2)="Select me " : Rem Four spaces
+			Menu$(1,1)="1 am useless " : Rem Five spaces
+			Menu$(2,1)="Please select me!"
+			Menu On
+		   End Proc
+		   Procedure CHANGE
+			Shared FLAG
+			Menu Del
+			If FLAG=0 Then Menu Bar 1: FLAG=1 Else Menu Tline 1: Flag=0
+			SET_MEN
+		   End Proc               
+
+                ~~~
+                '''
+            ]
+            "menu_line":
+            [
+                Use this command to change the display of options that relate to a particular title from a vertical block into a horizontal line. The line of options will now start from the left-hand corner of the first menu title and stretch to the bottom right-hand corner of the last title. Follow MENU LINE with the number of the level you want to affect, and make sure that this command is only called during your menu definitions. The level number can range from 1 to 8, and it specifies the layer of the menu to be affected.
+""
+It is perfectly legal to set individual items by this method, and with the following MENU TLINE and MENU BAR
+commands. This can result in some highly eccentric displays.
+                '''
+                ~~~                
+		   Menu Line(1,1,1) : Rem Display sub-option 1,1,1 as a line
+                ~~~
+                '''
+            ]
+            "menu_tline":
+            [
+                MENU TUNE is used to display a section of your menu as a total line, stretching from the extreme left to the extreme right of the screen. The complete line will be drawn even if the first item is centre screen. Use this instruction in the same way as MENU LINE during your menu definitions.
+
+            ]
+            "menu_movable":
+            [
+                The default condition is that the menu items at a particular level may be moved directly by the user. Any level can be repositioned by moving the mouse pointer over the first item in the menu and holding down the left mouse button. A rectangular box will appear around the selected menu item, and it can be dragged to its new screen position. When the left mouse button is released, the menu is re-drawn at this location, along with all of its
+associated items.
+""
+Use MENU MOVABLE to set the status of entire menu levels, or selected items in a menu hierarchy, but please
+note that this command does not allow you to change the status of any items below the selected level.
+            ]
+            "menu_static":
+            [
+                One characteristic of mobile menus is that the amount of memory they use changes during the course of the
+program. With large menus or programs that are on the boundary of available memory this can cause real problems.
+MENU STATIC can be used to avoid these difficulties by setting the level or item at which the entire menu
+becomes immovable by the user.
+            ]
+            "menu_item_static":
+            [
+                This command locks one or more menu items into place, and is the default setting.
+
+            ]
+            "menu_item_movable":
+            [
+                This is similar to MENU MOVABLE, but it allows the re-arrangement of various options in a particular level. Normally it is not possible to move items outside of the current menu bar, but this can be overcome by the MENU SEPARATE command, which is explained below.
+""
+To use MENU ITEM MOVABLE for changing the position of a menu item, the entire menu bar must itself be
+movable. So if MENU STATIC has been called, this command will have no effect. The first item in a menu bar can
+not be moved, because this would move the entire line. Furthermore, if the last item in a menu bar is moved, the size
+of that bar will be permanently reduced.
+""
+This problem can be overcome either by setting the last item into place with a MENU ITEM STATIC command, or
+by enclosing the whole menu bar with a rectangular box, like this:
+
+                '''
+                ~~~                
+		   Menu$(1 ,1)=,,,,"(Bar40,100)(Loc0,0)"
+                ~~~
+                '''
+            ]
+            "menu_active":
+            [
+                MENU ACTIVE reverses the effect of a previous MENU INACTIVE command. An entire level or single item
+specified by its parameters can be re-activated and the original appearance of their title strings will be re-displayed.
+
+            ]
+            "menu_inactive":
+            [
+                level will be deactivated. If you define an individual item in brackets by giving its parameters, only that item will become inactive.
+""
+If no inactive string has been defined when you originally set your menu up with MENU$, any menu options that
+have been made inactive will be shown in italics. Otherwise the special inactive string will appear.
+
+            ]
+            "menu_link":
+            [
+                This is the exact opposite of MENU SEPARATE, and is used to link one or more items together.
+            ]
+            "menu_called":
+            [
+                MENU CALLED engages the automatic re-drawing process. This command is normally used with a menu
+procedure to generate animated menu items, often with spectacular moving graphic effects.
+""
+To use this facility, a menu procedure should first be defined, as explained above. Next, add a call to this procedure in the required title strings, using an embedded PRoc command. Finally, activate the updating process with MENU CALLED. When the user selects the chosen item, your procedure is repeatedly accessed by the menu system.
+Because menu items are not double buffered, bobs may flicker a little, but the use of computed sprites will present
+no such problems.
+
+            ]
+            "menu_once":
+            [
+                MENU ONCE turns off the automatic updating system instigated by MENU CALLED. After the command is given, each menu item will only be re-drawn once when the menu is called on the screen. It is used like this:
+                '''
+                ~~~                
+		   Menu Once(1,1)
+                ~~~
+                '''
+            ]
+            "x_menu":
+            [
+                The X MENU function allows you to get the position of a menu item, relative to the previous option on screen. This information can be used to set up very powerful menus.
+
+            ]
+            "y_menu":
+            [
+                Y MENU returns the y-coordinate of a menu option, measured relatively to the previous item on screen. Please refer to the demonstration program above.
+
+            ]
+            "menu$":
+            [
+                To create a simple menu, its title line must first be defined. Each heading in a title line created with MENU$ must be assigned its own number. The title at the left-hand edge of the title line is represented by 1, the next title by 2, and so on, from left to right. The characters in your title string hold the name of the numbered title. This example sets up a menu title line offering two titles, and you should note the use of the spaces to separate titles when they appear in the title line:
+                '''
+                ~~~                
+		   Menu$(1)," Action"
+		   Menu$(2)," Mouse"
+                ~~~
+                '''
+The second type of usage of MENU$ defines a set of options that will be displayed in the vertical menu bar. The
+brackets after MENU$ contain two parameters, the first is the number of the menu heading that your option is to be
+displayed beneath, followed by the option number you want to install in the vertical menu bar. All options are
+numbered downwards from the top of the menu, starting from 1. The option string holds the name of your new
+option, and can consist of any text you choose. The following lines could be added to the last example above:
+                '''
+                ~~~                
+		   Rem Action menu has one option
+		   Menu$(1,1)=" Quit " : Rem Ensure three spaces after Quit
+		   Rem Mouse menu has three options
+		   Menu$(2,1)="Arrow " : Rem Ensure five spaces after Arrow
+		   Menu$(2,2)="Cross-hair"
+		   Menu$(2,3)="Clock " : Rem Ensure five spaces after Clock
+                ~~~
+                '''
+That specifies your list of alternatives for the "Action" and "Mouse" menus. Before this program can be run, it must
+first be activated.
+            ]
+            "choice":
+            [
+                CHOICE will return a value of -1 (true) if the menu has been highlighted by the user, otherwise a value of 0 (false)
+is returned. After the status of your menu is tested, the value held by CHOICE is automatically re-set to zero.
+
+- CHOICE(1) will return the value of the title number which has been chosen.
+- CHOICE(2) will return the value of the option number which has been selected.
+
+Now remove the Wait Key from the last example, and replace it with the following lines. This should change the
+shape of the mouse cursor, depending on the option selected from your menu. Note that Choice=-1 can be simplified
+to Choice.
+                '''
+                ~~~                
+		   Do
+			If Choice and Choice(1)=1 Then Exit
+			If Choice(1)=2 and Choice(2)<>0 Then Change Mouse Choice(2)
+		   Loop
+                ~~~
+                '''
+
+Creating advanced menus
+The use of MENU$ and CHOICE is not limited to the creation of simple menus. In fact, their use can be extremely
+sophisticated.
+""
+MENU$ is used to define the appearance of each individual item in one of your menus, whether it is a title, an
+option, a sub-option, all the way down to the eighth layer of options in the menu hierarchy. In this Chapter, when
+"single item parameters" is used it simply means those numbers separated by commas and held inside a single pair
+of brackets, that refer to the position of a single item somewhere in the menu. Up to eight parameters can be used,
+separated by commas. To make sure that is clear, here are some examples of parameters defining the position of a
+single item in the menu hierarchy:
+                '''
+                ~~~                
+		   Menu$(1)="Title1"
+		   Menu$(1 ,1)="Title1 Option1"
+		   Menu$(2,3)="Title2, Option2"
+		   Menu$(1,1,1,1)="Title1, Option1, Sub-option1, Sub-sub-option1"
+                ~~~
+                '''
+Now look at these uses of MENU$, which are used to give a single item its own characteristics:
+            ]
+            "on_menu_proc":
+            [
+                Each title in your menu can be assigned its own procedure which will be executed automatically when that option is selected by the user. Like the other ON MENU commands that are described next, ON MENU PROC uses
+interrupts, which means that it is performed 50 times a second. So your program can be engaged in other tasks while
+the menus are continually checked by the system.
+""
+When automatic selection takes place as the result of ON MENU PROC, the procedure is executed and the program
+will be returned to the instruction immediately after the ON MENU call. Procedures can make use of the CHOICE
+function to monitor which option has been triggered, and to perform the appropriate action.
+
+            ]
+            "on_menu_gosub":
+            [
+                Depending on which option has been selected by the user, ON MENU GOSUB goes to the appropriate subroutine. Unlike Amiga Basic, each title on the menu title bar is handled by its own individual subroutine. After using this instruction, ON MENU should be used to activate the menu system before jumping back to the main program with a RETURN. Also note that the labels used with this command cannot be replaced by expressions, because the label
+will be evaluated once only when the program is run.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "on_menu_goto":
+            [
+                Although this command is available for use, it has been superseded by the more powerful ON MENU PROC and ON MENU GOSUB instructions. It is retained to provide compatibility with programs written in STOS Basic.
+
+            ]
+        }
+    }
+}

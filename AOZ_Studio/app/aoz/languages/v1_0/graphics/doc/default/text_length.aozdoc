@@ -1,0 +1,14 @@
+<i>Text Length</i>
+<b>Text Length</b> xxxxxxx
+=
+This function returns the number of pixels that make up the width of the characters in the current font, in a given
+string. This can vary for the same string, depending on the font in use. Furthermore, there are special fonts which
+assign different widths for each character in the same character set, known as "proportional" fonts. Here is a simple
+example:
+@code
+TS="Centred Text"
+L=Text Length(T$)
+Text 160-L/2,100,T$
+@code
+
+

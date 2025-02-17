@@ -1,0 +1,19 @@
+{
+  "name": "audio",
+  "main": "./lib/main.js",
+  "version": "1.5.7",
+  "description": "Preview audio files in the Atom editor",
+  "repository": "https://github.com/jiborobot/atom-audio",
+  "author": "Jibo Inc. <info@jibo.com>",
+  "contributors": [
+    "Jonathan Ross <jonathan@jibo.com>",
+    "Francois Laberge <francoislaberge@gmail.com>"
+  ],
+  "license": "MIT",
+  "engines": {
+    "atom": ">=0.174.0 <2.0.0"
+  },
+  "dependencies": {
+    "atom-space-pen-views": "^2.0.5"
+  }
+}

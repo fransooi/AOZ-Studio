@@ -1,0 +1,14 @@
+<i>Centre</i>
+<b>Centre</b> xxxxxxx
+=
+Programmers often need to position text in the centre of the screen, and to save you the effort of calculating the text
+coordinates in order to achieve this, the CENTRE command takes a string of characters and prints it in the middle of
+the line currently occupied by the cursor. For example:
+@code
+Locate 0,1
+Centre "ABOVE"
+Cmove ,3
+Centre "suspicion"
+@code
+Please note that this instruction will have unpredicatable result if the string is larger than the width of the text window.
+

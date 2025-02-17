@@ -1,0 +1,8 @@
+<i>Screen Base</i>
+<b>Screen Base</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This function returns the base address of the internal table that is used to hold the number and position of AOZ Studio STUDIO screens.
+
+

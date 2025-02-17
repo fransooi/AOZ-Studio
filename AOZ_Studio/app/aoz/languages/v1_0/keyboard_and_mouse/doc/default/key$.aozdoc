@@ -1,0 +1,7 @@
+<i>Key$</i>
+<b>Key$</b> xxxxxxx
+=
+KEY$ assigns the contents of the specified command$ to a function key number from 1 to 20.
+
+Once done, a press on the given key will be identical to the user typeing the text on the keyboard.
+

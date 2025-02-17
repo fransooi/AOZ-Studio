@@ -1,0 +1,38 @@
+<i>Sprite Move X</i>
+<b>Sprite Move X</b> xxxxxxx
+=
+The SPRITE MOVE X command defines a list of horizontal movements to be performed on the bob specified by the given index.
+
+The number is followed by a "movement string" containing a series of
+instructions which control the speed and direction of the Object. These movement commands are enclosed by
+brackets, and are entered as the following three parameters, separated by commas.
+
+The speed parameter sets a delay between each step of the movement, given in 50ths of a second. Speed can vary
+from a value of 1 for very fast, all the way to 32767 for incredibly slow. This is followed by a step value, setting the
+number of pixels the Object is to be moved during each operation. A positive value moves the Object to the right,
+and a negative number to the left. The apparent speed of the Object will depend on the relationship between the
+speed and the step values, varying from slow and smooth, to rapid but jerky movements.
+
+A speed value of about 10 (or -10) is recommended. The last parameter is a count value, which determines the number of times the movement
+is to be repeated. Values range between 1 and 32767, with the additional value of zero causing an indefinite
+repetition.
+
+It is vital to add an L (loop) instruction to the movement string after these parameters, if you want to force a jump to
+the start of the string, forcing the entire sequence to be run again.
+
+Here is an example:
+@code
+Load "AMOSPro_Tutorial:Objects/Sprites.Abk" :Get Sprite Palette
+Sprite 1,360,100,1
+Sprite Move X 1,"(1,1,60)(1,-5,60)L"
+Sprite Move On
+Wait Key
+@code
+An alternative ending to the movement string is to use the E option, followed by the value of an x-coordinate.
+
+This stops the Object when it reaches the specified coordinate value, which must be less than (or equal to) the
+original horizontal target destination. Try changing the third line of the last example to this:
+@code
+Sprite Move X 1,"(1,-5,30)E100"
+@code
+

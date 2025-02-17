@@ -1,0 +1,14 @@
+<i>Fn</i>
+<b>Fn</b> xxxxxxx
+=
+The following examples show how DEF FN is first used to define a function, and how FN calls it up:
+@code
+Def Fn NAME$(A$,X,Y)=Mid$(A$,X,Y)
+Print Fn NAME$("AOZ Studio",4,3)
+Def Fn X(A,B,C)=A+B+C
+Print Fn X(1,10,100)
+@code
+The expression that equals the user-defined function can include any of the standard AOZ functions, and it is limited to a single line of a program.
+
+FN is a legacy instruction from the AMOS and STOS. We suggest to use the INSTRUCTION token instead.
+

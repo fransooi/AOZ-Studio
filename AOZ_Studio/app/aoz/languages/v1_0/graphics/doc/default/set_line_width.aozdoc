@@ -1,0 +1,23 @@
+<i>Set Line Width</i>
+<b>Set Line Width</b> xxxxxxx
+=
+
+@code
+Ink 1
+For f=1 to 10
+Set Line Width f
+Circle f*150,540,60
+Next f
+@code
+
+The line width can also be set to less than 1. The next example shows what the circles will look like with line widths from 0.1 to 1.0.
+You will see that for very thin lines, they appear much fainter.
+
+@code
+Ink 1
+For f=1 to 10
+Set Line Width f/10
+Circle f*150,540,60
+Next f
+@code
+

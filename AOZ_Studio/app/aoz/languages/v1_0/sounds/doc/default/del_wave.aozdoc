@@ -1,0 +1,15 @@
+<i>Del Wave</i>
+<b>Del Wave</b> xxxxxxx
+=
+To delete a wave that has been set up with a SET WAVE instruction, simply use this command followed by the number of the wave to be erased.
+
+When this has been done, all deleted voices will be set to the standard default sine wave. The pre-set wave numbers
+zero and 1 can be manipulated, but they cannot be eradicated.
+
+Making audio envelopes
+An "envelope" is audio jargon for how a sound is manipulated during the brief period of tin that it is played. In other
+words, whether it bursts into life or makes a more subtle entry (attack), whether it fades away with dignity or lives
+life to the full (decay), how long it hangs on for (sustain) and finally, the manner in which it meets its end (release).
+All of this is achieved simply by changing the volume of individual sections of the wave form.
+
+

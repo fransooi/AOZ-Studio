@@ -1,0 +1,911 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The ASSET Instructions Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 20/02/2020
+ */
+#need_server
+#need_javascript_file:"audio/audio.js"
+#need_javascript_file:"createjs/createjs.min.js"
+#need_javascript_file:"createjs/plugins/WebAudioPlugin.js"
+#need_javascript_file:"ilbm.js-master/iff.js"
+#need_javascript_file:"ilbm.js-master/jdataview.js"
+
+#need_module: "tracker"
+#need_module: "td"
+
+#noWarning:"instruction_not_implemented"
+{
+    this.aoz.ASSET = this;
+	this.aoz.ASSET.utilities = aoz.utilities;
+	this.aoz.ASSET.banks = aoz.banks;
+	this.arrImages = undefined;
+	this.arrAudios = undefined;
+	this.arrAudioNames = undefined;
+	this.arrVideos = undefined;
+	this.arrSpriteSheet = undefined;
+	this.arrScenes = undefined;
+	this.arrJSON = undefined;
+	this.arrHTML = undefined;
+	this.arrFonts = undefined;
+
+	this.timeoutHandle = null;
+	this.timeOut = 60 * 1000;
+	this.load_error = null;
+
+	this.onLoadProcName = undefined;
+	this.onErrorProcName = undefined;
+
+	//if ( this.aoz.useSounds )
+		createjs.Sound.registerPlugins( [ createjs.WebAudioPlugin, createjs.HTMLAudioPlugin ] );
+	//else
+		//createjs.Sound.registerPlugins( [] );
+
+	this.load_done = true;
+	this.loadAsset = function ( args )
+	{
+		var filename = args[ 0 ];
+		var number = args[ 1 ];
+		var directPath = args.length > 1 ? args[ 2 ] : false;
+		var parts = filename.split(".");
+		var ext = parts[ parts.length - 1 ];
+
+		this.load_done = false;
+		this.load_error = false;
+		this.isHttp = false;
+		if( filename.toLowerCase().indexOf( 'http' ) != 0 )
+		{
+			if ( !directPath )
+			{
+			var descriptor = this.aoz.filesystem.getFile( filename, { mustExist: true, asset: true } );
+			filename = descriptor.path;
+		}
+		}
+		else
+		{
+			this.isHttp = true;
+		}
+		var self = this;
+		switch( ext.toLowerCase() )
+		{
+			case 'ttf':
+			case 'woff':
+			case 'woff2':
+			case 'eot':
+			
+				if( self.arrFonts && self.arrFonts[ number ] )
+				{
+					this.load_done = true;
+					return;
+				}
+				
+				var cssFont = document.createElement( 'style' );
+				cssFont.setAttribute( 'type', 'text/css' );
+				
+				cssCode = "@font-face {\r\n";
+				cssCode += "font-family: '" + number + "';\r\n";
+				if( ext.toLowerCase() == 'eot' )
+				{
+					cssCode += "src: url('" + filename + "?#iefix') format('embedded-opentype');\r\n"
+				}
+				
+				if( ext.toLowerCase() == 'ttf' )
+				{
+					cssCode += "src: url('" + filename + "') format('truetype');\r\n"
+				}
+				
+				if( ext.toLowerCase() == 'woff' )
+				{
+					cssCode += "src: url('" + filename + "') format('woff');\r\n"
+				}
+
+				if( ext.toLowerCase() == 'woff2' )
+				{
+					cssCode += "src: url('" + filename + "') format('woff2');\r\n"
+				}
+
+				cssCode += "}"
+				cssFont.innerHTML = cssCode;
+				document.body.appendChild( cssFont );
+				
+				if( self.arrFonts == undefined  )
+				{
+					self.arrFonts = {};
+				}
+				self.arrFonts[ number ] = number;
+		
+				application.aoz.fonts.fontInformations.push(
+				{
+					contextNames: 
+					{
+						application: true,
+						ext_debugging: true
+					},
+					fonts:
+					{
+						index: number,
+						name: number,
+						type: 'google'
+					},
+					index: number,
+					name: number,
+					type: 'google'
+					
+				} );					
+
+				this.load_done = true;				
+				break;
+
+			case 'mod':
+			case 'xm':
+				if( self.isHttp )
+				{
+					throw "http_not_supported_by_format";
+				}			
+				this.aoz.extensionTracker.load( [ filename, number ] );
+				this.aoz.extensionTracker.load_done = true;
+				this.load_done = true;
+				self.assetLoaded( filename );
+				break;
+
+			case 'htm':
+			case 'html':
+			case 'xhtml':
+			case 'dhtml':
+				var self = this;	
+				if( self.isHttp )
+				{
+					throw "http_not_supported_by_format";
+				}
+
+				if( self.arrHTML && self.arrHTML[ 'html_' + number ] )
+				{
+					self.assetLoaded( filename );
+					self.load_done = true;
+					return;							
+				}
+				var xhttp = new XMLHttpRequest();
+
+				xhttp.onreadystatechange = function()
+				{
+				    if( this.readyState == 4 && this.status == 200 )
+					{
+						try
+						{
+				        	var html = this.responseText;
+							if( self.arrHTML == undefined )
+							{
+								self.arrHTML = {};
+							}
+							self.arrHTML[ 'html_' + number ] = html;
+							self.assetLoaded( filename );
+							self.load_done = true;
+						}
+						catch( e )
+						{
+							self.assetError( filename, "Invalid HTML format.");
+							throw 'html_wrong_format';
+						}
+				    }
+				};
+				xhttp.open("GET", filename + '?update=' + Date.now(), true);
+				xhttp.send()
+				break;
+
+			case 'js':
+				var script = document.createElement( 'script' );
+				script.setAttribute( 'type', 'text/javascript' );
+				var self = this;
+				if( self.isHttp )
+				{
+					script.setAttribute( 'src', filename );
+					document.getElementsByTagName( "head" )[ 0 ].appendChild( script );
+					self.assetLoaded( filename );
+					self.load_done = true;
+				}	
+				else
+				{
+						
+					var xhttp = new XMLHttpRequest();
+					xhttp.onreadystatechange = function()
+					{
+						if( this.readyState == 4 && this.status == 200 )
+						{
+							try
+							{
+								var js = this.responseText;
+								script.innerHTML = js;
+								document.body.appendChild( script );
+								self.assetLoaded( filename );
+								self.load_done = true;
+							}
+							catch( e )
+							{
+								self.assetError( filename, "Invalid HTML format.");
+								throw 'html_wrong_format';
+							}
+						}
+					};
+					xhttp.open("GET", filename + '?update=' + Date.now(), true);
+					xhttp.send();
+				}
+				break;
+
+			case 'css':
+				var link = document.createElement( 'link' );
+				link.setAttribute( 'type', 'text/css' );
+				link.setAttribute( 'rel', 'stylesheet' );
+				link.setAttribute( 'href', filename + '?update=' + Date.now() );
+				document.getElementsByTagName( "head" )[ 0 ].appendChild( link );
+				this.load_done = true;
+				self.assetLoaded( filename );
+				break;
+
+			case 'json':
+			case 'sfx':
+				var self = this;
+				if( self.isHttp )
+				{
+					throw "http_not_supported_by_format";
+				}
+
+				if( self.arrJSON && self.arrJSON[ 'json_' + number ] )
+				{
+					self.assetLoaded( filename );
+					self.load_done = true;
+					return;							
+				}
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function()
+				{
+				    if( this.readyState == 4 && this.status == 200 )
+					{
+						self.load_done = true;
+						try
+						{
+				        	json = JSON.parse( this.responseText );
+							if( self.arrJSON == undefined )
+							{
+								self.arrJSON = {};
+							}
+							self.arrJSON[ 'json_' + number ] = json;
+
+							if( self.aoz.JSON )
+							{
+								self.aoz.JSON.root = json;
+							}
+							self.assetLoaded( filename );
+
+						}
+						catch( e )
+						{
+							self.assetError( filename, "Invalid JSON format.");
+							throw 'json_wrong_format';
+						}
+				    }
+				};
+				xhttp.open("GET", filename + '?update=' + Date.now(), true);
+				xhttp.send()
+				break;
+
+			case 'sprite':
+				var self = this;
+				if( self.isHttp )
+				{
+					throw "http_not_supported_by_format";
+				}
+
+				if( self.arrSpriteSheet && self.arrSpriteSheet[ 'spr_' + number ] )
+				{
+					self.assetLoaded( filename );
+					self.load_done = true;
+					return;							
+				}			
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function()
+				{
+				    if( this.readyState == 4 && this.status == 200 )
+					{
+						self.load_done = true;
+						try
+						{
+				        	json = JSON.parse( this.responseText );
+							if( json.images )
+							{
+								var dirname = filename.match(/(.*)[\/\\]/)[1]||'';
+								for( var i = 0; i < json.images.length; i++ )
+								{
+									console.log( json.images[ i ] );
+									json.images[ i ] = dirname + "/" + json.images[ i ];
+									console.log( json.images[ i ] );
+								}
+							}
+							
+							if( self.arrSpriteSheet == undefined )
+							{
+								self.arrSpriteSheet = {};
+							}
+							var spritesheet = new createjs.SpriteSheet( json );
+							spritesheet.realFramerate = json.framerate;
+							self.arrSpriteSheet[ 'spr_' + number ] = spritesheet;
+							self.assetLoaded( filename );
+						}
+						catch( e )
+						{
+							self.assetError( filename, "Invalid Sprite Sheet format.");
+							throw 'json_wrong_format';
+						}
+				    }
+				};
+				xhttp.open("GET", filename + '?update=' + Date.now(), true);
+				xhttp.send()
+				break;
+
+			case 'jpg':
+			case 'jpeg':
+			case 'png':
+			case 'gif':
+			case 'svg':
+			case 'bmp':
+				var self = this;			
+				if( self.aoz.ASSET.arrImages && self.aoz.ASSET.arrImages[ 'image_' + number ] )
+				{
+					self.assetLoaded( filename );
+					self.load_done = true;
+					return;							
+				}			
+				var image = new Image();
+				image.onload = function()
+				{
+					if( self.aoz.ASSET.arrImages == undefined )
+					{
+						self.aoz.ASSET.arrImages = {};
+					}
+					self.aoz.ASSET.arrImages[ 'image_' + number ] = image;
+					
+					var ncanvas = document.createElement( 'canvas' );
+					ncanvas.width = this.width;
+					ncanvas.height = this.height;
+					var nctx = ncanvas.getContext( '2d' );
+					nctx.drawImage( this, 0, 0 );
+					
+					self.aoz.ASSET.banks.insertImage( 'images', number, undefined, undefined, self.aoz.currentContextName, undefined, ncanvas );
+					self.load_done = true;
+					self.assetLoaded( filename );
+				}
+
+				image.onerror = function()
+				{
+					self.load_error = 'file_not_found';
+				}
+
+				image.src = filename + '?update=' + Date.now();
+
+				break;
+
+			case 'iff':
+			case 'ilbm':
+				var self = this;
+				if( self.isHttp )
+				{
+					throw "http_not_supported_by_format";
+				}
+
+				if( self.aoz.ASSET.arrImages && self.aoz.ASSET.arrImages[ 'image_' + number ] )
+				{
+					self.assetLoaded( filename );
+					self.load_done = true;
+					return;							
+				}
+				var iffCanvas = document.createElement( 'canvas' );
+				iffCanvas.width = 320;
+				iffCanvas.height = 256;
+				var iff = new IffContainer( '', iffCanvas );
+				var self = this;
+
+				var xhr = new XMLHttpRequest();
+				xhr.open( 'GET', filename + '?update=' + Date.now(), true );
+				xhr.responseType = 'arraybuffer';
+
+				onFinishedDelegate = function( iff )
+				{
+					if( self.aoz.ASSET.arrImages == undefined )
+					{
+						self.aoz.ASSET.arrImages = {};
+					}
+					self.aoz.ASSET.arrImages[ 'image_' + number ] = iff.canvas;
+					self.aoz.ASSET.banks.insertImage( 'images', number, undefined, undefined, self.aoz.currentContextName, undefined, iff.canvas );
+					self.load_done = true;
+					self.assetLoaded( filename );
+				};
+
+				xhr.onload = function( event )
+				{
+					iff.arrayBuffer = xhr.response;
+					if( iff.arrayBuffer && xhr.status < 400 )
+					{
+						parseIffChunk( iff, 0, iff.arrayBuffer.byteLength );
+						drawIffImage( iff );
+						if( iff.color_animations.length > 0 && animate )
+						{
+							iff.startColorCycling();
+						}
+
+						if( onFinishedDelegate )
+						{
+							switch( typeof onFinishedDelegate )
+							{
+								case 'function':
+									onFinishedDelegate( iff );
+									break;
+
+								case 'string':
+									eval( onFinishedDelegate );
+									break;
+							}
+						}
+					} else {
+						self.assetError( filename, "Invalid IFF/ILBM format.");
+						reportError( xhr, path, iff.canvas );
+					}
+				}
+				xhr.send();
+				break;
+
+			case 'mp3':
+			case 'wav':
+			case 'ogg':
+			case 'wma':
+				var self = this;
+				if( self.aoz.ASSET.arrAudios && self.aoz.ASSET.arrAudios[ 'audio_' + number ] )
+				{
+					self.assetLoaded( filename );
+					self.load_done = true;
+					return;							
+				}				
+				if( self.aoz.ASSET.arrAudios == undefined )
+				{
+					self.aoz.ASSET.arrAudios = {};
+					self.aoz.ASSET.arrAudioNames = new Array();
+				}
+				
+				var audio = new Audio( filename + '?update=' + Date.now() );
+				
+				audio.addEventListener( 'loadeddata', ( event ) => {
+					self.aoz.ASSET.arrAudioNames.push( 'audio_' + number );
+					self.aoz.ASSET.arrAudios[ 'audio_' + number ] =	audio;
+					self.assetLoaded( filename );
+					self.load_done = true;
+				} )
+				;
+				audio.addEventListener( 'error', ( event ) => {
+					self.assetError( filename, "Cannot load file.");
+					self.load_error = { error: "cannot_load_file", parameter: filename };
+				} );
+
+				break;
+
+			case 'mp4':
+			case 'mpeg4':
+			case 'avi':
+			case 'wmv':
+			case 'ogv':
+			case 'webm':
+				var self = this;
+				if( self.aoz.ASSET.arrVideos && self.aoz.ASSET.arrVideos[ 'video_' + number ] )
+				{
+					self.assetLoaded( filename );
+					self.load_done = true;
+					return;							
+				}
+				var video = document.createElement( 'video' );
+				video.setAttribute( 'volume', '1.0' );
+				video.setAttribute( 'preload', 'auto' );
+				video.setAttribute( 'src', filename + '?update=' + Date.now() );
+
+				if( this.aoz.ASSET.arrVideos == undefined )
+				{
+					this.aoz.ASSET.arrVideos = {};
+				}
+
+				video.oncanplay = function()
+				{
+					this.loaded = true;
+					this.isPlaying = false;
+					self.load_done = true;
+					self.assetLoaded( filename );
+					clearTimeout( self.timeoutHandle );
+				};
+
+				this.aoz.ASSET.arrVideos[ 'video_' + number ] = video;
+
+				self.timeoutHandle = setTimeout( function()
+				{
+					self.assetError( filename, "Cannot load file.");
+					self.load_error = 'file_not_found';
+				}, self.timeOut );
+				break;
+
+			case 'obj':
+			case 'fbx':
+			case 'dae':
+			case 'gltf':
+			case 'aoz3d':
+				var self = this;
+				if( self.aoz.ASSET.arrScenes && self.aoz.ASSET.arrScenes[ 'scene_' + number ] )
+				{
+					self.assetLoaded( filename );
+					self.load_done = true;
+					return;							
+				}			
+				if( this.aoz.ASSET.arrScenes == undefined )
+				{
+					this.aoz.ASSET.arrScenes = {};
+				}
+
+				if( ext == 'gltf' )
+				{
+					var loader = new THREE.GLTFLoader();
+				}
+
+				if( ext == 'obj' )
+				{
+					loader = new THREE.OBJLoader();
+				}
+
+				if( ext == 'fbx' )
+				{
+					loader = new THREE.FBXLoader();
+				}
+
+				if( ext == 'dae' )
+				{
+					loader = new THREE.ColladaLoader();
+				}
+
+				if( ext == 'aoz3d' )
+				{
+					loader = new THREE.ObjectLoader();
+				}
+
+				this.ext = ext;
+				this.number = number;
+				var self = this;
+
+				loader.load( filename + '?update=' + Date.now(), function ( _model )
+				{
+					
+					if( self.arrScenes == undefined )
+					{
+						self.arrScenes = {};
+					}
+
+					if( ext == 'aoz3d' )
+					{
+						self.arrScenes[ 'scene_' + number ] = _model;
+						var xhr = new XMLHttpRequest();
+						xhr.onload = function( progressEvent )
+						{
+							var json = JSON.parse( xhr.responseText );
+							self.arrScenes[ 'scene_' + number ].aozEvents = json.object.aozEvents;							
+						};
+						var async = true;
+						xhr.open( "GET", filename + '?update=' + Date.now(), async );
+						xhr.send();
+					}
+
+					if( ext == 'gltf' || ext == 'dae' )
+					{
+						self.arrScenes[ 'scene_' + number ] = _model.scene;
+					}
+
+					if ( ext == 'obj' || ext == 'fbx' )
+					{
+						if( _model && _model.scene )
+						{
+							self.arrScenes[ 'scene_' + number ] = _model.scene;
+						}
+						else
+						{
+							var scene = new THREE.Scene();
+							if( _model.children )
+							{
+								for( var c = 0; c < _model.children.length; c++ )
+								{
+									scene.add( _model.children[ c ] );
+								}
+							}
+							else
+							{
+								scene.add( _model );
+							}
+							self.arrScenes[ 'scene_' + number ] = scene;
+						}
+					}
+
+					if( _model.animations )
+					{
+						self.arrScenes[ 'scene_' + number ].animations = _model.animations;
+						self.arrScenes[ 'scene_' + number ].mixer = undefined;
+					}
+
+
+					self.arrScenes[ 'scene_' + number ].ext = ext;
+					self.load_done = true;
+					self.assetLoaded( filename );
+				}, undefined, function ( error )
+				{
+					self.assetError( filename, "Cannot load file.");
+					self.load_done = true;
+				});
+				break;
+		}
+	}
+
+	// Get a value from JSON loaded by the "Load Asset" command
+	this.getAssetProperty = function( index, path )
+	{
+		if( this.aoz.ASSET && this.aoz.ASSET.arrJSON && this.aoz.ASSET.arrJSON[ 'json_' + index ] )
+		{
+			var value = eval( 'this.aoz.ASSET.arrJSON[ \'json_\' + index ].' + path );
+			if( value == undefined )
+			{
+				return "";
+			}
+			return value;
+		}
+		throw 'json_index_not_opened';
+	}
+
+	this.assetLoaded = function( filename )
+	{
+		var self = this;
+		if( this.onLoadProcName != undefined && this.onLoadProcName != '' )
+		{
+			self.aoz.runProcedure( self.onLoadProcName, { FILENAME$: filename } );
+		}
+	}
+
+	this.assetError = function( path, message )
+	{
+		var self = this;
+		if( this.onErrorProcName != undefined && this.onErrorProcName != '' )
+		{
+			self.aoz.runProcedure( self.onErrorProcName, { PATH$: path, MESSAGE$: message } );
+		}
+	}
+
+	this.isAssetLoaded = function( index, type )
+	{
+		if( index == undefined || index == '' )
+		{
+			throw "asset_index_not_defined";
+		}
+		
+		var result = false;
+		switch( type.toLowerCase() )
+		{
+			case 'image':
+				result = ( this.arrImages != undefined && this.arrImages[ 'image_' + index ] != undefined );
+				break;
+				
+			case 'spritesheet':
+				result = ( this.arrSpriteSheet != undefined && this.arrSpriteSheet[ 'spr_' + index ] != undefined );
+				break;
+				
+			case 'audio':
+				result = ( this.arrAudios != undefined && this.arrAudios[ 'audio_' + index ] != undefined );
+				break;
+				
+			case 'video':
+				result = ( this.arrVideos != undefined && this.arrVideos[ 'video_' + index ] != undefined );
+				break;
+				
+			case '3d':
+				result = ( this.arrScenes != undefined && this.arrScenes[ 'scene_' + index ] != undefined );
+				break;
+			
+			case 'json':
+				result = ( this.arrJSON != undefined && this.arrJSON[ 'json_' + index ] != undefined );
+				break;
+				
+		}
+		return result;
+	}
+
+	this.load_wait = function()
+	{
+		if ( this.load_error )
+		{
+			var error = this.load_error;
+			this.load_error = null;
+			throw error;
+		}
+		return this.load_done;
+	};
+
+}
+
+/**doc
+@name:Asset
+@description:Some commands to simplify the loading of different file formats.
+@author:Baptiste Bideaux
+doc*/
+
+/**api
+@name:Load Asset Listener
+@description:Définit les procédures AOZ a appeler lors du chargement des Assets
+@param:onLoad$:string:Nom de la procédure AOZ qui sera appelée lorsqu'un Asset a été chargé avec succès.
+@param:onLoad$:string:Nom de la procédure AOZ qui sera appelée lorsqu'une erreur s'est produite lors du chargement d'un asset.
+@content:
+api*/
+Instruction Load Asset Listener, onLoad$="", onError$=""
+{
+	#errors
+	this.aoz.ASSET.onLoadProcName = %onLoad$;
+	this.aoz.ASSET.onErrorProcName = %onError$;
+}
+End Instruction
+
+/**api
+@name:Load Asset
+@description:Load an external file for Image, Audio, video or JSON. If the file is an image, it can be used with the "Bob" command.
+@param:path$:string:Name of the file to load.
+@param:index:index:Index associated at
+@content:
+~~~
+	Rem Load an image from the "resources/assets/images" folder, and store it in the image bank at 1
+	Load Asset "resources/assets/images/hero.png", 1
+
+	Rem Show the loaded image as Bob 1
+	Bob 1, 100,100, 1
+~~~
+
+api*/
+Instruction Load Asset, path$, index=(index), directPath = False
+{
+	#errors
+	#waiting
+	#addToFilesystem:"asset:%path$"
+	return{type:12,waitThis:this.aoz.ASSET,callFunction:"loadAsset", waitFunction:"load_wait", args:[%path$,%index,%directPath]};
+}
+End Instruction
+
+
+/**api
+@name:Del Asset
+@description:Delete an asset from the memory.
+@param:type$:string:Type of asset to delete. Must be "image", "audio", "video" or "json".
+@param:index:index:Index of asset to delete
+@exception:Asset not exists.
+@content:
+
+~~~
+
+~~~
+
+api*/
+Instruction Del Asset, type$, index=(index)
+	{
+        #errors
+		switch( %type$.toLowerCase() )
+		{
+			case 'json':
+				if( this.aoz.ASSET.arrJSON[ 'json_' + %index ] )
+				{
+					this.aoz.ASSET.arrJSON[ 'json_' + %index ] = undefined;
+				}
+				break;
+			case 'image':
+				if( this.aoz.ASSET.arrImages[ 'image_' + %index ] )
+				{
+					this.aoz.ASSET.arrImages[ 'image_' + %index ] = undefined;
+					this.aoz.banks.deleteImage('images', %index);
+				}
+				break;
+
+			case 'audio':
+				if( this.aoz.ASSET.arrAudios[ 'audio_' + %index ] )
+				{
+					this.aoz.ASSET.arrAudios[ 'audio_' + %index ] = undefined;
+				}
+				break;
+
+			case 'video':
+				if( this.aoz.ASSET.arrVideos[ 'video_' + %index ] )
+				{
+					this.aoz.ASSET.arrVideos[ 'video_' + %index ] = undefined;
+				}
+				break;
+
+			case 'scene':
+			case 'model':
+				if( this.aoz.ASSET.arr3DObjects[ 'TD_' + %index ] )
+				{
+					this.aoz.ASSET.arr3DObjects[ 'TD_' + %index ] = undefined;
+				}
+				break;
+
+		}
+
+	}
+End Instruction
+
+/**api
+@name:JSON Asset Property
+@description:Get a numeric value from the JSON file loaded with the "Load Asset" command
+@param:index:index:Index of the asset
+@param:path$:string:Formatted string indicating the path to the property
+@return:number:The value from the property
+@content:
+
+~~~
+
+~~~
+
+api*/
+Function JSON Asset Property, index=(index), path$
+{
+	#errors
+}
+End Function( { aoz.ASSET.getAssetProperty( %index, %path$ ) } )
+
+/**api
+@name:JSON Asset Property$
+@description:Get a string value from the JSON file loaded with the "Load Asset" command
+@param:index:index:Index of the asset
+@param:path$:string:Formatted string indicating the path to the property
+@return:number:The string from the property
+@content:
+
+~~~
+
+~~~
+
+api*/
+Function JSON Asset Property$, index=(index), path$
+{
+	#errors
+}
+End Function( { aoz.ASSET.getAssetProperty( %index, %path$ ) } )
+
+/**api
+@name:Asset Loaded
+@description:Return True if an asset has been loaded with the "Load Asset" command, else False
+@param:index:index:Index of the asset
+@param:type$:string:Type of asset (may be "image", "module", "audio", "video", "spritesheet", "3d", "map")
+@return:number:The string from the property
+@content:
+
+~~~
+
+~~~
+
+api*/
+Function Asset Loaded, Index=(index), Type$=""
+{
+	#errors
+}
+End Function( { aoz.ASSET.isAssetLoaded( %Index, %Type$ ) } )

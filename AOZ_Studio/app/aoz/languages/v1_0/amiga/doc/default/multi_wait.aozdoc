@@ -1,0 +1,12 @@
+<i>Multi Wait</i>
+<b>Multi Wait</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The MULTI WAIT instruction should be used in the main loop of an AMOS Professional program. It forces a
+multi-task WAIT VBL for situations such as waiting for a menu item to be selected.
+
+This command should not be used to achieve accurate screen synchronisation, as it has been specifically provided
+for multi-tasking and may skip several vertical blank periods, depending on the number of tasks being run
+simultaneously.
+

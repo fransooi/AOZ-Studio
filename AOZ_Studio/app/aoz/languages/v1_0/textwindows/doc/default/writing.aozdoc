@@ -1,0 +1,23 @@
+<i>Writing</i>
+<b>Writing</b> xxxxxxx
+=
+The WRITING command is used to control how the subsequent text interacts with what is already on the screen,
+and it can be followed by either one or two values.The first value selects one of five writing modes:
+@code
+Value 	Mode 		Effect
+0 	REPLACE 	New text replaces any existing screen data
+1 	OR 		Merge new text with screen data, using logical OR
+2 	XOR 		Combine new text with screen data, using OR
+3 	AND 		Combine new text and screen data, using logical AND
+4 	IGNORE 		Ignore all subsequent printing instructi
+@code
+A number set as the optional second value selects which parts of the text are to be printed on the screen, as follows:
+@code
+Value 	Mode		Effect
+0 	Normal 		Print text and background together
+1 	Paper 		Only the background to be drawn on screen
+2 	Pen 		Ignore paper colour and print text on background colour zero
+@code
+The default value for both of the WRITING parameters is zero, giving normal printed output.
+
+

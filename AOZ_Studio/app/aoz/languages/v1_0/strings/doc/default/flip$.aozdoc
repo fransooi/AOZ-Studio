@@ -1,0 +1,8 @@
+<i>Flip$</i>
+<b>Flip$</b> xxxxxxx
+=
+This function simply reverses the order of the characters held in an existing string. For example:
+@code
+Print Flip$("SOMA gnippilf")
+@code
+

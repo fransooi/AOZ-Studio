@@ -1,0 +1,51 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Instructions Module Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"				// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "The Sfxr Extension"
+		author: "By Francois Lionet"
+		version: "Version 1.00"
+		date: "27/05/2021"
+		copyright: "(c) AOZ Studio 2019-2022"
+		start: "sfxr.aoz"
+		name: "sfxr"
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+				"sfx_not_defined: Sound effect not defined (%1)",
+				"sfx_type_not_defined: Sound effect type not defined (%1)",
+				"effect_property_not_found: Sound effect property not found (%1)"
+			]
+			fr:
+			[
+				"sfx_not_defined: Effet sonore non defini (%1)",
+				"sfx_type_not_defined: Type d'effet sonore non defini (%1)",
+				"effect_property_not_found: Propriete d'effet sonore non definie (%1)"
+			]
+		}
+	}
+}

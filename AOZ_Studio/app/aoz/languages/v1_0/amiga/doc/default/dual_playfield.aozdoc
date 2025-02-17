@@ -1,0 +1,40 @@
+<i>Dual Playfield</i>
+<b>Dual Playfield</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The DUAL PLAYFIELD mode is the equivalent of mixing together two images from separate video cameras, and is
+achieved by displaying two screens simultaneously at the same x,y- coordinates. Each of the two screens can be
+manipulated completely independently from one other, and this can be exploited to produce very smooth parallax
+scrolling. Because the sizes of the two screens can be different, a smaller screen can be scrolled against a larger
+background screen, creating the parallax effect.
+
+The two components of this dual playfield are treated as any other AOZ Studio screen, and they can even be
+double buffered or animated with AMAL.
+
+To create a dual playfield screen, simply give the command, followed by the two numbers of the relevant screens,
+which have already been defined using SCREEN OPEN. Both screens must have the same resolution, and there are
+some restrictions on the number of colours allowed. Here is a table of the possibilities:
+@code
+1st Screen 	2nd Screen 	Resolution of both screens
+2 colours 	2 colours 	Lowres or Hires
+4 colours 	2 colours 	Lowres or Hires
+4 colours 	4 colours 	Lowres or Hires
+8 colours 	4 colours 	Lowres only
+8 colours 	8 colours 	Lowres only
+@code
+The colours of these screens are taken from the palette of the first screen with colour zero being IF treated as
+transparent. The first screen makes use of colours zero to 7, while the second screen uses 8 to 15. When you are
+drawing to the second screen, AOZ Studio will automatically convert the colour index to the appropriate
+number before using it. This means that colours zero to 7 of the second screen's palette will use colours 8 to 15 of
+the first screen's palette, in ascending order.
+
+Always make the first screen the current screen when changing the colour settings.
+
+Remember that the automatic conversion process does not apply to assignment statements such as COLOUR or
+PALETTE.
+
+When using SCREEN OFFSET to position a dual playfield screen, always specify the first screen, and never set
+screen offsets for both dual playfield screens to zero.
+
+

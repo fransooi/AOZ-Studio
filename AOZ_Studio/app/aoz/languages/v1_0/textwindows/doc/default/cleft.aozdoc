@@ -1,0 +1,5 @@
+<i>CLeft</i>
+<b>CLeft</b> xxxxxxx
+=
+Cursor will wrap to the right and up if it was located at position zero, and eventual generate a scrolling down of the content of the window if scrolling is enabled.
+

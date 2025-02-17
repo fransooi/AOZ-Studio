@@ -1,0 +1,13 @@
+<i>Get CBlock</i>
+<b>Get CBlock</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The GET CBLOCK command is used to save and compact a rectangular area of graphics from the screen. These
+Blocks are often used to grab the area underneath dialogue boxes, so that after the dialogue has been completed, the
+screen can be rapidly restored to its original state.
+
+Specify the Block number from 1 to 65535, followed by the x,y-coordinates of its top left-hand corner. Then define
+the Block by giving its width and height, in pixels. Note that the x- coordinate, and the width of the Block will be
+rounded to the nearest multiple of eight pixels.
+

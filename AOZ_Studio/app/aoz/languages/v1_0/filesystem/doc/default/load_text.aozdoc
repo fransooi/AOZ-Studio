@@ -1,0 +1,17 @@
+<i>Load Text</i>
+<b>Load Text</b> xxxxxxx
+=
+This instruction loads a text into a string. The format of the text should be UTF-8. This instruction loads the text in one block, without affecting cariage return.
+@code
+// A very simple text viewer
+file$ = Dir First$( "*.png" )
+text$ = ""
+While file$ <> ""
+Load Text file$, text$
+Print text$
+Wait Key
+file$ = Dir Next$
+Cls
+Wend
+@code
+

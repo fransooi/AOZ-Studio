@@ -1,0 +1,14 @@
+<i>Def Fn</i>
+<b>Def Fn</b> xxxxxxx
+=
+To create a user-defined function, give it a name and follow the name with a list of variables. These variables must
+be held inside a pair of round brackets, and separated from one another by commas, like these examples:
+@code
+Def Fn NAME$(A$)=LOWER$(A$)
+Def Fn X(A,B,C)=A*B*C
+@code
+When a user-defined function is called up my variables that are entered with it will be substituted in the appropriate
+positions.
+
+DEF FN is a legacy instruction from the AMOS and STOS. We suggest to use the INSTRUCTION token instead.
+

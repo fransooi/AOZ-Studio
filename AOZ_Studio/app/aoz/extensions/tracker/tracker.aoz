@@ -1,0 +1,906 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Track Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 20/02/2020
+ */
+#include_javascript:"modplayer/bassoonplayer-min.js"
+#splashWaitSounds:true
+
+#noWarning:"instruction_not_implemented"
+
+{
+	this.aoz.extensionTracker = this;
+    this.module_isLoop = false;
+    this.load_done = true;
+    this.load_parameter = '';
+    this.load_error = undefined;
+    this.lastPlay = -1;
+    this.startTime = undefined;
+    this.lastState = undefined;
+    this.smoothingTimeConstant = 0.01;
+    this.initialized = true;
+	this.arrMOD = undefined;
+	BassoonTracker.init( true );
+	
+    this.supportedformats=new Array('mod', 'xm');
+
+    this.load = function(args)
+    {
+
+        if(typeof args == 'undefined')
+        {
+            return;
+        }
+
+        var moduleName = args[0];
+        var bankNumber = args[1];
+
+        if(typeof moduleName == 'undefined' || moduleName == '')
+        {
+            throw 'module_missing';
+        }
+
+		// Si bankNumber est une chaine
+		if( typeof bankNumber == 'string' && bankNumber != '' )
+		{
+			if( this.arrMOD == undefined )
+			{
+				this.arrMOD = {};
+			}
+			this.arrMOD[ 'mod_' + bankNumber ] = moduleName;
+			this.load_done = true;
+			return;
+		}
+
+		// Si c'est un numéro
+		if(typeof bankNumber == 'undefined' || isNaN(bankNumber) || bankNumber < 0)
+        {
+            throw { error: "invalid_bank", parameter: bankNumber };
+        }
+
+        if(bankNumber < 6)
+        {
+            throw { error: "bank_reserved", parameter: bankNumber };
+        }
+
+        var ext=moduleName.split('.').pop().toLowerCase().trim();
+        if (this.supportedformats.indexOf(ext)==-1) 
+        {
+            // unknown extension, maybe amiga-style prefix?
+            ext=moduleName.split('/').pop().split('.').shift().toLowerCase().trim();
+            if (this.supportedformats.indexOf(ext)==-1) 
+            {
+                throw { error: "format_wrong", parameter: ext };
+            }
+        }
+        var url = moduleName;
+        var descriptor = this.aoz.filesystem.getFile( url );
+        var self = this;
+        this.aoz.filesystem.loadFile( descriptor, { responseType: 'binary' }, function( response, data, extra )
+        {
+            if ( !response )
+            {
+                this.load_error  = 'cannot_load_file';
+                this.load_parameter = descriptor.path;
+            }
+            else
+            {
+                var block = self.aoz.allocMemoryBlock( data, self.aoz.manifest.compilation.endian );
+                block.moduleName = moduleName;
+                var bank = self.aoz.banks.reserve( bankNumber, 'tracker' );
+                bank.setElement( 1, block );
+                self.aoz.banks.updateBank( bank, bank.index, self.aoz.currentContextName );
+            }
+            self.load_done = true;
+        });
+    };
+
+	this.load_wait = function()
+	{
+        if ( this.load_done )
+        {
+            this.load_done = false;
+            var load_error = this.load_error;
+            var load_parameter = this.load_parameter;
+            this.load_error = undefined;
+            this.load_parameter = '';
+            if ( this.load_error )
+                throw { error: load_error, parameter: load_parameter };
+            return true;
+        }
+		return false;
+	};
+
+    this.trackLoop = function(_repeat)
+    {
+        self.module_isLoop = _repeat;
+    };
+
+    this.play = function(bankNumber, patternNumber)
+    {	
+		// Si bankNumber est une chaine
+		if( typeof bankNumber == 'string' && this.arrMOD != undefined && this.arrMOD[ 'mod_' + bankNumber ] != undefined )
+		{
+
+			if(this.lastPlay && this.lastPlay > -1)
+			{
+				if( BassoonTracker.isPlaying() )
+				{
+					BassoonTracker.stop();
+				}
+			}
+			var self = this;
+            var descriptor = this.aoz.filesystem.getFile( this.arrMOD[ 'mod_' + bankNumber ] );            
+			BassoonTracker.load( descriptor.dir + "/" + descriptor.filename + "." + descriptor.extension, false, function()
+			{
+				if( patternNumber > ( BassoonTracker.getSong().length - 1 ) )
+				{
+					patternNumber = 0;
+				}
+				BassoonTracker.setCurrentSongPosition(patternNumber);
+				BassoonTracker.playSong();
+				self.startTime = new Date().getTime();
+				self.lastPlay = bankNumber;
+			} );
+			this.load_done = true;
+			return;
+		}
+	
+		// Si bankNumber est un nombre
+        if(typeof bankNumber == 'undefined' || isNaN(bankNumber) || bankNumber < 0)
+        {
+            throw { error: "bank_reserved", parameter: bankNumber };
+        }
+
+        if(bankNumber < 6)
+        {
+            throw { error: 'bank_reserved', parameter: bankNumber };
+        }
+		
+        if(typeof patternNumber == 'undefined' || isNaN(patternNumber) || patternNumber < 0)
+        {
+            patternNumber = 0;
+        }
+		
+        if(!this.initialized)
+        {
+        	BassoonTracker.init(true);
+            this.initialized = true;
+        }
+		
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            if( BassoonTracker.isPlaying() )
+            {
+                BassoonTracker.stop();
+            }
+        }
+
+        var bank = this.aoz.banks.getBank( bankNumber, this.aoz.currentContextName, 'tracker' );
+        var block = bank.getElement( 1 );
+        var self = this;
+        this.load_done = false;
+        var blobUrl = block.getBlobUrl();
+        BassoonTracker.load(blobUrl, block.moduleName, function()
+        {
+            if(patternNumber > (BassoonTracker.getSong().length - 1))
+            {
+                patternNumber = 0;
+            }
+            BassoonTracker.setCurrentSongPosition(patternNumber);
+            BassoonTracker.playSong();
+            self.startTime = new Date().getTime();
+            self.lastPlay = bankNumber;
+            self.load_done = true;
+        });
+    };
+
+    this.stop = function()
+    {
+//        if(this.lastPlay && this.lastPlay > -1)
+//        {
+//            if( BassoonTracker.isPlaying() )
+//            {
+                BassoonTracker.stop();
+//            }
+//        }
+
+    };
+
+    this.pause = function()
+    {
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            if( BassoonTracker.isPlaying() )
+            {
+                BassoonTracker.togglePlay();
+            }
+        }
+    };
+
+    this.resume = function()
+    {
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            if( !BassoonTracker.isPlaying() )
+            {
+                BassoonTracker.playSong();
+            }
+        }
+    };
+
+    this.title = function()
+    {
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            return BassoonTracker.getSong().title;
+        }
+    };
+
+    this.signature = function()
+    {
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            var s = BassoonTracker.getSong().typeId;
+            switch(s)
+            {
+                case "M.K.":
+                case "M!K!":
+                case "4CHN":
+                case "FLT4":
+                case "8CHN":
+                case "FLT8":
+                case "6CHN":
+                case "28CH":
+					BassoonTracker.getSong().formatType = 'mod';
+                    s = 'ProBassoonTracker (MOD)';
+                    break;
+
+                default:
+					BassoonTracker.getSong().formatType = 'xm';
+                    s = 'FastBassoonTracker (XM)';
+                    break;
+            }
+            return s;
+        }
+    };
+
+    this.length = function()
+    {
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            return BassoonTracker.getSong().length;
+        }
+    };
+
+    this.channels = function()
+    {
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            return BassoonTracker.getTrackCount();
+        }
+    };
+
+    this.position = function()
+    {
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            var time = new Date().getTime() - this.startTime;
+			var state = BassoonTracker.getStateAtTime(time);
+            if(state)
+            {
+                this.lastState = state;
+			    return state.songPos;
+            }
+            else
+            {
+                if( this.lastState )
+                {
+    			    return this.lastState.songPos;
+                }
+            }
+        }
+    };
+
+    this.row = function()
+    {
+        if(this.lastPlay && this.lastPlay > -1)
+        {
+            var time = new Date().getTime() - this.startTime;
+			var state = BassoonTracker.getStateAtTime(time);
+            if(state)
+            {
+                this.lastState = state;
+			    return state.patternPos;
+            }
+            else
+            {
+                if( this.lastState )
+                {
+    			    return this.lastState.patternPos;
+                }
+            }
+        }
+    };
+
+    this.volume = function( volume )
+    {
+        if( volume < 0 || volume > 100 )
+        {
+            volume = 100;
+        }
+
+        if(this.initialized)
+        {
+            Audio.setMasterVolume(Math.round((64/100) * volume),0)
+        }
+    };
+
+    this.samPlay = function( sampleIndex, sampleRate, volume )
+    {
+        if(this.initialized)
+        {
+            if( volume < 0 || volume > 100 )
+            {
+                volume = 100;
+            }
+
+
+
+			if( typeof( sampleRate ) == 'undefined' || isNaN( sampleRate ))
+			{
+				this.signature();
+				if( typeof( BassoonTracker.getSong().formatType ) == 'undefined' || BassoonTracker.getSong().formatType == 'mod' )
+				{
+					sampleRate = 72;
+				}
+
+				if( BassoonTracker.getSong().formatType == 'xm' )
+				{
+					sampleRate = 3600;
+				}
+			}
+
+            Audio.playSample(sampleIndex, sampleRate, Math.round((64/100) * volume));
+        }
+    };
+
+    this.pattern = function( pattern )
+    {
+        if(this.initialized)
+        {
+            BassoonTracker.setCurrentSongPosition(pattern);
+        }
+    };
+}
+
+/**doc
+@name:Sound Track and Med musics
+@description:You can play music and sound effects inside your AOZ programs, using the old MOD and XM file formats.
+@description:The main advantage of this type of file is its small size. You can store music on several voices as well as sound effects. The AOZ instructions allow you to load and play your files.
+@description:AOZ uses the BassoonBassoonTracker Javascript library from Steffest, available under the MIT license.
+@description:Github: https://github.com/steffest/BassoonBassoonTracker
+@keywords:music,audio,sound,sample,sfx,module,med,mod,xm,tracker,protracker,octamed,soundtracker,fasttracker
+@author:Baptiste Bideaux
+@since:0.9.5
+@last:0.9.5.1
+doc*/
+
+
+/**api
+@name:Track Loop On
+@description:Enable the loop playing
+@compatible: aoz, amos
+@examples:instructions:i_72
+@content:
+Use these commands to make BassoonTracker modules loop over and over again, or to stop a particular loop after it has
+commenced. Try this example:
+~~~                
+Track Load "AMOSPro_Examples:Music/Mod.BassoonTracker"
+Track Play
+Track Loop On
+~~~
+api*/
+Instruction Track Loop On
+{
+    #errors
+    aoz.extensionTracker.trackLoop(true);
+}
+End Instruction
+
+/**api
+@name:Track Loop Off
+@description:Disable the loop playing
+@compatible: aoz, amos
+@examples:instructions:i_72
+@content:
+Use these commands to make BassoonTracker modules loop over and over again, or to stop a particular loop after it has
+commenced. Try this example:
+~~~                
+Track Load "AMOSPro_Examples:Music/Mod.BassoonTracker"
+Track Play
+Track Loop Off
+~~~
+api*/
+Instruction Track Loop Off
+{
+    #errors
+    aoz.extensionTracker.trackLoop(false);
+}
+End Instruction
+
+/**api
+@name:Track Load
+@param:path$:string:The filename of the module to load
+@param:bank:index:The bank to store the module loaded
+@description:Load a module music file into a bank
+@exception:The format of the file is not supported. Only MOD and XM files are supported.
+@exception:Bank number must be greater than 6.
+@exception:The module music file not found.
+@examples:instructions:i_72
+@compatible: aoz, amos
+@content:
+Use this command to load a specified BassoonTracker module into the memory bank number of your choice. Any existing
+data in this bank will be erased before the module is loaded, and the new bank will be called "BassoonTracker".
+api*/
+Instruction Track Load, path$, bank=(index)
+    {
+        #errors
+        #waiting
+    	#addToFilesystem:"image:%path$"
+        return{type:12,waitThis:aoz.extensionTracker,callFunction:"load", waitFunction:"load_wait", args:[%path$, %bank]};
+    }
+End Instruction
+
+/**api
+@name:Track Play
+@param:bank:index:The bank number containing the loaded module
+@param:*pattern:integer:The starting pattern (0 by default)
+@description:Play a music module loaded with Track Load instruction or Load Asset instruction
+@exception:The format of the file is not supported. Only MOD and XM files are supported.
+@exception:Bank number must be greater than 6.
+@exception:The module music file not found.
+@examples:instructions:i_72
+@link:Track Load
+@seealso:Load Asset
+@compatible: aoz, amos
+@content:
+To start your BassoonTracker module playing, give this command followed by the appropriate bank number. If the bank
+number is omitted, bank number 6 will be used as a default. Most electronic composers use sets of patterns to make
+up a tune, and these can be repeated in any suitable order. A BassoonTracker sequence can be started from any one of these
+patterns, providing that you know which pattern number refers to which particular part of the sequence. An optional
+pattern number can be added after the bank number parameter. Here are some example settings:
+~~~                
+Track Play : Rem Use default BassoonTracker bank
+Track Play ,5 : Rem Play pattern 5 from default BassoonTracker bank
+Track Play 9,5: Rem Play pattern 5 from bank 9
+~~~
+api*/
+Instruction Track Play, bank=(index), pattern=0
+{
+    #errors
+    #waiting
+    aoz.extensionTracker.play(%bank, %pattern);
+}
+End Instruction
+
+/**api
+@name:Track Stop
+@description:Stop the current playing of the music module after a call of Track Play instruction
+@link:Track Play
+@compatible: aoz, amos
+@examples:instructions:i_72
+@content:
+This command is used to halt all BassoonTracker modules playing.
+api*/
+Instruction Track Stop
+{
+    #errors
+    aoz.extensionTracker.stop();
+}
+End Instruction
+
+/**api
+@name:Track Pause
+@description:Pause the current playing of the music module after a call of Track Play instruction
+@link:Track Play
+@examples:instructions:i_72
+@compatible: aoz, amos
+api*/
+Instruction Track Pause
+{
+    #errors
+    aoz.extensionTracker.pause();
+}
+End Instruction
+
+/**api
+@name:Track Resume
+@description:Continue the current playing of the music module after a call of Track Stop instruction
+@link:Track Stop
+@examples:instructions:i_72
+@compatible: aoz, amos
+api*/
+Instruction Track Resume
+{
+    #errors
+    aoz.extensionTracker.resume();
+}
+End Instruction
+
+/**api
+@name:Track Title
+@description:Return the title of the current music module.
+@return:string
+@examples:instructions:i_72
+@compatible: aoz, amos
+api*/
+Function Track Title
+{
+    #errors
+    #returns:"string"
+}
+End Function( {aoz.extensionTracker.title()} )
+
+/**api
+@name:Track Signature
+@description:Return the name of the format of the current music module (Protracker or FastBassoonTracker).
+@return:string
+@examples:instructions:i_72
+@compatible: aoz, amos
+api*/
+Function Track Signature
+{
+    #errors
+    #returns:"string"
+}
+End Function( {aoz.extensionTracker.signature()} )
+
+/**api
+@name:Track Length
+@description:Return the length of the current music module in number of patterns.
+@return:integer
+@examples:instructions:i_72
+@compatible: aoz, amos
+api*/
+Function Track Length
+{
+    #errors
+}
+End Function( {aoz.extensionTracker.length()} )
+
+/**api
+@name:Track Channels
+@description:Return the number of channels of the current music module.
+@return:integer
+@examples:instructions:i_72
+@compatible: aoz, amos
+api*/
+Function Track Channels
+{
+    #errors
+}
+End Function( {aoz.extensionTracker.channels()} )
+
+/**api
+@name:Track Position
+@description:Return the number of the pattern in playing of the current music module.
+@return:integer
+@compatible: aoz, amos
+@examples:instructions:i_72
+api*/
+Function Track Position
+{
+    #errors
+}
+End Function( {aoz.extensionTracker.position()} )
+
+/**api
+@name:Track Row
+@description:Return the position into the pattern in playing of the current music module.
+@return:integer
+@compatible: aoz, amos
+@examples:instructions:i_72
+api*/
+Function Track Row
+{
+    #errors
+}
+End Function( {aoz.extensionTracker.row()} )
+
+/**api
+@name:Track Volume
+@description:Set the global volume of the current music module.
+@param:volume:integer:Integer value between 0 and 100
+@compatible: aoz, amos
+@examples:instructions:i_72
+api*/
+Instruction Track Volume, volume
+{
+    #errors
+    aoz.extensionTracker.volume( %volume );
+}
+End Instruction
+
+/**api
+@name:Track Pattern
+@description:Jump to a pattern of the current music module.
+@param:patterm:integer:Number of pattern
+@compatible: aoz, amos
+@examples:instructions:i_72
+api*/
+Instruction Track Pattern, pattern
+{
+    #errors
+    aoz.extensionTracker.pattern( %pattern );
+}
+End Instruction
+
+/**api
+@name:Track Sam Init
+@description:Initialize the samples from a bank number. Note: This instruction replace the current music module by one loaded into the bank.
+@param:bank:index:The bank number containing the loaded module
+@compatible: aoz, amos
+@examples:instructions:i_72
+api*/
+Instruction Track Sam Init, bank=(index)
+{
+    #errors
+    #waiting
+    aoz.extensionTracker.play(%bank, 0);
+    aoz.extensionTracker.pause();
+}
+End Instruction
+
+/**api
+@name:Track Sam Play
+@description:Play a sample stored into the current module.
+@param:sample:integer:The number of sample to play
+@compatible: aoz, amos
+@examples:instructions:i_72
+api*/
+Instruction Track Sam Play, sample
+{
+    #errors
+    aoz.extensionTracker.samPlay( %sample, undefined, 100 );
+}
+End Instruction
+
+/**api
+@name:Track Sam Play
+@description:Play a sample stored into the current module.
+@param:sample:integer:The number of sample to play
+@param:rate:integer:The sample rate to play
+@compatible: aoz, amos
+@examples:instructions:i_72
+api*/
+Instruction Track Sam Play, sample, rate
+{
+    #errors
+    aoz.extensionTracker.samPlay( %sample, %rate, 100 );
+}
+End Instruction
+
+/**api
+@name:Track Sam Play
+@description:Play a sample stored into the current module.
+@param:sample:integer:The number of sample to play
+@param:rate:integer:The sample rate to play
+@param:volume:integer:Integer value between 0 and 100
+@compatible: aoz, amos
+@examples:instructions:i_72
+api*/
+Instruction Track Sam Play, sample, rate, volume
+{
+    #errors
+    aoz.extensionTracker.samPlay( %sample, %rate, %volume );
+}
+End Instruction
+
+/**api
+@name:Med Load
+@param:path$:string:The filename of the module to load
+@param:bank:index:The bank to store the module loaded
+@description:Load a module music file into a bank
+@exception:The format of the file is not supported. Only MOD and XM files are supported.
+@exception:Bank number must be greater than 6.
+@exception:The module music file not found.
+@compatible: aoz, amos
+@examples:instructions:i_80
+@deprecated:It is recommended to use the Track instructions for better use of the music modules.
+@content:
+The MED LOAD instruction loads the specified module in memory, and re-locates it to the specified reserved bank
+in Chip memory. This bank is not a data bank, and will not be saved along with your program, so Med modules
+must be loaded anew each time that the program is run.
+
+This command will open the "Medplayer.library" file, and you may be asked to insert your System disc into the
+drive if this file is not available on the current disc.
+
+As with BassoonTracker modules, AOZ Studio sound samples can be played while Med modules are active. When a
+sound effect is triggered, any Med music will be stopped on all four voices, and will start again as soon as the
+sample has been played.
+api*/
+Instruction Med Load, path$, bank=(index)
+{
+    #errors
+    aoz.extensionTracker.load( [ %path$, %bank ] );
+}
+End Instruction
+
+/**api
+@name:Med Play
+@param:bank:index:The bank number containing the loaded module
+@description:Play a music module loaded with Med Load instruction
+@exception:The format of the file is not supported. Only MOD and XM files are supported.
+@exception:Bank number must be greater than 6.
+@exception:The module music file not found.
+@link:Med Load
+@examples:instructions:i_80
+@compatible: aoz, amos
+@exception:Bank number must be greater than 6.
+@exception:No data loaded into the bank.
+@deprecated:It is recommended to use the Track instructions for better use of the music modules.
+@content:
+The MED LOAD instruction loads the specified module in memory, and re-locates it to the specified reserved bank
+in Chip memory. This bank is not a data bank, and will not be saved along with your program, so Med modules
+must be loaded anew each time that the program is run.
+
+This command will open the "Medplayer.library" file, and you may be asked to insert your System disc into the
+drive if this file is not available on the current disc.
+
+As with BassoonTracker modules, AOZ Studio sound samples can be played while Med modules are active. When a
+sound effect is triggered, any Med music will be stopped on all four voices, and will start again as soon as the
+sample has been played.
+
+api*/
+Instruction Med Play, bank=(index)
+{
+    #errors
+    #waiting
+    aoz.extensionTracker.play(%bank, 0);
+}
+End Instruction
+
+/**api
+@name:Med Play
+@param:bank:index:The bank number containing the loaded module
+@param:music:integer:The starting music
+@description:Play a music module loaded with Med Load instruction
+@exception:The format of the file is not supported. Only MOD and XM files are supported.
+@exception:Bank number must be greater than 6.
+@exception:The module music file not found.
+@link:Med Load
+@examples:instructions:i_80
+@compatible: aoz, amos
+@exception:Bank number must be greater than 6.
+@exception:No data loaded into the bank.
+@deprecated:It is recommended to use the Track instructions for better use of the music modules.
+@content:
+The MED LOAD instruction loads the specified module in memory, and re-locates it to the specified reserved bank
+in Chip memory. This bank is not a data bank, and will not be saved along with your program, so Med modules
+must be loaded anew each time that the program is run.
+
+This command will open the "Medplayer.library" file, and you may be asked to insert your System disc into the
+drive if this file is not available on the current disc.
+
+As with BassoonTracker modules, AOZ Studio sound samples can be played while Med modules are active. When a
+sound effect is triggered, any Med music will be stopped on all four voices, and will start again as soon as the
+sample has been played.
+
+api*/
+Instruction Med Play, bank=(index), music
+{
+    #errors
+    #waiting
+    aoz.extensionTracker.play(%bank, 0);
+}
+End Instruction
+
+/**api
+@name:Med Stop
+@description:Stop the current playing of the music module after a call of Med Play instruction
+@link:Med Play
+@deprecated:It is recommended to use the Track instructions for better use of the music modules.
+@examples:instructions:i_80
+@compatible: aoz, amos
+@content:
+This simple instruction halts the current Med song being played. The song can now be started from the beginning
+with a new call to MED PLAY, or continued using a MED CONT command.
+
+api*/
+Instruction Med Stop
+{
+    #errors
+    aoz.extensionTracker.pause();
+}
+End Instruction
+
+/**api
+@name:Med Cont
+@description:Continue the current playing of the music module after a call of Med Stop instruction
+@link:Med Stop
+@deprecated:It is recommended to use the Track instructions for better use of the music modules.
+@compatible: aoz, amos
+@content:
+This simple instruction halts the current Med song being played. The song can now be started from the beginning
+with a new call to MED PLAY, or continued using a MED CONT command.
+api*/
+Instruction Med Cont
+{
+    #errors
+    aoz.extensionTracker.resume();
+}
+End Instruction
+
+/**api
+@name:Midi On
+@description:This instruction is not implemented. It's just for the compatibility with AMOS
+@examples:instructions:i_80
+@compatible: notimplemented
+api*/
+Instruction Midi On
+{
+    #errors
+}
+End Instruction
+
+/**api
+@name:Track Volume
+@description:Set the global volume of the current music module.
+@param:volume:integer:Integer value between 0 and 100
+@examples:instructions:i_80
+@compatible: aoz, amos
+api*/
+Instruction Med Volume, volume
+{
+    #errors
+    aoz.extensionTracker.volume( %volume );
+}
+End Instruction
+
+/**api
+@name:Led On
+@description:Toggle high pass filter
+@examples:instructions:i_72
+@compatible: amos
+api*/
+Instruction Led On
+{
+    #notImplemented
+}
+End Instruction
+
+/**api
+@name:Led Off
+@description:Toggle high pass filter
+@examples:instructions:i_72
+@compatible: amos
+api*/
+Instruction Led Off
+{
+    #notImplemented
+}
+End Instruction

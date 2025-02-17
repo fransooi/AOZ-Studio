@@ -1,0 +1,15 @@
+<i>Poke$</i>
+<b>Poke$</b> xxxxxxx
+=
+Use the POKE$ command to take a source string and copy it directly to a chosen memory location, one character at a time.
+The address parameter holds the address of the first byte to be loaded with the new string data.
+The copying operation will continue until the last character of the source string is reached, and the end address will be as follows:
+@code
+address+Len(string$)-1
+@code
+Example
+@code
+Reserve As Data 10,1000: Rem Reserve a memory bank
+Poke$ Start( 10 ), "Hello AOZ!"
+@code
+

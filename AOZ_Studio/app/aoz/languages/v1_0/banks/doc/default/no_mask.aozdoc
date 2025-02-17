@@ -1,0 +1,5 @@
+<i>No Mask</i>
+<b>No Mask</b> xxxxxxx
+=
+A "mask" means that the background colour (colour zero) around a Bob is made transparent, so t hat the screen graphics show through. The mask is also used by certain collision detection routines. A mask is automatically set up for every Bob, and the NO MASK command takes away this mask, so that the entire Bob image is drawn on the screen, including its original background colour and any other graphics in colour zero. To remove a mask, simply use this command followed by the number of the Bob image you are interested in.
+

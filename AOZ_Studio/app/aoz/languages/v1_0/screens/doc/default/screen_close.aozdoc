@@ -1,0 +1,8 @@
+<i>Screen Close</i>
+<b>Screen Close</b> xxxxxxx
+=
+Use the SCREEN CLOSE command to erase a screen and free the memory it was using for other programming needs. Simply specify the index of the screen to be deleted.
+
+- *tags$* is a list of text tags that allow you to control how the screen is open
+1. #keepCurrent: will not re-activate any other screen (warning this can lead to crashes, only use this tag if you are sure the screen you close is not the current one)
+

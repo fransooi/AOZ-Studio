@@ -1,0 +1,18 @@
+<i>Rev</i>
+<b>Rev</b> xxxxxxx
+=
+REV combines HREV and VREV into a single function. It takes the image whose number is held in brackets, reverses it from left to right and then performs another reversal from top to bottom. For example:
+@code
+Load "AMOSPro Tutorial:Objects/Bobs.abk"
+Curs Off : Cls 0
+Flash Off : Get Bob Palette
+For Y=200 To -40 Step -1
+Bob 1,Y*2,Y,1
+Wait Vbl
+Next Y
+For Y=-40 To 200
+Bob 1,Y*2,Y,Rev(1)
+Wait Vbl
+Next Y
+@code
+

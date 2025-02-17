@@ -1,0 +1,9 @@
+<i>Col</i>
+<b>Col</b> xxxxxxx
+=
+One obvious problem with all of the previous detection functions is that they only report on whether an individual object has been hit.
+To discover information about any other objects involved in a collision, the COL function is used. This means that each object can be tested on its own, to see if it has collided with the source object ""
+Give the index of the object you wish to test, either a Bob or a Sprite, depending on the circumstances, and its status will be reported with a value of True if it has collided, or False if it remains untouched
+
+Note that this function has been extended in AOZ, if you use -1 for this parameter, it will return the INDEX of the object in collision, to avoid having to perform a loop
+

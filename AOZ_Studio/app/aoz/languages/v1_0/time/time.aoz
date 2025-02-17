@@ -1,0 +1,168 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Timer and Time Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Timer and Time
+@description:Instructions and functions to manage the timer and time in AOZ
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Timer
+@description:Reserved variable. Return / Set the number of millisecond since the application was launched. Work in 1/50th of seconds in Amiga emulation
+@compatible: aoz, stos, amos
+@content:
+The TIMER reserved variable containing the number of seconds since it was reset. It is a floating point number on modern machines and the precision will reach 0.001
+
+On old machine, TIMER is an integer number increase by 1 every 1/50th of seconds
+
+This example will make things clear...
+
+~~~
+Timer = 0
+Print "Please press a key when you want"...
+Wait Key
+Print Timer			// If you wait for exactly one second, it will print "1"
+~~~
+
+In Amiga emulation:
+~~~
+#manifest: "Amiga"
+
+Timer = 0
+Print "Please press a key when you want"...
+Wait Key
+Print Timer			// If you wait for exactly one second, it will print "50"
+~~~
+
+You can use Timer as a seed for the randomize instruction, providing that you do not set the value of the time when you application starts.
+ ~~
+Randomize Timer
+~~~
+The best place to use this technique is immediately after the user has entered some data into the computer. Even a
+simple key-press to start a game will work perfectly, and generate truly random numbers.
+api*/
+
+/**api
+@name:Refresh
+@description:Pauses the application until the next screen refresh
+@compatible: aoz
+@content:
+This instruction is fundamental to stabilize the speed of your application and synchronize it perfectly with the display rate: it forces AOZ to "give back the hand" to the system, and wait for the next refresh of the display.
+
+Not only this "giving back the hand to the system" is a mandatory thing to do to ensure that the computer where your application is running does not freeze, it also ensures the speed of your application stays consistent.
+
+The rule is: *ALWAYS* use a Refresh instruction in long loops, or in the main loop of your application.
+
+This example display the refresh rate of your monitor, usually 60...
+~~~
+Timer = 0
+Count = 0
+Print "Press a key when you are ready!"
+Do
+	K$ = Inkey$
+	If K$ <> "" Then Exit
+	Inc Count
+	Sync Display 		// Synchronize the number of loops to the speed of the display
+Loop
+Print "Your monitor refresh rate is: "; Count / Timer
+~~~
+api*/
+Instruction Refresh
+{
+	#waiting
+	aoz.waitVblExit = true;
+	return{type:12,waitThis:aoz,callFunction:"waitVbl",waitFunction:"waitVbl_wait",args:[]};
+}
+End Instruction
+
+/**api
+@name:Wait Vbl
+@description:Pauses the application until the next screen refresh, alias of Sync Display
+@compatible: stos, amos
+@examples:instructions:i_40
+@seeAlso:Sync Display
+@content:
+This instruction is a duplicate of the Refresh instruction. It has been implemented in Aoz
+for compatibility with STOS and AMOS. The name "Wait Vbl", meaning "wait for next vertical blank"
+had a sense at the time: CRT monitors were synchronized by the position of the line being painted
+by the electron beam, this one returning to it's original position on the top-left of the screen
+every 50 or 60 time per second.
+
+Modern display manage the image globally, a more modern name was more appropriate.
+
+api*/
+Instruction Wait Vbl
+{
+	#waiting
+	aoz.waitVblExit = true;
+	return{type:12,waitThis:aoz,callFunction:"waitVbl",waitFunction:"waitVbl_wait",args:[]};
+}
+End Instruction
+
+/**api
+@name:Wait
+@description:Pauses the application during a certain period of time
+@param:time:integer:Duration of the pause, expressed in milliseconds. (Ticks in Amiga emulation)
+@compatible: aoz, stos, amos
+@content:
+The WAIT command tells the computer to stop the program and wait for as long as you want before moving on to
+the next instruction. The number that follows it is the waiting time, specified as a floating point number in seconds.
+
+The following example forces the program to wait for two seconds and 10 milliseconds:
+~~~
+Print "I am the first instruction."
+Wait 2.010
+Print "I am the next instruction."
+~~~
+
+The following example that works in Amiga emulation forces the program to wait for two seconds:
+~~~
+#manifest: "Amiga"
+
+Print "I am the first instruction."
+Wait 100
+Print "I am the next instruction."
+~~~
+api*/
+Instruction Wait, duration
+{
+	#waiting
+	#errors
+	return{type:12,waitThis:aoz,callFunction:"wait",waitFunction:"wait_wait",args:[%duration]};
+}
+End Instruction
+

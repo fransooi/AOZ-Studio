@@ -1,0 +1,18 @@
+<i>Td Copy</i>
+<b>Td Copy</b> xxxxxxx
+=
+@code
+Rem Initialize the 3D engine
+Td Init
+
+Rem Set a view with a scene by default.
+Td View "my_view", Scene$ = "my_scene"
+
+Rem Copy the scene
+Td Copy "copied_cube", Scene$ = "my_scene", Object$ = "cube"
+
+Rem Set a second view with the duplicated scene
+Td View "my_view_2", Scene$ = "copied_scene", Camera$ = "main_camera", X = 100, Y = 100, Width = 320, Height = 200
+
+@code
+

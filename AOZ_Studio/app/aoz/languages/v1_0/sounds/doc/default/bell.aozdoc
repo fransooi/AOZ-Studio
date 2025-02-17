@@ -1,0 +1,15 @@
+<i>Bell</i>
+<b>Bell</b> xxxxxxx
+=
+Unlike the built-in explosive sound effects, Bell produces a simple pure tone.
+
+The frequency or "pitch" of this sound can be changed by adding a pitch value after the BELL command, ranging
+from 1 for a very deep ring, up to 96 for an ultra high pitched sound. You can hear the range of frequencies with
+this example :
+@code
+For F=1 To 96
+Bell F : Wait F/10+1 : Rem Vary delay
+Next F
+@code
+(example taken from the Amiga, it will give various results depernding on the platform)
+

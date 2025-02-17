@@ -1,0 +1,14 @@
+<i>Zone</i>
+<b>Zone</b> xxxxxxx
+=
+The ZONE function is used to give the number of the screen zone at the specified screen coordinates x,y. These
+coordinates are normally relative to the current screen, but an optional screen number can be included before the
+coordinates.
+
+After the ZONE function has been called, the number of the first zone at these coordinates will be returned, or False will be given if no zone is detected.
+
+This function can be used with the X BOB and Y BOB functions to detect whether or not a Bob has entered a specific screen zone, as follows:
+@code
+N=Zone(X Bob(n),Y Bob(n))
+@code
+

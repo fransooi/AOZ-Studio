@@ -1,0 +1,23 @@
+<i>Mouse Click</i>
+<b>Mouse Click</b> xxxxxxx
+=
+This is similar to MOUSE KEY, but instead of checking to see whether or not a mouse button is held down,
+MOUSE CLICK is only interested in whether the user has just made a single click on a mouse button. It returns the
+familiar bit pattern of these elements:
+@code
+Pattern 	Report
+Bit 1 		Single test for left mouse button
+Bit 2 		Single test for right mouse button
+Bit 3 		Single test for third mouse button, if available
+@code
+These bits are automatically re-set to zero after one test has been made, so they will only check for a single key
+press at a time. Here is an example:
+@code
+Curs Off
+Do
+M=Mouse Click
+If M<>0 Then Print "Bit Pattern ";Bin$(M,8);" Number";M
+Loop
+@code
+
+

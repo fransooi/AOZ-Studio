@@ -1,0 +1,28 @@
+<i>Input</i>
+<b>Input</b> xxxxxxx
+=
+The INPUT command is used to enter information into one or more variables. Any variable may be used, as well as
+any set of variables, providing they are separated by commas. A question mark will automatically appear at the
+current cursor position as a prompt for your input.
+
+If your own "Prompt string" is included, it will be printed out before your information is entered. Please note that a
+semi-colon must be used between your prompt text and the variable list, a comma is not allowed for this purpose.
+You may also use an optional semi-colon at the end of your variable list, to specify that the text cursor is not to be
+affected by the INPUT command, and will retain its original position after your data has been entered.
+
+When INPUT is executed, the program will wait for the required information to be entered via the keyboard, and
+each variable in the list must be matched by a single value entered by the user. These values must be of exactly the
+same type as the original variables, and should be separated by commas.
+
+For example:
+
+@code
+Print "Type in a number"
+Input A
+Print "Your number was ";A
+Input "Type in a floating point number";N#
+Print "Your number was ";N#
+Input "What's your name?";Name$
+Locate 23, : Print "Hello ";Name$
+@code
+

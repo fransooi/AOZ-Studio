@@ -1,0 +1,186 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The Unity Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 21/11/2022
+ */
+#need_javascript_file:"aozjs/unity/unity.api.js"
+#need_javascript_file:"aozjs/unity/unity.back.js"
+
+#need_module: "assets"
+#noWarning:"instruction_not_implemented"
+{
+	 unity_initialize( this );
+}
+
+/**doc
+@name:Commands for Unity
+@description:Instructions and functions for the Unity Game Engine.
+@author:Baptiste Bideaux
+doc*/
+
+/**api
+@name: Unity Init
+@description: Initialise le moteur Unity
+@param:*Front:bool:Sit Ture alors l'écran Unity sera affiché au premier plan, sinon en arrière (par défaut)
+api*/
+Instruction Unity Init, Front=False
+{
+	#errors
+	unityInit(
+	{
+		front: %Front
+	} );
+}
+End Instruction
+
+/**api
+@name: Unity GameObject
+@description: Manipule un objet de la scène Unity en cours
+@param:Name$:string:Nom de l'objet à manipuler
+@param:*X#:float:Position de l'objet sur l'axe X
+@param:*Y#:float:Position de l'objet sur l'axe Y
+@param:*Z#:float:Position de l'objet sur l'axe Z
+@param:*AngleX#:float:Angle de rotation de l'objet sur l'axe X
+@param:*AngleY#:float:Angle de rotation de l'objet sur l'axe Y
+@param:*AngleZ#:float:Angle de rotation de l'objet sur l'axe Z
+@param:*ScaleX#:float:Echelle de l'objet sur l'axe X
+@param:*ScaleY#:float:Echelle de l'objet sur l'axe Y
+@param:*ScaleZ#:float:Echelle de l'objet sur l'axe Z
+@param:*Visible:bool:Visibilité de de l'objet
+@param:*Enabled:bool:Etat de l'objet (activé / désactivé)
+@param:*Animation$:string:Nom de l'animation à jouer
+@param:*LooAt$:string:Nom d'un objet de la scène ou position XYZ de la scène que doit regarder l'objet
+api*/
+Instruction Unity GameObject, Name$, X#=-0.000255, Y#=-0.000255, Z#=-0.000255, AngleX#=-0.000255, AngleY#=-0.000255, AngleZ#=-0.000255, ScaleX#=-0.000255,ScaleY#=-0.000255, ScaleZ#=-0.000255, Visible=-2, Enabled=-2, Animation$="", LookAt$=""
+{
+	#errors
+	unityGameObject(
+	{
+		name: %Name$,
+		position:
+		{
+			x: %X#,
+			y: %Y#,
+			z: %Z#
+		},
+		rotation:
+		{
+			x: %AngleX#,
+			y: %AngleY#,
+			z: %AngleZ#
+		},
+		scale:
+		{
+			x: %ScaleX#,
+			y: %ScaleY#,
+			z: %ScaleZ#
+		},
+		visible: %Visible,
+		enabled: %Enabled,
+		animation: %Animation$,
+		lookAt: %LookAt$			
+	} );
+}
+End Instruction
+
+/**api
+@name:Unity Set Camera
+@description:Défini la caméra à utiliser pourt le point de vue
+@syntax:Unity Set Camera Name$="Camera 2"
+@param:Name$:string:Nom de la caméra à utiliser.
+api*/
+Instruction Unity Set Camera, Name$
+{
+	#errors
+	unitySetCamera( %Name$ );
+}
+End Instruction
+
+/**api
+@name:Unity GameObject Infos
+@description:Charge les informations à propos d'un objet de la scène courante.
+@param:Name$:string:Nom de l'objet de la scène Unity.
+@syntax:=Unity GameObject Infos( Name$="unity_object" )
+api*/
+Instruction Unity GameObject Infos, Name$
+{
+	#errors
+	unityGameObjectInfos( %Name$ )
+}
+End Instruction
+
+/**api
+@name:Unity GameObject X
+@description:Retourne la position de l'objet sur l'axe X.
+@param:Name$:string:Nom de l'objet de la scène Unity.
+@syntax:=Unity GameObject X#( "unity_object" )
+@return:float: La valeur flottante de la position X
+api*/
+Function Unity GameObject X, Name$
+{
+	#errors
+}
+End Function( { unityGameObjectX( %Name$ ) } )
+
+/**api
+@name:Unity GameObject Y
+@description:Retourne la position de l'objet sur l'axe Y.
+@param:Name$:string:Nom de l'objet de la scène Unity.
+@syntax:=Unity GameObject Y#( "unity_object" )
+@return:float: La valeur flottante de la position Y
+api*/
+Function Unity GameObject Y, Name$
+{
+	#errors
+}
+End Function( { unityGameObjectY( %Name$ ) } )
+
+/**api
+@name:Unity GameObject Z
+@description:Retourne la position de l'objet sur l'axe Z.
+@param:Name$:string:Nom de l'objet de la scène Unity.
+@syntax:=Unity GameObject Z#( "unity_object" )
+@return:float: La valeur flottante de la position Z
+api*/
+Function Unity GameObject Z, Name$
+{
+	#errors
+}
+End Function( { unityGameObjectZ( %Name$ ) } )
+
+/**api
+@name:Unity Set Scene
+@description:Change la scène courante par la scène "Name$" 
+@syntax:Unity Set Scene Name$="scene 2"
+@param:Name$:string:Nom de la scène Unity.
+@return:string:Type of the column. May be "integer", "float", or "string"
+api*/
+Instruction Unity Set Scene, Name$
+{
+	#errors
+	unitySetScene( %Name$ )	
+}
+End Instruction

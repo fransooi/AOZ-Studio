@@ -1,0 +1,23 @@
+<i>Bob</i>
+<b>Bob</b> xxxxxxx
+=
+Each Bob must be given an identification index. As all indexes in AOZ, it can either be a string or a number.
+The is no limit to the number of Bobs that can be displayed at the same time in a screen, but the speed of the machine.
+
+As Bobs are part of a screen, you can turn this screen into a transparent "layer" with the Set Transparent instruction...
+
+If the coordinates lie outside of the existing screen area, the Bob will not be (or partly) displayed. So objects can be initialised
+off screen, ready to be moved into place during the course of your program.
+
+Once a Bob has been positioned on screen, the coordinate values become optional. The values of any coordinate
+parameters that are omitted will be remembered from the last time they were set. This technique is valuable for animating Bobs, because it allows objects to be moved effortlessly,
+without disturbing any existing animation sequences. It is vital to include all commas in their normal positions if
+coordinate values are omitted, or a syntax error will be reported. For example:
+
+@code
+Bob 1,160,100,1 : Rem Position Bob 1 at 160,100 using image1
+Bob 1,,150,1 : Rem Move Bob 1 down 50 pixels
+Bob 1,110,,1 : Rem Move Bob 1 50 pixels left
+Bob 1,,,2 : Rem Display new image 2 at Bob 1 current position
+@code
+

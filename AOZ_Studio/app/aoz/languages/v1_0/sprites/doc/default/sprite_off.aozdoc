@@ -1,0 +1,6 @@
+<i>Sprite Off</i>
+<b>Sprite Off</b> xxxxxxx
+=
+The SPRITE OFF command removes all sprites from your display, and all current Sprite movements are aborted.
+To re-start them, you have to re-create them with a SPRITE instruction or function.
+

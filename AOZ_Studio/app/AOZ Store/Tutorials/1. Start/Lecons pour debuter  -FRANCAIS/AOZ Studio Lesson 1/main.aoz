@@ -1,0 +1,124 @@
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+//
+// Bienvenue dans votre leçon AOZ Studio 1
+//
+// Note : Vous voyez ces deux barres obliques (//) -> cela signifie que tout ce qui suit est un commentaire.
+// Après les // vous pouvez mettre des remarques, des notes, des explications, mais ce ne sont pas des instructions de programme
+//
+// Alors nous sommes prêts, commençons!
+
+
+// L'instruction Print
+// "Print" permet d'afficher quelque chose à l'écran, comme :
+Print "Hello. Pour revenir au programme cliquez sur la croix"
+
+// **Cliquez sur le bouton "Run in AOZ Viewer" tout en haut au centre, sur le bouton avec un triangle noir dans un cercle gris.
+// Puis attendez 10 secondes pour que la transpilation se produise, c'est le processus pour transformer votre
+// programme composé d'instructions AOZ (faciles à comprendre pour les humains) en instructions exécutables
+// (que votre ordinateur peut comprendre et exécuter)
+//
+// Vous devriez avoir vu la phrase "Hello. Pour revenir..." dans la page ouverte automatiquement.
+// Et ... oui, vous êtes un(e) programmeur!
+
+// Note : si vous preferez afficher votre programme dans un navigateur, comme Chrome, Cliquez
+// sur le bouton "Run in Browser", ou appuyez sur la touche F1
+
+// Super, maintenant un pas de plus. Essayez de mettre vos propres mots ou "chaîne" entre les guillements
+// (au lieu du Hello...) et **Appuyez sur le même bouton triangle noir ou appuyez sur la touche F2.
+
+
+End
+// Bien, maintenant continuons la leçon. Supprimons d'abord l'instruction End ci-dessus, de sorte que
+// les instructions suivantes du programme seront également exécutées (le End arrête le programme).
+// Pour cela le plus simple est de rajouter les // juste devant l'instruction comme cela : //End.
+// Ainsi cela deviendra un commentaire et pas une instruction.
+
+
+// L'instruction Locate
+// "Locate" indique au programme où afficher le texte du Print à l'écran.
+Locate 5,3
+Print "QUESTIONS"
+// Les nombres après "Locate" indiquent à l'ordinateur de déplacer le curseur du nombre de colonnes (largeur)
+// et de lignes de texte (hauteur) indiqués, depuis en haut à gauche de l'écran;
+// dans ce cas, 5 caractères depuis la gauche (largeur) et 1 depuis le haut (hauteur)
+//
+// **Appuyez sur F2
+
+
+End
+// Maintenant supprimez l'instruction End ci-dessus ou ajoutez //, afin que les instructions suivantes soient également exécutées :
+
+
+// L'instruction Input
+// "Input" vous permet de demander des informations et de les utiliser dans le programme
+Input "Quel est ton nom ? ";nom$
+Print nom$
+Input "Quel est ton age ? ";age
+Print "Ton âge est : ";age
+End
+// Le premier "Input" demande un nom, c'est une chaîne (pas un nombre) donc on y ajoute le symbole $, comme pour nom$
+// choisi dans cet exemple (nous aurions pu utiliser MyName$ ou truc$...)
+// Il est logique d'utiliser un mot qui signifie quelque chose pour vous, le programmeur.
+// La deuxième utilisation de "Input" demande un nombre (pas de symbole $) et le stocke dans la variable "age".
+//
+// Remarquez comment le point-virgule, (;) nous permet de combiner l'affichage de "Ton âge est :" avec la variable age
+//
+// **Appuyez sur F2
+//
+// Supprimez l'instruction End ci-dessus, afin que les instructions suivantes soient également exécutées:
+
+
+// Les instructions Pen et For-to-Next
+// ---------------
+// L'instruction Pen définit la couleur du texte.
+// L'instruction For-to-Next est une instruction combinée pour créer une boucle d'instructions répétitives automatiquement
+For n = 1 to 15
+    Pen n
+    Locate 40,n
+    Print nom$ + " c'est toi !"
+    Wait 0.5
+Next
+
+// Le code ci-dessus utilisera de nombreuses couleurs pour le texte à l'écran, la variable n sera
+// augmentée pas à pas de 1 à 15
+// La première fois dans la boucle For-to-Next n = 1 et s'exécuteront donc:
+//  -l'instruction Pen 1 qui affichera cette couleur 1 (blanc)
+//  -la position sera avec Locate 40 (largeur), 1 (hauteur)
+//  -puis se fera le Print
+//  -Le Wait 0.5, qui est une pause de 0,5 seconde (pause l'execution de la suite du programme)
+//
+// Lorsque le programme exécute l'instruction "Next", comme c'est une une boucle, il recommencera à la ligne: pour n = 1 à 15
+// en augmentant la valeur de n
+// Alors maintenant n = 2 et donc Pen 2 et Locate 40,2 cela déplacera le prochain Print une ligne en dessous (ligne 2)
+// avec la couleur suivante (2) etc, etc,
+// Jusqu'à ... n = 15, ce sera la fin de la boucle For ... to ... Next
+// et le programme continuera alors les instructions suivants le mot "Next"
+//
+// Si vous ne comprenez pas tout de suite, pas de soucis. Vous pouvez essayer avec un programme simple uniquement avec
+// une boucle For-to-Next et juste un Print à l'intérieur comme ceci:
+//  For n = 1 to 5
+//      Print n
+//  Next
+//
+// A nouveau ne vous inquiétez pas, si tout n'est pas clair amusez-vous en essayant de changer le texte et les valeurs.
+//
+// OK aprés beaucoup d'explications, voyons maintenant ce que ça fait.
+// **Appuyez sur F2
+// (Nous utiliserons plus globalement le mot PLAY pour dire indifferement les 2 boutons de transpilation: dans l'AOZ Viewer, ou le navigateur internet
+
+
+//    _       __     ____       __                 __
+//   | |     / /__  / / /  ____/ /___  ____  ___  / /
+//   | | /| / / _ \/ / /  / __  / __ \/ __ \/ _ \/ /
+//   | |/ |/ /  __/ / /  / /_/ / /_/ / / / /  __/_/
+//   |__/|__/\___/_/_/   \__,_/\____/_/ /_/\___(_)
+//
+// Eh bien, félicitations ! C'est la fin de la leçon 1. Vous êtes prêt à passer à la leçon 2 :)

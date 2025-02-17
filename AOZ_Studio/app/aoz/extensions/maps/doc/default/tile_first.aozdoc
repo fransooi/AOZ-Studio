@@ -1,0 +1,21 @@
+<i>Tile First</i>
+<b>Tile First</b> xxxxxxx
+=
+This function and the associated "Tile Next" instruction allow you to scan all the tiles of the same value, either in the visible area or the whole map.
+
+Do not confuse the *index* of a tile in a view and it's value. The index is just the position from the start of the tile in the map array.
+
+This example asks for all the tiles with value "1345" and displays their coordinate in the map.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+TILEINDEX = Tile First( "MapView", 1345, True ) 	// Scans the whole map
+While TILEINDEX >= 0
+Print Tile X( TILEINDEX ), Tile Y( TileIndex )
+TILEINDEX = Tile Next
+Wend
+@code
+

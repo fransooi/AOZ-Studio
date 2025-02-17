@@ -1,0 +1,91 @@
+///////////////////////////
+//                       //
+//    Text Wheel Demo    //
+//                       //
+///////////////////////////
+
+// By Dave Baldwin - 13/4/20
+
+// V1.1 - 13/1/21 - Added distance fade and control, added random colour generator
+
+#googleFont:"permanent marker"			// Load a google font - this can be any font you like, but bear in mind that the letter sizes will vary.
+#smoothing:true							// Smooth all graphical operations with anti-aliasing
+
+Set font "permanent marker",100 							// Set the font to the one we've just loaded
+Degree									// Work in degrees, 360 for a full rotation.
+Ink 6									// Set ink colour to colour number 6 from the palette.
+Range=180								// Range value for the colour generator
+Bright=60								// Brightness value for the colour generator
+FADEAWAY=1								// Set the FADEAWAY variable to 1, ON. This will be changed between -1 and +1 when key 'f' is pressed.
+Global FADEAWAY							// Make the FADEAWAY variable global. This means it can be used by the Procedure Text_Wheel[].
+Set Transparent 0						// Set colour 0 to transparent
+
+// Now we're going to make some graphic images out of the font we've just selected.
+
+// The following string contains all the characters that we're going to turn into images.
+// You can add others if you like, and they don't have to be in any particular order.
+C$=" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.!?"
+
+// This string contains the message that will appear in the text wheel, maximum 30 characters.
+
+A$="Hello World, Welcome to AOZ!  "
+
+LC=Len (C$) 							// Get the length of C$ in characters
+For f=1 to LC							// Start a loop for the total number of characters.
+    B$=Mid$(C$,f-1,1)					// Pick out the character number 'f' from the string C$.
+	Gosub Rand_Col						// Call the random colour generation routine.
+    Colour 6,c							// Set colour 6 to the new random colour.
+	Text 100,130,B$,"#center"			// Place the character on the screen.
+    B=Asc(B$)							// Get the Asc character code number of the character in B$.
+										// Numbering the images this way keeps things simple as we only need to know what the character is to use the image, not the image number.
+    Get Bob B,50,50,106,100				// Get the image of the character we've just drawn and store it as Bob number 'B'
+    Hot Spot B,$11						// Set the hot spot of the new Bob to the centre of the image.
+	Cls 0								// Clear the screen ready for the next one.
+Next f									// Repeat the loop for each character in C$.
+
+ROTATION=0 : SCALE#=1.0					// Define variables for Roatation Angle and Image Scale
+
+Pen 3									// Set Pen colour to colour 3 from the palette
+Colour 3,$008800						// Change colour 3 to a dark green
+Locate 0,22 							// Position the text cursor
+Print "Press 'F' to toggle FADE"		// Print message at text cursor position
+
+//Main Program Loop
+do										// Start program loop
+    Text_Wheel[ROTATION,SCALE#,A$]		// Call the procedure that displays the text wheel at the current angle of rotation, scale, using message in A$.
+    Add ROTATION,-1,0 to 359			// Add -1 to the angle of rotation. Negative numbers make it rotate anti-clockwise, positive numbers clockwise.
+										// This also controls the speed,  -2 or more would be faster.
+    SCALE#=cos(ROTATION)/2.4+0.65		// Algorithm to change the size of the characters. Using Cos of the angle of rotation makes the size change follow a nice smooth sine curve, no no jerky movement.
+										// You can play around with these numbers, but be careful. The first number controls the limits of the size change effect, the more you increase it, the less the size variation will be.
+										// The second number controls the minimum size of the wheel. Changing one will also affect what the other does.
+										// Because the Scale and Rotation are connected in this way, if you increase the rotation speed, the zooming effect speeds up too.
+	I$=Inkey$							// Check if a key has been pressed and place the character of the key press in I$
+	If I$="f" then FADEAWAY=-FADEAWAY	// Check if key pressed was 'f', and if it was, toggle variable FADEAWAY from eg. from -1 to +1
+    Wait Vbl							// Wait for 1/60th of a second. This stops the program running too quickly.
+Loop									// Repeat program loop
+
+// Random Colour Generator routine
+Rand_Col:
+	r=rnd(Range)+Bright					// Generate a random RED value in the range 0-Range, and add the Bright value
+	g=rnd(Range)+Bright					// Generate a random GREEN value in the range 0-Range, and add the Bright value
+	b=rnd(Range)+Bright					// Generate a random BLUE value in the range 0-Range, and add the Bright value
+	c=r*65536+g*256+b					// Generate a 24 bit colour value by adding the RED, GREEN and BLUE values
+Return
+
+// Text Wheel procedure. This is the bit that draws the images on the screen.
+Procedure Text_Wheel[R,S#,A$]
+    A=Len(A$)							// Get the length of A$
+    For F=1 to A						// Start a loop for the number of characters in A$.
+	    ROT=Int(F*12+R)					// This works out where to place each character. For 30 characters, the spacing is 12 degrees (360/30)
+	    If ROT>359 Then Add ROT,-360 	// Check if the position of the character has gone over 359 degree and correct if necessary.
+	    Bob F,960+cos(ROT)*300*S#,540+sin(ROT)*300*S#,Asc(mid$(A$,F-1,1)) // Draw the character at it's position in the wheel.
+	    Add ROT,90 : If ROT>359 then Add ROT,-360 	// Add 90 degrees to the rotation of the character.
+	    Bob Rotate F,ROT				// Rotate the image
+	    Bob Scale F,S#,S#				// Set the scale of the image.
+		If FADEAWAY=1					// Check if we need to Fade the bobs as they shrink.
+			Bob Alpha F,S#*2/3+0.2		// Fade the images as they shrink.
+		Else 							// Or
+			Bob Alpha F,1				// Don't fade them.
+		End if
+    Next F								// Repeat the loop for each character.
+End Proc								// Return to main program loop.

@@ -1,0 +1,10 @@
+<i>Ln</i>
+<b>Ln</b> xxxxxxx
+=
+The LN Function calculates the natural logarithm (Naperian logarithm) of the given value. For example:
+@code
+Print Ln(10)
+A#=Ln(100) : Print A#
+@code
+
+

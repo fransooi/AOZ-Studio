@@ -1,0 +1,232 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Data Query Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 20/11/2021
+ */
+#need_javascript_file:"aozjs/dbquery/dbquery.api.js"
+#need_javascript_file:"aozjs/dbquery/dbquery.back.js"
+
+#need_module: "assets"
+#noWarning:"instruction_not_implemented"
+{
+	dbquery_initialize( this );
+}
+
+/**doc
+@name:Database Query Commands
+@description:Instructions and functions to request database.
+@author:Baptiste Bideaux
+doc*/
+
+/**api
+@name:Set DB Service
+@description:Set the Database Service configuration
+@param:*URL$:string:URL of the service for the request calling. "localhost" by default
+@param:*Security:bool:If True, the system will use the HTTPS protocol. False by default( HTTP protocol ). 
+api*/
+Instruction Set DB Service, URL$="localhost", Security=False
+{
+	#errors
+	dbquery_module.setConfig(
+	{
+		URL: %URL$,
+		Security: %Security
+	} );
+}
+End Instruction
+
+/**api
+@name:DB Query
+@description:Asynchrone request execution from the database
+@syntax:DB Query Id$="<id>", Name$="<name of the request>", Value$="<Values list to paste to the request>", OnResult$="<AOZ procedure name>", OnError$="<AOZ procedure name>"
+@param:*Id$:string:ID under which the results of the query will be stored.
+@param:Name$:string:Name of the configured request to call.
+@param:*Value$:string:Values list to paste to the the request. Each value must be separated by "|".
+@param:*OnResult$:string:Name of the AOZ procedure called when the request has successful
+@param:*OnErrors:string:Name of the AOZ procedure called when the request has failed
+api*/
+Instruction DB Query, Id$="", Name$ = "", Value$ = "", OnResult$ = "", OnError$ = ""
+{
+	#errors
+	dbquery_module.query(
+	{
+		id: %Id$,
+		Query: %Name$,
+		Values: %Value$,
+		OnResult: %OnResult$,
+		OnError: %OnError$,
+		sync: false
+	} );
+}
+End Instruction
+
+/**api
+@name:DB Query Sync
+@description:Synchrone request execution from the database. The program will be paused as long as the request is not completed( success or error ) 
+@syntax:DB Query Id$="<id>", Name$="<name of the request>", Value$="<Values list>", OnResult$="<AOZ procedure name>", OnError$="<AOZ procedure name>"
+@param:Id$:string:ID under which the results of the query will be stored.
+@param:Name$:string:Name of the configured request to call.
+@param:*Value$:string:Values list to paste to the the request. Each value must be separated by "|".
+@param:*OnResult$:string:Name of the AOZ procedure called when the request has successful
+@param:*OnErrors:string:Name of the AOZ procedure called when the request has failed
+api*/
+Instruction DB Query Sync, Id$="", Name$ = "", Value$ = "", OnResult$ = "", OnError$ = ""
+{
+	#errors
+	#waiting
+	return{ type:12,waitThis:dbquery_module,callFunction:"query", waitFunction:"load_wait", args:{
+		id: %Id$,
+		Query: %Name$,
+		Values: %Value$,
+		OnResult: %OnResult$,
+		OnError: %OnError$,
+		sync: true
+	} };
+}
+End Instruction
+
+/**api
+@name:DB Count Rows
+@description:Returns the number of rows got from the last request called.
+@syntax:=DB Count Rows( Id$="<id>" )
+@param:*Id$:string:ID of the results of the query.
+@return:int:The number of rows.
+api*/
+Function DB Count Rows, Id$=""
+{
+	#errors
+}
+End Function( { dbquery_module.getInfo( %Id$, 'numRows' ) } )
+
+/**api
+@name:DB Count Columns
+@description:Returns the number of columns got from the last request called
+@syntax:=DB Count Columns( Id$="<id>" )
+@param:*Id$:string:ID of the results of the query.
+@return:int: The number of columns
+api*/
+Function DB Count Columns, Id$=""
+{
+	#errors
+}
+End Function( { dbquery_module.getInfo( %Id$, 'numCols' ) } )
+
+/**api
+@name:DB Column Name$
+@description:Returns the name of the column <numCol>.
+@syntax:=DB Column Name$( Id$="<id>", <index of the column> )
+@param:*Id$:string:ID of the results of the query.
+@param:numCol:int:Index of the column
+@return:string: Name of the column
+api*/
+Function DB Column Name$, Id$="", numCol = -1
+{
+	#errors
+}
+End Function( { dbquery_module.getColName( %Id$, %numCol ) } )
+
+/**api
+@name:DB Column Type$
+@description:Returns the type of the column <numCol>.
+@syntax:=DB Column Type$( Id$="<id>", <index of the column> )
+@param:*Id$:string:ID of the results of the query.
+@param:numCol:int:Index of the column
+@return:string:Type of the column. May be "integer", "float", or "string"
+api*/
+Function DB Column Type$, Id$="", numCol = -1
+{
+	#errors
+}
+End Function( { dbquery_module.getColType( %Id$, %numCol ) } )
+
+/**api
+@name:DB Column Value$
+@description:Return the value of the column ColName$
+@syntax:=DB Column Value$( id$="<id>", "<column name>" )
+@param:*Id$:string:ID of the results of the query.
+@param:Colname$:string:Name of the column.
+@return:string:Value of the column.
+api*/
+Function DB Column Value$, Id$="", ColName$ = ""
+{
+	#errors
+}
+End Function( { dbquery_module.getValue( %Id$, %ColName$, 'string' ) } )
+
+/**api
+@name:DB Column Value
+@description:Return the value of the column ColName$
+@syntax:=DB Column Value( Id$="<id>", "<column name>" )
+@param:*Id$:string:ID of the results of the query.
+@param:Colname$:string:Name of the column.
+@return:int:Value of the column.
+api*/
+Function DB Column Value, Id$="", ColName$ = ""
+{
+	#errors
+}
+End Function( { dbquery_module.getValue( %Id$, %ColName$, 'integer' ) } )
+
+/**api
+@name:DB Column Value#
+@description:Return the value of the column ColName$
+@syntax:=DB Column Value#( Id$="<id>", "<column name>" )
+@param:*Id$:string:ID of the results of the query.
+@return:float:Value of the column.
+api*/
+Function DB Column Value#, Id$="", ColName$ = ""
+{
+	#errors
+}
+End Function( { dbquery_module.getValue( %Id$, %ColName$, 'float' ) } )
+
+/**api
+@name:DB Next Row
+@description:Moves the seeker to the next row.
+@syntax:DB Next Row( Id$="<id>" )
+@param:*Id$:string:ID of the results of the query.
+api*/
+Instruction DB Next Row, Id$=""
+{
+	#errors
+	DB_Next_Row( %Id$ );
+
+}
+End Instruction
+
+/**api
+@name:DB Goto Row
+@description:Moves the seeker to the number of row.
+@syntax:DB Goto Row <index>, <row number>
+@param:*Id$:string:ID of the results of the query.
+@param:row:integer:Index of the row
+api*/
+Instruction DB Goto Row, Id$="", row=-1
+{
+	#errors
+	DB_Goto_Row( %Id$, %row );
+}
+End Instruction

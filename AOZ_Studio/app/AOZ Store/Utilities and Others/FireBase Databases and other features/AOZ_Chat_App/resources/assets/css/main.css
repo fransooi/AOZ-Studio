@@ -1,0 +1,15 @@
+body {
+	background-color: #000;
+}
+
+.user-image {
+   border-radius: 50%;
+}
+
+.chat-text {
+	color: #aaa;
+}
+
+.built-in-ui {
+	margin-top: 200px;
+}

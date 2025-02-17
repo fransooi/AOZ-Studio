@@ -1,0 +1,11 @@
+<i>Set Tab</i>
+<b>Set Tab</b> xxxxxxx
+=
+This simple command specifies the number of characters that the text cursor will move to the right when the next
+TAB$ is printed. For example:
+@code
+Cls : Print "Home"
+Print Tab$;"And"
+Set Tab 10 : Print Tab$;"Away"
+@code
+

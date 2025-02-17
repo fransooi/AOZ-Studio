@@ -1,0 +1,228 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Rainbow Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Icon Commands
+@description:Instructions and functions to handle icons
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Paste Icon
+@description:Draw an icon from the Icons bank into a screen
+@param:x:integer:Horizontal coordinate of drawing
+@param:y:integer:Vertical coordinate of drawing
+@param:iconIndex:index:Index of the icon in the Icons bank
+@param:scaleX#:float:Horizontal scaling of the icon, 1 = original size, 0.5 = half, 2 = twice, etc (optional)
+@param:scaleY#:float:Vertical scaling of the icon, 1 = original size, 0.5 = half, 2 = twice, etc (optional)
+@param:angle#:float:Angle of rotation, in radian (default) or degree after the "Degree" instruction has been used (optional)
+@examples:instructions:i_65,instructions:i_29
+@compatible: aoz, stos, amos
+@content:
+Use the PASTE ICON command to draw the specified Icon number already stored in Bank 2, on screen. The screen position is defined by graphic coordinates, and can be anywhere you like. Icon images will be clipped in the normal way, if they exceed the standard limitations. Here is a simple example:
+~~~
+Load Image "AMOSPro_Examples:Iff/logo.iff"
+Z=0
+For A=0 To 304 Step 16
+	Inc Z
+	Get Block Z,A,1,16,199
+Next A
+Cls 0
+For A=0 To 304 Step 16
+	Put Block Z,A,0
+	Dec Z
+	Wait Vbl
+Next A
+~~~
+api*/
+Instruction Paste Icon, x, y, iconIndex=(index), scaleX#=1, scaleY#=1, angle#=0, alpha#=1, tags$
+{
+	#errors
+	aoz.currentScreen.pasteImage('icons',%iconIndex,%x,%y,%scaleX#,%scaleY#,(%angle#)*aoz.degreeRadian,%alpha#,%tags$);
+}
+End Instruction
+
+/**api
+@name:Make Icon Mask
+@description:Create a transparency mask out of the full black color of an image in Icons bank (RGB = $000000)
+@param:iconIndex:index:Index of the image work on
+@compatible: aoz, stos, amos
+@content:
+Normally, any Icons that are drawn on screen completely replace the existing background image, and the Icon
+appears in a rectangular box filled with colour zero. If you prefer to overlay Icons on top of the current graphics, a
+mask must be created. This is achieved by the MAKE ICON MASK command, and sets colour zero to transparent.
+All Icons in Bank 2 will be affected by this instruction, unless an optional Icon number is given, in which case only
+that Icon will be masked.
+api*/
+Instruction Make Icon Mask, iconIndex=(index)
+{
+	#errors
+	aoz.banks.processMask('icons',%iconIndex,true);
+}
+End Instruction
+
+/**api
+@name:No Icon Mask
+@description:Removes the transparency mask of an icon in the Icons bank, turning the icon fully opaque
+@param:iconIndex:index:Index of the icon work on
+@compatible: aoz, stos, amos
+@content:
+This command performs exactly the same task as the "NO MASK" instruction except that it
+is used with Icons instead of Bobs.
+api*/
+Instruction No Icon Mask, iconIndex=(index)
+{
+	#errors
+	aoz.banks.processMask('icons',%iconIndex,false);
+}
+End Instruction
+
+/**api
+@name:Ins Icon
+@description:Inserts an empty icon in Icons bank
+@param:position:integer:Position to insert at
+@compatible: aoz, stos, amos
+@examples:instructions:i_65
+@content:
+The INS ICON instruction operates in exactly the same way as "INS BOB"...
+api*/
+Instruction Ins Icon, position
+{
+	#errors
+	aoz.banks.insertImage('icons',%position);
+}
+End Instruction
+
+Instruction Ins Icon, start To end
+{
+	#errors #errors
+	aoz.banks.insertImageRange('icons',%start,%end);
+}
+End Instruction
+
+/**api
+@name:Del Icon
+@description:Delete an icon Icons bank
+@param:*iconIndex:index:Index of the icon to delete
+@examples:instructions:i_65
+@compatible: aoz, stos, amos
+@content:
+DEL ICON erases the Icon whose number is specified from Bank 2. A second Icon number may also be given, in
+which case, all Icons from the first number TO the second number will be deleted. When the final Icon in the bank
+has been deleted, the whole bank will be removed from memory.
+
+api*/
+Instruction Del Icon, iconIndex
+{
+	#errors
+	aoz.banks.deleteImage('icons',%iconIndex);
+}
+End Instruction
+
+Instruction Del Icon, start To end
+{
+	#errors
+	aoz.banks.deleteImageRange('icons',%start,%end);
+}
+End Instruction
+
+/**api
+@name:Get Icon
+@description:Captures a portion of the current screen and add the image to the Icons bank.
+@param:*screenIndex:index:Index of the screen to capture from
+@param:iconIndex:index:Index of the icon to grab
+@param:x1:integer:Horizontal coordinate of the top-left corner of the capture area
+@param:y1:integer:Vertical coordinate of the top-left corner of the capture area
+@param:x2:integer:Horizontal coordinate of the bottom-right corner of the capture area
+@param:y2:integer:Vertical coordinate of the bottom-right corner of the capture area
+@examples:instructions:i_65
+@compatible: aoz, stos, amos
+@content:
+The GET ICON command grabs an image from the screen and loads it into an Icon. Specify the Icon number, and
+then give the coordinates of the rectangle that is to be grabbed, from the top left-hand corner to the bottom righthand
+corner. If the Icon whose number you specify does not already exist, it will be created in Bank 2. If the
+memory bank has not been reserved, this will also be done automatically.
+
+An optional screen number can also be given, immediately after the GET ICON instruction, and this will select the
+screen to be used as the source of the Icon's image. If this screen number is omitted, the image is taken from the
+current screen.
+
+api*/
+Instruction Get Icon, iconIndex=(index), x1, y1 To x2, y2, tags$
+{
+	#errors
+	aoz.currentScreen.getImage('icons',%iconIndex,{x:%x1,y:%y1,x2:%x2,y2:%y2},%tags$);
+}
+End Instruction
+
+Instruction Get Icon, screenIndex=(index), screenIndex=(index), x1, y1 To x2, y2, tags$
+{
+	#errors
+	aoz.getScreen(%screenIndex).getImage('icons',%iconIndex,{x:%x1,y:%y1,x2:%x2,y2:%y2},%tags$);
+}
+End Instruction
+
+Instruction Get Icon, iconIndex=(index), x1, y1, width, height, tags$
+{
+	#errors
+	aoz.currentScreen.getImage('icons',%iconIndex,{x:%x1,y:%y1,width:%width,height:%height},%tags$);
+}
+End Instruction
+
+Instruction Get Icon, screenIndex=(index), iconIndex=(index), x1, y1, width, height, tags$
+{
+	#errors
+	aoz.getScreen(%screenIndex).getImage('icons',%iconIndex,{x:%x1,y:%y1,width:%width,height:%height},%tags$);
+}
+End Instruction
+
+/**api
+@name:Get Icon Palette
+@description:Copy the colour palette from the Icons bank to the current screen
+@param:mask:integer:Mask of bits where each bit set to 1 represent a colour to capture and 0 a colour to ignore, up to 32 (optional)
+@compatible: aoz, stos, amos
+@examples:instructions:i_65
+@content:
+This instruction is usually employed to initialise a screen, after Icons have been loaded from disc.
+GET ICON PALETTE grabs the colours of the Icon images stored in Bank 2, and loads them in to the current
+screen.
+api*/
+Instruction Get Icon Palette, mask
+{
+	#errors
+	aoz.currentScreen.getImagePalette('icons',%mask);
+}
+End Instruction

@@ -1,0 +1,11 @@
+<i>Direct</i>
+<b>Direct</b> xxxxxxx
+=
+Use the DIRECT command to jump out of the current program and go straight to Direct Mode for testing out a programming idea.
+@code
+Print "Take me to Direct Mode immediately"
+Direct
+@code
+Normally, a program can be interrupted by pressing the [Ctrl] and the [C] keys together...
+This facility can be turned off and on at will, creating a crude sort of program protection.
+

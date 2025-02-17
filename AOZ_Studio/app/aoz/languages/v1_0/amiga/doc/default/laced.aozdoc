@@ -1,0 +1,20 @@
+<i>Laced</i>
+<b>Laced</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+LACED is a reserved variable which holds the value of 4. It is used in addition to either the Hires or Lowres
+parameters when opening a screen, like this:
+@code
+Screen Open 0,320,200,16,Laced+Lowres
+@code
+Interlaced screens have double the number of vertical lines, which is excellent for graphic displays. Unfortunately
+they take twice as long to update, which is no good at all for fast-action games! Interlaced screens will only give
+flicker-free results if a "multi-sync" monitor is being used. Also certain TV sets and monitors do not take kindly to
+excessive switching between interlaced and normal screens.
+
+All of the usual operations may be used with interlaced screens, such as SCREEN DISPLAY, SCREEN OFFSET,
+and so on, but for technical reasons interlacing is not allowed during copper list calculations. As soon as the last
+interlaced screen has been closed, the entire display returns to normal mode.
+
+

@@ -1,0 +1,17 @@
+<i>Wind Size</i>
+<b>Wind Size</b> xxxxxxx
+=
+To change the size of the current window, specify the new width and new height in terms of the number of
+characters. If WIND SAVE has been activated, the original contents of the window will be re-drawn by this
+instruction. If the new window size is smaller than the original, any parts of the original image that lie outside of the
+new window boundaries will be lost. Alternatively, if the new window is larger, the space around the saved area will
+be filled with the current paper colour. Please note that the text cursor is always re-set to coordinates 0,0. For
+example:
+@code
+Wind Open 1,16,16,22,10,2
+Print "I want to be wider!"
+Wind Save
+Wait 50
+Wind Size 30,10
+@code
+

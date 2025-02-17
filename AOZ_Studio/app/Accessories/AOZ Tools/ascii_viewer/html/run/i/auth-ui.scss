@@ -1,0 +1,224 @@
+
+.auth-ui {
+	display: inline-block;
+	left: 0;
+	position: absolute;
+	top: 0;
+
+	*, ::after, ::before {
+		box-sizing: border-box;
+	}
+
+	button {
+		cursor: pointer;
+		padding: 0;
+	}
+
+	> h2 {
+		font-size: 32px;
+		margin: 0 0 24px;
+		text-align: center;
+	}
+
+	> ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+
+		> li {
+			margin: 0;
+			padding: 0;
+		}
+
+		&.fieldset {
+
+			> li:not(.remember-me) {
+				height: 40px;
+				position: relative;
+
+				> input {
+					background: none;
+					border: none;
+					font-size: 20px;
+					height: 100%;
+					outline: none;
+					position: absolute;
+					top: 0;
+					width: 100%;
+
+					&::placeholder {
+						opacity: 1;
+						text-transform: capitalize;
+					}
+
+					&:-webkit-autofill {
+						-webkit-text-fill-color: white !important;
+						caret-color: white;
+						transition: background-color 5000s ease-in-out 0s;
+					}
+				}
+
+				> label {
+					display: block;
+					height: 100%;
+					font-size: 0;
+					width: 100%;
+				}
+			}
+
+			> li.remember-me {
+				left: 20px;
+				position: absolute;
+
+				> input {
+					appearance: none;
+					border-radius: 3px;
+					height: 14px;
+					margin: 0;
+					padding: 0;
+					position: relative;
+					width: 14px;
+				}
+
+				> label {
+					font-size: 14px;
+					left: 24px;
+					line-height: 18.5px;
+					position: absolute;
+					white-space: nowrap;
+				}
+			}
+		}
+
+		&.actions > li {
+
+			&.close {
+				font-size: 0;
+				position: absolute;
+				right: 8px;
+				top: 8px;
+
+				> button {
+					border-radius: 4px;
+					font-size: 0;
+					height: 20px;
+					width: 20px;
+				}
+			}
+		}
+
+		.close > button,
+		.remember-me > input {
+			border: 1.25px solid;
+			box-sizing: content-box;
+		}
+
+		.close > button::before,
+		.remember-me > input:checked::before {
+			content: '';
+			height: 100%;
+			left: 0;
+			mask: url(cross.svg) no-repeat center; -webkit-mask: url(cross.svg) no-repeat center;
+			mask-size: 60%; -webkit-mask-size: 60%;
+			position: absolute;
+			top: 0;
+			width: 100%;
+		}
+	}
+
+	&.forgot-password .confirm-email,
+	&.forgot-password .remember-me,
+	&.forgot-password .sign-up,
+	&.login .confirm-email,
+	&.login .confirm-password,
+	&.sign-up .forgot-password {
+		display: none;
+	}
+
+	&.forgot-password .forgot-password,
+	&.login .login,
+	&.sign-up .sign-up {
+		display: block;
+		text-align: center;
+
+		> button {
+			background: none;
+			border: none;
+			font-size: 20px;
+			font-weight: bold;
+			text-decoration: underline;
+			text-transform: uppercase;
+		}
+	}
+
+	&.forgot-password .forgot-password,
+	&.sign-up .sign-up {
+		padding: 10px 0 60px;
+	}
+
+	&.login {
+
+		.forgot-password {
+			margin-top: 4.5px;
+			position: absolute;
+			right: 20px;
+
+			> button {
+				background: none;
+				border: none;
+				font-size: 14px;
+				font-style: italic;
+				line-height: 18.5px;
+
+				&:after {
+					content: ' ?'
+				}
+			}
+		}
+
+		.login {
+			padding: 40px 0 60px;
+		}
+
+		.remember-me {
+			margin-top: 8px;
+		}
+	}
+
+	&.sign-up .remember-me {
+		bottom: 13px;
+	}
+
+	&:not(.login) .login,
+	&:not(.sign-up) .sign-up {
+		bottom: 16px;
+		position: absolute;
+		right: 20px;
+
+		> button {
+			background: none;
+			border: none;
+			font-size: 14px;
+			font-weight: 400;
+			text-decoration: underline;
+		}
+	}
+
+	> .messages {
+		bottom: 48px;
+		position: absolute;
+		text-align: center;
+		width: 100%;
+		z-index: 1;
+
+		> li {
+			display: inline-block;
+			padding: .5em 1em;
+			white-space: nowrap;
+
+			&:empty {
+				display: none;
+			}
+		}
+	}
+}

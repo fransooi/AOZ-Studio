@@ -1,0 +1,19 @@
+<i>Menu Item Movable</i>
+<b>Menu Item Movable</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This is similar to MENU MOVABLE, but it allows the re-arrangement of various options in a particular level. Normally it is not possible to move items outside of the current menu bar, but this can be overcome by the MENU SEPARATE command, which is explained below.
+
+To use MENU ITEM MOVABLE for changing the position of a menu item, the entire menu bar must itself be
+movable. So if MENU STATIC has been called, this command will have no effect. The first item in a menu bar can
+not be moved, because this would move the entire line. Furthermore, if the last item in a menu bar is moved, the size
+of that bar will be permanently reduced.
+
+This problem can be overcome either by setting the last item into place with a MENU ITEM STATIC command, or
+by enclosing the whole menu bar with a rectangular box, like this:
+@code
+Menu$(1 ,1)=,,,,"(Bar40,100)(Loc0,0)"
+@code
+
+

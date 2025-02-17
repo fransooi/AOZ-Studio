@@ -1,0 +1,17 @@
+<i>PI#</i>
+<b>PI#</b> xxxxxxx
+=
+Pi is the Greek letter it that is used to summon up a number which begins 3.141592653 and on for ever.
+
+This number is the ratio of the circumference of a circle to its diameter, and it is used in trigonometry as the tool for calculating
+aspects of circles and spheres. Note that in order to avoid clashes with your own variable names, a # character is part
+of the token name. The PI# function gives a constant value of Pi in your calculations.
+
+In the following diagram of a circle, a point is moved from the right hand side of the x-axis up along the perimeter
+for a distance a, stopping at position b.
+![PI](help:img/pi.png)
+
+In conventional trigonometry, a circle is divided into 360 degrees, so a defines the number of degrees in the angle
+between the x-axis and the line from the centre of the circle to point b. However, your Amiga uses a default by
+which it expects all angles to be given in "radians" and not degrees.
+

@@ -1,0 +1,16 @@
+<i>View Width</i>
+<b>View Width</b> xxxxxxx
+=
+The value returned is the number of horizontal tiles shown by the view, and is calculated from the width of the display divided by the width of each tiles
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 720		// Set the map display
+Redraw View "MapView"						// Display it
+
+Print View Width( "MapView" )				// Will print "20" with 64x64 tiles.
+Wait Key
+@code
+

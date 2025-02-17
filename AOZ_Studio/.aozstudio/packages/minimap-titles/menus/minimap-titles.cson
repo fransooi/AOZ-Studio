@@ -1,0 +1,27 @@
+# See https://atom.io/docs/latest/hacking-atom-package-word-count#menus for more details
+'context-menu':
+  'atom-text-editor': [
+    {
+      'label': 'Minimap Titles Convert'
+      'command': 'minimap-titles:convert'
+    }
+  ]
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+        'label': 'Minimap Titles'
+        'submenu': [
+              {
+                'label': 'Convert'
+                'command': 'minimap-titles:convert'
+              }
+              {
+                'label': 'Toggle Comment Borders'
+                'command': 'minimap-titles:border'
+              }
+        ]
+    ]
+  }
+]
+

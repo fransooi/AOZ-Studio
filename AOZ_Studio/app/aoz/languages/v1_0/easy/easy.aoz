@@ -1,0 +1,649 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The Easy Instructions Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 20/02/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+#need_extension:"Asset"
+#need_module: "sounds"
+
+{
+    this.aoz.EASY = this;
+	this.aoz.EASY.utilities = aoz.utilities;
+	this.aoz.EASY.banks = aoz.banks;
+
+	this.childExists = function( parent, child )
+	{
+		if( parent.children )
+		{
+			for( i = 0; i < parent.children; i++ )
+			{
+				if( parent.children[ i ] == child )
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	};
+
+	this.getTime = function( index )
+	{
+		var audio = this.aoz.ASSET.arrAudios[ 'audio_' + index ];
+		if( audio != undefined )
+		{
+			//var tm = audio.currentTime / 1000;
+			//var tm = audio.instance.position / 1000
+			return Math.round( audio.currentTime );
+		}
+		return -1;
+	};
+
+	this.load_wait = function()
+	{
+		return this.load_done;
+	};
+}
+
+/**doc
+@name:Meta Audio Video
+@description:Some commands to simplify the coding.
+@author:Baptiste Bideaux
+doc*/
+
+/**api
+@name:Set Display
+@description:Set the resolution of the display in pixels.
+@param:width:integer:Width of the display in pixel.
+@param:height:integer:Height of the display in pixel.
+@compatible: aoz
+api*/
+Instruction Set Display, widht, height
+{
+	#errors
+	aoz.manifest.display.width = %width;
+	aoz.manifest.display.height = %height;
+	aoz.renderer.width = %widht;
+	aoz.renderer.height = %height;
+	aoz.renderer.originalWidth = %width;
+	aoz.renderer.originalHeight = %height;
+
+	document.getElementById( 'AOZCanvas' ).setAttribute( 'width', %width );
+	document.getElementById( 'AOZCanvas' ).setAttribute( 'height', %height );
+	document.getElementById( 'AOZCanvas' ).style.width = %width + 'px';
+	document.getElementById( 'AOZCanvas' ).style.height = %height + 'px';
+}
+End Instruction
+
+/**api
+@name:Draw Image
+@description:Draw an image loaded with "Load Asset" command, in the current screen, with a specific size
+@param:image:index:Index of Image.
+@param:x:integer:Position X on the current Screen in pixel.
+@param:y:integer:Position Y on the current Screen in pixel.
+@param:width:integer:Width on the current Screen in pixel.
+@param:height:integer:Height on the current Screen in pixel.
+@exception:Image not loaded
+@compatible: aoz
+api*/
+Instruction Draw Image, image=(index), x, y, width, height
+{
+	#errors
+	var image = aoz.ASSET.arrImages[ 'image_' + (%image) ];
+	if( image )
+		aoz.currentScreen.pasteCanvas( image, (x:%x, y:%y, width:%width, height:%height );
+	else
+		throw 'image_not_loaded';
+}
+End Instruction
+
+/**api
+@name:Audio Loop On
+@description:Repeat the playing at the end of audio.
+@param:audio:index:Index of audio.
+@exception:Audio not loaded.
+@compatible: aoz
+api*/
+Instruction Audio Loop On, audio=(index)
+{
+	#errors
+	var audio = aoz.ASSET.arrAudios[ 'audio_' + (%audio) ];
+	if( audio )
+	{
+		audio.loop = true;
+		//audio.props.loop = -1;
+		//audio.instance.applyPlayProps( audio.props );
+	}
+	else
+	{
+		throw 'audio_not_loaded';
+	}
+}
+End Instruction
+
+/**api
+@name:Audio Loop Off
+@description:Stop the repeat the playing at the end of audio.
+@param:audio:index:Index of audio.
+@exception: Audio not loaded.
+@compatible: aoz
+api*/
+Instruction Audio Loop Off, audio=(index)
+{
+	#errors
+	var audio = aoz.ASSET.arrAudios[ 'audio_' + (%audio) ];
+	if( audio )
+	{
+		audio.loop = false;
+		//audio.props.loop = 0;
+		//audio.instance.applyPlayProps( audio.props );
+	}
+	else
+	{
+		throw 'audio_not_loaded';
+	}
+}
+End Instruction
+
+/**api
+@name:Play Audio
+@description:Play an audio file loaded with the "Load Asset" command.
+@param:audio:index:Index of audio.
+@param:*AudioLoop:bool:If True, the sound will be played in loop.
+@param:*Volume:integer:Value in %. 0(mute) - 100(full volume). 75 by default.
+@exception:Audio not loaded.
+@compatible: aoz
+api*/
+Instruction Play Audio, audio=(index), AudioLoop=False, Volume = 75
+{
+	#errors
+	var audio = undefined;
+	if( %Volume < 0 || %Volume > 100 )
+	{
+		throw 'audio_error_volume';
+	}
+
+	if( aoz.ASSET && aoz.ASSET.arrAudios && aoz.ASSET.arrAudios[ 'audio_' + (%audio) ] )
+	{
+		audio = aoz.ASSET.arrAudios[ 'audio_' + (%audio) ];
+		if( audio )
+		{
+			audio.loop = %AudioLoop;
+			audio.volume = %Volume / 100;
+			audio.currentTime = 0;
+			audio.isPlaying = true;
+			audio.play();
+		}
+		else
+		{
+			if( application.aoz.sounds )
+			{
+				application.aoz.sounds.setVolume( %Volume / 100 );
+				application.aoz.sounds.samLoop( %AudioLoop, undefined );
+				application.aoz.moduleSounds.play({ index: %audio, loop: %AudioLoop, frequency: undefined, type:'sound'});
+			}
+			else
+			{
+			throw 'audio_not_loaded';
+			}
+		}
+	}
+	else
+	{
+		if( application.aoz.sounds )
+		{
+			application.aoz.sounds.setVolume( %Volume / 100 );
+			application.aoz.sounds.samLoop( %AudioLoop, undefined );		
+			application.aoz.moduleSounds.play( { index: %audio, type:'sound' } );		
+		}
+	}
+}
+End Instruction
+
+/**api
+@name:Stop Audio
+@description:Stop an audio loaded with the "Load Asset" command.
+@param:audio:index:Index of audio.
+@exception:Audio not loaded.
+@compatible: aoz
+api*/
+Instruction Stop Audio, audio=(index)
+{
+	#errors
+	var audio = undefined;
+	if( aoz.ASSET && aoz.ASSET.arrAudios && aoz.ASSET.arrAudios[ 'audio_' + (%audio) ] )
+	{
+		audio = aoz.ASSET.arrAudios[ 'audio_' + (%audio) ];
+		if( audio )
+		{
+			audio.isPlaying = false;
+			audio.currentTime = 0;
+			audio.pause();
+		}
+		else
+		{
+			throw 'audio_not_loaded';
+		}
+	}
+	else
+	{
+		aoz.sounds.callVoices( 'stop', -1, [ %audio ] );
+	}
+}
+End Instruction
+
+/**api
+@name:Pause Audio
+@description:Pause an audio loaded with the "Load Asset" command.
+@param:audio:index:Index of audio.
+@exception:Audio not loaded.
+@compatible: aoz
+api*/
+Instruction Pause Audio, audio=(index)
+{
+	#errors
+	var audio = undefined;
+	if( aoz.ASSET && aoz.ASSET.arrAudios && aoz.ASSET.arrAudios[ 'audio_' + (%audio) ] )
+	{
+		audio = aoz.ASSET.arrAudios[ 'audio_' + (%audio) ];
+		if( audio )
+		{
+			audio.isPlaying = false;
+			audio.pause();
+		}
+		else
+		{
+			throw 'audio_not_loaded';
+		}
+	}
+
+}
+End Instruction
+
+/**api
+@name:Volume Audio
+@description:Set the volume of an audio loaded with the "Load Asset" command.
+@param:audio:index:Index of audio.
+@param:volume:integer:Value of the volume between 0(mute)-100(full)
+@exception:Audio not loaded.
+@compatible: aoz
+api*/
+Instruction Volume Audio, audio=(index), volume
+{
+	#errors
+	
+	var audio = undefined;
+	if( aoz.ASSET && aoz.ASSET.arrAudios && aoz.ASSET.arrAudios[ 'audio_' + (%audio) ] )
+	{
+		if( %volume < 0 || %volume > 100 )
+		{
+			throw 'audio_error_volume';
+		}
+
+		audio = aoz.ASSET.arrAudios[ 'audio_' + (%audio) ];
+		if( audio )
+		{
+			audio.volume = ( %volume ) / 100;
+		}
+		else
+		{
+			throw 'audio_not_loaded';
+		}
+	}
+	else
+	{
+		if( %volume < 0 || %volume > 63 )
+		{
+			throw 'audio_error_volume';
+		}
+		aoz.sounds.setVolume( %volume );	
+	}
+}
+End Instruction
+
+/**api
+@name:Time Audio
+@description:Set the position of an audio loaded with the "Load Asset" command.
+@param:audio:index:Index of audio.
+@param:time:integer:Value of the timer in seconds
+@compatible: aoz
+api*/
+Instruction Time Audio, audio=(index), time
+{
+	#errors
+	var audio = aoz.ASSET.arrAudios[ 'audio_' + (%audio) ];
+	if( audio )
+	{
+		audio.currentTime = %time;
+		//audio.instance.position = %time;
+	}
+	else
+	{
+		throw 'audio_not_loaded';
+	}
+}
+End Instruction
+
+/**api
+@name:Time Audio
+@description:Return the position of audio
+@param:audio:index:Index of audio.
+@exception:Audio not loaded.
+@return:number:The position of audio in seconds.
+@compatible: aoz
+api*/
+Function Time Audio, audio=(index)
+{
+	#errors
+}
+End Function( { aoz.EASY.getTime( %audio ) } )
+
+/**api
+@name:Video Loop On
+@description:Repeat the playing at the end of video loaded with the "Load Asset" command.
+@param:video:index:Index of video.
+@exception:Video not loaded
+@compatible: aoz
+api*/
+Instruction Video Loop On, video=(index)
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ];
+	if( video )
+		video.setAttribute( 'loop', '' );
+	else
+		throw 'video_not_loaded';
+}
+End Instruction
+
+/**api
+@name:Video Loop Off
+@description:Stop Repeat the playing at the end of video
+@param:video:index:Index of video.
+@exception:Video not loaded
+@compatible: aoz
+api*/
+Instruction Video Loop Off, video=(index)
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ];
+	if( video )
+		if( video.hasAttribute( 'loop' ) )
+			video.removeAttribute( 'loop' );
+	else
+		throw 'video_not_loaded';
+}
+End Instruction
+
+/**api
+@name:Play Video
+@description:Play a video loaded with the "Load Asset" command
+@param:video:index:Index of video.
+@exception:Video not loaded
+@compatible: aoz
+api*/
+Instruction Play Video, video=(index)
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ];
+	if( video && video.loaded )
+	{
+		video.isPlaying = true;
+		video.play();
+	}
+	else
+	{
+		throw 'video_not_loaded';
+	}
+}
+End Instruction
+
+/**api
+@name:Stop Video
+@description:Stop a video loaded by the "Load Asset" command.
+@param:video:index:Index of video.
+@exception:Video not loaded
+@compatible: aoz
+api*/
+Instruction Stop Video, video=(index)
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ];
+	if( video )
+	{
+		video.isPlaying = false;
+		video.pause();
+		video.currentTime = 0;
+	}
+	else
+	{
+		throw 'video_not_loaded';
+	}
+}
+End Instruction
+
+/**api
+@name:Pause Video
+@description:Pause a video loaded with the "Load Asset" command.
+@param:video:index:Index of video.
+@exception:Video not loaded
+@compatible: aoz
+api*/
+Instruction Pause Video, video=(index)
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ];
+	if( video )
+		video.pause();
+	else
+		throw 'video_not_loaded';
+}
+End Instruction
+
+/**api
+@name:Volume Video
+@description:Set the video volume
+@param:video:index:Index of video.
+@param:volume:integer:Value of the volume between 0(mute)-100(full)
+@exception:Video not loaded
+@compatible: aoz
+api*/
+Instruction Volume Video, video=(index), volume
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ];
+	if( video )
+		video.volume =  ( %volume ) / 100;
+	else
+		throw 'video_not_loaded';
+}
+End Instruction
+
+/**api
+@name:Time Video
+@description:Set the position of video in seconds
+@param:video:integer:Index of video.
+@param:time:integer:Value of the timer in seconds
+@exception:Video not loaded
+@compatible: aoz
+api*/
+Instruction Time Video, video=(index), time
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ];
+	if( video )
+		video.currentTime = %time;
+	else
+		throw 'video_not_loaded';
+}
+End Instruction
+
+/**api
+@name:Time Video
+@description:Return the position of video in seconds
+@param:video:index:Index of video.
+@exception:Video not loaded
+@return:number:The position of video in seconds.
+@compatible: aoz
+api*/
+Function Time Video, video=(index), time
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ]
+	if( !video )
+		throw 'video_not_loaded';
+}
+End Function( { video.currentTime } )
+
+/**api
+@name:Draw Video
+@description:Draw a video loaded with the "Load Asset" command on the current screen with a specific size
+@param:video:index:Index of video.
+@param:x:integer:Position X of the video in pixel.
+@param:y:integer:Position Y of the video in pixel.
+@param:width:integer:Width of the video in pixel.
+@param:height:integer:Height of the video in pixel.
+@exception:Video not loaded.
+@compatible: aoz
+api*/
+Instruction Draw Video, video=(index), x, y, width, height
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%video) ];
+	if ( video )
+	{
+		if( video.isPlaying )
+		{
+			aoz.currentScreen.pasteCanvas( video, { x: %x, y: %y, width: %width, height: %height } );
+		}
+	}
+	else
+	{
+		throw 'video_not_loaded';
+	}
+}
+End Instruction
+
+/**api
+@name:Video Bob
+@description:Assign a video loaded with the "Load Asset" command as a Bob Image
+@param:videon:index:Index of video.
+@param:bobindex:index:Index of Bob image.
+@exception:Video not loaded.
+@compatible: aoz
+api*/
+Instruction Video Bob, videon=(index), image=(index), width=-1001, height=-1001
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%videon) ];
+	if( video )
+	{
+		var bank = aoz.banks.getBank( undefined, undefined, 'images' );
+		var image = undefined;
+		try
+		{
+			image = bank.getElement( %image, aoz.currentContextName, undefined );
+		}
+		catch( e )
+		{
+			image = undefined;
+		}
+
+		if ( image == undefined )
+		{
+			bank.add( %image );
+			var canvas = document.createElement( 'canvas' );
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			bank.setElement( %image, canvas );
+		}
+
+		if ( video.isPlaying )
+		{
+			var w = video.videoWidth;
+			var h = video.videoHeight;
+			if( %width && %width != -1001 )
+			{
+				w = %width;
+			}
+
+			if( %height && %height != -1001 )
+			{
+				h = %height;
+			}
+
+			image = bank.getElement( %image );
+			image.width = w;
+			image.height = h;
+			image.canvas.width = w;
+			image.canvas.height = h;
+			var ctx = image.canvas.getContext( '2d' );
+			ctx.drawImage( video, 0, 0, w, h );
+		}
+	}
+	else
+	{
+		throw 'video_not_loaded';
+	}
+}
+End Instruction
+
+
+
+/**api
+@name:Show Video
+@description:Show the video in fullscreen
+@param:video:index:Index of video.
+@compatible: aoz
+api*/
+Instruction Show Video, VIDEON=(index)
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%VIDEON) ];
+	if( video && aoz.EASY.childExists( video ) )
+		document.body.removeChild( video );
+	video.setAttribute( 'width', window.innerWidth );
+	video.setAttribute( 'height', window.innerHeight );
+	video.setAttribute( 'style', 'z-index: 100' );
+	document.body.appendChild( video );
+}
+End Instruction
+
+/**api
+@name:Hide Video
+@description:Hide the video
+@param:video:index:Index of video.
+@compatible: aoz
+api*/
+Instruction Hide Video, VIDEON=(index)
+{
+	#errors
+	var video = aoz.ASSET.arrVideos[ 'video_' + (%VIDEON) ];
+	if( video && aoz.EASY.childExists( video ) )
+		document.body.removeChild( video );
+}
+End Instruction

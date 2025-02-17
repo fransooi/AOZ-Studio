@@ -1,0 +1,2261 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Maps Instruction Set
+ * By Baptiste Bideaux and Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BP - FL
+ * @date first pushed on 24/12/2019
+ */
+
+//
+// Initialization
+//
+{
+	this.maps = {};
+	this.views = {};
+	this.tileSets = {};
+	this.currentMapIndex = undefined;
+	this.currentViewIndex = undefined;
+	this.currentTileSetIndex = undefined;
+	this.mapCopy = undefined;
+	this.options = {};
+	this.mapIndex = -1;
+	this.load_done = true;
+	this.screenViewNumber = 1000;
+	this.findRequest = undefined;
+
+	this.getMap = function( mapIndex )
+	{
+		if ( typeof mapIndex == 'undefined' )
+		{
+			if ( typeof this.currentMapIndex == 'undefined' )
+				throw { error: "no_map_defined" };
+			mapIndex = this.currentMapIndex;
+		}
+		if( !this.maps[ mapIndex ] )
+			throw { error: "map_not_found", params: [ viewIndex ] };
+		return this.maps[ mapIndex ];
+	};
+	this.getView = function( viewIndex )
+	{
+		if ( typeof viewIndex == 'undefined' )
+		{
+			if ( typeof this.currentViewIndex == 'undefined' )
+				throw { error: "no_view_defined" };
+			viewIndex = this.currentViewIndex;
+		}
+		if( !this.views[ viewIndex ] )
+			throw { error: "view_not_found", params: [ viewIndex ] };
+		return this.views[ viewIndex ];
+	};
+	this.getViewComplete = function( viewIndex )
+	{
+		var view = this.getView( viewIndex );
+		if ( !view.map )
+			throw 'map_not_defined_in_view';
+		if ( !view.tileSet )
+			throw 'tileset_not_defined_in_view';
+		return view;
+	};
+	this.getTileSet = function( tileSetIndex )
+	{
+		if ( typeof tileSetIndex == 'undefined' )
+		{
+			if ( typeof this.currentTileSetIndex == 'undefined' )
+				throw { error: "no_tileset_defined" };
+			tileSetIndex = this.currentTileSetIndex;
+		}
+		if ( !this.tileSets[ tileSetIndex ] )
+			throw { error: "tileset_not_found", params: [ tileSetIndex ] };
+		return this.tileSets[ tileSetIndex ];
+	};
+
+	this.reset = function()
+	{
+		this.maps = {};
+		for ( v in this.views )
+			this.viewClose( v );
+		this.views = {};
+		this.tileSets = {};
+		this.currentMapIndex = undefined;
+		this.currentViewIndex = undefined;
+		this.currentTileSetIndex = undefined;
+	};
+
+	this.load = function( args )
+	{
+		this.load_done = false;
+
+		var path = args[ 0 ];
+		var parts = path.split( "." );
+		var ext = parts[ parts.length - 1 ];
+
+		switch( ext )
+		{
+			// Chargement de maps au format TEXT
+			case 'aozmap':
+				this.loadTXT( path );
+				break;
+
+			// Chargement de maps au format JSON
+			case 'json':
+				this.loadJSON( path );
+				break;
+
+			// Chargement de maps au format TMX
+			case 'tmx':
+				this.loadTMX( path );
+				break;
+
+			default:
+				this.load_done = true;
+				throw 'unknow_maps_format';
+				break;
+		}
+		return;
+	};
+
+	this.loadTileset = function( args )
+	{
+		this.load_done = false;
+
+		var path = args[ 0 ];
+		var firstImage = args[ 1 ];
+		var parts = path.split(".");
+		var ext = parts[parts.length - 1];
+
+		switch( ext )
+		{
+			// Chargement de maps au format JSON
+			case 'json':
+				this.loadTileSetJSON( path, firstImage );
+				break;
+
+			// Chargement de tilesets au format TSX
+			case 'tsx':
+				this.loadTileSetTSX( path, firstImage );
+				break;
+
+			default:
+				this.load_done = true;
+				throw 'unknow_tileset_format';
+				break;
+		}
+		return;
+	};
+
+	this.loadTMX = function( path )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.loadFile( path, { responseType: 'text' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				var xmlDoc, map, datas;
+				var parser = new DOMParser();
+				xmlDoc = parser.parseFromString(data, "text/xml");
+				map = xmlDoc.getElementsByTagName("map");
+
+				var name = self.aoz.utilities.getFilename( path );
+				var newMap = {};
+				if ( map )
+				{
+					self.getAttributes( newMap, map[ 0 ] )
+					newMap.layers = [];
+					newMap.tiles = {};
+					newMap.data = {};
+
+					var tiles = xmlDoc.getElementsByTagName("tile");
+					var layers = xmlDoc.getElementsByTagName("layer");
+					var datas = xmlDoc.getElementsByTagName("data");
+					if( datas )
+					{
+						for ( var i = 0; i < datas.length; i++ )
+						{
+							if( layers[ i ] )
+							{
+								newMap.layers[ i ] = {};
+								self.getAttributes( newMap.layers[ i ], layers[i] );
+								var datai = datas[ i ].innerHTML.replace(/(\r\n|\n|\r)/gm,"").split(",");
+								for ( var d = 0; d < datai.length; d++ )
+									datai[ d ] = parseInt( datai[ d ] );
+								newMap.layers[ i ].width = newMap.width;
+								newMap.layers[ i ].height = newMap.height;
+								newMap.layers[ i ].data = datai;
+							}
+						}
+					}
+				}
+				newMap.index = name;
+				self.maps[ name ] = newMap;
+				self.currentMapIndex = name;
+
+				console.log(self);
+			}
+			self.load_done = true;
+		} );
+	};
+	this.getAttributes = function( dest, source )
+	{
+		if ( source )
+		{
+			for ( i = 0; i < source.attributes.length; i++)
+			{
+				var attr = source.attributes[ i ];
+				var value = parseInt( attr.value );
+				if ( !isNaN( value ) )
+					dest[ attr.nodeName ] = value;
+				else
+					dest[ attr.nodeName ] = attr.value;
+			}
+		}
+	};
+
+
+	// Chargement de maps au format TXT
+	this.loadTXT = function( path )
+	{
+		this.load_done = false;
+		this.options = {
+			width: 0,
+			height: 0,
+			refTiles: []
+		};
+
+		var self = this;
+		this.aoz.filesystem.loadFile( path, { responseType: 'text' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				var txtDoc, map, datas;
+				var name = self.aoz.utilities.getFilename( path );
+
+				txtDoc = data.split( "\n" );
+				var map =
+				{
+					type: "map",
+					index: name,
+					width: 0,
+					height: 0,
+					tilewidth: 16,
+					tileheight: 16,
+					infinite: false,
+					layers: [],
+				};
+				var tileSet =
+				{
+					type:"tileset",
+					index: name,
+					name: "",
+					columns: 0,
+					tilecount: 0,
+					tileheight: width,
+					tilewidth: height,
+					tiles: [],
+					refTiles: [],
+					refTileStart: 1000000,
+					refTileEnd: 0
+				};
+				var lines = undefined;
+				var width = 0;
+				var height = 0;
+				for ( i = 0; i < txtDoc.length; i++ )
+				{
+					var line = self.aoz.utilities.trimString( txtDoc[ i ] );
+					if ( line.toLowerCase() == "start" )
+					{
+						layer =
+						{
+							type: "tilelayer",
+							id: 0,
+							width: 0,
+							height: 0,
+							data: [],
+							name: "",
+							opacity: 1,
+							visible: true,
+							x: 0,
+							y: 0
+						}
+						lines = [];
+					}
+					else if ( line.toLowerCase() == "end" )
+					{
+						if ( lines )
+						{
+							layer.data = [];
+							for ( l = 0; l < lines.length; l++ )
+							{
+								for( ll = lines[ l ].length; ll < layer.width; ll++ )
+									lines[ l ] = lines[ l ] + " ";
+							}
+							for ( l = 0; l < lines.length; l++ )
+							{
+								var line = lines[ l ];
+								for( ll = 0; ll < line.length; ll++ )
+								{
+									layer.data.push( line.charCodeAt( ll ) );
+								}
+							}
+							layer.id = layer.length;
+							map.layers.push( layer );
+							layer = [];
+						}
+					}
+					else if ( line.substring( 0, 4 ) == 'ref:' )
+					{
+						var values = line.substring(4).split( "," );
+						var index = values[ 0 ].charCodeAt( 0 );
+						var value = parseInt( values[ 1 ] );
+						tileSet.refTileStart = Math.min( tileSet.refTileStart, value );
+						tileSet.refTileEnd = Math.max( tileSet.refTileEnd, value + 1 );
+						tileSet.refTiles[ index ] = value;
+					}
+					else if ( line.substring( 0, 5 ) == "size:" )
+					{
+						var values = line.substring(5).split( "," );
+						map.tilewidth = parseInt( values[ 0 ] );
+						map.tileheight = parseInt( values[ 1 ] );
+						tileSet.tilewidth = map.tilewidth;
+						tileSet.tileheight = map.tileheight;
+					}
+					else
+					{
+						lines.push( line );
+						if ( line.length > layer.width )
+							layer.width = line.length;
+						layer.height++;
+					}
+				}
+				if ( tileSet.refTiles.length )
+				{
+					for ( var i = 0; i < tileSet.refTiles.length; i++ )
+					{
+						if ( typeof tileSet.refTiles[ i ] == 'undefined' )
+							tileSet.refTiles[ i ] = 0;
+					}
+				}
+				else
+				{
+					for ( var i = 0; i < 256; i++ )
+						tileSet.refTiles[ i ] = i;
+					tileSet.refTileStart = 0;
+					tileSet.refTileEnd = 256;
+				}
+				self.maps[ name ] = map;
+				self.tileSets[ name ] = tileSet;
+				self.currentMapIndex = name;
+				self.currentTileSetIndex = name;
+			}
+			self.load_done = true;
+		} );
+	};
+
+	// Chargement de maps au format TILED
+	this.loadJSON = function( path )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.loadFile( path, { responseType: 'text' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				var name = self.aoz.utilities.getFilename( path );
+				var map = JSON.parse( data );
+				map.index = name;
+				self.maps[ name ] = map;
+				for ( var l = 0; l < map.layers.length; l++ )
+				{
+					map.layers[ l ].width = map.width;
+					map.layers[ l ].height = map.height;
+				}
+				self.currentMapIndex = name;
+				self.load_done = true;
+			}
+		} );
+	};
+
+	// Chargement de maps au format TILED
+	this.loadTileSetJSON = function( path, firstImage )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.loadFile( path, { responseType: 'text' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				var tileSet = JSON.parse( data );
+				tileSet.refTiles = [];
+				tileSet.index = tileSet.name;
+				self.currentTileSetIndex = tileSet.name;
+				self.tileSets[ tileSet.name ] = tileSet;
+
+				// Load image into hidden screen
+				var imagePath = self.aoz.utilities.getFilenameAndExtension( tileSet.image );
+				var descriptor = self.aoz.filesystem.getFile( imagePath );
+				if ( descriptor.filename == '' )
+				{
+					self.load_done = false;
+					throw 'tileset_image_not_found';
+				}
+				self.aoz.filesystem.loadFile( descriptor, { binary: true }, function( response, arrayBuffer, tileSet )
+				{
+					if ( response )
+					{
+						var blob = new Blob( [ arrayBuffer ], { type: 'image/png' } );
+						var urlCreator = window.URL || window.webkitURL;
+						var imageUrl = urlCreator.createObjectURL( blob );
+						var image = new Image();
+						image.onload = function()
+						{
+							// Paste the image in a screen
+							var screen = self.aoz.getScreenOrCreateOne( { index: 1000, width: this.width, height: this.height, numberOfcolors: 32, pixelMode: 0 } );
+							screen.setVisible( true );
+							screen.setTransparent( [ 0 ] );
+							screen.cls( 0 );
+							screen.pasteCanvas( this, { x: 0, y: 0, width: this.width, height: this.height } );
+
+							// Cut the bobs
+							tileSet.refTileStart = firstImage;
+							var tilesPerLine = Math.floor( tileSet.imagewidth / ( tileSet.tilewidth + tileSet.spacing ) );
+							var numberOfLines = Math.floor( tileSet.imageheight / ( tileSet.tileheight + tileSet.spacing ) );
+							for ( var t = 0; t < tilesPerLine * numberOfLines; t++ )
+							{
+								getTile( t, firstImage );
+								tileSet.refTiles[ t ] = firstImage - 1;
+								firstImage++;
+							}
+							tileSet.refTileEnd = firstImage;
+
+							// Delete temporary screen
+							self.aoz.screenClose( screen, "#keepCurrent" );
+
+							// All done!
+							self.load_done = true;
+
+							function getTile( number, bobNumber )
+							{
+								var x = Math.floor( number % tilesPerLine ) * ( tileSet.tilewidth + tileSet.spacing );
+								var y = Math.floor( number / tilesPerLine ) * ( tileSet.tileheight + tileSet.spacing );
+								screen.getImage( 'images', bobNumber, { x: x, y: y, width:tileSet.tilewidth, height: tileSet.tileheight }, '#noremap' );
+							}
+						}
+						image.src = imageUrl;
+					}
+				}, tileSet );
+			}
+		} );
+	};
+	this.createTileset = function( name, width, height, firstImage, numberOfImages )
+	{
+		var tileSet =
+		{
+			type: "tileset",
+			columns: 0,
+			image: "",
+			imageheight: width,
+			imagewidth: height,
+			margin: 0,
+			name: "",
+			spacing: 0,
+			tilecount: 0,
+			tiledversion: "",
+			tileheight: width,
+			tilewidth: height,
+			tiles: [],
+			version: 1.2,
+			refTiles: [],
+			index: name,
+			refTileStart: firstImage,
+			refTileEnd: firstImage + numberOfImages
+		};
+		for ( var i = 0; i < numberOfImages; i++ )
+		{
+			tileSet.tiles[ i ] = { id: i };
+			tileSet.refTiles[ i ] = firstImage + i;
+		}
+		this.currentTileSetIndex = name;
+		this.tileSets[ name ] = tileSet;
+	};
+	this.loadTileSetTSX = function( path, firstImage )
+	{
+		this.load_done = false;
+		var self = this;
+		this.aoz.filesystem.loadFile( path, { responseType: 'text' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				var xmlDoc, map, datas;
+				var parser = new DOMParser();
+				xmlDoc = parser.parseFromString( data, "text/xml" );
+
+				var ts = xmlDoc.children[ 0 ];
+				var tileSet = {};
+				tileSet.refTiles = [];
+				tileSet.tiles = [];
+				self.getAttributes( tileSet, ts );
+
+				var lastId = -1;
+				tileSet.refTileStart = firstImage;
+				for ( var c = 0; c < ts.children.length; c++ )
+				{
+					var t = ts.children[ c ];
+					if ( t.localName == "tile" )
+					{
+						var id = parseInt( t.id );
+						var tile = { id: id };
+						self.getAttributes( tile, t );
+						tileSet.tiles[ id ] = tile;
+						tileSet.refTiles[ id ] = firstImage + id;
+						lastId = Math.max( lastId, id );
+					}
+				}
+				tileSet.refTileEnd = firstImage + lastId + 1;
+				var name = self.aoz.utilities.getFilename( path );
+				tileSet.index = name;
+				self.currentTileSetIndex = name;
+				self.tileSets[ name ] = tileSet;
+				self.load_done = true;
+			}
+		} );
+	};
+	this.load_wait = function()
+	{
+		return this.load_done;
+	};
+
+	this.setMapIndex = function( viewIndex, mapIndex )
+	{
+		var view = this.getView( viewIndex );
+		view.map = this.getMap( mapIndex );
+	};
+
+	this.getMapIndex = function( viewIndex )
+	{
+		var view = this.getView( viewIndex );
+		return view.map.index;
+	};
+
+	this.layerCount = function( viewIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		return view.map.layers.length;
+	};
+
+	this.setViewLayer = function( viewIndex, layer )
+	{
+		var view = this.getViewComplete( viewIndex );
+		if ( layer < 0 || layer > view.map.layers.length )
+			throw { error: 'illegal_function_call', parameter: layer };
+		view.layerIndex = layer;
+	};
+
+	this.getViewLayer = function( viewIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		return view.layerIndex;
+	};
+
+	this.tileReplace = function( viewIndex, tileSearch, tileReplace )
+	{
+		var view = this.getView( viewIndex );
+		if ( !view.map )
+			throw "map_view_not_set";
+
+		for( i = 0; i < view.map.datas.length; i++ )
+		{
+			if( view.map.datas[ i ] == tileSearch )
+			{
+				view.map.datas[ i ]  = tileReplace;
+			}
+		}
+		view.toUpdate = true;
+	};
+
+	this.mapWidth = function( viewIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		return layer.width;
+	};
+
+	this.mapHeight = function( viewIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		return layer.height;
+	};
+
+	this.removeMap = function( mapIndex )
+	{
+		var map = this.getMap( mapIndex );
+		this.maps = this.aoz.utilities.cleanObject( this.maps, map );
+	};
+
+	this.pushMap = function( viewIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		view.mapCopy.push( this.aoz.utilities.copyObject( view.map ) );
+	};
+
+	this.popMap = function( viewIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		if ( view.mapCopy.length == 0 )
+			throw 'map_not_pushed';
+		view.map = view.mapCopy.pop();
+	};
+
+	this.viewOpen = function( viewIndex, mapIndex, tileSetIndex, layerIndex )
+	{
+		if( viewIndex == "" )
+			throw "illegal_function_call"
+		if( this.views[ viewIndex ] )
+			this.viewClose( viewIndex );
+
+		var tileSet;
+		if ( typeof tileSetIndex == 'undefined' )
+		{
+			// Create an emtpy tileset
+			this.tileSet( viewIndex ) =
+			{
+				"type":"tileset",
+				"columns": 0,
+				"image": "",
+				"imageheight": 64,
+				"imagewidth": 64,
+				"margin": 0,
+				"name": "",
+				"spacing": 0,
+				"tilecount": 0,
+				"tiledversion": "",
+				"tileheight": 0,
+				"tilewidth": 0,
+				"tiles": [],
+				"version": 1.2
+			}
+		}
+		else
+		{
+			tileSet = this.getTileSet( tileSetIndex );
+		}
+		var view =
+		{
+			type: '2d',
+			x: 0,
+			y: 0,
+			width: 320,
+			height: 200,
+			offsetX: 0,
+			offsetY: 0,
+			offsetZ: 0,
+			map: this.getMap( mapIndex ),
+			tileSet: tileSet,
+			refTiles: this.aoz.utilities.copyObject( this.getTileSet( tileSetIndex ).refTiles ),
+			strings: [],
+			layerIndex: typeof layerIndex == 'undefined' ? 0 : layerIndex,
+		};
+
+		// Open hidden screen
+        view.screen = this.aoz.screenOpen( { index:2000, width:2000, height:2000, numberOfColors:32 }, "#findFreeIndex #keepCurrent #noCls" );         // TODO: organize spaces of numbers for temporary screens.
+		if ( !view.screen )
+    		throw 'cannot_open_screen';
+		view.screenIndex = view.screen.index;
+		view.screen.setTransparent( [ 0 ] );
+		view.screen.cls( 0 );
+		view.screen.setVisible( false );
+
+		this.views[ viewIndex ] = view;
+		view.toUpdate = true;
+		view.neverUpdated = true;
+	};
+
+	this.setTileImage = function( viewIndex, tileIndex, imageIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		if ( typeof tileIndex == 'string' )
+		{
+			tileIndex = parseInt( tileIndex );
+			if ( isNaN( tileIndex ) )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+		}
+		if ( tileIndex >= 0 )
+		{
+			if ( typeof imageIndex == 'string' )
+			{
+				imageIndex = parseInt( imageIndex );
+				if ( isNaN( imageIndex ) )
+					throw { error: 'illegal_function_call', parameter: imageIndex };
+			}
+			if ( tileIndex >= view.tileSet.refTiles.length )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+			view.tileSet.refTiles[ tileIndex ] = imageIndex;
+			view.toUpdate = true;
+		}
+	};
+
+	this.getTileImage = function( viewIndex, tileIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		if ( typeof tileIndex == 'string' )
+		{
+			tileIndex = parseInt( tileIndex );
+			if ( isNaN( tileIndex ) )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+		}
+		if ( tileIndex < 0 )
+			return -1;
+		if ( tileIndex >= view.tileSet.refTiles.length )
+			throw { error: 'illegal_function_call', parameter: tileIndex };
+		return view.tileSet.refTiles[ tileIndex ];
+	};
+	this.tileAtCoordinates = function( viewIndex, x, y )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( x >= view.x && x < view.x + view.width && x >= view.y && y < view.y + view.height )
+		{
+			x = ( x - view.x ) + view.offsetX;
+			y = ( y - view.y) + view.offsetY;
+			y = Math.floor( y / view.tileSet.tileheight );
+			x = Math.floor( x / view.tileSet.tilewidth );
+			return y * layer.width + x;
+		}
+		return -1;
+	};
+	this.getTileIndex = function( viewIndex, x, y )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		x = ( typeof x == 'undefined' ? 0 : x );
+		y = ( typeof y == 'undefined' ? 0 : y );
+		if( x < 0 || x > layer.width || y < 0 || y > layer.height )
+			return -1;
+		return y * layer.width + x;
+	};
+	this.getTileValue = function( viewIndex, tileIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( typeof tileIndex == 'string' )
+		{
+			tileIndex = parseInt( tileIndex );
+			if ( isNaN( tileIndex ) )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+		}
+		if ( tileIndex < 0 )
+			return 0;
+		if ( tileIndex > layer.data.length )
+			throw { error: 'illegal_function_call', parameter: tileIndex };
+		return layer.data[ tileIndex ];
+	};
+	this.setTileValue = function( viewIndex, tileIndex, value )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( typeof tileIndex == 'string' )
+		{
+			tileIndex = parseInt( tileIndex );
+			if ( isNaN( tileIndex ) )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+		}
+		if ( tileIndex >= 0 )
+		{
+			if ( tileIndex > layer.data.length )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+			if ( typeof value == 'string' )
+			{
+				value = parseInt( value )
+				if ( isNaN( value ) )
+					throw { error: 'illegal_function_call', parameter: value };
+			}
+			layer.data[ tileIndex ] = value;
+			view.toUpdate = true;
+		}
+	};
+	this.setTileString = function( viewIndex, tileIndex, text )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( typeof tileIndex == 'string' )
+		{
+			tileIndex = parseInt( tileIndex );
+			if ( isNaN( tileIndex ) )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+		}
+		if ( tileIndex >= 0 )
+		{
+			if ( tileIndex > layer.data.length )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+			view.strings[ tileIndex ] = text;
+		}
+	};
+	this.getTileString = function( viewIndex, tileIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( typeof tileIndex == 'string' )
+		{
+			tileIndex = parseInt( tileIndex );
+			if ( isNaN( tileIndex ) )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+		}
+		if ( tileIndex < 0 )
+			return "";
+		if ( tileIndex > layer.data.length )
+			throw { error: 'illegal_function_call', parameter: tileIndex };
+		var result = view.strings[ tileIndex ];
+		if ( typeof result == 'undefined' )
+			return '';
+		return result;
+	};
+
+	this.viewSetLayer = function( viewIndex, layerIndex )
+	{
+		var view = this.getView( viewIndex );
+		if ( layerIndex >= view.map.layers.length )
+			throw 'layer_not_defined';
+		view.layerIndex = layerIndex;
+		view.toUpdate = true;
+	};
+
+	this.viewClose = function( viewIndex )
+	{
+		var view = this.getView( viewIndex );
+		this.aoz.screenClose( view.screen, "#keepCurrent" );
+		this.views = this.aoz.utilities.cleanObject( this.views, view );
+	};
+
+	this.getViewOffsetX = function( viewIndex )
+	{
+		return this.this.getView( viewIndex ).offsetX;
+	};
+
+	this.getViewOffsetY = function( viewIndex )
+	{
+		return this.this.getView( viewIndex ).offsetY;
+	};
+
+	this.getViewOffsetZ = function( viewIndex )
+	{
+		return this.this.getView( viewIndex ).offsetZ;
+	};
+
+	this.viewOffset = function( viewIndex, offsetX, offsetY, offsetZ )
+	{
+		var view = this.getView( viewIndex );
+		if ( typeof offsetX != 'undefined' )
+			view.offsetX = offsetX;
+		if ( typeof offsetY != 'undefined' )
+			view.offsetY = offsetY;
+		if ( typeof offsetZ != 'undefined' )
+			view.offsetZ = offsetZ;
+		view.toUpdate = true;
+	};
+
+	this.viewDisplay = function( viewIndex, x, y, width, height )
+	{
+		var view = this.getView( viewIndex );
+		if( typeof x != 'undefined' )
+			view.x = x;
+		if( typeof y != 'undefined' )
+			view.y = y;
+		if( typeof width != 'undefined' )
+			view.width = width;
+		if( typeof height != 'undefined' )
+			view.height = height;
+		view.toUpdate = true;
+	};
+
+	this.viewRedraw = function( viewIndex, backColor )
+	{
+		var self = this;
+		if ( typeof viewIndex == 'undefined' )
+		{
+			for ( var v in this.views )
+			{
+				doRedraw( v, backColor );
+			}
+		}
+		else
+		{
+			doRedraw( viewIndex, backColor );
+		}
+		function doRedraw( v )
+		{
+			var view = self.getView( v );
+			self.viewUpdate( v, backColor );
+			var screen = self.aoz.getScreen( view.screenIndex );
+			screen.screenCopy( self.aoz.currentScreen, { x: view.offsetX, y: view.offsetY, width: view.width, height: view.height }, { x: view.x, y: view.y }, 0 );
+		}
+	};
+
+	this.viewUpdate = function( viewIndex, backColor )
+	{
+		var view = this.getView( viewIndex );
+		if ( view.toUpdate || view.neverUpdated )
+		{
+			var map = view.map;
+			var tileSet = view.tileSet;
+			var refTiles = view.refTiles;
+			var layer = map.layers[ view.layerIndex ];
+			if ( map && tileSet && refTiles && layer )
+			{
+				backColor = typeof backColor == 'undefined' ? 0 : backColor;
+				var screen = this.aoz.getScreen( view.screenIndex );
+				screen.cls( backColor );
+
+				var x = 0;
+				var y = 0;
+				for( i = 0; i < layer.data.length; i++ )
+				{
+					var image = refTiles[ layer.data[ i ] ];
+					if ( image && image >= tileSet.refTileStart && image < tileSet.refTileEnd )
+						screen.pasteImage( 'images', image, x * tileSet.tilewidth, y * tileSet.tileheight );
+
+					x++;
+					if( x == layer.width )
+					{
+						x = 0;
+						y++;
+					}
+				}
+			}
+			view.toUpdate = false;
+			view.neverUpdated = false;
+		}
+	};
+
+	this.viewWidth = function( viewIndex )
+	{
+		return this.getView( viewIndex ).width;
+	};
+
+	this.viewHeight = function( viewIndex )
+	{
+		return this.getView( viewIndex ).height;
+	};
+
+	this.tileWidth = function( viewIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		return view.tileSet.tilewidth;
+	};
+
+	this.tileHeight = function( viewIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		return view.tileSet.tileheight;
+	};
+
+	this.tileResize = function( viewIndex, width, height )
+	{
+		var view = this.getViewComplete( viewIndex );
+		if ( width )
+		{
+			view.tileSet.width = width;
+			view.tileSet.tilewidth = width;
+		}
+		if ( height )
+		{
+			view.tileSet.height = height;
+			view.tileSet.tileheight = height;
+		}
+		view.toUpdate = true;
+	};
+
+	this.tileCount = function( viewIndex, tileValue )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( typeof tileValue == 'string' )
+			tileValue = tileValue.charCodeAt( 0 );
+		var count = 0;
+		for( i = 0; i < layer.data.length; i++ )
+		{
+			if( layer.data[ i ] == tileValue )
+				count++;
+		}
+		return count;
+	};
+
+	this.findTile = function( viewIndex, tileValue )
+	{
+		var view = this.getView( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( typeof tileValue == 'string' )
+			tileValue = tileValue.charCodeAt( 0 );
+		this.findRequest =
+		{
+			seek: 0,
+			datas: layer.data,
+			tileValue: tileValue
+		}
+		return this.findNext();
+	};
+
+	this.findNext = function()
+	{
+		if( this.findRequest )
+		{
+			for( r = this.findRequest.seek; r < this.findRequest.datas.length; r++ )
+			{
+				if( this.findRequest.datas[ r ] == this.findRequest.tileValue )
+				{
+					this.findRequest.seek = r + 1;
+					return r;
+				}
+			}
+			this.findRequest = undefined;
+			return -1;
+		}
+		else
+		{
+			throw "find_not_initialized"
+		}
+	};
+
+	this.tileX = function( viewIndex, tileIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( typeof tileIndex == 'string' )
+		{
+			tileIndex = parseInt( tileIndex )
+			if ( isNaN( tileIndex ) )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+		}
+		if ( tileIndex < 0 || tileIndex > layer.data.length )
+			throw { error: 'illegal_function_call', parameter: tileIndex };
+		var y = Math.floor( tileIndex / layer.width );
+		var x = tileIndex - ( y * layer.width );
+		return view.x - view.offsetX + x * view.tileSet.tilewidth;
+	};
+
+	this.tileY = function( viewIndex, tileIndex )
+	{
+		var view = this.getViewComplete( viewIndex );
+		var layer = view.map.layers[ view.layerIndex ];
+		if ( typeof tileIndex == 'string' )
+		{
+			tileIndex = parseInt( tileIndex )
+			if ( isNaN( tileIndex ) )
+				throw { error: 'illegal_function_call', parameter: tileIndex };
+		}
+		var y = Math.floor( tileIndex / layer.width );
+		return view.y - view.offsetY + y * view.tileSet.tileheight;
+	};
+
+}
+
+/**doc
+@name:Maps and Tiles
+@description:Insert scenery for your games, with these commands that allow you to create and manage maps and tiles.
+@author:Baptiste Bideaux + Francois Lionet
+@since:0.9.2
+doc*/
+
+/**api
+@name:Load Map
+@description:Load a map file. The file must be one of these formats : aozmap, tmx or Tiled json
+@param:path$:string:path to the map to load
+@compatible: aoz
+@content:
+This instruction should eb the first one to use if you want to display maps. It loads all the data relative to all the layers of the map, but only the data.
+After this instruction, you may want to load the tileset or not.
+
+If you do, everything will be automatic and the next step should be to open a view on the map.
+
+If you do not, then you can create the tileset yourself with the Create Tilset instruction.
+
+The best way to put the files containing the whole map is in the "resources/filesystem/application" folder, this folder being available as a normal disc-drive within your running application.
+
+Once loaded, the map will be refered to from the name of the file without extension.
+~~~
+Load Map "mymap.tmx"
+~~~
+api*/
+Instruction Load Map, path$
+{
+	#waiting
+	#errors
+	return{type:12,waitThis:aoz.extensionMaps,callFunction:"load", waitFunction:"load_wait", args:[%path$]};
+}
+End Instruction
+
+/**api
+@name:Load Tileset
+@description:Load all the tiles from a map file, and create the associated images in the image bank to use as tiles.
+@param:path$:string:Filename to load.
+@param:firstImage:integer:Number of the first image to create in the image bank
+@compatible: aoz
+@content:
+This instruction doers all the hard work of loading all the tiles necessary to display your maps, by extracting the graphics from the map tileset image and adding the cut images to the image bank.
+The "firstimage" parameter indicates the position of the first image in the image bank. If your image bank already contains images at the position where the imp;orter creates them, they will be replaced by the new images.
+
+It is perfectly possible to load several tileset, they are independant entities, allowing you to completely chaneg the aspect of your game by changing the tileset with one instruction (just make sure that they do not overlap in the image bank).
+
+It only works with tilesets exported by Tiled in eother TSX format or JSON export format. If you use the aozmap format, you will have to create your tileset by hand.
+
+In order to work, you must not forget to add to the same directory where the tileset file is located, the source image from which to extract the graphics. The name of the image should be identical to the name of the titleset file (but for the extension of course).
+
+As for the "Load Map" instruction, the tileset will be refered later by the name of the file without extension.
+
+The next example is extracted from the ZeldaoZ tutorial.
+~~~
+// Load the main map definition
+Load Map "zeldaoz.json"
+
+// Load the tilset after image number 1000
+Load Tileset "zelda_tiles1.json", 1000
+~~~
+api*/
+Instruction Load Tileset, path$, firstImage
+{
+	#waiting
+	#errors
+	return{type:12,waitThis:aoz.extensionMaps,callFunction:"loadTileset", waitFunction:"load_wait", args:[%path$,%firstImage]};
+}
+End Instruction
+
+/**api
+@name:Create Tileset
+@description:Create an empty tileset, each tile being associated to it's number plus the first image in the image bank
+@param:name$:string:Name of the tileset to create
+@param:width:integer:Width of the tileset to create
+@param:height:integer:Height of the tileset to create
+@param:firstImage:integer:Index of the first image to use in the image bank
+@param:numberOfImages:integer:Number of images in the tileset
+@compatible: aoz
+@content:
+This instruction creates an empty tileset, that is a tileset with all the information by the images themselves. It is up to you to create the images in the image bank, as in this example:
+
+~~~
+Load Map "mymap.tsx"
+Create Tileset "mytileset", 1000, 100
+
+// Load the image containg the tiles and grab them into the image bank after location 1000
+Load Image "tiles.png", 1
+NUMIMAGE = 1000
+For Y = 0 To 3
+	For X = 0 To 7
+		Get Image NUMIMAGE, X * 24, Y * 32 To ( X + 1 ) * 24, ( Y + 1 ) * 32
+		Inc NUMIMAGE
+	Next X
+Next Y
+
+// We can now open our view on layer 0 of the map
+Open View "Ground", "mymap", "mytileset", 0
+~~~
+
+api*/
+Instruction Create Tileset, name$, width, height, firstImage, numberOfImages
+{
+	#errors
+	aoz.extensionMaps.createTileset( %name$, %width, %height, %firstImage, %numberOfImages );
+}
+End Instruction
+
+/**api
+@name:View Map$
+@description:Return the name of map associated to a map view.
+@param:viewName$:string:Name of the map view.
+@return:integer:The name of the map
+@compatible: aoz
+@content:
+For complex games, you may need to change the tileset affected to each view. This function allows you to recover which tileset is used in which view...
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset1.json", 1000
+
+Open View "MapView", "mymap", "tileset1", 0
+Display View "MapView", 0, 0, 160, 144
+Print View Map$( "MapView" )				// Will display "mymap"
+
+api*/
+Function Map Name$, viewName$
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.getMapIndex(viewName$)} )
+
+/**api
+@name:Set View Map
+@description:Link a map to a view
+@param:viewName$:string:Name of the view
+@param:mapName$:string:Name of the map to associate
+@compatible: aoz
+@content:
+For complex games, you may need to change the map affected to each view. This function allows you to recover which tileset is used in which view...
+~~~
+Load Map "mymap.json"
+Load Map "mysecondmap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 720		// Set the map display
+Redraw View "MapView"						// Display it
+Wait Key
+
+// Replace the tileset with the other one, changing all graphics on screen
+Set View Map "MapView", "mysecondmap"		// Change the map
+Redraw View "MapView"
+
+api*/
+Instruction Set View Map, viewName$, mapIndex$
+{
+	#errors
+	aoz.extensionMaps.setMapIndex(%viewName$, %mapIndex$);
+}
+End Instruction
+
+/**api
+@name:View Layer
+@description:Return the index of the current layer displayed by a view
+@param:mapName$:string:Name of the map
+@return:integer:Index of the layer
+@compatible: aoz
+@content:
+Map files create by Tiled contain several "layers" of tiles. It is a good idea to separate the layer in a game in different sections, like the ground, the obstacles or the ennemies.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 720		// Set the map display
+Redraw View "MapView"						// Display it
+Print View Layer( "MapView" )				// Will print "0"
+Wait Key
+~~~
+api*/
+Function View Layer, viewName$
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.getViewLayer(%viewName$)} )
+
+/**api
+@name:Set View Layer
+@description:Set the index of the current layer of the map in a view
+@param:viewName$:string:Name of the view
+@param:layerIndex:integer:Index of the layer
+@compatible: aoz
+@content:
+Map files create by Titled contain several "layers" of tiles. It is a good idea to separate the layer in a game in different sections, like the ground, the obstacles or the ennemies.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 720		// Set the map display
+Redraw View "MapView"						// Display it
+Print View Layer( "MapView" )				// Will print "0"
+Wait Key
+
+Set View Layer "MapView", 1					// Change layer
+Redraw View "MapView"						// Display it
+Print View Layer( "MapView" )				// Will print "1"
+~~~
+api*/
+Instruction Set View Layer, viewName$, layerIndex
+{
+	#errors
+	aoz.extensionMaps.setViewLayer(%viewName$, %layerIndex);
+}
+End Instruction
+
+/**api
+@name:Map Width
+@description:Return the number of tiles of the map referred to by a map view
+@param:viewName$:string:Name of the map view
+@compatible: aoz
+@content:
+Please note that this function returns the width of the MAP and not the map view. Use "View Width" to get the width of the view.
+api*/
+Function Map Width, viewName$
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.mapWidth(%viewName$)} )
+
+/**api
+@name:Map Height
+@description:Return the number of tiles in height of a map view
+@param:viewName$:string:Name of the map view
+@compatible: aoz
+@content:
+Please note that this function returns the height of the MAP and not the map view. Use "View Height" to get the height of the view.
+api*/
+Function Map Height, viewName$
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.mapHeight(%viewName$)} )
+
+/**api
+@name:View Width
+@description:Return the width of a view
+@param:viewName$:string:Name of the view
+@compatible: aoz
+@content:
+The value returned is the number of horizontal tiles shown by the view, and is calculated from the width of the display divided by the width of each tiles
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 720		// Set the map display
+Redraw View "MapView"						// Display it
+
+Print View Width( "MapView" )				// Will print "20" with 64x64 tiles.
+Wait Key
+~~~
+api*/
+Function View Width, viewName$
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.viewWidth(%viewName$)} )
+
+/**api
+@name:View Height
+@description:Return the height of a view
+@param:viewName$:string:Name of the view
+@compatible: aoz
+@content:
+The value returned is the number of vertical tiles shown by the view, and is calculated from the height of the display divided by the height of each tiles
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"						// Display it
+
+Print View Height( "MapView" )				// Will print "11" with 64x64 tiles.
+Wait Key
+api*/
+Function View Height, viewName$
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.viewHeight(%viewName$)} )
+
+/**api
+@name:Tile Width
+@description:Return the width of a tile
+@param:viewName$:string:Name of the view
+@compatible: aoz
+@content:
+This function returns the width of each tile of the tileset affected to the view.
+api*/
+Function Tile Width, viewName$
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.tileWidth(%viewName$)} )
+
+/**api
+@name:Tile Height
+@description:Return the height of a tile
+@param:viewName$:string:Name of the view
+@compatible: aoz
+@content:
+This function returns the height of each tile of the tileset affected to the view.
+api*/
+Function Tile Height, viewName$
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.tileHeight(%viewName$)} )
+
+/**api
+@name:Replace Tiles
+@description:Replace all the tiles in the view with another tile
+@param:viewName$:string:Name of the view
+@param:tileSearch:integer:Value of the tile to replace
+@param:tileReplace:integer:Value of the tile to replace with
+@compatible: aoz
+@content:
+This instruction only performs the change in the copy of the map that is refered to by the view: it will not affect the map itself.
+api*/
+Instruction Replace Tiles, viewName$, tileSearch, tileReplace
+{
+	#errors
+	aoz.extensionMaps.tileReplace(%viewName$, %tileSearch, %tileReplace);
+}
+End Instruction
+
+/**api
+@name:Reset Maps
+@description:Reset the maps set and clean all the maps data
+@compatible: aoz
+@content:
+This instructions resets the AOZ Map system to the initial state, as it was when the program was loaded.
+Please note that it does NOT detete any image from the image bank, if you want a total reset that includes also the images, you should use the "Del Image" instruction.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"						// Display it
+Wait Key
+
+Reset Maps
+Del Image 1000 To 2000
+Print "Good as new!"
+~~~
+api*/
+Instruction Reset Maps
+{
+	#errors
+	aoz.extensionMaps.reset();
+}
+End Instruction
+
+/**api
+@name:Push View
+@description:Store the actual state of a map view
+@param:viewName$:string:ID of the map view
+@compatible: aoz
+@content:
+This instruction associated with the "Pop View" instruction allow you to change anything in your view, the value of tiles and even the map itself safely, knowing that everything can be recovered in its initial state later...
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"						// Display it
+
+Push View "MapView"
+Replace Tiles "MapView", 1000, 1001			// Replace all "1000" tiles with 1001
+Redraw View "MapView"						// Display it
+Wait Key
+Pop View "MapView"
+
+Redraw View "MapView"
+Print "back to normal!"
+~~~
+api*/
+Instruction Push View, viewName$
+{
+	#errors
+	aoz.extensionMaps.push(%viewName$);
+}
+End Instruction
+
+/**api
+@name:Pop View
+@description:Restore the state of a map view stored by "View Push" command
+@param:viewName$:string:Name of the view
+@compatible: aoz
+@content:
+This instruction associated with the "View Pop" instruction allow you to change anything in your view, the value of tiles and even the map itself safely, knowing that everything can be recovered in its initial state later...
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"						// Display it
+
+Push View "MapView"
+Replace Tiles "MapView", 1000, 1001			// Replace all "1000" tiles with 1001
+Redraw View "MapView"						// Display it
+Wait Key
+View Pop "MapView"
+
+Redraw View "MapView"
+Print "back to normal!"
+~~~
+api*/
+Instruction Pop View, viewName$
+{
+	#errors
+	aoz.extensionMaps.pop(%viewName$);
+}
+End Instruction
+
+/**api
+@name:Open View
+@description:Open a view to display a map on the current screen
+@param:viewName$:string:Name of the view
+@param:mapIndex$:string:Name of the map
+@param:tileSetIndex$:string:Name of the tileset
+@param:*layerIndex:integer:Index of the layer in the current map, will use the first one if ommited
+@compatible: aoz
+@content:
+This instruction allow you to display the content of a map files. The last parameter defines the number of the layer in the map file...
+
+After it has been used, you need to define the visible area of the view with the "Display View" instruction. Then you are ready to display it with a simple call to "Redraw View".
+
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"						// Display it
+~~~
+api*/
+Instruction Open View, viewName$, mapIndex$, tileSetIndex$, layerIndex
+{
+	#errors
+	aoz.extensionMaps.viewOpen(%viewName$, %mapIndex$, %tileSetIndex$, %layerIndex);
+}
+End Instruction
+
+/**api
+@name:Close View
+@description:Close a map Open Viewed with the "Open View" commands.
+@param:viewName$:string:Name of the view
+@compatible: aoz
+api*/
+Instruction Close View, viewName$
+{
+	#errors
+	aoz.extensionMaps.viewClose(%viewName$);
+}
+End Instruction
+
+
+/**api
+@name:Layer Count
+@description:Return the number of layers in the view's map
+@param:viewName$:string:Name of the view
+@compatible: aoz
+@content:
+Tiled maps can contain several layer... Each layer is an independant map with it's own tiles.
+
+We suggest to split your maps into several layers. Example:
+
+* layer 0: the ground
+* layer 1: the obstacles
+* layer 2: the ennemies (for example)
+
+As you can open as many views as you want on each layer, it is perfectly possible and easy to make paralax scrolling between the planes and achieve greate effect in verical scrolling games such as Cybenet..
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Print Layer Count( "MapView" )				// Will print "3"
+~~~
+api*/
+Function Layer Count, viewName$
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.layerCount(%viewName$)} )
+
+
+/**api
+@name:Offset View
+@description:Scrolls the map into the view
+@param:viewName$:string:name of the view
+@param:X:integer:Position X in pixel of the scrolling of the view
+@param:Y:integer:Position Y in pixel of the scrolling of the view
+@compatible: aoz
+@content:
+Once the maps have been loaded, once the view has been opened and display, this instruction is the key to your game, as it enables the exploration of the map in the view.
+
+As a default, the origin of the map displayed in the view is at 0, 0, the top-left corner of the map will be display at the position of the top-left pixel in the Display View.
+
+You can achieve scrollings by setting the offsets to the view, as you would do for screens with the "Screen Offset" instruction.
+
+You can perfectly set the offset out of the map: in such area nothing will be drawn and the previous graphics will be left in place: if you want a clean display, the extra "Ink" parameter of the "Redraw View" instruction.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Slow scrolling on the whole map
+For X = 0 To Map Width
+	Offset View "MapView", X, 0
+	Redraw View "MapView", 0				// Make sure the display is clean
+	Wait Vbl
+Next
+~~~
+api*/
+Instruction Offset View, viewName$, x, y, z
+{
+	#errors
+	aoz.extensionMaps.viewOffset(%viewName$, %x, %y, %z);
+}
+End Instruction
+
+/**api
+@name:Display View
+@description:Set the position and the size of the view on the current screen
+@param:viewName$:string:Name of the view
+@param:X:integer:Position X in pixel of the view on the current Screen
+@param:Y:integer:Position Y in pixel of the view on the current Screen
+@param:width:integer:Width of the view in pixel
+@param:height:integer:Height of the view in pixel
+@compatible: aoz
+@content:
+This instruction should normally be used after you have open a view, but you can also use it anywhere in yoru application.
+
+It defines the rectangle in which to display the map. Width and Height do *not* need to be multiples of the width or height of the tiles...
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 255, 25, 999, 500	// Any size is possible
+Redraw View
+~~~
+api*/
+Instruction Display View, viewName$, x, y, width, height
+{
+	#errors
+	aoz.extensionMaps.viewDisplay(%viewName$, %x, %y, %width, %height);
+}
+End Instruction
+
+/**api
+@name:View Offset X
+description:Return the horizontal offset of the map inside of the view
+@param:viewName$:string:ID of the map view
+@return:integer:Position in pixel.
+@compatible: aoz
+@content:
+This function allows you to retreive the current horizontal offset of the view..
+~~~
+// Scrolling the map in diagonal
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+Do
+	Offset View "MapView", View Offset X( "MapView" ) + 1, View Offset Y( "MapView" ) + 1
+	Redraw View "MapView", 0				// Clear the view rectangle first and then displays the map
+	Wait Vbl
+Next
+~~~
+api*/
+Function View Offset X, viewName$
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.getViewOffsetX(%viewName$)} )
+
+/**api
+@name:View Offset Y
+description:Return the vertical offset of the map inside of the view
+@param:viewName$:string:Name of the view
+@return:integer:Vertical offset in pixels
+@compatible: aoz
+@content:
+This function allows you to retreive the current vertical offset of the view..
+~~~
+// Scrolling the map in diagonal
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+Do
+	Offset View "MapView", View Offset X( "MapView" ) + 1, View Offset Y( "MapView" ) + 1
+	Cls 0, 0, 0 To 1280, 704				// Make sure the display is clean
+	Redraw View "MapView"
+	Wait Vbl
+Next
+~~~
+api*/
+Function View Offset Y, viewName$
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.getViewOffsetY(%viewName$)} )
+
+/**api
+@name:Redraw View
+@description:Redraw the map view on the screen
+@param:viewName$:string:Name of the map view
+@param:*backColor:rgb:Color to use for the background (transparent if not indicated)
+@compatible: aoz
+@content:
+This instruction might be the most fundamental of all the map instruction: it displays the content of the map.
+
+It will only work after all the paremeters have been defined: the map is loaded, the view opened and it's display area set...
+
+You can call it safely without checking first for any change in position or offset: it will not take any processor time or do any change if nothing has changed since the last time it was called.
+
+If you want to *force* this instruction display even if nothing has change, you can simulate a change by doing a non-visible change in the view, like setting the value of a tile to it's value, thus seting the "Redraw" flag to true.
+
+~~~
+// Joystick controlled scrolling
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+XOFFSET = 0
+YOFFSET = 0
+Do
+	If JLeft( 1 ) Then XOFFSET = XOFFSET - 1
+	If JRight( 1 ) Then XOFFSET = XOFFSET + 1
+	If JUp( 1 ) Then YOFFSET = YOFFSET - 1
+	If JDown( 1 ) Then YOFFSET = YOFFSET + 1
+	Offset View "MapView", XOFFSET, YOFFSET
+	Redraw View "MapView"
+	Wait Vbl
+Loop
+~~~
+api*/
+Instruction Redraw View, viewName$, backColor
+{
+	#errors
+	aoz.extensionMaps.viewRedraw(%viewName$, %backColor);
+}
+End Instruction
+
+/**api
+@name:Resize Tiles
+@description:Set the width and height of the tiles in pixel for a specific view, does not affect the original tiles
+@param:viewName$:string:Name of the view
+@param:width:integer:Width of the tiles in pixel
+@param:height:integer:Height of the tiles in pixel
+@compatible: aoz
+@content:
+This simple instruction enables you to zoom in or out the map inside of the view.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"
+Wait Key
+
+Resize Tiles "MapView", 16, 16				// Zoom out
+Redraw View "MapView"
+Wait Key
+
+Resize Tiles "MapView", 128, 128			// Zoom in
+Redraw View "MapView"
+~~~
+api*/
+Instruction Resize Tiles, viewName$, width, height
+{
+	#errors
+	aoz.extensionMaps.tileResize(%viewName$, %width, %height);
+}
+End Instruction
+
+/**api
+@name:Tile Count
+@description:Return the number of a specific tile in a map view
+@param:viewName$:string:Name of the map view
+@param:tileValue:integer:Value of the tile to look for
+@param:*wholeMap:boolean:If set to True, the search will occur on the whole map. If not (default), the search will be conducted only on the visible part of the map.
+@return:integer:Number of specific tiles
+@compatible: aoz
+@content:
+This instructionm scans the tiles currently displayed by the view looking for a specific tile.
+
+If no tile of this value is found, then it returns 0.
+
+If one or more tiles is found, then the value returned is the number of such tile. Please note that it counts a tile as soon as it appears in the view, even a portion of the tile will be counted.
+
+Use this function in your game to detect for example the arrival of ennemies from an "ennemy" layer, detect bonuses etc.
+
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+XOFFSET = 0
+YOFFSET = 0
+ENNEMYTILE = 1112
+Do
+	If JLeft( 1 ) Then XOFFSET = XOFFSET - 1
+	If JRight( 1 ) Then XOFFSET = XOFFSET + 1
+	If JUp( 1 ) Then YOFFSET = YOFFSET - 1
+	If JDown( 1 ) Then YOFFSET = YOFFSET + 1
+	Offset View "MapView", XOFFSET, YOFFSET
+	Redraw View "MapView"
+
+	If Tile Count( 'MapView", ENNEMYTILE ) > 0
+		Print "Ennemies at sight!"
+	End If
+	Wait Vbl
+Loop
+~~~
+
+api*/
+Function Tile Count, viewName$, tileValue, wholeMap = False
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.tileCount(%viewName$, %tileValue, %wholeMap)} )
+
+/**api
+@name:Tile First
+@description:Return the index of the first tile on the map view with this value
+@param:viewName$:string:Name of the map view
+@param:tileValue:integer:Value of the searched tile
+@param:*wholeMap:boolean:If set to True, the search will occur on the whole map. If not (default), the search will be conducted only on the visible part of the map.
+@return:integer:The index of the tile in the view, a number that you can use later in your game to change the tile, -1 if no tile is found.
+@compatible: aoz
+@content:
+This function and the associated "Tile Next" instruction allow you to scan all the tiles of the same value, either in the visible area or the whole map.
+
+Do not confuse the *index* of a tile in a view and it's value. The index is just the position from the start of the tile in the map array.
+
+This example asks for all the tiles with value "1345" and displays their coordinate in the map.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+TILEINDEX = Tile First( "MapView", 1345, True ) 	// Scans the whole map
+While TILEINDEX >= 0
+	Print Tile X( TILEINDEX ), Tile Y( TileIndex )
+	TILEINDEX = Tile Next
+Wend
+~~~
+api*/
+Function Tile First, viewName$, tileValue, wholeMap = False
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.findTile(%viewName$, %tileValue)} )
+
+/**api
+@name:Tile Next
+@description:Return the next number of tile on the map view after a call to the "Tile First" command.
+@return:integer:The next index of tile found. if -1 is returned then no tile found.
+@compatible: aoz
+@content:
+This function and the associated "Tile Next" instruction allow you to scan all the tiles of the same value, either in the visible area or the whole map.
+
+This example asks for all the tiles with value "1345" and displays their coordinate in the map.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+TILEINDEX = Tile First( "MapView", 1345, True ) 	// Scans the whole map
+While TILEINDEX >= 0
+	Print Tile X( TILEINDEX ), Tile Y( TileIndex )
+	TILEINDEX = Tile Next
+Wend
+~~~
+api*/
+Function Tile Next
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.findNext()} )
+
+/**api
+@name:Tile X
+@description:Return the horizontal position in pixel of a tile in the map view.
+@param:viewName$:string:Name of the map view
+@param:tileIndex:integer:Index of tile in the amp
+@return:integer:The horizontal position in pixel.
+@compatible: aoz
+@content:
+The coordinate returned is the actual coordinate of the top-left corner of the tile on display. It takes into account all the parameters of the view (position and size) as well as the width of the tiles in the tileset.
+
+It means that you can safely use it to over-impose a bob or a sprite as in this example.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+XOFFSET = 0
+YOFFSET = 0
+ENNEMYTILE = 1112
+Do
+	If JLeft( 1 ) Then XOFFSET = XOFFSET - 1
+	If JRight( 1 ) Then XOFFSET = XOFFSET + 1
+	If JUp( 1 ) Then YOFFSET = YOFFSET - 1
+	If JDown( 1 ) Then YOFFSET = YOFFSET + 1
+	Offset View "MapView", XOFFSET, YOFFSET
+	Redraw View "MapView"
+
+	// If the is an ennemy tile in the display, use a bob to display the ennemy...
+	// The bob will automatically follow the scrolling.
+	ENNEMYINDEX = Tile First( "MapView", ENNEMYTILE )
+	If ENNEMYINDEX >= 0
+		Bob "myennemy", Tile X( "MapView", ENNEMYINDEX ), Tile Y( "MapView", ENNEMYINDEX )
+	Else
+		Bob Off "myennemy"
+	End If
+	Wait Vbl
+Loop
+~~~
+api*/
+Function Tile X, viewName$, tileIndex
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.tileX(%viewName$, %tileIndex)} )
+
+/**api
+@name:Tile Y
+@description:Return the vertical position in pixel of a tile in the map view.
+@param:viewName$:string:ID of the map view
+@param:tileIndex:integer:Index of tile in the map
+@return:integer:The vertical position in pixel.
+@compatible: aoz
+@content:
+The coordinate returned is the actual coordinate of the top-left corner of the tile on display. It takes into account all the parameters of the view (position and size) as well as the height of the tiles in the tileset.
+
+It means that you can safely use it to over-impose a bob or a sprite as in this example.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+XOFFSET = 0
+YOFFSET = 0
+ENNEMYTILE = 1112
+Do
+	If JLeft( 1 ) Then XOFFSET = XOFFSET - 1
+	If JRight( 1 ) Then XOFFSET = XOFFSET + 1
+	If JUp( 1 ) Then YOFFSET = YOFFSET - 1
+	If JDown( 1 ) Then YOFFSET = YOFFSET + 1
+	Offset View "MapView", XOFFSET, YOFFSET
+	Redraw View "MapView"
+
+	// If the is an ennemy tile in the display, use a bob to display the ennemy...
+	// The bob will automatically follow the scrolling.
+	ENNEMYINDEX = Tile First( "MapView", ENNEMYTILE )
+	If ENNEMYINDEX >= 0
+		Bob "myennemy", Tile X( "MapView", ENNEMYINDEX ), Tile Y( "MapView", ENNEMYINDEX )
+	Else
+		Bob Off "myennemy"
+	End If
+	Wait Vbl
+Loop
+~~~
+api*/
+Function Tile Y, viewName$, tileIndex
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.tileY(%viewName$, %tileIndex)} )
+
+/**api
+@name:Tile Test
+@description:Return the index of tile at the position x and y on a map view
+@param:viewName$:string:name of the view
+@param:x:integer:Position X in pixel to test.
+@param:y:integer:Position Y in pixel to test.
+@return:string:Index of tile found or -1 if the tile is not found.
+@compatible: aoz
+@content:
+This very handy function detects the value of the tile at a specific position on screen. You can use it for example when the user click on the map, as in this example.
+~~~
+
+// Display the index of the tile under the mouse
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"
+Do
+	I = Tile Test( "MapView", X Mouse, Y Mouse )
+	If I >= 0
+		Print "Tile "; I; " is under the mouse"
+	End If
+	Wait Vbl
+Loop
+~~~
+api*/
+Function Tile Test, viewName$, x, y
+{
+	#errors
+}
+End Function( {aoz.extensionMaps.tileAtCoordinates(%viewName$, %x, %y)} )
+
+/**api
+@name:Set Tile Image
+@description:Set the image of a specific tile of a Map View
+@param:viewName$:string:Name of the map view
+@param:tileIndex:integer:Index of tile.
+@param:imageIndex:index:Index of the image
+@compatible: aoz
+@content:
+When you load a map and open a view, there is a direct reference between the *value* of the tile and the image taken out of the image bank and displayed.
+
+This instruction allows you to change the image assigned to the tiles of a specific value. AOZ keeps an internal reference table to perform the indirection.
+It does not affect the original map, just the view.
+
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Change the image of the tile the user is clicking on
+Do
+	If Mouse Click
+		I = Tile Test( "MapView", X Mouse, Y Mouse )
+		If I >= 0 Then Set Tile Image "MapView", I, 1111
+	End If
+	Redraw View"MapView"
+	Wait Vbl
+Loop
+~~~
+api*/
+Instruction Set Tile Image, viewName$, tileIndex, imageIndex=(index)
+{
+	#errors
+	aoz.extensionMaps.setTileImage(%viewName$, %tileIndex, %imageIndex);
+}
+End Instruction
+Instruction Set Tile Image, viewName$, x, y, imageIndex=(index)
+{
+	#errors
+	var t = aoz.extensionMaps.getTileIndex(%viewName$, %x, %y);
+	if ( t >= 0 )
+		aoz.extensionMaps.setTileImage(%viewName$, t, %imageIndex);
+}
+End Instruction
+
+/**api
+@name:Tile Image
+@description:Return the index of the image used to display a tile in the view
+@param:viewName$:string:Name of the map view
+@param:tileIndex:integer:Index of the tile
+@return:integer:The index of the image
+@compatible: aoz
+@content:
+When you load a map and open a view, there is a direct reference between the *value* of the tile and the image taken out of the image bank and displayed.
+If you use this function immediately after loading the map and opening the view, it will return the value of the tile as it will also be the index of the image used.
+
+The return value will change after a Set Tile Image instruction.
+
+This example display the index of the image of the tile under the mouse.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"
+Do
+	I = Tile Test( "MapView", X Mouse, Y Mouse )
+	If I >= 0
+		Print "Image "; Tile Image( "MapView", I )
+	End If
+	Wait Vbl
+Loop
+~~~
+api*/
+Function Tile Image, viewName$, tileIndex
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.getTileImage(%viewName$, %tileIndex)} )
+Function Tile Image, viewName$, x, y
+{
+	#errors
+	var r = -1;
+	var t = aoz.extensionMaps.getTileIndex(%viewName$, %x, %y);
+	if ( t >= 0 )
+		r = aoz.extensionMaps.getTileImage(%viewName$, t);
+}
+End Function ( {r} )
+
+/**api
+@name:Set Tile Value
+@description:Change the value of a specifc tile in a view
+@param:viewName$:string:Index of the view
+@param:tileIndex:integer:Index of the tile
+@param:imageIndex:index:Number of image of the images bank.
+@compatible: aoz
+@content:
+You can modify the aspect of your map in real time with this function.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Change the image of the tile the user is clicking on
+Do
+	If Mouse Click
+		I = Tile Test( "MapView", X Mouse, Y Mouse )
+		If I >= 0 Then Set Tile Value "MapView", I, 10
+	End If
+	Redraw View "MapView"
+	Wait Vbl
+Loop
+~~~
+
+api*/
+Instruction Set Tile Value, viewName$, tileIndex, imageIndex=(index)
+{
+	#errors
+	aoz.extensionMaps.setTileValue(%viewName$, %tileIndex, %imageIndex);
+}
+End Instruction
+Instruction Set Tile Value, viewName$, x, y, imageIndex=(index)
+{
+	#errors
+	var t = aoz.extensionMaps.getTileIndex(%viewName$, %x, %y);
+	if ( t >= 0 )
+		aoz.extensionMaps.setTileValue(%viewName$, t, %imageIndex);
+}
+End Instruction
+
+/**api
+@name:Tile Value
+@description:Return the value of a specific tile in the map
+@param:viewName$:string:Name of the map view
+@param:tileIndex:integer:Index of the tile
+@return:integer:The index of the image
+@compatible: aoz
+@content:
+The return value will change after a Set Tile Value instruction.
+
+This example display the value of the tile under the mouse.
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"
+Do
+	I = Tile Test( "MapView", X Mouse, Y Mouse )
+	If I >= 0
+		Print "Value "; Tile value( "MapView", I )
+	End If
+	Wait Vbl
+Loop
+~~~
+api*/
+Function Tile Value, viewName$, tileIndex
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.getTileValue(%viewName$, %tileIndex)} )
+Function Tile Value, viewName$, x, y
+{
+	#errors
+	var r = 0;
+	var t = aoz.extensionMaps.getTileIndex(%viewName$, %x, %y);
+	if ( t >= 0 )
+		r = aoz.extensionMaps.getTileValue(%viewName$, t);
+}
+End Function ( {r} )
+
+/**api
+@name:Set Tile String
+@description:Change the internal string of a specifc tile in a view
+@param:viewName$:string:Index of the view
+@param:tileIndex:integer:Index of the tile
+@param:string$:string:String to store in the tile
+@compatible: aoz
+@content:
+Sometimes you need to keep data associated with a specific tile, like for example a door, if it is open or closed.
+
+AOZ allows you to store data in the form of a string of character in each tile of the map and recover it later...
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Store data
+Do
+	I = Tile Test( "MapView", X Mouse, Y Mouse )
+	If I >= 0
+		If Mouse Click Then Set Tile String "MapView", I, "hello AOZ!"
+		Print "String "; Tile String( "MapView", I )
+	End If
+	Redraw View "MapView"
+	Wait Vbl
+Loop
+~~~
+api*/
+Instruction Set Tile String, viewName$, tileIndex, string$
+{
+	#errors
+	aoz.extensionMaps.setTileString(%viewName$, %tileIndex, %string$);
+}
+End Instruction
+Instruction Set Tile String, viewName$, x, y, string$
+{
+	#errors
+	var t = aoz.extensionMaps.getTileIndex(%viewName$, %x, %y);
+	if ( t >= 0 )
+		aoz.extensionMaps.setTileString(%viewName$, t, %string$);
+}
+End Instruction
+
+/**api
+@name:Tile String$
+@description:Return the string associated with a specific tile in the map
+@param:viewName$:string:Name of the map view
+@param:tileIndex:integer:Index of the tile
+@return:string:The associated with the tile, or "" if no string is associated.
+@compatible: aoz
+@content:
+Sometimes you need to keep data associated with a specific tile, like for example a door, if it is open or closed.
+
+AOZ allows you to store data in the form of a string of character in each tile of the map and recover it later...
+~~~
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Store data
+Do
+	I = Tile Test( "MapView", X Mouse, Y Mouse )
+	If I >= 0
+		If Mouse Click Then Set Tile String "MapView", I, "hello AOZ!"
+		Print "String "; Tile String( "MapView", I )
+	End If
+	Redraw View "MapView"
+	Wait Vbl
+Loop
+~~~
+api*/
+Function Tile String$, viewName$, tileIndex
+{
+	#errors
+}
+End Function ( {aoz.extensionMaps.getTileString(%viewName$, %tileIndex)} )
+
+Function Tile String$, viewName$, x, y
+{
+	#errors
+	var r = "";
+	var t = aoz.extensionMaps.getTileIndex(%viewName$, %x, %y);
+	if ( t >= 0 )
+		r = aoz.extensionMaps.getTileString(%viewName$, t);
+}
+End Function ( {r} )

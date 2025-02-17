@@ -1,0 +1,342 @@
+#splashScreen:false
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+//
+// Welcome to your AOZ Studio Lesson Create a HangMan 5 - Adding Bobs to the game - Neil Ives
+
+// In this tutorial we will add the graphics shown in a previous lesson to the game
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Many of the instructions and techniques used in this code have been explained in previous tutorials. //
+// Notes have been minimised and some of the code has been tidied up onto single lines.                 //
+// If you have come straight here and are not sure about anything please review the earlier lessons.    //
+// Having the words embedded in the code is a not a very professional approach. The next lesson will    //
+// show you how to load a larger list of words from disk.                                               //
+// Also, we need a title screen!                                                                        //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Curs Off
+
+Dim MYWORD$(20)
+
+PLAYAGAIN:// Afer the game is won or lost the code returns to this label using the 'GoTo' instruction so the game can be played again.
+
+// Set the variables ready for the next round
+WRONG_GUESSES$=""
+WRONG_GUESS_COUNT=0
+PANCAKE_COUNT = 10
+
+Cls
+
+X=800:Y=300 // Define Bob coordinates to the right of the screen away from the word quiz texts.
+
+// Put 10 pancake images on the screen
+For n = 1 to 10
+    Y=Y-10-Rnd(10) // Vertical position, Y is reduced by 10, (Y=Y-10), minus a 1 to 10 jiggle
+    Bob n,X+Rnd(20),Y,1 // Horizontal position, X is jiggled by adding 0 to 20
+Next
+
+Print "10 Bobs all using the same image have been printed on the screen."
+Print "Also a feedback message for the player."
+Print "Notice how the stack looks casually stacked"
+Print "Press f5 to re-start the program and see how the pancake stack"
+Print "looks different each time."
+Print "Please study the code to see how that is achieved."
+
+Locate 51,12:Print "10 pancakes  "// Feedback
+
+End  // Please Rem, (//) or delete 'End' to allow the next part of the code to run.
+
+Cls
+
+Restore Rnd(179)+1 : Read HIDDENWORD$ //Read the word at the point set by 'Restore'
+
+HIDDENWORD$=Upper$(HIDDENWORD$) //Convert to upper case.
+
+LETTERCOUNT=Len(HIDDENWORD$) //LETTERCOUNT is a numeric variable representing the length of the hidden word string.
+
+Cls
+Locate 7,5
+For n = 1 to LETTERCOUNT
+    MYWORD$(n)="-"
+    Pen 5: Print MYWORD$(n);
+Next
+
+Locate 7,15:Pen 1
+Locate 7,:Print "The length of the hidden word," + Str$(LETTERCOUNT) + " letters in this case"
+Locate 7,:Print "has been obtained and the array MYWORD$ loaded"
+Locate 7,:Print "with dashes to represent each letter."
+Locate 7,:Print ""
+Locate 7,:Print "The dashes stored in the array elements have been made to print"
+Locate 7,:Print "on one line by appending a semicolon."
+Locate 7,:Print "Press f5 to refresh the program."
+
+End // Please Rem, (//) or delete 'End' to allow the next part of the code to run.
+
+
+////////////////////
+// Main game Loop //
+////////////////////
+
+Do
+
+    RETRY:
+
+    Locate 5,1: Pen 1: Input "Enter a guess: ";MYGUESS$ // User 'Inputs' a guess.
+
+    MYGUESS$=Left$(MYGUESS$,1) // Take only the first letter of MYGUESS$.
+
+    If MYGUESS$ = " " then GoTo RETRY // If a space gets entered go back and get another guess.
+
+    MYGUESS$=Upper$(MYGUESS$)
+
+    GUESS_CORRECT=false// Set this boolean variable to false to decide what action to take after each guess. See later.
+
+    For n = 1 to LETTERCOUNT
+        If MYGUESS$=Mid$(HIDDENWORD$,n,1) Then GUESS_CORRECT=True: MYWORD$(n) = MYGUESS$ // Replace the dash in the array with the correctly guessed character.
+    Next
+
+    If GUESS_CORRECT = False // The guess was incorrect
+
+        Inc WRONG_GUESS_COUNT
+
+        If WRONG_GUESS_COUNT > 9 then GoTo JMP // The player has lost this round. Jump to the label JMP to show a suitable message.
+
+        WRONG_GUESSES$=WRONG_GUESSES$ + MYGUESS$ +"," // Create a string of the incorrect guesses with commas appended.
+
+        Locate 51,12:Print "    ":Locate 51,12:Print Str$(PANCAKE_COUNT-1) + " pancakes left  " // Feedback
+
+        Bob off (PANCAKE_COUNT) // This removes from the screen the Bob that has the same number as the PANCAKE_COUNT count .
+
+        Dec PANCAKE_COUNT // Remove 1 from the PANCAKE_COUNT count  .
+
+    End if
+
+    If WRONG_GUESS_COUNT > 0 then Locate 5,8:Print Str$(WRONG_GUESS_COUNT) +" out of 10 incorrect guesses:" // Only print this message when the incorrect count exceeds zero
+
+    Locate 5,10: Pen 7: Print WRONG_GUESSES$:Pen 1 // Display the string of incorrect guesses
+
+    CORRECT$="" //Clear this string before it is created again in the following For/Next loop.
+
+    For n = 1 to LETTERCOUNT
+        CORRECT$=CORRECT$+MYWORD$(n)
+    Next
+
+    Locate 7,5: Pen 5: Print CORRECT$ : Pen 1 // This string is used to display the current state of play and also...
+    // ... decide if the game has been won
+    If CORRECT$=HIDDENWORD$ //If the word created from the array is equal to the hidden word the player has won!
+
+        Cls
+
+        Locate 2,5: Print "Well done! The word was " + CORRECT$ // Print a suitable message
+
+        Locate 45,12:Print Str$(PANCAKE_COUNT) + " pancakes for you!" // Feedback
+
+        Wait 3
+
+        Goto PLAYAGAIN // Play again
+
+    End If
+
+Loop
+
+// After 10 unsuccessful attempts the code jumps to here
+
+JMP:
+
+Bob Off: Cls: Pen 5 : Locate ,11: Centre "The word was " + HIDDENWORD$ + ". Try another word": Wait 3
+
+Goto PLAYAGAIN
+
+
+/////////////////////////////////////////////////
+// 180 words embeded as data with line numbers //
+/////////////////////////////////////////////////
+
+1 Data "ABLE"
+2 Data "ACCUSE"
+3 Data "ADVANCE"
+4 Data "AFTER"
+5 Data "AIRPLANE"
+6 Data "ALSO"
+7 Data "ANNOY"
+8 Data "APPLY"
+9 Data "ARROW"
+10 Data "ASSOCIATION"
+11 Data "AVENUE"
+12 Data "BAD"
+13 Data "BARREL"
+14 Data "BEAN"
+15 Data "BEG"
+16 Data "BEND"
+17 Data "BIND"
+18 Data "BLIND"
+19 Data "BONE"
+20 Data "BOW"
+21 Data "BREATHE"
+22 Data "BRUSH"
+23 Data "BUT"
+24 Data "CAMERA"
+25 Data "CARRY"
+26 Data "CENT"
+27 Data "CHARM"
+28 Data "CHIEF"
+29 Data "CLASS"
+30 Data "CLOTH"
+31 Data "COLLECT"
+32 Data "COMMITTEE"
+33 Data "CONCERN"
+34 Data "CONSCIOUS"
+35 Data "CORNER"
+36 Data "COURSE"
+37 Data "CRITIC"
+38 Data "CUPBOARD"
+39 Data "DAMP"
+40 Data "DEAF"
+41 Data "DEER"
+42 Data "DEMAND"
+43 Data "DETAIL"
+44 Data "DIFFICULT"
+45 Data "DISGUST"
+46 Data "DO"
+47 Data "DRAG"
+48 Data "DRUM"
+49 Data "EARTH"
+50 Data "EITHER"
+51 Data "END"
+52 Data "ENVY"
+53 Data "EXAMINATION"
+54 Data "EXPECT"
+55 Data "EYE"
+56 Data "FALL"
+57 Data "FEAR"
+58 Data "FIERCE"
+59 Data "FIRM"
+60 Data "FLESH"
+61 Data "FOND"
+62 Data "FORMER"
+63 Data "FRIGHT"
+64 Data "FURTHER"
+65 Data "FUTURE"
+66 Data "GAY"
+67 Data "GOD"
+68 Data "GRATEFUL"
+69 Data "GUARD"
+70 Data "HAMMER"
+71 Data "HASTE"
+72 Data "HEAR"
+73 Data "HIGH"
+74 Data "HOLLOW"
+75 Data "HOT"
+76 Data "HURRAH"
+77 Data "IMMEDIATE"
+78 Data "INDOORS"
+79 Data "INSTRUMENT"
+80 Data "INTRODUCE"
+81 Data "JOIN"
+82 Data "KEY"
+83 Data "LACK"
+84 Data "LATTER"
+85 Data "LEAVE"
+86 Data "LIBERTY"
+87 Data "LIP"
+88 Data "LOCAL"
+89 Data "LOUD"
+90 Data "MAIL"
+91 Data "MASS"
+92 Data "MEASURE"
+93 Data "MERE"
+94 Data "MILL"
+95 Data "MISFIT"
+96 Data "MISUSE"
+97 Data "MORE"
+98 Data "MOVE"
+99 Data "NARROW"
+100 Data "NECK"
+101 Data "NEXT"
+102 Data "NOR"
+103 Data "NURSE"
+104 Data "OFF "
+105 Data "OPERATION"
+106 Data "ORNAMENT"
+107 Data "OWN"
+108 Data "PAN"
+109 Data "PATH"
+110 Data "PECULIAR"
+111 Data "PERSUADE"
+112 Data "PINCH"
+113 Data "PLAY"
+114 Data "POLISH"
+115 Data "POT"
+116 Data "PRECIOUS"
+117 Data "PRICE"
+118 Data "PRODUCT"
+119 Data "PROVIDE"
+120 Data "PUSH"
+121 Data "QUIET"
+122 Data "RAKE"
+123 Data "REAL"
+124 Data "REFLECT"
+125 Data "REMAIN"
+126 Data "REPORT"
+127 Data "RESPONSIBLE"
+128 Data "RICE"
+129 Data "RIVAL"
+130 Data "ROOM"
+131 Data "RUDE"
+132 Data "SAD"
+133 Data "SAW"
+134 Data "SCOLD"
+135 Data "SECRETARY"
+136 Data "SENTENCE"
+137 Data "SHALL"
+138 Data "SHE"
+139 Data "SHOE"
+140 Data "SHUT"
+141 Data "SINCE"
+142 Data "SKILL"
+143 Data "SMALL"
+144 Data "SOCKS"
+145 Data "SORROW"
+146 Data "SPACE"
+147 Data "SPLENDID"
+148 Data "SQUARE"
+149 Data "STAY"
+150 Data "STIFF"
+151 Data "STORY"
+152 Data "STRICT"
+153 Data "SUCCEED"
+154 Data "SUPPER"
+155 Data "SWEAT"
+156 Data "TAIL"
+157 Data "TEACH"
+158 Data "TENT"
+159 Data "THEM"
+160 Data "THINK"
+161 Data "THUMB"
+162 Data "TIN"
+163 Data "TONIGHT"
+164 Data "TOWEL"
+165 Data "TREAT"
+166 Data "TRUTH"
+167 Data "UNION"
+168 Data "UPWARDS"
+169 Data "VERSE"
+170 Data "VOTE"
+171 Data "WAR"
+172 Data "WE"
+173 Data "WELL"
+174 Data "WHILE"
+175 Data "WILL"
+176 Data "WISH"
+177 Data "WORM"
+178 Data "WRECK"
+179 Data "YOUNG"
+180 Data "ZOO"

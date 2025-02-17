@@ -1,0 +1,12 @@
+<i>Sqr</i>
+<b>Sqr</b> xxxxxxx
+=
+This function calculates the square root of a positive number, that is to say, it returns a number that must be
+multiplied by itself to give the specified value.
+
+For example:
+@code
+Print Sqr(25)
+Print Sqr(11.1111)
+@code
+

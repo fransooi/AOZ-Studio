@@ -1,0 +1,61 @@
+' *****************************************************************************
+' *
+' *   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+' *  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+' *  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+' *  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+' *  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+' *  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+' *
+' *****************************************************************************
+' *  Device Orientation Demo
+' *  Example of device orientation detection
+' *
+' *  AOZ Code by Baptiste BIDEAUX - August 2020
+' *
+' *
+#manifest: "aoz"
+#displayWidth: 720
+#displayHeight: 1280
+#googleFont:"Graduate"
+
+Screen Open 0, 720, 1280, 32, Lowres : Curs Off : Flash Off
+Palette $000000, $FFFFFF, $FF0000,$FF8800, $FFFF00, $00FF00, $008800, $0088FF, $00FFFF, $0000FF, $FFA726
+
+Cls 0
+Rem If the screen is not orientable
+If Orientable = False
+
+	Rem Warning message
+	Set Font 1, 35
+	Ink 1 : Text 360, 500, "An orientable screen is required!", "#center"
+
+	Rem Exit the program
+	End
+
+End If
+
+Set Font 1, 35
+Rem Main loop
+Do
+
+	Rem Background Color and Text Color
+	BC = 0 : TC = 1
+
+	Rem Variable for text
+	ORIENTATION$ = ""
+
+	Rem Get the Orientation of screen
+	O = Orientation
+
+	Rem Is Landscape
+	If O = 0 Then  BC = 0 : TC = 1 : ORIENTATION$ = "Landscape"
+
+	Rem Is Portrait
+	If O = 1 Then BC = 1 : TC = 0 : ORIENTATION$ = "Portrait"
+
+	Rem Draw Text
+	Cls BC : Ink TC : Text 360, 500, "Orientation is " + ORIENTATION$, "#center"
+
+	Wait Vbl
+Loop

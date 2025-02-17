@@ -1,0 +1,96 @@
+#main_toolbar
+{
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	right: 0px;
+	height: 56px;
+	border: 3px #e8c602 solid;
+	border-radius: 8px;
+	margin: 4px;
+	padding-left: 27%;
+	background-color: #222222;
+	background-repeat: no-repeat;
+	background-image: url( images/logo_banner.png );
+	background-size: 25%;
+	background-position: 8px 4px;
+}
+
+.invisible
+{
+	display: none;
+}
+
+.visible
+{
+	display: inline-block;
+}
+
+.disabled
+{
+	pointer-events: none;
+	opacity: 0.1;
+}
+
+div.aoz_toolitem
+{
+	position: relative;
+	display: inline-block;
+	width: 32px;
+	height: 32px;
+	margin: 8px;
+	background-repeat: no-repeat;
+	background-size: contain;
+	cursor: pointer;
+}
+
+div.aoz_toolitem:active
+{
+	cursor: pointer;
+	opacity: 0.6;
+}
+
+div.aoz_toolitem:hover
+{
+	opacity: 1.0;
+}
+
+div.aoz_toolitem:disabled
+{
+	opacity: 0.2;
+	cursor: default;
+}
+
+div.separator
+{
+	background-image: url( 'images/toolbar/separator.png');
+	cursor: default;
+	opacity: 0.15;
+	pointer-events: none;
+	width: 16px;
+}
+
+div.new_project
+{
+	background-image: url( 'images/toolbar/new.png');
+}
+
+div.open_project
+{
+	background-image: url( 'images/toolbar/open.png');
+}
+
+div.save_project
+{
+	background-image: url( 'images/toolbar/save.png');
+}
+
+div.export_sprite
+{
+	background-image: url( 'images/toolbar/export.png');
+}
+
+div.add_image
+{
+	background-image: url( 'images/toolbar/add image.png');
+}

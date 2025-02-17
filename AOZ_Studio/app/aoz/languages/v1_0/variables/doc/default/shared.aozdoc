@@ -1,0 +1,23 @@
+<i>structure: define a list of global variables</i>
+<b>Shared</b> list of variables
+=
+There is an alternative method of passing data between a procedure and the main program. When SHARED is
+placed inside a procedure definition, it takes a list of local variables separated by commas and transforms them into global variables, which can be directly accessed from the main program. Of course, if you declare any arrays as global using this technique, they must already have been dimensioned in the main program.
+=
+For example:
+@code
+A=666: B=999
+Print A,B
+Procedure EXAMPLE
+	Shared A,B
+	A=B-A: B=B+1
+End Proc
+@code
+EXAMPLE can now read and write information to the global variables A and B.
+=
+If you need to share an array, it should be defined as follows:
+@code
+Shared A(),B#(),C$()
+@code
+=
+In a very large program, it is often convenient for different procedures to share the same set of global variables. This offers an easy way of transferring large amounts of information between your procedures.

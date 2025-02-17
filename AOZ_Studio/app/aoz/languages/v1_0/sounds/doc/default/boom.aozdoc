@@ -1,0 +1,17 @@
+<i>Boom</i>
+<b>Boom</b> xxxxxxx
+=
+This does not delay the program at all, so it may be necessary to use WAIT between successive explosions,
+or to create ricochet and echo effects.
+
+The BOOM command plays a realistic explosive sound effect simulating an explosion.
+This does not delay the program at all, so it may be necessary to use WAIT between successive explosions, or to
+create ricochet and echo effects For example:
+@code
+Curs Off : Centre "Thunderbolt and Lightning"
+Flash 1, "(FFF,1)(000,147)(A5F,2)
+Boom : Wait 150: Boom : Cls
+Centre "Very Very Frightening"
+Wait 50 : Boom
+@code
+

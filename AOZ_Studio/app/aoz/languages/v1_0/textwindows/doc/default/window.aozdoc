@@ -1,0 +1,12 @@
+<i>Window</i>
+<b>Window</b> xxxxxxx
+=
+This command sets the window number specified as the active window, to be used for all future text operations.
+There is an automatic saving system for re-drawing the contents of windows, which is explained below.For now, run the last example from Direct mode and enter the following statements:
+@code
+Window 1: Print "AMOS"
+Window 3: Print "open windows on the world"
+Window 2: "lets me"
+@code
+The active window is host to the flashing text cursor, unless it has been made invisible with a CURS OFF command.
+

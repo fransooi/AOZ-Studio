@@ -1,0 +1,108 @@
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __                                   
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  ) 
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/  
+//
+// ............................................................................................................
+
+//  Welcome to your AOZ Studio Lesson 4     Adapted by Dave Baldwin - February 2020
+//  We will learn to draw lots of random bars (rectangles) or triangles filled with random colourful patterns all over the screen.
+
+//	Commands also featured in this tutorial are SET PATTERN, SET PAINT, BAR and POLYGON
+
+
+#manifest:"aoz"			// Set the program environment to standard PC mode
+#fullScreen:true		// Use a full sized screen
+#fps:true				// Turn ON the FPS counter in the Top Left Corner. Change to 'false' if you do not like to see it.
+
+Curs Off				// Turn off the flashing cursor.
+
+sw=Screen Width			// Define variable sw as the width of the screen.
+sh=Screen Height		// Define variable sh as the height of the screen.
+
+BARS=1 					// Define variable for switching Bars ON (1) or OFF (0)
+TRIANGLES=0				// Define variable for switching Triangles ON (1) or OFF (0)
+SPEED=0					// Define variable for controlling speed. Slow (0), Fast (1)
+
+
+Cls 					// Clear screen before we start.
+
+
+// Main program loop. All code between Do and Loop will be repeated over and over until we stop the program.
+
+Do						// Start the program loop.
+
+	x1 = Rnd(sw)		// Define random x and Y coordinates for the first corner of polygon. 
+	y1 = Rnd(sh)+100	// Rnd(??) gives us a random number between 0 and whatever number we put in the brackets.
+
+	x2 = Rnd(sw)		// Define random x and Y coordinates for the second corner of polygon.
+	y2 = Rnd(sh)			
+
+	x3 = Rnd(sw)		// Define random x and Y coordinates for the third corner of polygon.
+	y3 = Rnd(sh)	
+
+			
+	// First, we're going to draw the polygon in a solid colour (the last ink colour) so that covers any shapes and patterns behind it.
+	
+	Set Pattern 0 						// This sets the fill pattern to a solid block of colour (the last ink colour used)
+	Set Paint 0							// This sets the outline mode for the polygon command. '0' means no outline, '1' means the shape will have an outline.
+
+	If BARS=1 then Bar x1,y1 to x2,y2						// Check if we need to draw bars, and if we do (BARS=1) then draw a bar using two pairs of coordinates, which represent opposite corners.
+	If TRIANGLES=1 then Polygon x1,y1 to x2,y2 to x3,y3		// Check if we need to draw triangles, and if we do (TRIANGLES=1) then draw a triangle using three pairs of coordinates, which represent each corner.
+
+	
+	// Now we're going draw the same shape, outlined and filled with a random pattern. Currently, there are 34 pre-set patterns and pattern 0 which is solid colour.
+	// The patterns are made of two colours, colour 0 (which is treated as transparent by drawing operations), and the current ink colour.
+	
+	Set Pattern rnd( 34 )									// Set the pattern to a random number between 0 and 34. This pattern will be used in all future drawing operations until it is changed.
+	Set Paint 1												// Set the outline mode to 1.
+	Ink Rnd( 32 )											// Set the ink colour. (This is used for the next polygon drawn, and also for the next solid block colour in the next loop)
+	If BARS=1 then Bar x1,y1 to x2,y2						// Check if we need to draw bars, and if we do (BARS=1) then draw a bar using two pairs of coordinates, which represent opposite corners.
+	If TRIANGLES=1 then Polygon x1,y1 to x2,y2 to x3,y3		// Check if we need to draw triangles, and if we do (TRIANGLES=1) then draw a triangle using three pairs of coordinates, which represent each corner.
+	
+	
+	// Finally, we'll add some keyboard controls to make it more interesting.
+		
+	Centre "Press 'B' for BARS, 'T' for TRIANGLES, 'S' for SLOW, 'F' for FAST, 'Q' to QUIT" // Display this line of text at top of screen. Doing it now makes sure it does't get drawn on.
+	
+	I$=Inkey$		//	Check if a key has been pressed, and define I$ if it has. If you press the "T" key, I$ will become "T"
+
+	If I$="B" or I$="b" then BARS=1 : TRIANGLES=0	// Check if "B" has been pressed and if it has, switch BARS on and turn TRIANGLES off. We'll check for both upper and lower case letters in case Caps Lock is on.
+	If I$="T" or I$="t" then TRIANGLES=1 : BARS=0   // Check if "T" has been pressed and if it has, switch TRIANGLES on and turn BARS off.
+	If I$="S" or I$="s" then SPEED=0				// Check if "S" has been pressed and if it has, set the SPEED variable to '0' for slow.			
+	If I$="F" or I$="f" then SPEED=1				// Check if "F" has been pressed and if it has, set the SPEED variable to '1' for fast.
+	If I$="Q" or I$="q" then Exit					// If 'Q' has been pressed, Exit program.
+
+	If SPEED=0 then Wait 0.2						// Check if we're supposed to be going SLOW and if we are, wait for a while before continuing.
+											
+	Wait 0.001						   				// Pause the program briefly to slow it down a bit. If we don't have this command here, the program will run too quickly and mess up your browser.
+Loop												// End of the program loop, so go back to the 'Do' and start again.
+
+
+//	#####################
+//	# CODING CHALLENGES #
+//	#####################
+
+//	1.	EASY			Instead of rectangles, can you draw randomly sized squares?
+// 						And Ellipses, see below
+
+//	2.	MODERATE		How about equilateral triangles? 
+
+//	3. 	CHALLENGING		Add a fourth set of coordinates to your polygons and observe what happens. Think about how you can make sure
+//						that solid four sided shapes are drawn.
+
+// 	Similar commands are: 	POLYLINE x1,y1 to x2,y2 to x3,y3 to ... - Draws a hollow polygon with as many corners as you like.
+//							BOX x1,y1 to x2,y2 - Draws a hollow rectangle or square.
+//							CIRCLE x1,y1,r - Draw a hollow circle with centre x1,y1 with radius r
+//							ELLIPSE x1,y1,r1,r2 - Draws a hollow ellipse with centre x1,y1 with horizontal radiius r1 and vertical radius r2
+
+
+
+//    _       __     ____       __                 __
+//   | |     / /__  / / /  ____/ /___  ____  ___  / /
+//   | | /| / / _ \/ / /  / __  / __ \/ __ \/ _ \/ / 
+//   | |/ |/ /  __/ / /  / /_/ / /_/ / / / /  __/_/  
+//   |__/|__/\___/_/_/   \__,_/\____/_/ /_/\___(_)   

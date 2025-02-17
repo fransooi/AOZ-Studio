@@ -1,0 +1,18 @@
+<i>Frame Param</i>
+<b>Frame Param</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This function returns the amount of time needed to successfully display an animation on screen, measured in 50ths
+of a second. It is used after FRAME PLAY or FRAME SKIP to delay the program until the screen has been totally
+re-drawn.
+
+Deluxe Paint users may need to slow down the speed of AOZ Studio animations by one fiftieth of a second,
+in order to harmonise the display, like this:
+@code
+Wait Form Param+1
+@code
+This has nothing to do with the Deluxe Paint package, but takes into account the extra efficiency of the AMOS
+Professional double buffering and copper calculations, when compared to the standard Workbench routines!
+
+

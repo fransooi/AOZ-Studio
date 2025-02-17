@@ -1,0 +1,19 @@
+<i>Limit Bob</i>
+<b>Limit Bob</b> xxxxxxx
+=
+This command keeps all Bobs restricted to moving inside an invisible rectangular area of the screen, whose coordinates are set by the usual top left to bottom right-hand corner coordinates.
+If LIMIT BOB is followed with a Bob number, then only that Bob becomes restricted by the boundaries of the rectangle.
+
+To keep Bob number 1 trapped inside an area, you would use
+something like this:
+@code
+Limit Bob 1,10,0 To 320,100
+@code
+Remember that a Bob must be called up with the BOB command before LIMIT BOB is used, otherwise the
+limitation will have no effect. To restore a Bob's freedom to move around the whole screen, use the command
+without any coordinates, like this:
+@code
+Limit Bob
+@code
+
+

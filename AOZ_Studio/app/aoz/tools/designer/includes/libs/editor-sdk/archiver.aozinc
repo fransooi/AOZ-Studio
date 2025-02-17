@@ -1,0 +1,13 @@
+Load Asset "resources/assets/libs/editor-sdk/js/archiver.js", "sdk-archiver"
+
+/**
+Extract a GZIP archive (*.tar.gz)
+SOURCE$ is the path of the archive
+TARGET_PATH$ if the path of destination
+PROCNAME$ is the name of the AOZ procedure to control the extracting progression
+*/
+Procedure EXTRACT_GZIP[ SOURCE$, TARGET_PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.archiver.extractGZip( '" + SOURCE$ + "', '" + TARGET_PATH$ + "'',  '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc

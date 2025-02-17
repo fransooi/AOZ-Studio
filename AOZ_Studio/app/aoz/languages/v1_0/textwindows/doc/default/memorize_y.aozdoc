@@ -1,0 +1,6 @@
+<i>Memorize Y</i>
+<b>Memorize Y</b> xxxxxxx
+=
+The MEMORIZE commands store the current position of the x or y text cursor, so that you can print any text on the
+screen without destroying the original cursor coordinates. These may be reloaded using the REMEMBER X and REMEMBER Y commands:
+

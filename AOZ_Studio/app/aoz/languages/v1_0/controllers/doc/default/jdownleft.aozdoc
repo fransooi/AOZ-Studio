@@ -1,0 +1,16 @@
+<i>JDownLeft</i>
+<b>JDownLeft</b> xxxxxxx
+=
+This returns True if the joystick connected to the given port number has been pushed to the
+down-left diagonal, otherwise False is returned.
+These functions can be demonstrated by the following example:
+@code
+Do
+If JUpLeft(1) Then Print "NORTH-WEST"
+If JUpRight(1) Then Print "NORTH-EAST"
+If JDownLeft(1) Then Print "SOUTH-WEST"
+If JDownRight(1) Then Print "SOUTH-EAST"
+Loop
+@code
+
+

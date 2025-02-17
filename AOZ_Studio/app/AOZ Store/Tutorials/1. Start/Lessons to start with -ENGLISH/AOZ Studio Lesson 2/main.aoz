@@ -1,0 +1,149 @@
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+
+// Welcome to your AOZ Studio Lesson 2
+
+// You see these two slash (//) -> that means that anything afterwards (all marked in green) is a comment.
+// After the // everything will be a remark, note, explanation, but not program instruction for AOZ.
+
+// I am going to show you how to enter information into your program and then show it on the screen.
+
+
+// Variables------------------------------------------
+// A "Variable" is a way of temporarily storing information. The value it stores can be varied, a number,
+// a letter, a word, a sentence... We saw it in Lesson 1 and will play more with it in this lesson.
+
+// For instance:
+
+N = 20
+Print N
+
+N = 2000
+Print N
+
+ELEPHANT = 1
+Print ELEPHANT
+
+ANYWORD$ = "Kitchen"
+Print ANYWORD$
+
+ANYWORD$ = "Elephant"
+Print ANYWORD$
+
+ANYWORD$ = "Fred"
+Print ANYWORD$
+
+
+// The Variable "N" is being used to store the number 20, then 2000
+// The Variable "ANYWORD$"" is being used to store the words Kitchen, then Elephant and then Fred.
+// Letters and Words in computer language are called Strings. ANYWORD$ is a "String Variable", it stores pieces of text.
+// We must put double quotes around Words like above see "Kitchen", "Elephant",..
+
+// Notice that, to let the computer know that the Variable holds a word rather than a number we add
+// the dollar sign at the end of the Variable name. Variables must be written exactly the same every time;
+// if we spelt Anyword$, then ANYWORD$ or anyword$ or aNyWoRd$ will not be recognised as the same thing.
+
+// **Press the Run in AOZ viewer button(or F2) at the top of this screen
+
+
+End
+// **Now, delete the End instruction above or add // (//End), so the following instructions will be executed as well
+
+
+Cls
+// Cls will clear the screen. Note: so quickly that you will not see anymore the Print(s) that are above
+
+Print "Q1 of 4": Input "Is the number 95 a number or a string? N or S "; ANSWER1$
+// Note the ':'' between the Print and the Input. It allows to have several functions in one line
+
+
+// If - Else -End if Instruction-----------------------------------
+
+// Let me explain this very useful instruction made of 3 parts "if" and "else" and "End if",
+// to make simple logical decisions.
+// If (something is true) -> (carry out a course of actions)   Else (carry out other actions, up to End if)
+// eg., If Highscore = 1000 then Print "Player Wins" else Print "you loose"
+
+// Note: Else is not mandatory.
+
+If Upper$( ANSWER1$ ) = "N"
+    // Upper$ function convert the variable Answer1$ to capitals because we cannot tell if
+    // the user will enter capitals or lower case. So if the answer is n or N it will print:
+    Print "Yes 95 is a number, it is an Integer" : Inc MYSCORE
+
+Else
+
+    Print "Incorrect, 95 is an Integer"
+
+End If
+Print
+
+Print "Q2 of 4": Input "Can variable 'Name' be used to store a name? Y or N "; ANSWER2$
+
+If Upper$( ANSWER2$ ) = "N"
+
+    Print "Correct. There is no dollar sign after it. That means it is for storing numbers not strings"
+
+    // Inc MyScore is equivalent to MyScore=MyScore+1, it increase the value of the variable of 1
+    Inc MYSCORE
+
+Else
+
+    Print "That's wrong. That type of variable is for Text"
+
+End if
+Print
+
+Print "Q3 of 4" : Input "Show me what is used to stop lines of program being read by the computer "; ANSWER3$
+
+If ANSWER3$ = "//" Or ANSWER3$ = "'"
+
+    Print "You've got this!" : Inc MYSCORE
+
+Else
+
+    Print "Sorry, not correct. The double slash (//) or Apostrophe (') are used for comments in the program"
+
+End If
+Print
+
+
+Print "Q4 of 4": Input "Can the variable 'Cheese' be used to store text? Y or N"; ANSWER4$
+
+If Upper$( ANSWER4$ ) = "N"
+
+    Print "Well done! That variable is for storing (integer) numbers" : Inc MYSCORE
+
+Else
+
+    Print "Whoops! Text is stored in a String variable with a dollar sign at the end"
+
+End If
+Print
+
+Print "Press a key for the results..."
+Wait key
+Cls
+// Wait key, simply is waiting for a key to be pressed on the keyboard
+// Cls you know is to clear the screen
+Print
+
+If MYSCORE = 4 then Print" Congratulations!"
+Print " You scored " + Str$( MYSCORE ) + " out of 4"
+// Note: there is no Else or End if with that simple If
+
+
+//    _       __     ____       __                 __
+//   | |     / /__  / / /  ____/ /___  ____  ___  / /
+//   | | /| / / _ \/ / /  / __  / __ \/ __ \/ _ \/ /
+//   | |/ |/ /  __/ / /  / /_/ / /_/ / / / /  __/_/
+//   |__/|__/\___/_/_/   \__,_/\____/_/ /_/\___(_)
+
+// You are ready to go to... the important Lesson 3. Congratulations!

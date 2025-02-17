@@ -1,0 +1,1391 @@
+
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Bob Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+
+
+//
+// Initialization
+//
+{
+}
+
+/**doc
+@name:Animate Bob
+@description:Instructions and functions to display moveable objects inside AOZ screens (Bitmap Objects)
+@intro:
+@conclusion:
+@author:Francois Lionet
+doc*/
+
+/**api
+@name:Bob
+@description:Changes the image of a bob
+@param:index:index:Index of the bob in the list of bobs
+@param:x:integer:Horizontal position of the bob in the screen
+@param:y:integer:Vertical position of the bob in the screen
+@param:image:integer:Index of the image in the "Images" bank
+@examples:instructions:i_26
+@content:
+Each Bob must be given an identification index. As all indexes in AOZ, it can either be a string or a number.
+The is no limit to the number of Bobs that can be displayed at the same time in a screen, but the speed of the machine.
+
+As Bobs are part of a screen, you can turn this screen into a transparent "layer" with the Set Transparent instruction...
+
+If the coordinates lie outside of the existing screen area, the Bob will not be (or partly) displayed. So objects can be initialised
+off screen, ready to be moved into place during the course of your program.
+
+Once a Bob has been positioned on screen, the coordinate values become optional. The values of any coordinate
+parameters that are omitted will be remembered from the last time they were set. This technique is valuable for animating Bobs, because it allows objects to be moved effortlessly,
+without disturbing any existing animation sequences. It is vital to include all commas in their normal positions if
+coordinate values are omitted, or a syntax error will be reported. For example:
+
+~~~
+Bob 1,160,100,1 : Rem Position Bob 1 at 160,100 using image1
+Bob 1,,150,1 : Rem Move Bob 1 down 50 pixels
+Bob 1,110,,1 : Rem Move Bob 1 50 pixels left
+Bob 1,,,2 : Rem Display new image 2 at Bob 1 current position
+~~~
+api*/
+Instruction Bob, index = (index), image = (index)
+{
+	#errors
+	#addToFilesystem:"image:%image"
+	aoz.currentScreen.bob(%index, {}, aoz.checkIndex(%image));
+}
+End Instruction
+Instruction Bob, index = (index), x, y, image = (index)
+{
+	#errors
+	#addToFilesystem:"image:%image"
+	aoz.currentScreen.bob(%index,{x:%x,y:%y},aoz.checkIndex(%image));
+}
+End Instruction
+Function Bob, index = (index)
+{
+	#errors
+	#returns:"object"
+}
+End Function({aoz.getBob(%index)})
+Function Bob, index = (index), x, y, image = (index)
+{
+	#errors
+	#returns:"object"
+	#addToFilesystem:"image:%image"
+	debugger;
+	aoz.currentScreen.bob(%index,{x:%x,y:%y},aoz.checkIndex(%image));
+}
+End Function({aoz.getBob(%index)})
+
+/**api
+@name:Bob Camera
+@description:Creates or sets the point of view on a bob
+@param:index:index:Index of the create or modify
+@param:x:integer:Horizontal position of the camera in the screen
+@param:y:integer:Vertical position of the camera in the screen
+@content:
+This instruction simulates a "camera" that offsets the position of the bob in the screen.
+
+Before it is used, the Bob will be displayed at it's exact position. Using it adds an offset to both horizontal and vertical coordinates of the bob on screen.
+~~~
+Bob "mybob", 200, 200, 1
+Print "Please press a key"
+Print "and watch the bob move 20 pixels to the right and 20 pixels to the top"
+Wait Key
+Bob Camera "mybob", 180, 220
+api*/
+Instruction Bob Camera, index = (index), x = 0, y = 0
+{
+	#errors
+	aoz.currentScreen.bobCamera(%index,{x:%x,y:%y,z:0},'#update');
+}
+End Instruction
+
+/**api
+@name:Bob Off
+@description:Destroys all or one bob
+@param:index:index:Index of the bob to destroy. If absent, will destroy all the bobs in the current screen
+@examples:instructions:i_28
+@content:
+Use this command to remove all Bobs from the screen simultaneously. If the index of a Bob is specified, only that Bob will be extinguished. For example:
+~~~
+Bob Off 1: 			// Remove Bob 1 only
+Bob Off "mybob" 	// remove Bob "mybob" only
+Bob Off 			// Remove all Bobs from screen
+~~~
+The BOB OFF instruction also turns off any animation or collision routines associated with these Bobs.
+
+api*/
+Instruction Bob Off, index = (index)
+{
+	#errors
+	aoz.currentScreen.bobDestroy(%index);
+}
+End Instruction
+
+/**api
+@name:Bob Update Off
+@description:Turns off the automatic bob coordinate update system. After it, all "Bob" instruction will no longer have a visible effect until an "Bob Update" instruction is useD
+@seeAlso:Bob Update On, Bob Update
+@content:
+The BOB UPDATE family of commands provide total control of Sprite movements. Normally, when a Sprite is
+moved its position is updated automatically during the next vertical blank period. Please see WAIT VBL if this
+needs explaining. However, when many bobs are moved with the BOB command, updates will happen before
+all of the Sprites have been successfully repositioned, which can result in jerky patterns of movement. In these
+circumstances, the automatic updating system can be turned off with a BOB UPDATE OFF command.
+
+When the Sprites have been moved successfully, a call to BOB UPDATE will reposition any Sprites that have
+been moved since the last update. Alternatively, BOB UPDATE ON returns to the default status of automatic
+updating.
+api*/
+Instruction Bob Update Off
+{
+	#errors
+	aoz.setBobsUpdate(false);
+}
+End Instruction
+
+/**api
+@name:Bob Update On
+@description:Turns on the automatic bob coordinate update system. After it, the effect of all "Bob" instructions will be visible on display without intervention on yoru part.
+@seeAlso:Bob Update Off, Bob Update
+@content:
+The BOB UPDATE family of commands provide total control of Sprite movements. Normally, when a Sprite is
+moved its position is updated automatically during the next vertical blank period. Please see WAIT VBL if this
+needs explaining. However, when many bobs are moved with the BOB command, updates will happen before
+all of the Sprites have been successfully repositioned, which can result in jerky patterns of movement. In these
+circumstances, the automatic updating system can be turned off with a BOB UPDATE OFF command.
+
+When the Sprites have been moved successfully, a call to BOB UPDATE will reposition any Sprites that have
+been moved since the last update. Alternatively, BOB UPDATE ON returns to the default status of automatic
+updating.
+
+api*/
+Instruction Bob Update On
+{
+	#errors
+	aoz.setBobsUpdate(true);
+}
+End Instruction
+
+/**api
+@name:Bob Update
+@description:Performs one step of animation of all the bobs in all the screen and displays the result
+@seeAlso:Bob Update On, Bob Update Off
+@content:
+BOB UPDATE performs all Bob movements in a single, mighty burst, so all objects are moved at the same instant in your program.
+The resulting movement effects are now incredibly smooth, even with dozens of objects on screen at once. BOB UPDATE is extremely easy to use, as the following technique explains.
+- First, turn off the automatic system with BOB UPDATE OFF
+- Execute your main loop as normal.
+- Now call a BOB UPDATE command at the point when objects are to be moved and drawn on screen.
+- Finally, wait for the updates to be completed, by using WAIT VBL.
+
+BOB UPDATE is now used as the standard technique in the vast majority of AOZ arcade games.
+
+If you need to restore the re-drawing system to its default status, BOB UPDATE ON sets the situation back to
+normal.
+api*/
+Instruction Bob Update Off
+{
+	#errors
+	aoz.setBobsUpdate(false);
+}
+End Instruction
+
+
+
+/**api
+@name:Limit Bob
+@description:Clip the position (but not the display) of all bobs to a limited area in the current screen
+@param:X1:integer:Horizontal coordinate of the top-left corner of the bounding box
+@param:Y1:integer:Vertical coordinate of the top-left corner of the bounding box
+@param:X2:integer:Horizontal coordinate of the bottom-right corner of the bounding box
+@param:Y2:integer:Vertical coordinate of the bottom-right corner of the bounding box
+@examples:instructions:i_27
+@seeAlso:Clip Bob
+@content:
+This command keeps all Bobs restricted to moving inside an invisible rectangular area of the screen, whose coordinates are set by the usual top left to bottom right-hand corner coordinates.
+If LIMIT BOB is followed with a Bob number, then only that Bob becomes restricted by the boundaries of the rectangle.
+
+To keep Bob number 1 trapped inside an area, you would use
+something like this:
+~~~
+Limit Bob 1,10,0 To 320,100
+~~~
+Remember that a Bob must be called up with the BOB command before LIMIT BOB is used, otherwise the
+limitation will have no effect. To restore a Bob's freedom to move around the whole screen, use the command
+without any coordinates, like this:
+~~~
+Limit Bob
+~~~
+
+api*/
+Instruction Limit Bob, x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.limitBob(undefined,{x1:%x1,y1:%y1,x2:%x2,y2:%y2},'#update');
+}
+End Instruction
+
+
+Instruction Limit Bob
+{
+	#errors
+	aoz.currentScreen.limitBob(undefined,null,'#update');
+}
+End Instruction
+
+Instruction Limit Bob Off
+{
+	#errors
+	aoz.currentScreen.limitBob(undefined,null,'#update');
+}
+End Instruction
+
+Instruction Limit Bob Off, index = (index)
+{
+	#errors
+	aoz.currentScreen.limitBob(%index ,null,'#update');
+}
+End Instruction
+
+Instruction Limit Bob, index = (index), x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.limitBob(%index,{x1:%x1,y1:%y1,x2:%x2,y2:%y2},'#update');
+}
+End Instruction
+
+Instruction Limit Bob, x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.limitBob(undefined,{x:%x1,y:%y1,width:%width,height:%height},'#update');
+}
+End Instruction
+
+Instruction Limit Bob, index = (index), x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.limitBob(%index,{x:%x1,y:%y1,width:%width,height:%height},'#update');
+}
+End Instruction
+/**api
+@name:Clip Bob
+@description:Clip the position (but not the display) of all bobs to a limited area in the current screen
+@param:X1:integer:Horizontal coordinate of the top-left corner or centre of the bounding box
+@param:Y1:integer:Vertical coordinate of the top-left corner or centre of the bounding box
+@param:X2:integer:Horizontal coordinate of the bottom-right corner of the bounding box
+@param:Y2:integer:Vertical coordinate of the bottom-right corner of the bounding box
+@param:width:integer:Width of the bounding box
+@param:height:integer:Height of the bounding box
+@param:angle:integer:Angle of rotation of the bounding box
+@param:style$:string:Defines the type of bounding box to draw in extended syntax. "round" - draws a cirle or ellipse, "shape" - draws a regular polygon with the stated number of sides.
+@param:sides:integer:Number of sides when using "shape" style. If omitted, 'sides'defaults to the minimum value,3
+@examples:instructions:i_27
+@seeAlso:Clip Bob
+@content:
+This command creates an area in which some or all of the Bobs visible. If a Bob that has Clip Bob applied moves outside this area, it will disappear
+ and remain invisible until it moves back into the area. There are a number of different syntaxes for Clip Bob, and they work as follows.
+~~~
+Clip Bob x1, y1, width,  height			// All bobs only visible in defined rectangular area
+Clip Bob x1, y1 to x2, y2				// All bobs only visible in defined rectangular area
+Clip Bob index, x1, y1, width, height	// Bob number 'index' only visible in defined rectangular area
+Clip Bob index, x1, y1 to x2, y2		// Bob number 'index' only visible in defined rectangular area
+
+Clip Bob x, y, width, height, angle, style$			// All bobs only visible in defined area, rotated by 'angle'. Style$ can be 'round' or 'shape'
+Clip Bob x, y, width, height, angle, style$, sides	// All bobs only visible in defined area with 'sides' number of sides, rotated by 'angle'. Style$ can be 'round' or 'shape'
+Clip Bob index, x, y, width, height, angle, style$  // Bob number 'index' only visible in defined area, rotated by 'angle'. Style$ can be 'round' or 'shape'
+Clip Bob index, x, y, width, height, angle, style$, sides   // Bob number 'index' only visible in defined area with 'sides' number of sides, rotated by 'angle'. Style$ can be 'round' or 'shape'
+
+Clip Bob		//	Remove all bob clipping
+~~~
+The following example draws 100 bobs on the screen, and then allows you to move the mouse around with different button combinations to use 3 different clipping methods.
+~~~
+#useAssetsResources:true
+For n=1 to 100
+	bob n,rnd(100 to 1820),rnd(100 to 980),"ship.png"
+	s#=rnd(50 to 150)/100
+	bob scale n, s#, s#
+	bob rotate n,rnd(360)
+next n
+Do
+	xm= x mouse
+	ym= y mouse
+	if mouse key = 1 then  Clip Bob x mouse-400, y mouse-250,800,500 : c = 1
+	if mouse key = 2 then  Clip Bob x mouse, y mouse,600,,36,"shape", 5 : c = 1
+	if mouse key = 3 then  Clip Bob x mouse, y mouse,900,,36,"round" :  c = 1
+	if not mouse key and c = 1 then Clip Bob : c = 0
+Loop
+~~~
+
+api*/
+Instruction Clip Bob , x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.clipBob(undefined,{x1:%x1,y1:%y1,x2:%x2,y2:%y2,style:'rectangle'},'#update');
+}
+End Instruction
+
+Instruction Clip Bob , index = (index), x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.clipBob(%index,{x1:%x1,y1:%y1,x2:%x2,y2:%y2,style:'rectangle'},'#update');
+}
+End Instruction
+
+Instruction Clip Bob
+{
+	#errors
+	aoz.currentScreen.clipBob(undefined,null,'#update');
+}
+End Instruction
+
+Instruction Clip Bob , x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.clipBob(undefined,{x:%x1,y:%y1,width:%width,height:%height,style:'rectangle'},'#update');
+}
+End Instruction
+
+Instruction Clip Bob , index = (index), x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.clipBob(%index,{x:%x1,y:%y1,width:%width,height:%height,style:'rectangle'},'#update');
+}
+End Instruction
+
+Instruction Clip Bob , x1, y1, width, height, angle, style$, sides
+{
+	#errors
+	aoz.currentScreen.clipBob(undefined,{x:%x1,y:%y1,width:%width,height:%height,sides:%sides,angle:(%angle)*aoz.degreeRadian,style:%style$},'#update');
+}
+End Instruction
+
+Instruction Clip Bob , index = (index), x1, y1, width, height, angle, style$, sides
+{
+	#errors
+	aoz.currentScreen.clipBob(%index,{x:%x1,y:%y1,width:%width,height:%height,sides:%sides,angle:(%angle)*aoz.degreeRadian,style:%style$},'#update');
+}
+End Instruction
+
+Instruction Clip Bob Off
+{
+	#errors
+	aoz.currentScreen.clipBob(undefined,null,'#update');
+}
+End Instruction
+
+Instruction Clip Bob Off, index = (index)
+{
+	#errors
+	aoz.currentScreen.clipBob(%index,null,'#update');
+}
+End Instruction
+
+Instruction Set Bob, x, y, width, height
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Paste Bob
+@description:Draws an image from the image bank in the current screen
+@param:x:integer:Horizontal coordinate of the paste
+@param:y:integer:vertical coordinate of the paste
+@param:image:integer:Index of the image in the "Images" bank
+@param:*scaleX#:float:Horizontal scaling, identical to the bob Scale parameter
+@param:*scaleY#:float:Angle of rotation of the image around it's hot-spot
+@param:width:integer:Width of the pasted image (if scale is not specified)
+@param:height:integer:Height of the pasted image (if scale is not specified)
+@examples:instructions:i_29
+@content:
+PASTE BOB takes an image held in the Image Bank, and draws it straight onto the current screen. Unlike the PUT BOB command, the image is drawn immediately, so there is no need to add the WAIT VBL commands before
+proceeding.
+
+It is important to note that the coordinates for the given image number are measured from the top left-hand corner of the image, and take no account of the current hot spot setting!"
+
+PASTE BOB can be used to generate a range of extremely fast graphical operations, and it is also useful for mapping complex displays in
+scrolling arcade games. Here is an example:
+~~~
+Cls 0
+Rem The following Palette values go on one line
+For C=1 To 15
+    Ink C : Circle 16,16,15 : Paint 16,16
+Image C,0,0 To 32,32
+Next C
+Do
+    Rem Choose a random circle and choose its position
+    N=Rnd(14)+1 : X=Rnd(320) : Y=Rnd(200)
+    Rem Paste image on screen at new coordinates
+    Paste Bob X,Y,N
+Loop
+~~~
+
+api*/
+Instruction Paste Bob, index = (index)
+{
+	#errors
+	aoz.currentScreen.putBob(%index);
+}
+End Instruction
+Instruction Paste Bob, x, y, index = (index), scaleX# = 0, scaleY# = 0, angle# = 0, alpha# = 1.0, tags$, width = 0, height = 0
+{
+	#errors
+	if ( %width && %height )
+		aoz.currentScreen.pasteImage2('images',%index,{x:%x,y:%y},{width:%width,height:%height},((%angle#)*aoz.degreeRadian),0,%alpha#,%tags$);
+	else
+		aoz.currentScreen.pasteImage('images',%index,%x,%y,%scaleX#,%scaleY#,((%angle#)*aoz.degreeRadian),0,0,%alpha#,%tags$);
+}
+End Instruction
+
+/**api
+@name:Bob Alpha
+@description:Set the global transparency of a bob, also called "Alpha"
+@param:index:index:Index of the bob in the list of active bobs
+@param:alpha#:float:Value of Alpha, from 1 (fully opaque) to 0 (fully transparent)
+@content:
+This instruction allows you to turn any opaque bob into a semi-transparent image. The bob will completely disappear from display with an Alpha value of 0, but will remain active (like a ghost object which can be useful for collision detection)...
+
+The next example displays a bob on the screen and slowly fades it away...
+~~~
+Curs Off : Cls 0 					// Set up screen
+Bob 1, 670,450, "gameover.png" 		// Display Bob at coordinates on screen.
+do
+	For A# = 1 To 0 Step -0.01 		// Define alpha fade from 1 to 0 in 100 steps
+		Bob Alpha 1, A#				// Set new alpha level
+		Wait Vbl					// Wait, and re-draw Bob with new alpha level.
+	Next A#
+loop
+~~~
+api*/
+Instruction Bob Alpha, index = (index), alpha# = 1
+{
+	#errors
+	aoz.currentScreen.bobAlpha(%index,%alpha#,'#update');
+}
+End Instruction
+
+/**api
+@name:Bob Show
+@description:Make a bob visible on screen
+@param:index:index:Index of the bob in the list of active bobs
+api*/
+Instruction Bob Show, index = (index)
+{
+	#errors
+	aoz.currentScreen.bobVisible(%index,true,'#update');
+}
+End Instruction
+
+/**api
+@name:Bob Hide
+@description:Make a bob invisible
+@param:index:index:Index of the bob in the list of active bobs
+@content:
+Please note that even if it is hidden, a Bob remains active in the collision detection process...
+api*/
+Instruction Bob Hide, index = (index)
+{
+	#errors
+	aoz.currentScreen.bobVisible(%index,false,'#update');
+}
+End Instruction
+
+/**api
+@name:Bob Scale
+@description:Changes the scale (zoom) of a bob
+@param:idnex:integer:Index of the bob in the list of active bobs
+@param:scaleX#:float:Horizontal scale, 1 displays the bob at original size, 0.5 reduces it by half, 2 multiplies by two etc. Negative values will mirror the bob horizontally
+@param:scaleY#:float:Vertical scale, 1 displays the bob at original size, 0.5 reduces it by half, 2 multiplies by two etc. Negative values will mirror the bob vertically
+@seeAlso:Bob Alpha, Bob, Bob Rotate, Bob Skew
+@content:
+This instruction allows you to zoom any bob instantly and adapt the size of it's image to your game.
+the scale also affects collision detect6ion, and the collisions will only be generated on the new surface.
+
+Bob Scale also worjks with negative value... in case of a negative scale value, the bob will be mirrored in this direction. Hot Spot are also affected by this instruction.
+
+The next example displays a bob on the screen and zooms it until it is bigger than the screen...
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load Bob images from disc
+Cls 0 										// Set up screen
+Bob 1, 100, 100, 2 		// Display Bob at position
+
+For S# = 1 To 100
+	Bob Scale 1, S#, S#
+	Wait Vbl
+Next
+~~~
+api*/
+Instruction Bob Scale, index = (index), scaleX# = 1, scaleY# = 1
+{
+	#errors
+	aoz.currentScreen.bobScale(%index,{x:%scaleX#,y:%scaleY#},'#update');
+}
+End Instruction
+
+/**api
+@name:Bob Rotate
+@description:Rotates a bob around it's hot-spot
+@param:index:index:Index of the bob in the list of active bobs
+@param:angle#:float:Angle to rotate with, either in degrees or radian depending on the use of the "Degree" or "Radian" instruction. AOZ use radians by default
+@content:
+This instruction allows you to rotate any bob instantly...
+
+A positive angle rotates the bob clockwise and a negative angle will rotate it counter-clockwise.
+The rotation also affects collision detection, and the collisions will only be generated on the rotated object.
+
+The next example displays a bob on the screen and rotates it slowly..
+~~~
+Degree							// Switch to degrees
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load Bob images from disc
+Cls 0 										// Set up screen
+Bob 1, 100, 100, 2 		// Display Bob at position
+
+For A = 0 To 360
+	Bob Rotate 1, A
+	Wait Vbl
+Next
+~~~
+api*/
+Instruction Bob Rotate, index = (index), angle# = 0
+{
+	#errors
+	aoz.currentScreen.bobRotate(%index,(%angle#)*aoz.degreeRadian,'#update');
+}
+End Instruction
+
+/**api
+@name:Bob Skew
+@description:Distorts a bob horizontally or vertically
+@param:index:index:Index of the bob in the list of active bobs
+@param:skewX#:float:Horizontal skew, values should be experimented. 0 displays the bob in original proportions
+@param:skewY#:float:Vertical skew, values should be experimented. 0 displays the bob in original proportions
+@content:
+This instruction allows you to generate interesting distortion effects.
+
+The next example displays a bob on the screen and demonstrates the effect with random values...
+~~~
+Degree							// Switch to degrees
+Load "AMOSPro_Tutorial:Objects/Bobs.abk" 	// Load Bob images from disc
+Cls 0 										// Set up screen
+Bob 1, 100, 100, 2 		// Display Bob at position
+
+Do
+	Bob Skew 1, Rnd() * 2, Rnd() * 2
+	Wait Vbl
+Next
+~~~
+api*/
+Instruction Bob Skew, index = (index), skewX# = 0, skewY# = 0
+{
+	#errors
+	aoz.currentScreen.bobSkew(%index,{x:%skewX#,y:%skewY#},'#update');
+}
+End Instruction
+
+/**api
+@name:Put Bob
+@description:Draws the bob in in the current screen as a stamp, at its current position with it's current scale, rotation and skew
+@param:index:index:Index of the bob in the list of active bobs
+@examples:instructions:i_28
+@content:
+The PUT BOB command takes the Bob whose number is given and fixes a permanent copy of its image on the screen, at the current position.
+Note that after the image has been copied, the original Bob can be animated and moved with no ill effects.
+api*/
+Instruction Put Bob, index = (index)
+{
+	#errors
+	aoz.currentScreen.putBob(%index);
+}
+End Instruction
+
+/**api
+@name:Bob Shadow
+@description:Display a shadow beneath the bob.
+@param:index:index:Index of the bob in the list of active bobs.
+@param:offsetX:float:A float specifying the distance that shadows will be offset horizontally. Positive values are to the right, and negative to the left.
+@param:offsetY:float:A float specifying the distance that shadows will be offset vertically. Positive values are down, and negative up from the image.
+@param:blur:float:A non-negative float specifying the level of shadow blur, where 0 represents no blur and larger numbers represent increasingly more blur. This value doesn't correspond to a number of pixels,
+@param:rgba:The RGBA colour value for the shadow. eg: $FF000077 would be Red with 50% opacity.
+@content:
+This instruction allows you to add a shadow to any bob image. With a bit of imagination, shadow can be used to create other effects, such as add a glow to an image. See second example below.
+Note, if the offsetX and offsetY are both zero, no shadow will be displayed.
+
+The next example displays a series of images on the screen and applies a semi transparent shadow to them...
+~~~
+Curs Off : Cls 6 									// Set up screen, blue background
+For f=1 to 10
+	Bob f,f*170,450-f*5, "ship.png" 				// Display bob at a new position
+	Bob Shadow f,10+f*2,40+f*5,10+f*2,$000000aa		// Define shadow with increasing offset and shadow blur.
+	Wait 0.3
+Next f
+End
+~~~
+This example show how Bob Shadow can be used to add a 'Glow' to a bob, and also how to turn off shadows.
+~~~
+Curs Off : Cls 0							// Set up screen, black background
+For f=1 to 10
+	Bob f,f*170,450, "ship.png" 			// Display bob at a new position
+	Bob Shadow f,0,0.01,f*4,$00ffffff		// Define shadow 'glow' with increasing shadow blur, which increases the 'glow'.
+	Wait 0.2
+Next f
+Print "Press Any Key to Turn Off Shadows"	// Display a message
+Wait Key									// Wait for key press
+For f=1 to 10
+	Bob Shadow f,0,0						// Set shadow offsets to zero
+	Wait 0.5
+Next f
+End
+~~~
+api*/
+Instruction Bob Shadow, index=(index), offsetX#, offsetY#, blur#, rgba
+{
+	#errors
+	aoz.currentScreen.bobShadow(%index,{x:%offsetX#,y:%offsetY#,blur:%blur#,color:%rgba},'#update');
+}
+End Instruction
+/**api
+@name:Bob Shadow Off
+@description:Turns off one or all bob shadows by setting the offsets to zero.
+@param:index:index:Index of the bob in the list of active bobs (optional)
+@content:
+This instruction removes the shadow from one (specified by index) or all of the bobs (if index in omitted).
+The blur and colour of each indivual shadow is remembered, so the shadow can be switched back on by just changing one or both of the offset values.
+
+This example show how Bob Shadow Off can be used to turn off individual bob shadows or all bob shadows at once.
+~~~
+Curs Off : Cls 1								// Set up screen, black background
+For f=1 to 10
+	Bob f,f*170,450, "ship.png" 				// Display bob at a new position
+	Bob Shadow f,0,f*3,f*4,$000000ff		// Define shadow with increasing shadow blur'.
+	Wait 0.2
+Next f
+Print "Press Any Key to Turn Off FIRST 5 Shadows individually"	// Display a message
+Wait Key										// Wait for key press
+For f=1 to 5
+	Bob Shadow Off f							// Turn off shadow of bob number f
+	Wait 0.5
+Next f
+Cls 1
+Print "Press Any Key to Turn Off ALL REMAINING Shadows"	// Display a message
+Wait Key										// Wait for key press
+Bob Shadow Off								// Turn off shadow of all bobs
+End
+~~~
+api*/
+Instruction Bob Shadow Off, index=(index)
+{
+	#errors
+	aoz.currentScreen.bobShadowOff(%index);
+}
+End Instruction
+
+/**api
+@name:Priority On
+@description:Turns on automatic sorting of the Z-order of the bobs in the current screen
+@seeAlso:Priority Off, Priority Reverse On, Priority Reverse Off
+@examples:instructions:i_30
+@content:
+When PRIORITY ON is used, Bobs with the highest y-coordinates take priority on the screen.
+It is usually best to set hot spots at the bottom of Bobs to exploit this priority, and some superb perspective effects can be created.
+
+All that is needed to re-set the original Bob number priorities is to use the PRIORITY OFF command.
+api*/
+Instruction Priority On
+{
+	#errors
+	aoz.currentScreen.setBobsPriority(true);
+}
+End Instruction
+
+/**api
+@name:Priority Off
+@description:Turns off automatic sorting of the Z-order of the bobs in the current screen
+@seeAlso:Priority On, Priority Reverse On, Priority Reverse Off
+@examples:instructions:i_30
+@content:
+When PRIORITY ON is used, Bobs with the highest y-coordinates take priority on the screen.
+It is usually best to set hot spots at the bottom of Bobs to exploit this priority, and some superb perspective effects can be created.
+
+All that is needed to re-set the original Bob number priorities is to use the PRIORITY OFF command.
+
+api*/
+Instruction Priority Off
+{
+	#errors
+	aoz.currentScreen.setBobsPriority(false);
+}
+End Instruction
+
+/**api
+@name:Priority Reverse On
+@description:Inverts the Z-Order of the bobs in the current screen if Priority is activated. After this instruction, bobs with the highest Y coordinate will be displayed in the back of others
+@seeAlso:Priority On, Priority Off, Priority Reverse Off
+@examples:instructions:i_30
+@content:
+The PRIORITY REVERSE ON command changes around the entire priority table based on Bob numbers. Not only does it give a lower Bob number priority over a higher Bob number, when used with PRIORITY ON it also gives
+priority to a Bob with the lowest y-coordinate. As you would expect, PRIORITY REVERSE OFF sets the priority
+system back to normal.
+
+api*/
+Instruction Priority Reverse On
+{
+	#errors
+	aoz.currentScreen.setBobsPriorityReverse(true);
+}
+End Instruction
+
+/**api
+@name:Priority Reverse Off
+@description:Stops the inversion of the Z-Order of the bobs in the current screen if Priority is activated. After this instruction, bobs with the lowest Y coordinate will be displayed in the back of others
+@seeAlso:Priority On, Priority Off, Priority Reverse On
+@examples:instructions:i_30
+@content:
+The PRIORITY REVERSE ON command changes around the entire priority table based on Bob numbers. Not only does it give a lower Bob number priority over a higher Bob number, when used with PRIORITY ON it also gives
+priority to a Bob with the lowest y-coordinate. As you would expect, PRIORITY REVERSE OFF sets the priority
+system back to normal.
+
+api*/
+Instruction Priority Reverse Off
+{
+	#errors
+	aoz.currentScreen.setBobsPriorityReverse(false);
+}
+End Instruction
+
+/**api
+@name:BobPriority
+@description:Turns on or off automatic sorting of the Z-order of the bobs
+@param:onOff:boolean:True to turn priority sorting on, False to stop it
+@compatible: aoz, stos, amos
+@content:
+When SPRITE PRIORITY ON is used, Bobs with the highest y-coordinates take priority on the screen.
+It is usually best to set hot spots at the bottom of the Sprite to exploit this priority, and some superb perspective effects can be created.
+
+All that is needed to re-set the original sprite number priorities is to use the SPRITE PRIORITY OFF command.
+api*/
+
+
+Instruction Bob Priority, onOff
+{
+	#errors
+	aoz.sprites.setBobsPriority(%onOff);
+}
+End Instruction
+Instruction Bob Priority On
+{
+	#errors
+	aoz.sprites.setBobsPriority(true);
+}
+End Instruction
+Instruction Bob Priority Off
+{
+	#errors
+	aoz.sprites.setBobsPriority(false);
+}
+End Instruction
+
+
+/**api
+@name:X Bob
+@description:Returns the horizontal coordinate of the bob
+@return:integer:Horizontal coordinate
+@examples:instructions:i_27
+@content:
+It is not difficult to keep track of Bobs under normal circumstances, but if Bobs are moved with movements objects or even AMAL, their coordinates can vary unpredictably.
+In which case, the X BOB and Y BOB functions may be used to get a snapshot of their current position, by returning the screen coordinates of your selected Bob.
+Specify the index of the chosen Bob on screen, and the appropriate coordinate will be returned, as measured from the top left-hand corner of the screen to the hot spot of the current image. For example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Cls 0		// Set up screen
+Do
+    // Move Bob1 with mouse
+    Bob 1, X Screen( X Mouse ), Y Screen( Y Mouse ),1
+
+    // Print new location on screen
+    Locate 0,0 : Print X Bob(1);" ";Y Bob(1);" ";
+Loop
+~~~
+api*/
+Function X Bob, index = (index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.xBob(%index)} )
+
+/**api
+@name:Y Bob
+@description:Returns vertical coordinate of the bob
+@return:integer:Vertical coordinate
+@examples:instructions:i_27
+@content:
+It is not difficult to keep track of Bobs under normal circumstances, but if Bobs are moved with movements objects or even AMAL, their coordinates can vary unpredictably.
+In which case, the X BOB and Y BOB functions may be used to get a snapshot of their current position, by returning the screen coordinates of your selected Bob.
+Specify the index of the chosen Bob on screen, and the appropriate coordinate will be returned, as measured from the top left-hand corner of the screen to the hot spot of the current image. For example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Cls 0		// Set up screen
+Do
+    // Move Bob1 with mouse
+    Bob 1, X Screen( X Mouse ), Y Screen( Y Mouse ),1
+
+    // Print new location on screen
+    Locate 0,0 : Print X Bob(1);" ";Y Bob(1);" ";
+Loop
+~~~
+api*/
+Function Y Bob, index = (index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.yBob(%index)} )
+
+/**api
+@name:I Bob
+@description:Returns the index of the current image displayed by the bob
+@return:integer:Index of the image in the "image" bank
+@examples:instructions:i_27
+@content:
+I BOB returns the number of the image currently assigned to the specified Bob number.
+If the Bob number you want to examine does not exist, an illegal function error will be given, so it is vital to define the Bob correctly before calling I BOB.
+Here is an example:
+~~~
+Load "AMOSPro Tutorial:Objects/Bobs.abk"
+Bob 1,160,100,1 		// Display Bob 1 at centre of screen
+Do
+For IMAGE=1 To Length(1)
+    // Move Bob 1 with the mouse
+    Bob 1,X Screen(X Mouse),Y Screen(Y Mouse),IMAGE
+    For W=0 To 3 : Wait Vbl : Next W
+    	// Display image number on screen
+    	Locate 0,0 : Print "Image ";I Bob(1);" ";
+	Next IMAGE
+Loop
+~~~
+api*/
+Function I Bob, index = (index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.iBob(%index)} )
+
+/**api
+@name:I Bob$
+@description: Returns the name of the current image displayed by the bob as a string
+@return:integer:Index of the image in the "image" bank
+@examples:instructions:i_27
+@seeAlso:I Bob
+@content:
+~~~
+As image indexes can either be numbers or strings, I BOB$ returns the index of the image currently displayed in the form of a string so that you can name your images.
+If the index is a number, then the returned value will be the string version of the number.
+~~~
+api*/
+/*
+Function I Bob$, index = (index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.iBob$(%index)} )
+*/
+
+/**api
+@name:IsBob
+@description:Checks if a bob is defined without generating an error
+@return:boolean:true if the bob exists, false if not.
+@content:
+Use this function if you are not sure a bob exists and want to avoid "Bob not defined" errors...
+~~~
+Bob 1, 100, 100, 1
+If IsBob( 1 )
+	Print "Bob 1 exists!"
+End If
+If IsBob( 2 )
+	Print "Bob 2 does not exist, this will will never be printed!"
+End If
+~~~
+
+api*/
+Function IsBob, index = (index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.isBob(%index)} )
+
+/**api
+@name:Get Bob
+@description:Captures a portion of the current screen, create a transparency mask out of true black (RGB #000000) and add the image to the Images bank. (Deprecated, use "Get Image")
+@param:*screenIndex:index:Index of the screen to grab the image from
+@param:imageIndex:index:Index of the image to insert in the Images bank
+@param:x1:integer:Horizontal coordinate of the top-left corner of the capture area
+@param:y1:integer:Vertical coordinate of the top-left corner of the capture area
+@param:x2:integer:Horizontal coordinate of the bottom-right corner of the capture area
+@param:y2:integer:Vertical coordinate of the bottom-right corner of the capture area
+@param:*tags$:string:Unused for the moment
+@examples:instructions:i_28
+api*/
+Instruction Get Bob, imageIndex = (index), x1, y1 To x2, y2, tags$
+{
+	#errors
+	aoz.currentScreen.getImage('images',%imageIndex,{x:%x1,y:%y1,x2:%x2,y2:%y2},%tags$);
+}
+End Instruction
+Instruction Get Bob, screenIndex=(index), imageIndex = (index), x1, y1 To x2, y2, tags$
+{
+	#errors
+	aoz.getScreen(%screenIndex).getImage('images',%imageIndex,{x:%x1,y:%y1,x2:%x2,y2:%y2},%tags$);
+}
+End Instruction
+Instruction Get Bob, imageIndex = (index), x, y, width, height, tags$
+{
+	#errors
+	aoz.currentScreen.getImage('images',%imageIndex,{x:%x,y:%y,width:%width,height:%height},%tags$);
+}
+End Instruction
+Instruction Get Bob, screenIndex=(index), imageIndex = (index), x, y, width, height, tags$
+{
+	#errors
+	aoz.getScreen(%screenIndex).getImage('images',%imageIndex,{x:%x,y:%y,width:%width,height:%height},%tags$);
+}
+End Instruction
+
+/**api
+@name:Ins Bob
+@description:Inserts an empty image in the Images bank (deprecated, use "Ins Image")
+@param:position:integer:Position to insert at
+@examples:instructions:i_28
+@content:
+INS BOB inserts a blank image at the numbered position in the current Object Bank. All of the images after this
+numbered position will then be moved down one place in the numerical order. The second version of this command
+allows you to create several spaces in a single operation, by giving the range of new gaps between the first and last
+image numbers that you specify.
+
+Any of these new image spaces are completely empty, and so cannot be allocated to a Bob or displayed directly on
+screen while they are still blank. An actual image must first be grabbed into the Object Bank, using a GET SPRITE
+or GET BOB command. If this is not done, the appropriate error message will be given as soon as you try to access
+the empty image.
+
+Both DEL BOB and INS BOB are provided to be used with the GET BOB and GET SPRITE commands. They
+allow you to modify and adjust your Bob images from inside AOZ Studio programs, with complete
+freedom. They may be used to create numerous special effects such as interactive screen animations and animated
+brushes.
+
+api*/
+Instruction Ins Bob, position
+{
+	#errors
+	aoz.banks.insertImage('images',%position);
+}
+End Instruction
+
+/**api
+@name:Ins Bob
+@description:Inserts a number of empty images in the Images bank (deprecated, use "Ins Image")
+@param:start:integer:Position of insersion
+@param:end:integer:End position of insertion
+@examples:instructions:i_28
+@content:
+This version of the INS BOB instruction works like the version with only one parameter but inserts a series of blank image after the numbered position in the current Object Bank and not only one.
+All of the images after this numbered position will then be moved down one place in the numerical order.
+api*/
+Instruction Ins Bob, start To end
+{
+	#errors
+	aoz.banks.insertImageRange('images',%start,%end);
+}
+End Instruction
+
+/**api
+@name:Del Bob
+@description:Delete an image in the Images bank (deprecated, use "Del Image")
+@param:imageIndex:index:Index of the image to delete
+@examples:instructions:i_28
+@content:
+The DEL BOB command permanently deletes one or more Bob images from the Object Bank. To erase a single image, simply give the image number to be deleted, like this:
+~~~
+Del Bob 2
+~~~
+Whenever an image is deleted, all the subsequent images in the Bank with a numerical index are moved up one place in the numerical order.
+For instance, if the Bank originally contained four images, the above example would remove image number 2 from
+memory, leaving a gap between images 1 and 3. This gap would be filled immediately, as the old image numbers 3
+and 4 were shunted up one place, to become the new image numbers 2 and 3.
+
+api*/
+Instruction Del Bob, imageIndex
+{
+	#errors
+	aoz.banks.deleteImage('images',%imageIndex);
+}
+End Instruction
+
+Instruction Del Bob, start To end
+{
+	#errors
+	aoz.banks.deleteImageRange('images',%start,%end);
+}
+End Instruction
+
+//////////////////////////////////////////////////////////////////
+// Bob Movements
+
+/**api
+@name:Bob Move
+@description:Defines the movement of a bob horizontally and vertically.
+@param:index:index:Index of the bob
+@param:movementX$:string:Horizontal movement definition string
+@param:movementY$:string:Vertical movement definition string
+@compatible: aoz
+@content:
+The instruction has been added to AOZ to allow you to declare movement in just one instruction instead of two, namely "Move X" and "Move Y".
+
+Each string contains the definition of the movement for it's axe. The syntax of the string is identical to the one used in "Move X" and "Move Y".
+api*/
+Instruction Bob Move, index = (index), movementX$ = "", movementY$ = ""
+{
+	#errors
+	#need_module:"animations"
+
+	var channelNumber = aoz.channelBaseBobs + %index;
+	aoz.checkAnimationChannel(channelNumber,"movement",%index,"Bob",true);
+	aoz.moduleAnimations.move( channelNumber, %movementX$, %movementY$ );
+	aoz.moduleAnimations.setMoveState( 'on', channelNumber );
+}
+End Instruction
+
+/**api
+@name:Bob Move X
+@description:Defines the horizontal movement of a bob. The bob starts to move immediately. For finer control please use the "Channel" and "MoveX" instructions.
+@param:index:index:Index of the bob
+@param:movement$:string:Movement definition string
+@compatible: aoz
+@content:
+The BOB MOVE X command defines a list of horizontal movements to be performed on the bob specified by the given index.
+
+The number is followed by a "movement string" containing a series of
+instructions which control the speed and direction of the Object. These movement commands are enclosed by
+brackets, and are entered as the following three parameters, separated by commas.
+
+The speed parameter sets a delay between each step of the movement, given in 50ths of a second. Speed can vary
+from a value of 1 for very fast, all the way to 32767 for incredibly slow. This is followed by a step value, setting the
+number of pixels the Object is to be moved during each operation. A positive value moves the Object to the right,
+and a negative number to the left. The apparent speed of the Object will depend on the relationship between the
+speed and the step values, varying from slow and smooth, to rapid but jerky movements.
+
+A speed value of about 10 (or -10) is recommended. The last parameter is a count value, which determines the number of times the movement
+is to be repeated. Values range between 1 and 32767, with the additional value of zero causing an indefinite
+repetition.
+
+It is vital to add an L (loop) instruction to the movement string after these parameters, if you want to force a jump to
+the start of the string, forcing the entire sequence to be run again.
+
+Here is an example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Sprites.Abk" :Get Sprite Palette
+Bob 1,360,100,1
+Bob Move X 1,"(1,1,60)(1,-5,60)L"
+Bob Move On
+Wait Key
+~~~
+An alternative ending to the movement string is to use the E option, followed by the value of an x-coordinate.
+
+This stops the Object when it reaches the specified coordinate value, which must be less than (or equal to) the
+original horizontal target destination. Try changing the third line of the last example to this:
+~~~
+Bob Move X 1,"(1,-5,30)E100"
+~~~
+api*/
+Instruction Bob Move X, index = (index), movement$
+{
+	#errors
+	#need_module:"animations"
+
+	aoz.checkAnimationChannel(%index,"movement",%index,"Bob",undefined,true);
+	aoz.moduleAnimations.moveX( %index, %movement$ );
+	aoz.moduleAnimations.setMoveState( 'on', %index );
+}
+End Instruction
+
+/**api
+@name:Bob Move Y
+@description:Defines the horizontal movement of a bob. The bob starts to move immediately. For finer control please use the "Channel" and "Move Y" instructions.
+@param:index:index:Index of the bob
+@param:movement$:string:Vertical movement definition string
+@compatible: aoz
+@content:
+This command operates in the same way as "BOB MOVE X", and controls vertical movement.
+Positive values for the step parameter control downward movements, and a negative value will result in an upward movement.
+
+Here is an example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Bobs.abk"
+Bob 1,228,50,1
+Bob Move Y 1,"(1,1,180)(1,-1,180)L" : Rem Loop Sprite
+Bob Move On : Wait Key
+~~~
+api*/
+Instruction Bob Move Y, index = (index), movement$
+{
+	#errors
+	#need_module:"animations"
+
+	aoz.checkAnimationChannel(%index,"movement",%index,"Bob",undefined,true);
+	aoz.moduleAnimations.moveY( %index, %movement$ );
+	aoz.moduleAnimations.setMoveState( 'on', %index );
+}
+End Instruction
+
+/**api
+@name:Bob Move Off
+@description:Stops the movement of one or all the bobs.
+@param:index:index:Index of the bob
+@compatible: aoz
+@content:
+This command suspends the movement of all or the specified Bobs on screen. Frozen Objects may be re- animated using the
+"BOB MOVE ON" command.
+api*/
+Instruction Bob Move Off
+{
+	#need_module:"animations"
+	aoz.moduleAnimations.setMoveState( 'off' );
+	aoz.setMoveState( undefined, 'bob', 'off' );
+}
+End Instruction
+Instruction Bob Move Off, index = (index)
+{
+	#errors
+	#need_module:"animations"
+	aoz.moduleAnimations.setMoveState( 'off', %index );
+	aoz.setMoveState( %index, 'bob', 'off' );
+}
+End Instruction
+
+/**api
+@name:Bob Move On
+@description:Start the movement of one or all the bobs.
+@param:index:index:Index of the bob
+@compatible: aoz
+@content:
+Before any movement patterns can be executed, they must be activated by a BOB MOVE ON command. All movements
+will begin at once unless an optional number is given, in which case only that particular animation sequence will be
+activated. BOB MOVE OFF has the opposite effect, halting all animations, or a single sequence specified by its number.
+api*/
+Instruction Bob Move On
+{
+	aoz.moduleAnimations.setMoveState( 'on' );
+	aoz.setMoveState( undefined, 'bob', 'on' );
+}
+End Instruction
+Instruction Bob Move On, index = (index)
+{
+	#errors
+	#need_module:"animations"
+	aoz.moduleAnimations.setMoveState( 'on', %index );
+	aoz.setMoveState( %index, 'bob', 'on' );
+}
+End Instruction
+
+/**api
+@name:Bob Move Freeze
+@description:Pause the movement of one or all the bobs.
+@param:index:index:Index of the bob
+@compatible: aoz
+@content:
+This command suspends the movement of all Objects on screen. Frozen Objects may be re- animated using the
+"BOB MOVE ON" command. If an optional Object number is given after "BOB MOVE FREEZE", then only that bob will be frozen.
+api*/
+Instruction Bob Move Freeze
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'pause' );
+	aoz.setMoveState( undefined, 'bob', 'pause' );
+}
+End Instruction
+Instruction Bob Move Freeze, index = (index)
+{
+	#errors
+	#need_module:"animations"
+	aoz.moduleAnimations.setMoveState( 'pause', %index );
+	aoz.setMoveState( %index, 'bob', 'pause' );
+}
+End Instruction
+
+/**api
+@name:Bob Moveon
+@description:Indicates if the movement of one bob is completed or not.
+@param:index:index:Index of the bob
+@return:boolean:string:True if the bob is moving, false if not
+@compatible: aoz
+@content:
+Use the BOB MOVON function to check whether a particular Object is being moved by a "BOB MOVE X" or "BOB MOVE Y"
+command. A value of True is returned while the bob is in motion, otherwise False is given for static
+bobs. Please note that BOB MOVON does not search for patterns generated by AMAL.
+api*/
+Function Bob Movon
+{
+	#need_module:"animations"
+}
+End Function( {aoz.moduleAnimations.moveOn('bob')} )
+Function Bob Movon, index=(index)
+{
+	#need_module:"animations"
+}
+End Function( {aoz.moduleAnimations.moveOn('bob', %index)} )
+
+// Filters
+/////////////////////////////////////////////////////////////////////////////////
+
+/**api
+@name:Bob Filter
+@description:Set or add a graphical filter to a bob
+@param:index:index:Index of the bob in question.
+@param:filterName$:string:Name of the filter to use (see list)
+@param:value1#:number:First value to use, a percentage or a number of pixels, depending on the filter
+@param:value2#:number:Second value to use, a percentage or a number of pixels, , depending on the filter
+@param:value3#:number:Third value to use, a percentage or a number of pixels, , depending on the filter
+@param:value4#:number:Fourth value to use, a percentage or a number of pixels (or a color), depending on the filter
+@content:
+This instruction applies one of the filters offered by Javascript and Aoz to the given bob. The name, so the effect
+f the filter is specified in the first parameter, filterName$, and can be one of the following list,
+allong with the first, second third and fourth parameter, which value and type depend on the filter itself.
+
+- "blur": Applies a Gaussian blur to the bob. The parameter defines the value of the standard deviation
+  to the Gaussian function, i.e., how many pixels on the screen blend into each other;
+  thus, a larger value will create more blur. A value of 0 leaves the input unchanged.
+
+- "brightness": Applies a linear multiplier to the bob, making it appear brighter or darker.
+  A value under 100% darkens the image, while a value over 100% brightens it.
+  A value of 0% will create an image that is completely black, while a value of 100% leaves the input unchanged.
+
+- "contrast": Adjusts the contrast of the bob. A value of 0% will create a drawing that is completely black.
+  A value of 100% leaves the drawing unchanged.
+
+- "grayscale": Converts the bob to grayscale. A value of 100% is completely grayscale.
+  A value of 0% leaves the drawing unchanged.
+
+- "hue-rotate": Applies a hue rotation on the bob. The value is expressed in degrees. 0 leaves the input unchanged.
+
+- "invert": Inverts the bob. A value of 100% means complete inversion.
+  A value of 0% leaves the drawing unchanged.
+
+- "opacity": Applies transparency to the bob. A value of 0% means completely transparent.
+  A value of 100% leaves the drawing unchanged.
+
+- "saturate": Saturates the bob. A value of 0% means completely un-saturated.
+  A value of 100% leaves the drawing unchanged.
+
+- "sepia": Converts the bob to sepia. A value of 100% means completely sepia.
+  A value of 0% leaves the drawing unchanged.
+
+- "drop-shadow": Applies a drop shadow effect to the bob. A drop shadow is effectively a blurred,
+  offset version of the drawing's alpha mask drawn in a particular color, composited below the
+  drawing. This function takes four arguments:
+
+  1. Specifies the horizontal distance of the shadow, in pixels. Can be positive (the shadow will be on
+    the right of the graphic), can be negativbe, it will be on the left.
+  2. Specifies the vertical distance of the shadow, in pixels. Can be positiove (the shadow will lower than the
+     graphic), can be negative (the shadow will be higher).
+  3. The larger this value, the bigger the blur, so the shadow becomes bigger and lighter.
+     Negative values are not allowed.
+  4. The color of the shadow, in RGBA hexadecimal form, $RRGGBBAA (with AA handling the transparency
+     of the shadow)
+
+Multiple filters can be used at the same time. For example, it is possible to display a blurred sepia version
+of a bob, with two Set Filter commands in chain before the actual drawing. Use Bob Filter Del to remove
+one or all filters.
+
+Please note tha the drop-shadow effect cannnot be applied to a screen. If you try, it will not generate
+an error but will have no effect.
+
+~~~
+Bob Filter index$="lucie", "sepia", 100
+Bob Filter index$="lucie", "blur", 14
+~~~
+
+If the screen hosting the bob is also filtered, the value of the matching filters will be added and kept between
+tolerances.
+
+Please note that like every complex graphical operation, Filters dans slow down the display or the drawing,
+specially complex filters like blur or drop-shadows that can massively slow down the dislay if applied on hundreds
+of bobs at the same time. It is suggested to only uise filters at key points, or key graphics like your main
+character and not everywhere.
+
+api*/
+Instruction Bob Filter, index=(index), name$='', param1#=0, param2#=0, param3#=0, param4#=0
+{
+	#errors
+	aoz.currentScreen.addBobFilter({index:%index,name:%name$,parameters:[%param1#,%param2#,%param3#,%param4#]});
+}
+End Instruction
+
+/**api
+@name:Bob Filter Del
+@description:Remove a specific or all filters applied to a bob.
+@param:index:index:Index of the bob
+@param:filterName$:string:Name of the filter to use (see list in the Bob Filter instruction)
+@content:
+This instruction if used without parameters will restore the display of the bob to normal.
+If you specify the name of a filter, and if this filter is used, then it will be removed,
+preserving eventual other filters already in place.
+api*/
+Instruction Bob Filter Del, index=(index), name$
+{
+	#errors
+	aoz.currentScreen.delBobFilter({index:%index,name:%name$});
+}
+End Instruction
+
+/**api
+@name:Filter$
+@description:Returns the CSS string used by Javascript in the context.filter property.
+@param:index:index:Index of the bob
+@return:string:The CSS string
+@content:
+This function is intended to be used by advanced developers, and returns the actual string
+to set in the Javascript context before drawing.
+api*/
+Function Bob Filter, index=(index), name$
+{
+	#errors
+}
+End Function({aoz.currentScreen.getBobFilter({index:%index,name:%name$})})
+
+/**api
+@name:Filter
+@description:Return the current value of the given filter
+@param:index:index:Index of the bob
+@param:name$:The name of the filter in question
+@return:number:The current value of the given filter
+api*/
+Function Bob Filter$, index=(index)
+{
+	#errors
+}
+End Function({aoz.currentScreen.getBobFilterString({index:%index})})

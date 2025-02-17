@@ -1,0 +1,32 @@
+<i>Include</i>
+<b>Include</b> xxxxxxx
+=
+This command allows you to insert the another source-code in your current application.
+
+You simply indicate the path to the file to ionxclude as a parameter. You can also, if the file is located somewhere in the AOZ Drive, just specify the name of the file,
+Aoz will perform a search in the AOZ Drive and use the file if it is found.
+
+The new source code is inserted at the very position of the Include statement, and the code located right after the line where the include is located is resumed after the end of the included code.
+
+Include is a very powerul instruction. It allows to group all kinds of procedures or routines, or data in external files, and this way make your main code more readable and debuggable.
+
+Here is an example of inclusion of code from the AOZ Drive/includes directory. "fbdemo.aoz" is a set of CSS and procedures that will automatically display an "About" button
+over your application wihtout affecting how it works, to make it ready for publication on Facebook or other social networks.
+
+@code
+// Include the code for facebook...
+Include "fbdemo"
+
+// The game main loop
+Do
+Actor 1, "lucie.png"
+...
+Exit If Inkey$ <> ""
+Loop
+
+// Call the information screen located in the fbdemo code...
+VIEW_INFOS
+@code
+
+Please note that it is perfectly possible to include other files in a file that is itself included, AOZ makes sure that no code is duplicated.
+

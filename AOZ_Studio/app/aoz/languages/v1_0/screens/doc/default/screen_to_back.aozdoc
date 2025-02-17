@@ -1,0 +1,16 @@
+<i>Screen To Back</i>
+<b>Screen To Back</b> xxxxxxx
+=
+This command is used to move a screen to the background of the display. If another screen is already there, it will
+be displayed in front of the chosen screen. Again, if the screen number is omitted after a SCREEN TO BACK
+command, the current screen will be relegated to the back of the display queue. Try this example:
+@code
+Centre "Hello! Screen 0 here"
+Wait 100
+Screen Open 1,1280,720
+Centre "Excuse me, make way for Screen 1"
+Wait 100 : Screen To Front 0
+Screen 0
+Wait 100 : Screen To Back
+@code
+

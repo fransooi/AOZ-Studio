@@ -1,0 +1,7 @@
+<i>X Screen</i>
+<b>X Screen</b> xxxxxxx
+=
+These functions transform a hardware coordinate into a screen coordinate, relative to the current screen. If the
+hardware coordinates lie outside of the screen, both functions will return relative offsets from the screen boundaries.
+An optional screen number may be included, in which case the coordinates will be returned relative to that screen.
+

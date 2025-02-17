@@ -1,0 +1,7 @@
+<i>Append</i>
+<b>Append</b> xxxxxxx
+=
+This works like OPEN OUT, but it allows you to add to your files at any time after they have been defined.
+If the filename already exists, your new data will be appended to it, in other words it will be added to the end of that file.
+
+

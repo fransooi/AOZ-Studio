@@ -1,0 +1,899 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The Animation Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/05/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+//
+// Initialization
+//
+{
+	this.contextAnimations = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+	this.contextMovementsX = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+	this.contextMovementsY = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+
+	this.doSynchro = function( deltaTime )
+	{
+		this.contextAnimations.parseAll( this.aoz.currentContextName, function( animation )
+		{
+			if ( animation.state == 'on' && !animation.end )
+				animation.update( deltaTime );
+		} );
+		this.contextMovementsX.parseAll( this.aoz.currentContextName, function( movement )
+		{
+			if ( movement.state == 'on' && !movement.end && !movement.paused && typeof movement.channelNumber != 'undefined' )
+			{
+				var info = movement.aoz.getAnimationChannel( movement.channelNumber );	
+				if ( info )
+				{	
+					var coordinate = info[ 'get_x' ].call( info.self );
+					var newCoordinate = movement.update( coordinate );
+					if ( newCoordinate != coordinate )
+						info[ 'set_x' ].call( info.self, newCoordinate );
+				}
+			}
+		} );
+		this.contextMovementsY.parseAll( this.aoz.currentContextName, function( movement )
+		{
+			if ( movement.state == 'on' && !movement.end && !movement.paused && typeof movement.channelNumber != 'undefined' )
+			{
+				var info = movement.aoz.getAnimationChannel( movement.channelNumber );	
+				if ( info )
+				{	
+					var coordinate = info[ 'get_y' ].call( info.self );
+					var newCoordinate = movement.update( coordinate );
+					if ( newCoordinate != coordinate )
+						info[ 'set_y' ].call( info.self, newCoordinate );
+				}
+			}
+		} );
+	};
+
+	/////////////////////////////////////////////////////////////////
+	// STOS Animations, welcome back Jack! :)
+	/////////////////////////////////////////////////////////////////
+	this.STOSAnimation = function( aoz, definition )
+	{
+		this.aoz = aoz;
+		this.channelNumber = undefined;
+		this.definition = definition;
+		this.steps = [];
+		this.loop = false;
+		this.delayCount = -1;
+
+		// Parse string
+		var count = 0;
+		var image, delay, end;
+		this.lineParser = new LineParser( this.aoz, definition, 'STOSanim' );
+		do
+		{
+			if ( this.lineParser.extract( 'character', 'syntax_error_in_animation_string' ) != '(' )
+				throw { error: 'syntax_error_in_animation_string', parameter: this.lineParser.getToEndOfLine() };
+
+			image = this.lineParser.extract( 'integer', 'syntax_error_in_animation_string' );
+			if ( this.lineParser.extract( 'character', 'syntax_error_in_animation_string' ) != ','  )
+				throw { error: 'syntax_error_in_animation_string', parameter: this.lineParser.getToEndOfLine() };
+
+		 	delay = this.lineParser.extract( 'integer', 'syntax_error_in_animation_string' );
+
+			if ( this.lineParser.extract( 'character', 'syntax_error_in_animation_string' ) != ')'  )
+				throw { error: 'syntax_error_in_animation_string', parameter: this.lineParser.getToEndOfLine() };
+
+			this.steps.push( { count: count++, image: image, delay: delay } );
+
+			end = this.lineParser.get( 'character' );
+
+		} while ( !this.lineParser.endOfLine && end == '(' );
+		if ( end && end.toLowerCase() == 'l' )
+			this.loop = true;
+
+		// Prepare animation
+		this.currentStepNumber = 0;
+		this.delayCount = -1;
+		this.state = 'off';
+	}
+	this.STOSAnimation.prototype.setChannelNumber = function( number )
+	{
+		this.channelNumber = number;
+	};
+	this.STOSAnimation.prototype.update = function()
+	{
+		var toUpdate = false;
+		if ( this.delayCount >= 0 )
+		{
+			if ( --this.delayCount == 0 )
+			{
+				if ( this.currentStepNumber < this.steps.length - 1 )
+				{
+					this.currentStepNumber++;
+					this.image = this.steps[ this.currentStepNumber ].image;
+					this.delayCount = this.steps[ this.currentStepNumber ].delay;
+					toUpdate = true;
+				}
+				else
+				{
+					if ( this.loop )
+					{
+						this.currentStepNumber = 0;
+						this.image = this.steps[ this.currentStepNumber ].image;
+						this.delayCount = this.steps[ this.currentStepNumber ].delay;
+						toUpdate = true;
+					}
+					else
+					{
+						this.delayCount = -1;
+						this.setState( 'off' );
+						this.end = true; 
+					}
+				}
+			}
+		}
+		else
+		{
+			this.currentStepNumber = 0;
+			this.image = this.steps[ 0 ].image;
+			this.delayCount = this.steps[ 0 ].delay;
+			toUpdate = true;
+		}
+		if ( toUpdate && typeof this.channelNumber != 'undefined' )
+		{
+			var info = this.aoz.getAnimationChannel( this.channelNumber );	
+			if ( info )
+			{	
+				info.set_image.call( info.self, this.image );
+			}
+		}
+	}
+	this.STOSAnimation.prototype.setState = function( state, frequency )
+	{
+		var self = this;
+		this.updateDelay = Math.floor( 1000 / frequency );
+		if ( state != this.state )
+		{
+		switch ( state.toLowerCase() )
+		{
+			case 'on':
+				this.paused = false;
+				break;
+			case 'off':
+				break;
+			case 'pause':
+					this.paused = true;
+				break;
+			case 'play':
+					this.paused = false;
+				break;
+			case 'reset':
+				this.delayCount = -1;
+				this.setState( 'on', frequency );
+				break;
+			default:
+				throw 'illegal_function_call';
+		}
+		this.state = state;
+		}
+	};
+	this.STOSAnimation.prototype.getState = function()
+	{
+		return this.state;
+	};
+
+	/////////////////////////////////////////////////////////////////
+	// STOS Movement, still here Jack? :P
+	/////////////////////////////////////////////////////////////////
+	this.STOSMovement = function( aoz, definition, dimension )
+	{
+		this.aoz = aoz;
+		this.definition = definition;
+		this.dimension = dimension.toLowerCase();
+		this.steps = [];
+		this.loop = false;
+		this.delayCount = -1;
+		this.stepCount = -1;
+		this.channelNumber = undefined;
+
+		// Parse string
+		var stepNumber = 0;
+		var displacement, delay, count, end;
+		this.lineParser = new LineParser( this.aoz, definition, 'STOSmove' );
+		do
+		{
+			if ( this.lineParser.extract( 'character', 'syntax_error_in_movement_string' ) != '(' )
+				throw { error: 'syntax_error_in_movement_string', parameter: this.lineParser.getToEndOfLine() };
+
+			// Delay
+			delay = this.lineParser.extract( 'integer', 'syntax_error_in_movement_string' );
+			if ( delay <= 0 )
+				throw { error: 'syntax_error_in_movement_string', parameter: this.lineParser.getToEndOfLine() };
+
+			// Comma
+			if ( this.lineParser.extract( 'character', 'syntax_error_in_movement_string' ) != ','  )
+				throw { error: 'syntax_error_in_movement_string', parameter: this.lineParser.getToEndOfLine() };
+
+			// Displacement
+			displacement = this.lineParser.extract( 'integer', 'syntax_error_in_movement_string' );
+
+			// Comma
+			if ( this.lineParser.extract( 'character', 'syntax_error_in_movement_string' ) != ','  )
+				throw { error: 'syntax_error_in_movement_string', parameter: this.lineParser.getToEndOfLine() };
+
+			// Step count
+			count = this.lineParser.extract( 'integer', 'syntax_error_in_movement_string' );
+			if ( count <= 0 )
+				throw { error: 'syntax_error_in_movement_string', parameter: this.lineParser.getToEndOfLine() };
+
+			// Bracket
+			if ( this.lineParser.extract( 'character', 'syntax_error_in_movement_string' ) != ')'  )
+				throw { error: 'syntax_error_in_movement_string', parameter: this.lineParser.getToEndOfLine() };
+
+			this.steps.push( { stepNumber: stepNumber++, displacement: displacement, delay: delay, count: count } );
+
+			end = this.lineParser.get( 'character' );
+
+		} while ( !this.lineParser.endOfLine && end == '(' );
+		if ( end && end.toLowerCase() == 'l' )
+			this.loop = true;
+
+		// Prepare animation
+		this.currentStepNumber = 0;
+		this.delayCount = -1;
+		this.state = 'off';
+	}
+	this.STOSMovement.prototype.setChannelNumber = function( number )
+	{
+		this.channelNumber = number;
+	};
+	this.STOSMovement.prototype.update = function( coordinate )
+	{
+		if ( this.delayCount >= 0 )
+		{
+			if ( --this.delayCount == 0 )
+			{
+				do
+				{
+					if ( --this.stepCount > 0 )
+					{
+						this.delayCount = this.steps[ this.currentStepNumber ].delay;
+						coordinate += this.displacement;
+					}
+					else
+					{
+						this.currentStepNumber++;
+						if ( this.currentStepNumber >= this.steps.length )
+						{
+							if ( this.loop )
+								this.currentStepNumber = 0;
+							else
+							{
+								this.end = true;
+								this.setState( 'off' );
+								this.delayCount = -1;
+								break;
+							}
+						}
+						this.stepCount = this.steps[ this.currentStepNumber ].count;
+						this.delayCount = this.steps[ this.currentStepNumber ].delay;
+						this.displacement = this.steps[ this.currentStepNumber ].displacement;
+					}
+				} while( false );
+			}
+		}
+		else
+		{
+			this.currentMovementNumber = 0;
+			this.stepCount = this.steps[ 0 ].count;
+			this.delayCount = this.steps[ 0 ].delay;
+			this.displacement = this.steps[ 0 ].displacement;
+		}
+		return coordinate;
+	}
+	this.STOSMovement.prototype.setState = function( state, frequency )
+	{
+		var self = this;
+		this.updateDelay = Math.floor( 1000 / frequency );
+		if ( this.state != state )
+		{
+		switch ( state.toLowerCase() )
+		{
+			case 'on':
+				this.paused = false;
+				break;
+			case 'off':
+				break;
+			case 'pause':
+					this.paused = true;
+				break;
+			case 'play':
+					this.paused = false;
+				break;
+			default:
+				throw 'illegal_function_call';
+		}
+		this.state = state;
+		}
+	};
+	this.STOSMovement.prototype.getState = function()
+	{
+		return this.state;
+	};
+
+	// Animation primitives...
+	this.anim = function( number, definition )
+	{
+		var currentAnimation = this.contextAnimations.getElement( this.aoz.currentContextName, number );
+		if ( currentAnimation )
+			currentAnimation.setState( 'off' );
+		var newAnimation = new this.STOSAnimation( this.aoz, definition );
+		this.contextAnimations.setElement( this.aoz.currentContextName, newAnimation, number, true );
+		newAnimation.setChannelNumber( number );
+		this.aoz.checkAnimationChannel( number, "animation", number, undefined, undefined, true );
+	};
+	this.setAnimState = function( state, number, frequency )
+	{
+		frequency = typeof frequency == 'undefined' ? 50 : frequency;
+		if ( typeof number == 'undefined' )
+		{
+			if ( state == 'off' )
+				this.contextAnimations.reset();
+			else
+			{
+			this.contextAnimations.parseAll( this.aoz.currentContextName, function( stosAnim )
+			{
+				stosAnim.setState( state, frequency );
+			} );
+		}
+		}
+		else
+		{
+			if ( state == 'off' )
+				this.contextAnimations.deleteElement( this.aoz.currentContextName, number );
+		else
+		{
+			var anim = this.contextAnimations.getElement( this.aoz.currentContextName, number );
+			anim.setState( state, frequency );
+		}
+		}
+	};
+
+	// Movement primitives...
+	this.move = function( number, definitionX, definitionY )
+	{
+		if ( definitionX )
+		{
+			var moveX = new this.STOSMovement( this.aoz, definitionX, 'x' );
+			this.contextMovementsX.setElement( this.aoz.currentContextName, moveX, number, true );
+			moveX.setChannelNumber( number );	
+		}
+		if ( definitionY )
+		{
+			var moveY = new this.STOSMovement( this.aoz, definitionY, 'y' );
+			this.contextMovementsY.setElement( this.aoz.currentContextName, moveY, number, true );
+			moveY.setChannelNumber( number );
+		}
+	};
+	this.moveX = function( number, definition )
+	{
+		var currentMovement = this.contextMovementsX.getElement( this.aoz.currentContextName, number );
+		if ( currentMovement )
+			currentMovement.setState( 'off' );
+		var newMovement = new this.STOSMovement( this.aoz, definition, 'x' );
+		this.contextMovementsX.setElement( this.aoz.currentContextName, newMovement, number, true );
+		newMovement.setChannelNumber( number );
+	};
+	this.moveY = function( number, definition )
+	{
+		var currentMovement = this.contextMovementsY.getElement( this.aoz.currentContextName, number );
+		if ( currentMovement )
+			currentMovement.setState( 'off' );
+		var newMovement = new this.STOSMovement( this.aoz, definition, 'y' );
+		this.contextMovementsY.setElement( this.aoz.currentContextName, newMovement, number, true );
+		newMovement.setChannelNumber( number );
+	};
+	this.moveOn = function( number )
+	{
+		if ( typeof number == 'undefined' )
+		{
+			var moving = false;
+			this.contextMovementsX.parseAll( this.aoz.currentContextName, function( stosMove )
+			{
+				moving |= stosMove.end;
+			} );
+			this.contextMovementsY.parseAll( this.aoz.currentContextName, function( stosMove )
+			{
+				moving |= stosMove.end;
+			} );
+			return moving;
+		}
+		else
+		{
+			var moving = false;
+			var moveX = this.contextMovementsX.getElement( this.aoz.currentContextName, number, frequency );
+			if ( moveX )
+				moving |= moveX.end;
+			var moveY = this.contextMovementsY.getElement( this.aoz.currentContextName, number, frequency );
+			if ( moveY )
+				moving |= moveY.end;
+			return moving;
+		}
+	};
+	this.setMoveState = function( state, number, frequency )
+	{
+		frequency = typeof frequency == 'undefined' ? 50 : frequency;
+		if ( typeof number == 'undefined' )
+		{
+			if ( state == 'off' )
+			{
+				this.contextMovementsX.reset();
+				this.contextMovementsY.reset();
+			}
+			else
+			{
+			this.contextMovementsX.parseAll( this.aoz.currentContextName, function( stosMove )
+			{
+				stosMove.setState( state, frequency );
+			} );
+			this.contextMovementsY.parseAll( this.aoz.currentContextName, function( stosMove )
+			{
+				stosMove.setState( state, frequency );
+			} );
+		}
+		}
+		else
+		{
+			if ( state == 'off' )
+			{
+				this.contextMovementsX.deleteElement( this.aoz.currentContextName, number );
+				this.contextMovementsY.deleteElement( this.aoz.currentContextName, number );
+			}
+		else
+		{
+			var moveX = this.contextMovementsX.getElement( this.aoz.currentContextName, number );
+			if ( moveX )
+				moveX.setState( state, frequency );
+			var moveY = this.contextMovementsY.getElement( this.aoz.currentContextName, number );
+			if ( moveY )
+				moveY.setState( state, frequency );
+			}
+		}
+	};
+}
+
+// 
+// CLIP object
+//
+/*
+Class Clip, name$ = "static", direction = 0, loop = True, flip$="", minSpeed = 100, maxSpeed = 1000, destroyAtEnd = False, definition=(Image=(index), Delay)
+	{
+		#friendClass:"Bob"
+		#friendClass:"Sprite"
+		#class:"Clip"
+
+		this.set_name = function( value )
+		{
+			this.vars.name = value;
+		};
+		this.set_direction = function( value )
+		{
+			this.vars.direction = value * this.aoz.degreeRadian;
+		};
+		this.set_loop = function( value )
+		{
+			this.vars.loop = value;
+		};
+		this.set_flip$ = function( value )
+		{
+			this.vars.flip$ = value;
+		};
+		this.set_minSpeed = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.minSpeed = value;
+		};
+		this.set_maxSpeed = function( value )
+		{
+			if ( value < 0 )
+				throw { error: 'illegal_function_call', parameter: value };
+			this.vars.maxSpeed = value;
+		};
+		this.set_destroyAtEnd = function( value )
+		{
+			this.vars.destroyAtEnd = value;
+		};
+		this.setState = function( state )
+		{
+			this.state = state;
+		};
+		this.state = 'on';
+		this.set_name( this.vars.name$ );
+		this.set_direction( this.vars.direction );
+		this.set_minSpeed( this.vars.minSpeed );
+		this.set_maxSpeed( this.vars.maxSpeed );	
+		if ( this.vars.definition.length == 0 )
+			throw { error: 'illegal_function_call', parameter: '(empty definition string)' };
+		if ( ( this.vars.definition.length & 0x01 ) != 0 )
+			throw throw { error: 'illegal_function_call', parameter: '(missing definition)' };
+		this.addToSynchro = true;
+	}
+	Method Start, channel, previousClip
+	{
+		this.parent.currentPosition = 0;
+		this.parent.currentTime = 0;
+		if ( vars.previousClip )
+		{
+			this.parent.currentTime = vars.previousClip.currentTime;
+			this.parent.currentPosition = Math.min( ( this.parent.vars.definition.length - 2 ) / 2 , vars.previousClip.currentPosition );
+		}
+		vars.channel.set_Image( this.parent.vars.definition[ this.parent.currentPosition * 2 ], '#update' );
+	}
+	End Method
+	Method Animate, channel, deltaTime, speed
+	{
+		var parent = this.parent;
+		if ( parent.state == 'on' )
+		{
+			var time = parent.currentTime - vars.deltaTime;
+			var position = parent.currentPosition;
+			var speed = ( vars.speed == 0 ? 1000 : vars.speed );
+			speed = Math.min( Math.max( speed, parent.vars.minSpeed ), parent.vars.maxSpeed );
+			while ( time < 0 )
+			{
+				position++;
+				if ( position * 2 >= parent.vars.definition.length )
+				{
+					if ( !parent.vars.loop )
+					{
+						position--;
+						parent.state = 'stop';
+						if ( parent.vars.destroyAtEnd )
+						{
+							this.aoz.destroyChannel( channel );
+						}
+						break;
+					}
+					else
+						position = 0;
+				}
+				time += parent.vars.definition[ position * 2 + 1 ] / speed * 20;
+			}
+			parent.currentTime = time;
+			if ( position != parent.currentPosition )
+			{
+				parent.currentPosition = position;
+				vars.channel.set_image( parent.vars.definition[ position * 2 ], '#update' );
+			}
+		}
+	}
+	End Method
+End Class
+*/
+
+/**doc
+@name:Animation Commands
+@description:Instructions and functions to animate and move sprites, bobs, screens, rainbows or any other graphical objects, different than AMAL
+@author:Francois Lionet
+doc*/
+
+/**api
+@name:Anim
+@description:Starts a simple animation
+@param:channelIndex:index:Index of the animation channel
+@param:definition$:string:Definition of the animation
+@compatible: aoz, stos, amos
+@content:
+ANIM is used to take an Object through a sequence of different images, creating smooth animation effects. 
+These animations are performed in the background, so they can be executed simultaneously with
+AOZ programs. After the ANIM command, a channel number must be given to specify the
+Object to be animated. 
+
+Then an animation string is given, with each operation composed of a pair of brackets
+holding an image number and a delay time (in 50ths of a second). 
+
+For example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Sprites.abk"
+Channel 1 To Sprite 8: Sprite 8,200,100,1
+Anim 1,"(1,10)(2,10)(3,10)(4,10)"
+Anim On : Wait Key
+~~~
+api*/
+Instruction Anim, channelIndex=(index), definition$
+{
+	#errors
+	aoz.moduleAnimations.anim( %channelIndex, %definition$ );
+}
+End Instruction
+
+/**api
+@name:Anim Off
+@description:Stops the animations of an animation channel
+@param:channelIndex:index:Index of the animation channel
+@compatible: aoz, stos, amos
+@content:
+To activate all animation sequences already created by an ANIM command, use ANIM ON. If ail individual
+sequence is specified by number, then only that sequence will be affected. Similarly, sequences started by ANIM ON
+may be turned off by the ANIM OFF command.
+api*/
+Instruction Anim Off, channelIndex=(index)
+{
+	#errors
+	aoz.moduleAnimations.setAnimState( 'off', %channelIndex );
+	aoz.setAnimState( %channelIndex, undefined, 'off' )
+}
+End Instruction
+
+/**api
+@name:Anim On
+@description:Starts the animations of an animation channel and eventually set the refresh frequency
+@param:channelIndex:index:Index of the animation channel
+@compatible: aoz, stos, amos
+@content:
+To activate all animation sequences already created by an ANIM command, use ANIM ON. If ail individual
+sequence is specified by number, then only that sequence will be affected. Similarly, sequences started by ANIM ON
+may be turned off by the ANIM OFF command.
+api*/
+Instruction Anim On, channelIndex=(index), frequency
+{
+	#errors
+	aoz.moduleAnimations.setAnimState( 'on', %channelIndex, %frequency );
+	aoz.setAnimState( %channelIndex, undefined, 'on' )
+}
+End Instruction
+
+/**api
+@name:Anim Freeze
+@description:Pause the animations of an animation channel
+@param:channelIndex:index:Index of the animation channel
+@compatible: aoz, stos, amos
+@content:
+The ANIM FREEZE command suspends all animation sequences on screen, leaving them frozen in place. An
+optional number may be given to freeze that specific sequence only. Animations can be started again with a simple
+call to ANIM ON.
+api*/
+Instruction Anim Freeze, channelIndex=(index)
+{
+	#errors
+	aoz.moduleAnimations.setAnimState( 'pause', %channelIndex );
+	aoz.setAnimState( %channelIndex, undefined, 'pause' )
+}
+End Instruction
+
+/**api
+@name:Move
+@description:Starts a simple movement horizontally and vertically. You must use "Move On" to actually see the object moving.
+@param:index:any:Index of the animation channel
+@param:definitionX$:string:A string containing the horizontal definition of the movement
+@param:definitionY$:string:A string containing the vertical definition of the movement
+@compatible aoz
+@content:
+The instruction has been added to AOZ to allow you to declare movement in just one instruction instead of two, namely "Move X" and "Move Y".
+
+Each string contains the definition of the movement for it's axe. The syntax of the string is identical to the one used in "Move X".
+api*/
+Instruction Move, channelIndex=(index), definitionX$, definitionY$
+{
+	#errors
+	aoz.moduleAnimations.move( %channelIndex, %definitionX$, %definitionY$ );
+}
+End Instruction
+
+/**api
+@name:Move X
+@description:Starts a simple movement horizontally. You must use "Move On" to actually see the object moving.
+@param:channelIndex:index:Index of the animation channel
+@param:definition$:string:A string containing the horizontal definition of the movement
+@compatible: aoz, stos, amos
+@content:
+The MOVE X command defines a list of horizontal movements to be performed on the animation channel specified
+by the given index. This index refers to an animation sequence for an Object already
+assigned by the CHANNEL command. 
+
+The number is followed by a "movement string" containing a series of
+instructions which control the speed and direction of the Object. These movement commands are enclosed by
+brackets, and are entered as the following three parameters, separated by commas.
+
+The speed parameter sets a delay between each step of the movement, given in 50ths of a second. Speed can vary
+from a value of 1 for very fast, all the way to 32767 for incredibly slow. This is followed by a step value, setting the
+number of pixels the Object is to be moved during each operation. A positive value moves the Object to the right,
+and a negative number to the left. The apparent speed of the Object will depend on the relationship between the
+speed and the step values, varying from slow and smooth, to rapid but jerky movements. 
+
+A speed value of about 10 (or -10) is recommended. The last parameter is a count value, which determines the number of times the movement
+is to be repeated. Values range between 1 and 32767, with the additional value of zero causing an indefinite
+repetition.
+
+It is vital to add an L (loop) instruction to the movement string after these parameters, if you want to force a jump to
+the start of the string, forcing the entire sequence to be run again. 
+
+Here is an example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Sprites.Abk" :Get Sprite Palette
+Sprite 1,360,100,1
+Move X 1,"(1,1,60)(1,-5,60)L"
+Move On
+Wait Key
+~~~
+An alternative ending to the movement string is to use the E option, followed by the value of an x-coordinate.
+
+This stops the Object when it reaches the specified coordinate value, which must be less than (or equal to) the
+original horizontal target destination. Try changing the third line of the last example to this:
+~~~
+Move X 1,"(1,-5,30)E100"
+~~~
+api*/
+Instruction Move X, channelIndex=(index), definition$
+{
+	#errors
+	aoz.moduleAnimations.moveX( %channelIndex, %definition$ );
+	aoz.checkAnimationChannel(%channelIndex,"movement",%channelIndex,undefined,undefined,true);
+}
+End Instruction
+
+/**api
+@name:Move Y
+@description:Starts a simple movement horizontally. You must use "Move On" to actually see the object moving.
+@param:channelIndex:index:Index of the animation channel
+@param:definition$:string:A string containing the definition of the movement
+@compatible: aoz, stos, amos
+@content:
+This command operates in the same way as "MOVE X", and controls vertical movement. First the number of an
+animation sequence is given, ranging from 0 to 15, and this sequence must be Already allocated using the
+CHANNEL command. Then the movement string is given, as explained above. Positive values for the step
+parameter control downward movements, and a negative value will result in an upward movement. 
+
+Here is an example:
+~~~
+Load "AMOSPro_Tutorial:Objects/Sprites.abk" 
+Channel 1 To Sprite 1: Sprite 1,228,50,1: Wait Vbl
+Move Y 1,"(1,1,180)(1,-1,180)L" : Rem Loop Sprite
+Channel 2 To Screen Display 0: Rem Assign screen position
+Move Y 2,"(1,4,25)(1,-4,25)" : Rem Bounce screen up and down
+Move On : Wait Key
+~~~
+api*/
+Instruction Move Y, channelIndex=(index), _definition$
+{
+	#errors
+	aoz.moduleAnimations.moveY(%channelIndex,%_definition$);
+	aoz.checkAnimationChannel(%channelIndex,"movement",%channelIndex,undefined,undefined,true );
+}
+End Instruction
+
+/**api
+@name:Move Off
+@description:Stops the movement of an animation channel
+@param:*channelIndex:index:Index of the animation channel
+@compatible: aoz, stos, amos
+@content:
+This command suspends the movement of all or the specified Objects on screen. Frozen Objects may be re- animated using the
+MOVE ON command. If an optional Object number is given after MOVE FREEZE, then only that Object will be frozen.
+api*/
+Instruction Move Off, channelIndex = (index)
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'off', %channelIndex );
+}
+End Instruction
+
+/**api
+@name:Move On
+@description:Starts the movement of an animation channel
+@param:*channelIndex:index:Index of the animation channel
+@compatilble: aoz, stos, amos
+@content:
+Before any movement patterns can be executed, they must be activated by a MOVE ON command. All movements
+will begin at once unless an optional number is given, in which case only that particular animation sequence will be
+activated. MOVE OFF has the opposite effect, halting all animations, or a single sequence specified by its number.
+api*/
+Instruction Move On, channelIndex=(index)
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'on', %channelIndex );
+}
+End Instruction
+
+/**api
+@name:Move Freeze
+@description:Pauses the movement of an animation channel
+@param:channelIndex:index:Index of the animation channel
+@compatilble: aoz, stos, amos
+@content:
+This command suspends the movement of all Objects on screen. Frozen Objects may be re- animated using the
+MOVE ON command. If an optional Object number is given after MOVE FREEZE, then only that Object will be
+frozen.
+api*/
+Instruction Move Freeze, channelIndex=(index)
+{
+	#errors
+	aoz.moduleAnimations.setMoveState( 'pause', %channelIndex );
+}
+End Instruction
+
+/**api
+@name:Movon
+@description:Returns True if the animation channel is moving, false if not.
+@param:channelIndex:index:Index of the animation channel
+@compatible: aoz, stos, amos
+@content:
+Use the MOVON function to check whether a particular Object is being moved by a MOVE X or MOVE Y
+command. A value of True is returned while the Object is in motion, otherwise False is given for static
+Objects. Please note that MOVON does not search for patterns generated by AMAL.
+api*/
+Function Movon, channelIndex=(index)
+{
+	#errors
+}
+End Function( {aoz.moduleAnimations.moveOn( %channelIndex );} )
+
+/**api
+@name:Synchro On
+@description:Turn ON the automatic execution of the animations and movements
+@compatible: aoz, stos, amos
+@content:
+All animation and movements programs can be run by a single call to the SYNCHRO command. 
+
+Prior to calling SYNCHRO, the automatic movement and animation system must be turned off with a SYNCHRO OFF instruction.
+api*/ 
+Instruction Synchro On
+{
+	#errors
+	aoz.amal.setSynchro(true);
+}
+End Instruction
+
+/**api
+@name:Synchro Off
+@description:Turn OFF the automatic execution of the AMAL programs
+@compatible: aoz, stos, amos
+@content:
+All animation and movements programs can be run by a single call to the SYNCHRO command. 
+
+Prior to calling SYNCHRO, the automatic movement and animation system must be turned off with a SYNCHRO OFF instruction. 
+api*/
+Instruction Synchro Off
+{
+	#errors
+	aoz.amal.setSynchro(false);
+}
+End Instruction
+
+/**api
+@name:Synchro
+@description:Executes on step of animation of all AMAL channels. "Synchro Off" must have been used before calling this instruction
+@compatible: aoz, stos, amos
+@content:
+All animation and movements programs can be run by a single call to the SYNCHRO command. 
+
+Prior to calling SYNCHRO, the automatic movement and animation system must be turned off with a SYNCHRO OFF instruction. 
+api*/
+Instruction Synchro
+{
+	#errors
+	aoz.amal.synchro(false);
+}
+End Instruction
+

@@ -1,0 +1,10 @@
+<i>CUp$</i>
+<b>CUp$</b> xxxxxxx
+=
+Return the control character (30) to move cursor up one line.
+
+@code
+Print
+Print "AO" + CUp$ + "Z"
+@code
+

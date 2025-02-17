@@ -1,0 +1,7 @@
+<i>Remember X</i>
+<b>Remember X</b> xxxxxxx
+=
+Use REMEMBER to position the text cursor at the coordinates saved by a previous MEMORIZE X or MEMORIZE Y command. If
+MEMORIZE has not been used, the relevant coordinate will automatically be set to zero. There is a ready-made
+example demonstrating these commands to be found under the SET CURS command, which is below.
+

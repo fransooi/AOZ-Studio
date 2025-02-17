@@ -1,0 +1,7 @@
+<i>Music</i>
+<b>Music</b> xxxxxxx
+=
+The MUSIC command is used to start playing the specified melody. Up to three different melodies can be started at
+the same time, but each new MUSIC instruction will halt the current melody and hold its status in a stack. When the
+new song has ended, the original music will start again exactly where it left off.
+

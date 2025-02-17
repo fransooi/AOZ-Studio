@@ -1,0 +1,14 @@
+<i>Cos</i>
+<b>Cos</b> xxxxxxx
+=
+In the above diagram, the distance that point b is to the right of the y-axis is known as the cosine. If b goes to the
+left of the y-axis, its cosine value becomes negative. (Similarly, if it drops below the x-axis, its sine value is
+negative.) The COS function gives the cosine of a given angle.
+![PI](help:img/pi.png)
+
+@code
+Y#=Cos(X)
+Plot X,Y#*50+100
+@code
+
+

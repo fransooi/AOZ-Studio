@@ -1,0 +1,3 @@
+EN: This folder contains the icon associated with your program, in different formats. You can customize this icon by replacing the default ones with your own. 
+
+FR: Ce dossier contient l'icône associée à votre programme, dans différents formats. Vous pouvez personnaliser cette icône en remplaçant celles par défaut par la votre. 

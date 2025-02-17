@@ -1,0 +1,36 @@
+<i>Leaderboard Load</i>
+<b>Leaderboard Load</b> xxxxxxx
+=
+After loading a leaderboard, the leaderboard items are cached and can be accessed using the Leaderboard$() function.
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+
+Leaderboard Load leaderboardName$="Level 1", onLoaded$="ON_LEADERBOARD_LOADED"
+
+Procedure ON_LEADERBOARD_LOADED[COUNT]
+xpos = 1000: ypos = 250
+Ink 1: Text xpos, ypos - 150, "Level 1"
+
+For x = 0 to 9
+Ink 1: LBNAME$ = ". . . . . . . . . . . . . . . . .": LBSCORE$ = "0": LBID$ = ""
+
+If x < COUNT
+LBNAME$ = Leaderboard$(itemIndex = x, itemName$="playerName")
+LBSCORE$ = Leaderboard$(itemIndex = x, itemName$="value")
+LBID$ = Leaderboard$(itemIndex = x, itemName$="id")
+
+// Highlight the current player score
+If Player Id$() = LBID$
+Ink 6
+Else
+Ink 1
+End If
+End If
+
+Text xpos + 100, ypos + x * 70, LBNAME$
+Text xpos, ypos + x * 70, Str$(x + 1)
+Ink 1: Text xpos + 630, ypos + x * 70, LBSCORE$
+Next x
+End Proc
+@code
+

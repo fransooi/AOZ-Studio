@@ -1,0 +1,5 @@
+<i>function:Return the last Actor clicked</i>
+value$=<b>Actor Clicked$</b>()
+=
+Returns the name of the last Actor Clicked.
+=

@@ -1,0 +1,435 @@
+// ########################
+// #      MAYDAY UFO      #
+// #     By Phil Bell     #
+// #      26/02/2020      #
+// # fil_bell@hotmail.com #
+// #         V1.1         #
+// ########################
+
+#useAssetsResources:false   //to define the path of the assets and not use the default folder
+#manifest: "aoz"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#fps:false
+#clean:true
+
+// Set up the screen
+Screen Open 0, 1920, 1080, 32, Lowres
+Curs Off: Flash Off
+
+// This array is used to store the Y (text column) screen location of the top of each building
+// The array index correlates to the screen X (text row) location of the building
+Dim BUILDING(80)
+
+// The player graphic is made using 3 ASCII characters
+SHIP$ = "<=>"
+
+// Used to track the high score
+HISCORE = 0
+
+// Used to check if the game is paused (1=true, 0=false)
+ISPAUSED = 0
+
+INTRO:
+    // Used to check if the game is in demo mode (1=true, 0=false)
+    DEMO = 0
+    Gosub SHOW_INTRO
+
+    // This is the duration before demo mode begins
+    STARTDEMO# = 5
+
+    // Wait at the intro screen until a key is pressed
+    // or the demo mode timer has elapsed
+    Do
+        // Get any keyboard input
+        A$ = Inkey$
+
+        // If a key has been pressed then start a new game
+        If A$ <> "": GOTO START: End If
+
+        // Decrement the demo mode mode timer
+        STARTDEMO# = STARTDEMO# - 0.01
+
+        // Check is the demo mode timer has elasped
+        If STARTDEMO# <= 0
+            // So set the DEMO variable and jump to the START label
+            DEMO = 1
+            GOTO START
+        End if
+
+        //  Controls the loop time so we can control when the demo starts
+        Wait (10 / 1000)
+    Loop
+
+START:
+    // Reset the variables for a new game
+    LEVEL = 1
+    // The maximum number so buildings to generate
+    MAXBUILDINGS = 6
+
+    // This controls the maximum hight a building can be when the level is randomly generated
+    // The value relates to the Y (text row) screen location, the ground is at Y screen location 21
+    // So, 16 would mean the max height of for each building would be is 4
+    // 21 - 1 for the ground row, then - 16 = 4
+    // The smaller the value, the taller the building
+    MAXBUILDINGHEIGHT = 16
+    SCORE = 0
+
+    // If we are in demo mode, generate a more difficult the level for the computer
+    IF DEMO = 1
+        MAXBUILDINGS = 25
+        MAXBUILDINGHEIGHT = 12
+    End If
+
+START_LEVEL:
+    // Controls the speed of the game loop
+    // We decrement this value each time the player is
+    // repositioned back to the first text column
+    // So the game speeds up the closer the player gets to the ground
+    GAMESPEED# = 0.1
+
+    // Initialise game variables for a new level
+    PX = 0          // Player x screen location
+    PY = 2          // Player y screen location
+    BOMBCOUNT = 0   // Used to check if a bomb has been dropped (1=true, 0=false)
+
+    // Clear the screen and show the title and score
+    Cls 0
+    Gosub SHOW_TITLE
+    Gosub SHOW_SCORE
+
+    // Reset all the building array elements to zero
+    For i = 0 to 79: BUILDING(i) = 0: Next i
+
+    // Draw the sky and ground on screen
+    For i = 1 To 78:
+        // randomly pick shades of blue for the sky
+        P = 0
+        While P < 20: P = RND(23): Wend
+        // Sky
+        Pen P: Locate i,1 : Print "*":
+        // Ground
+        Pen 9: Locate i,22 : Print "=":
+    Next i
+
+    // The number of buildings increase for each level so we need to set
+    // the variable we are using to check if all the building have been destroyed
+    REMAINING = MAXBUILDINGS
+
+    // Randomly create the buildings location and height
+    // This loop continues until the correct number of building have been generated
+    COUNT = 0
+    While COUNT < MAXBUILDINGS
+
+        // Generate a X (text column) screen location for a building
+        // between 3 and 77 so we dont have buildings at the very start or end of the screen
+        XPOS = 0
+        While XPOS < 3: XPOS = RND(77): Wend
+
+        // Check we dont already have a building in this X (text column) screen location
+        If BUILDING(XPOS) = 0
+            // Increment the counter so we can exit the loop when all the buildings have been generated
+            Inc COUNT
+
+            // Get a random building height
+            TOP = 0
+            While TOP < MAXBUILDINGHEIGHT: TOP = RND(20): Wend
+
+            // Get a random pen colour
+            BUILDCOLOUR = 0
+            While BUILDCOLOUR < 10: BUILDCOLOUR = RND(14): Wend
+
+            // Store the top of the building screen X (text column) location to the array
+            // We use this array to check if the player game object has collided with
+            // the top of a buildings and also to check if bombs have hit them
+            BUILDING(XPOS) = TOP
+
+            // Draw the building on the screen
+            For i = TOP to 21
+                Pen BUILDCOLOUR: Locate XPOS, i
+                // We use a different ASCII character for the top of the building
+                if i = TOP: Print "^": Else : Print "*": End If
+            Next i
+        End if
+    Wend
+
+// Main game loop starts here
+    Do
+PAUSED:
+        // Get keyboard input
+        A$ = Inkey$
+
+        // If we are not in demo mode handle the pause feature
+        If DEMO = 0
+
+            IF A$= "p"
+                Play Audio 1
+                IF ISPAUSED = 1
+                    ISPAUSED = 0
+                    Gosub SHOW_SCORE
+                Else
+                    ISPAUSED = 1
+                End If
+            End If
+
+            // Show that the game is paused on screen
+            IF ISPAUSED = 1
+                Pen 5: Locate 1, 0: Print "GAME PAUSED      "
+                GOTO PAUSED
+            End If
+        End If
+
+        // Store the current player screen location
+        // We do this so we can remove the players ASCII charactes off the screen
+        // when it is moved to a new screen location
+        OX = PX: OY = PY:
+
+        // Increment the player X screen location (move 1 text column to the right)
+        Inc PX
+
+        // Check if the game loop is in demo mode (1=true, 0 = false)
+        If DEMO = 1
+            // Go to the intro screen if a key has been pressed
+            IF A$ <> ""
+                GOTO INTRO
+            Else
+                // Demo Mode Computer Player AI
+                If BOMBCOUNT = 0
+                    // Check if player is over a building
+                    // We add 1 to PX because bombs are dropped from the centre of the
+                    // player graphic which is 3 characters. PX refers to the location of the first character
+                    If BUILDING(PX + 1) > 0
+                        // Computer has a 75% chance of dropping a bomb on a building
+                        If RND(100) < 75: A$ = " ": End If
+                    Else
+                        // Computer is not over a building, 5% chance of dropping a bomb on an empty space on the ground
+                        If RND(100) < 5: A$ = " ": End If
+                    End If
+                End If
+            End If
+        End If
+
+        // Check if a bomb is currently falling (0=false, 1=true)
+        // Player can only drop one bomb at a time
+        If BOMBCOUNT = 0
+            // Check if the [SPACE BAR] has been pressed
+            IF A$ = " "
+                // Set the bomb start screen location to be under the centre of the player character
+                BX = PX + 1: BY = PY
+                BOMBCOUNT = 1
+                Play Audio 9
+                Play Audio 3
+            End If
+        Else
+            // A bomb is falling so first remove it from the screen
+            Pen 0: Locate BX, BY: Print " "
+
+            // Increment the bombs Y (text row) screen location (move down the screen)
+            Inc BY
+
+            // Play a sample if the bomb hits the top of a building
+            If BUILDING(BX) > 0 and BY = BUILDING(BX)
+                Sam Stop
+                Play Audio 4
+            End If
+
+            // Check if the bomb is hitting a building
+            If BUILDING(BX) > 0 and BY > BUILDING(BX)
+                // Add 10 to the players score for each row of a building
+                // so more points for taller buildings
+                SCORE = SCORE + 10
+                Gosub SHOW_SCORE
+            End If
+
+            // Check if the bomb has hit the ground
+            // 22 is the screen Y (text row) location where the ground has been drawn
+            If BY = 22
+                // Reset the bomb count, this will allow the player to fire another bomb
+                BOMBCOUNT = 0
+
+                // Clear the keyboard buffer
+                Clear Key
+
+                // Check if we have a building at the bombs screen x location
+                // If we do then we have destroyed a building
+                If BUILDING(BX) > 0
+                    // This variable tracks how many buildings are left
+                    // so we can check if the level is complete
+                    Dec REMAINING
+                Else
+                    // Play a differnt sample when the bomb hits the ground when there was no building
+                    Sam Stop
+                    Play Audio 5
+                End If
+
+                // Clear the array element so we know there is no longer a building
+                // at the bombs screen X (text column) location
+                BUILDING(BX) = 0
+
+                // Check if all the buildings have been destroyed
+                If REMAINING = 0
+                    Goto LEVEL_COMPLETE
+                End If
+
+            Else
+                // Put the bomb ASCCI character on screen at it its new location
+                Pen 4: Locate BX, BY: Print "O"
+            End If
+        End If
+
+        // Check if the players new location is colliding with the top of a building
+        // We add 2 to PX because the player if 3 characters long, PX is the location of
+        // the first character so we need to check the right side location
+        IF PY = BUILDING(PX + 2)
+            GOTO GAMEOVER
+        End If
+
+        Pen 19
+        Gosub DRAW_PLAYER
+
+        // Controls the speed of the game loop
+        Wait GAMESPEED#
+    Loop
+
+DRAW_PLAYER:
+    // When the player reaches the end of the screen
+    // move them down the screen by one text row and back to the first text column
+    IF PX = 77
+        Inc PY  // move one row down the screen
+        PX = 0  // back to the first text column
+
+        // Speed up the game, the closer the player is to the ground the faster the game loop runs
+        GAMESPEED# = GAMESPEED# - 0.003
+    End If
+
+    // Remove the previous player ASCII characters
+    Locate OX, OY: Print "   "
+
+    // Add the player ASCII characters on screen
+    Locate PX, PY: Print SHIP$
+    Return
+
+SHOW_INTRO:
+    Gosub SHOW_TITLE
+
+    // Show the intro screen
+    Pen 5: Locate , 1: Centre "=========="
+    Pen 1: Locate , 4: Centre "YOUR SHIP HAS RUN OUT OF FUEL"
+    Pen 1: Locate , 6: Centre "YOU NEED TO LAND BUT YOU MUST FIRST"
+    Pen 1: Locate , 8: Centre "CLEAR THE CITYSCAPE BY DESTROYING ALL THE BUILDINGS"
+    Pen 17: Locate , 11: Centre "PRESS [SPACE] TO DROP BOMBS"
+    Pen 17: Locate , 13: Centre "PRESS [P] TO PAUSE GAME"
+    Pen 17: Locate , 15: Centre "PRESS ANY KEY TO EXIT DEMO"
+    Pen 17: Locate , 16: Centre "--------------------------"
+    Pen 5: Locate , 21: Centre "PRESS ANY KEY TO PLAY"
+    Return
+
+SHOW_TITLE:
+    Cls 0: Pen 5: Locate , 0: Centre "MAYDAY UFO"
+    Return
+
+SHOW_SCORE:
+    If DEMO = 1
+        Pen 1: Locate 1, 0: Print "PRESS ANY KEY TO EXIT DEMO"
+        Return
+    End If
+
+    // Track the high score
+    If SCORE > HISCORE: HISCORE = SCORE: End If
+
+    Pen 1
+    If HISCORE > 0: Locate 68, 0: Print "HI: " + Str$(HISCORE): End If
+    Locate 1,0: Print "SCORE: " + Str$(SCORE) + "  "
+    Locate 18, 0: Print "LEVEL: " + Str$(LEVEL) + " "
+    Return
+
+LEVEL_COMPLETE:
+    // Play landing sample
+    Sam Stop
+    Play Audio 7
+
+    // Move the player towards the ground
+    While PY < 21
+        Inc PY
+        Inc PX
+        Pen 5 // Turn the player characters green
+        Gosub DRAW_PLAYER
+        OX = PX: OY = PY:
+        // Award 10 points for each Y (text row) position above the ground
+        SCORE = SCORE + 10
+        Gosub SHOW_SCORE
+        Wait (100 / 1000)
+    Wend
+
+    // ensure the player does not go below the ground
+    IF PY > 21: PY = 21: End If
+
+    // Move the player to the far right of the screen
+    While PX < 76
+        Inc PX
+        Pen 5 // Turn the player green
+        Gosub DRAW_PLAYER
+        OX = PX
+        Wait (40 / 1000)
+    Wend
+
+    // If we are in demo mode, return to the intro
+    IF DEMO = 1: Goto INTRO: End If
+
+    // Reward a score bonus (100 * LEVEL) points for completing the level
+    SCORE = SCORE + (LEVEL * 100)
+    Gosub SHOW_SCORE:
+
+    Pen 1: Locate , 11: Centre "WELL DONE YOU LANDED"
+    Pen 5: Locate , 13: Centre "PRESS ANY KEY TO PLAY THE NEXT LEVEL": Pen 1
+
+    // Pause here until a key is pressed
+    Wait Key
+
+    // Increase the number of buildings for the next level
+    MAXBUILDINGS = MAXBUILDINGS + 3
+
+    // By decreasing the max hight variable which is the Y (text row) screen location
+    // for the top of the buildings, it increases the possible height of the buildings
+    Dec MAXBUILDINGHEIGHT
+
+    // Tracks the level number
+    Inc LEVEL
+
+    Goto START_LEVEL
+
+GAMEOVER:
+    // Play explosion sample
+    Play Audio 8
+
+    // Make the player fall straight to the ground
+    Dec PX
+    While PY < 21
+        Inc PY
+        Pen 4 // Turn the player red
+        Gosub DRAW_PLAYER
+        // Replace player ASCII characters to show it as damaged
+        Locate PX,PY: Print "###"
+        OX = PX: OY = PY:
+        Gosub SHOW_SCORE
+        // Control the fall rate of the player character
+        Wait (100 / 1000)
+    Wend
+    Sam Stop
+    Play Audio 2
+
+    // If we are in demo mode, return to the intro screen
+    IF DEMO = 1: Goto INTRO: End If
+
+    // Show game over
+    Pen 1: Locate , 11: Centre "G A M E   O V E R"
+    Pen 5: Locate , 13: Centre "PRESS ANY KEY": Pen 1
+
+    // Pause just in case the player is still pressing the space bar
+    Wait 1
+
+    Wait Key
+
+    Goto INTRO

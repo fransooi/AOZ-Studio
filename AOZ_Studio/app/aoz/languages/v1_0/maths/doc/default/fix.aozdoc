@@ -1,0 +1,21 @@
+<i>Fix</i>
+<b>Fix</b> xxxxxxx
+=
+The FIX command changes the way floating point numbers are displayed on screen, or output to a printer. The
+precision of these floating point numbers is determined by a number (n) that is specified in brackets, and there can
+be four possibilities, as follows:
+
+- If (n) is greater than 0 and less than 16, the number of figures shown after the decimal point will be n.
+- If (n) equals 16 then the format is returned to normal.
+- If (n) is greater than 16, any trailing zeros will be removed and the display will be proportional.
+- If (n) is less than 0, the absolute value ABS(n) will determine the number of digits after the decimal point, and
+all floating point numbers will be displayed in exponential format.
+
+Here are some examples:
+@code
+Fix (2) : Print Pi# : Rem Two digits after decimal point
+Fix(-4) : Print Pi# : Rem Exponential with four digits after decimal point
+Fix(16) : Print Pi# : Rem Revert to normal mode
+@code
+
+

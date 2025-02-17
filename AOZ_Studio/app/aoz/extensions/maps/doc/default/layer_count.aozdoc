@@ -1,0 +1,8 @@
+<i>Layer Count</i>
+<b>Layer Count</b> xxxxxxx
+=
+Tiled maps can contain several layer... Each layer is an independant map with it's own tiles.
+
+We suggest to split your maps into several layers. Example:
+
+

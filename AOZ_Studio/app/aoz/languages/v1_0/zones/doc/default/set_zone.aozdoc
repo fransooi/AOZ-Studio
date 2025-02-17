@@ -1,0 +1,7 @@
+<i>Set Zone</i>
+<b>Set Zone</b> xxxxxxx
+=
+After memory has been allocated with the RESERVE ZONE command, SET ZONE is used to define a rectangular
+area of the screen which can be tested by the various ZONE functions. The command is followed by the number of
+the new zone, followed by its coordinates from top left to bottom right-hand corner.
+

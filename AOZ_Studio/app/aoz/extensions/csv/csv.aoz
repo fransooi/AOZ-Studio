@@ -1,0 +1,554 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ CSV extension
+ * By Francois Lionet
+ *
+ * @author FL
+ * @date first pushed on 20/03/2020
+ *
+ */
+#basicRemarks:false
+
+/**doc
+@name:CSV Files
+@description:Instructions and functions to load and save CSV files
+@author:Francois Lionet
+doc*/
+
+
+//
+// Initialization
+//
+{
+    this.aoz.csv = this;
+	this.context = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+
+    function CSV( aoz, csv, width, height )
+    {
+        this.aoz =  aoz;
+        this.csv = csv;
+        this.width = 0;
+        this.height = 0;
+        if ( typeof width != 'undefined' && typeof height != 'undefined' )
+        {
+            if ( width <= 0 || height <= 0 )
+                throw { error: 'illegal_function_call', parameters: [ width, height ] };
+            this.width = width;
+            this.height = height;
+        }
+        this.erase();
+    };
+    CSV.prototype.load = function( path, tags )
+	{
+        var self = this;
+		this.csv.load_done = false;
+		this.csv.error = false;
+        this.width = 0;
+        this.height = 0;
+        this.array = [];
+        this.types = [];
+        this.columns = [];
+		this.aoz.filesystem.loadFile( path, { responseType: 'text' }, function( response, data, extra )
+		{
+			if ( response )
+			{
+				var textArray = data.split( "\n" );
+                self.width = 0;
+                self.height = 0;
+
+                // Scan first line
+                var line = textArray[ 0 ];
+                var x = 0;
+                var start = 0;
+                var content = getNext( line );
+                while ( content )
+                {
+                    self.columns[ x++ ] = content.result.replace( /[\r\n]+/gm, '' );
+                    content = getNext( line, content );
+                }
+                self.width = x;
+
+                // Scan lines
+                var y;
+                for ( y = 1; y < textArray.length; y++ )
+                {
+                    self.array[ y - 1 ] = [];
+                    self.types[ y - 1 ] = [];
+                    var line = textArray[ y ];
+                    if ( line == '' )
+                        break;
+                    var x = 0;
+                    var start = 0;
+                    content = getNext( line );
+                    while ( content )
+                    {
+                        self.array[ y - 1 ][ x ] = content.result.replace( /[\r\n]+/gm, '' );
+                        self.types[ y - 1 ][ x++ ] = content.type;
+                        content = getNext( line, content );
+                    }
+                    if ( x > 0 && x != self.width )
+                    {
+                        self.csv.error = 'illegal_csv_file';
+                        self.width = 0;
+                        self.height = 0;
+                        self.array = [];
+                        self.types = [];
+                        self.columns = [];
+                    }
+				}
+                self.height = y - 1;
+			}
+            else
+            {
+                self.csv.error = data;
+            }
+            self.csv.load_done = true;
+		} );
+
+        function getNext( line, position )
+        {
+            if ( !position )
+                position = { x: 0 };
+            if ( position.x >= line.length )
+            {
+                return undefined;
+            }
+            var c = line.charAt( position.x );
+            if ( c == '"' || c == "'" )
+            {
+                position.result = '';
+                while ( c == '"' || c == "'" )
+                {
+                    var str = self.aoz.utilities.extractString( line, position.x );
+                    position.result += str;
+                    position.x += str.length + 2;
+                    c = line.charAt( position.x );
+                }
+                position.x++;
+                position.type = 2;
+            }
+            else
+            {
+                var comma = line.indexOf( ',', position.x );
+                if ( comma < 0 )
+                    comma = line.length;
+                position.result = line.substring( position.x, comma );
+                position.x += position.result.length + 1;
+                position.type = 0;
+            }
+            return position;
+        }
+	};
+    CSV.prototype.save = function( path, tags )
+	{
+        var self = this;
+		this.csv.load_done = false;
+		this.csv.error = false;
+        var file = this.getString( tags );
+    };
+    CSV.prototype.getString = function( tags )
+	{
+        var result = '';
+        for ( var x = 0; x < this.width; x++ )
+        {
+            result += this.columns[ x ];
+            if ( x < this.width - 1 )
+                result += ',';
+            else
+                result += '\n';
+        }
+        for ( var y = 1; y < this.height; y++ )
+        {
+            for ( var x = 0; x < this.width; x++ )
+            {
+                if ( this.types[ y - 1 ][ x ] == 2 )
+                    result += '"' + this.array[ y - 1 ][ x ] + '"';
+                else
+                    result += this.array[ y - 1 ][ x ];
+                if ( x < this.width - 1 )
+                    result += ',';
+                else
+                    result += '\n';
+            }
+        }
+        return result;
+    };
+    CSV.prototype.erase = function()
+	{
+        this.columns = [];
+        for ( var x = 0; x < this.width; x++ )
+            this.columns[ x ] = '';
+        this.array = [];
+        this.types = [];
+        for ( var y = 0; y < this.height; y++ )
+        {
+            this.array[ y ] = [];
+            this.types[ y ] = [];
+            for ( var x = 0; x < this.width; x++ )
+            {
+                this.array[ y ][ x ] = '';
+                this.types[ y ][ x ] = 0;
+            }
+        }
+    };
+    CSV.prototype.getColumn$ = function( x )
+	{
+        if ( typeof x == 'undefined' )
+            throw 'missing_parameters';
+        if ( x < 0 || x > this.width )
+            throw 'parameters_out_of_bounds';
+        return this.columns[ x ];
+    };
+    CSV.prototype.setColumn = function( x, text$ )
+	{
+        if ( typeof x == 'undefined' )
+            throw 'missing_parameters';
+        if ( x < 0 || x > this.width )
+            throw 'parameters_out_of_bounds';
+        this.columns[ x ] = text$;
+    };
+    CSV.prototype.get$ = function( x, y )
+	{
+        if ( typeof x == 'undefined' || typeof y == 'undefined' )
+            throw 'missing_parameters';
+        if ( x < 0 || x > this.width || y < 0 || y > this.height )
+            throw 'parameters_out_of_bounds';
+        return this.array[ y ][ x ];
+    };
+    CSV.prototype.get = function( x, y )
+	{
+        if ( typeof x == 'undefined' || typeof y == 'undefined' )
+            throw 'missing_parameters';
+        if ( x < 0 || x > this.width || y < 0 || y > this.height )
+            throw 'parameters_out_of_bounds';
+
+        var value = this.array[ y ][ x ];
+        var cleaned = '';
+        for ( var p = 0; p < value.length; p++ )
+        {
+            var c = value.charAt( p );
+            if ( ( c >= '0' && c <= '9' ) || c == '.' || c == 'e' || c == '-' || c == '+' )
+                cleaned += c;
+        }
+        var result = 0;
+        if ( cleaned.length > 0 )
+        {
+            result = parseFloat( cleaned );
+            if ( isNaN( result ) )
+                result = 0;
+        }
+        return result;
+    };
+    CSV.prototype.set$ = function( x, y, text$ )
+	{
+        if ( typeof x == 'undefined' || typeof y == 'undefined' )
+            throw 'missing_parameters';
+        if ( x < 0 || x > this.width || y < 0 || y > this.height )
+            throw 'parameters_out_of_bounds';
+        this.array[ y ][ x ] = text$;
+        this.types[ y ][ x ] = 2;
+    };
+    CSV.prototype.set = function( x, y, number )
+	{
+        if ( typeof x == 'undefined' || typeof y == 'undefined' )
+            throw 'missing_parameters';
+        if ( x < 0 || x > this.width || y < 0 || y > this.height )
+            throw 'parameters_out_of_bounds';
+        this.array[ y ][ x ] = '' + number;
+        this.types[ y ][ x ] = 0;
+    };
+    CSV.prototype.getAscii = function( x, y )
+	{
+        if ( typeof x == 'undefined' || typeof y == 'undefined' )
+            throw 'missing_parameters';
+        if ( x < 0 || x > this.width || y < 0 || y > this.height )
+            throw 'parameters_out_of_bounds';
+
+        var value = this.array[ y ][ x ];
+        var result = '';
+        for ( var p = 0; p < value.length; p++ )
+        {
+            var c = value.charAt( p );
+            if ( ( c < '0' || c > '9' ) && c != '-' && c != '+' && c != ',' && c != '.' )
+                result += c;
+        }
+        return result;
+    };
+    this.open = function( index, width, height )
+    {
+        var newCSV = this.context.getElement( this.aoz.currentContextName, index );
+        if ( newCSV )
+            throw 'csv_already_exists';
+        newCSV = new CSV( this.aoz, this.aoz.csv, width, height );
+        this.context.setElement( this.aoz.currentContextName, newCSV, index );
+    };
+    this.load = function( args )
+    {
+        var index = args[ 0 ];
+        var path = args[ 1 ];
+        var tags = args[ 2 ];
+        var newCSV = this.context.getElement( this.aoz.currentContextName, index );
+        if ( !newCSV )
+        {
+            newCSV = new CSV( this.aoz, this.aoz.csv );
+            this.context.setElement( this.aoz.currentContextName, newCSV, index );
+        }
+        newCSV.load( path, tags )
+    };
+    this.save = function( args )
+    {
+        var index = args[ 0 ];
+        var path = args[ 1 ];
+        var tags = args[ 2 ];
+        this.context.getElement( this.aoz.currentContextName, index, 'csv_not_defined' ).save( path, tags );
+    };
+    this.close = function( index )
+    {
+        this.context.deleteElement( this.aoz.currentContextName, index, 'csv_not_defined' );
+    };
+   	this.wait = function()
+	{
+		if ( this.load_done )
+		{
+            if ( this.error )
+                throw this.error;
+			return true;
+		}
+        return false;
+	};
+}
+
+/**api
+@name:CSV Open
+@description:Open a CSV channel, enabling you to load, create and later save CSV files
+@param:index:index:Index of the channel
+@param:width:integer:Number of columns in the CSV file, will be overwritten when loading a file
+@param:height:integer:Number of lines in the CSV file, will be overwritten when loading a file
+@compatible: aoz
+api*/
+Instruction CSV Open, index=(index), width, height
+{
+    #errors
+	this.aoz.csv.open( %index, %width, %height );
+}
+End Instruction
+
+/**api
+@name:CSV Load
+@description:Open a CSV file iinto the channel
+@param:index:index:Index of the channel
+@param:path$:string:Path to the file. For the moment, the file must be located in the "filesystem" of your application
+@param:tags$:string:unuse4d, for future expansion
+@compatible:aoz
+api*/
+Instruction CSV Load, index=(index), path$, tags$
+{
+	#waiting
+    #errors
+	return{type:12,waitThis:this.aoz.csv,callFunction:"load",waitFunction:"wait",args:[%index,%path$,%tags$]};
+}
+End Instruction
+
+/**api
+@name:CSV Save
+@description:Save the content of the channel into a CSV file
+@param:index:integer:Index of the channel
+@param:path$:string:Path to the file to create. For the moment, the file will be saved in the local data area of your browser, and will appear in the directory of the application filesystem next time you run it in the browser with the same URL
+@param:tags$:string:unuse4d, for future expansion
+@compatible: notimplemented
+api*/
+Instruction CSV Save, index=(index), path$, tags$
+{
+	#waiting
+    #errors
+    return{type:12,waitThis:this.aoz.csv,callFunction:"save",waitFunction:"wait",args:[%index,%path$,%tags$]};
+}
+End Instruction
+
+/**api
+@name:CSV Close
+@description:Destroys a channel and all data associated
+@param:index:index:Index of the channel
+@compatible: aoz
+api*/
+Instruction CSV Close, index=(index)
+{
+    #errors
+    aoz.csv.close( %index );
+}
+End Instruction
+
+/**api
+@name:CSV Column$
+@description:Returns the title of a column as a string
+@param:inded:index:Index of the channel
+@param:column:integer:Number of the column
+@return:string:The title of the column
+@compatible: aoz
+api*/
+Function CSV Column$, index=(index), x
+{
+    #errors
+}
+End Function( {aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).getColumn$( %x )} )
+
+/**api
+@name:CSV Get$
+@description:Returns the content of a cell as a string
+@param:index:index:Index of the channel
+@param:column:integer:Number of the column
+@param:line:integer:Number of the line
+@return:string:The numeric value of the cell
+@compatible: aoz
+api*/
+Function CSV Get$, index=(index), x, y
+{
+    #errors
+}
+End Function( {aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).get$( %x, %y )} )
+
+/**api
+@name:CSV Get
+@description:Returns the content of a cell as a number, or 0 if the content cannot be converted to a number
+@param:index:index:Index of the channel
+@param:column:integer:Number of the column
+@param:line:integer:Number of the line
+@return:integer:The numeric value of the cell
+@compatible: aoz
+api*/
+Function CSV Get, index=(index), x, y
+{
+    #errors
+}
+End Function( {aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).get( %x, %y )} )
+
+/**api
+@name:CSV Get Ascii$
+@description:Extracts and return the text content of a cell as string. Returns an empty string if there is no ttext. Use it for cells indicating a currency, like the ones generated by Excel with 1000$ or such
+@param:index:index:Index of the channel
+@param:column:integer:Number of the column
+@param:line:integer:Number of the line
+@return:string:The filetered ASCII content of the cell
+@compatible: aoz
+api*/
+Function CSV Get Ascii$, index=(index), x, y
+{
+    #errors
+}
+End Function( {aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).getAscii( %x, %y )} )
+
+/**api
+@name:CSV String$
+@description:Return the whole content of a channel as an exportable CSV formatted UTF-8 string
+@param:index:index:Index of the channel
+@return:string:The whole content of the channel
+@compatible: aoz
+api*/
+Function CSV String$, index=(index), tags$
+{
+    #errors
+}
+End Function( {aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).getString( %tags$)} )
+
+/**api
+@name:CSV Column
+@description:Set the title of a column
+@param:index:index:Index of the channel
+@param:column:integer:Number of the column
+@param:title$:string:New string for title
+@compatible: aoz
+api*/
+Instruction CSV Column, index=(index), x, text$
+{
+    #errors
+    aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).setColumn( %x, %text$ );
+}
+End Instruction
+
+/**api
+@name:CSV Set$
+@description:Set the content of a cell from a string
+@param:index:index:Index of the channel
+@param:column:integer:Number of the column
+@param:line:integer:Number of the line
+@param:text$:string:Text to set
+@compatible: aoz
+api*/
+Instruction CSV Set$, index=(index), x, y, text$
+{
+    #errors
+    aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).set$( %x, %y, %text$ );
+}
+End Instruction
+
+/**api
+@name:CSV Set
+@description:Set the content of a cell from a number
+@param:index:index:Index of the channel
+@param:column:integer:Number of the column
+@param:line:integer:Number of the line
+@param:number:number:Value to set
+@compatible: aoz
+api*/
+Instruction CSV Set, index=(index), x, y, number
+{
+    #errors
+    aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).set( %x, %y, %number );
+}
+End Instruction
+
+/**api
+@name:CSV Erase
+@description:Reset a CSV channel, all data will be erased
+@param:index:index:Index of the channel
+@compatible: aoz
+api*/
+Instruction CSV Erase, index=(index)
+{
+    #errors
+    aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).erase();
+}
+End Instruction
+
+/**api
+@name:CSV Width
+@description:Returns the number of columns of a channel
+@param:index:index:Index of the channel
+@return:integer:The number of columns
+@compatible: aoz
+api*/
+Function CSV Width, index=(index)
+{
+    #errors
+}
+End Function( {aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).width} )
+
+/**api
+@name:CSV Height
+@description:Returns the number of lines of a channel
+@param:index:index:Index of the channel
+@return:integer:The number of lilnes
+@compatible: aoz
+api*/
+Function CSV Height, index=(index)
+{
+    #errors
+}
+End Function( {aoz.csv.context.getElement( aoz.currentContextName, %index, 'csv_not_defined' ).height} )

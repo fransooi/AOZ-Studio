@@ -1,0 +1,8 @@
+<i>BobSprite Col</i>
+<b>BobSprite Col</b> xxxxxxx
+=
+This function checks for a collision between the single Bob whose number you specify, and all active Sprites on screen.
+The result will be True if a collision is detected, or False if the object remains untouched.
+To narrow the range of Sprites to be monitored, simply include the first to the last number in that range. As with SPRITEBOB COL, this function should only be used in low resolution
+
+

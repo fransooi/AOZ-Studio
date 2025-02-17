@@ -1,0 +1,13 @@
+<i>structure: read data into a variable</i>
+<b>Read</b> list
+=
+When READ loads items of information that have been stored in a DATA statement into a list of variables, it uses a special marker to jump to the first item in the first DATA statement of your listing. As soon as that item of data has been read, the marker moves on to the next item in the list.
+=
+It must be remembered that the variables to be read must be of exactly the same type as the data held at the current position. If you match up one type of stored data with a different type of variable after a READ command, the appropriate error message will be given. Here is an example of correct matching:
+=
+@code
+N=Rnd(100)
+Read A$,B,C,D$
+Print A$,B,C,D$
+Data "Text string",100,N,"AOZ"+"Studio"
+@code

@@ -1,0 +1,10 @@
+<i>GfxCall</i>
+<b>GfxCall</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This executes a function directly from the Graphics library, taking the parameters from the DREG and AREG
+arrays. The function offset parameter enters the offset to the function you wish to call, and can also be set using the
+LVO function, if required.
+
+

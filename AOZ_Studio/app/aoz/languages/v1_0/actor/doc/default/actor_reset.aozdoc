@@ -1,0 +1,19 @@
+<i>instruction: Reset all properties of one or all the actors</i>
+<b>Actor Reset</b> number
+<b>Actor Reset</b> name$
+<b>Actor Reset</b> "*"
+=
+Example 1:
+@code
+Cls 0
+Actor 1, x=100, y=50, image$="magic"
+Actor Reset 1 // Remove the Actor 1
+@code
+=
+Example 2:
+@code
+Cls 0
+Actor 1, x=100, y=50, image$="magic"
+Actor "lucie", x=200, y=0, image$="lucie"
+Actor Reset "*" // Remove All the actors
+@code

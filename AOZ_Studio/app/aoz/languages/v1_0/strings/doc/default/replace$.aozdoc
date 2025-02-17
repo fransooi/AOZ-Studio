@@ -1,0 +1,8 @@
+<i>Replace$</i>
+<b>Replace$</b> xxxxxxx
+=
+Here are two examples demonstrating each version of usage:
+@code
+Print Replace$( "Hello XYZ Studio!", "XYZ", "AOZ" )
+@code
+

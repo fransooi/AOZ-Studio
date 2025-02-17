@@ -1,0 +1,1012 @@
+/*@*****************************************************************************
+*                                                                              *
+* Bot Simulator
+* By Francois Lionet
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+#googleFont: "Red Hat Display"
+#fps: False
+#googleFont:"roboto mono"
+#rebuild: "three_d"
+#rebuild: "bot"
+
+NOCONSOLE = 0
+Load Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+
+FONTCYBERPI$ = "Red Hat Display"
+FONTINFO$ = "Red Hat Display" : FONTINFOSIZE = 20
+
+SIMSCREEN = 100
+WIDTHPANEL = 1920 : HEIGHTPANEL = 200 : XPANEL = 0 : YPANEL = 1080 - HEIGHTPANEL
+WIDTHCYBERPI = 320 : HEIGHTCYBERPI = 133
+XCYBERPI = 960 - WIDTHCYBERPI / 2 - 100 : YCYBERPI = 0
+XCOMMANDS = XCYBERPI + WIDTHCYBERPI + 8 : Global XCOMMANDS
+WIDTHLIST = 496 : Global WIDTHLIST
+XLIST = WIDTHPANEL - WIDTHLIST - 48 : Global XLIST
+
+WIDTHLED = 320 : HEIGHTLED = 50 : XLED = 0 : YLED = 0
+PANELALPHA# = 0.15
+GRIDWIDTH# = 0.2 : GRIDDEPTH# = 0.2
+GROUNDWIDTH# = 2 : GROUNDDEPTH# = 2
+SCREENONLY = True : CONNECTED$ = "Disconnected"
+PLAYING = False : PLAYINGSPEED = 50 : PLAYINGCOUNT = 0 : NOCOMMANDCOUNT = 0 : PLAYINGFIRST = False : PREVIOUSPLAYING = False : LOOPING = 0
+CONSOLEON = 0 : CONNECTINGCOUNT = 0 :  CONNECTINGFLASH = False
+RECORDON = 0 : RECORDINGFLASH = False : RECORDINGCOUNT = 0 : RECORDING$ = ""
+BOTSPEED# = 10 : IDLECOUNT = 0 : IDCOPY = 0
+INITIALIZED = False
+IDDELETELINE = 0 : IDDELETE = 0 : IDREWIND = 0 : IDRUN = 0 : IDPLAY = 0 : IDPAUSE = 0 : IDLOOP = 0 : IDCONNECT = 0 : IDRESET = 0 : IDCONSOLE = 0 : IDRECORD = 0
+INTRO = 1 : GLobal INTRO
+INTROCOUNT = 0 : Global INTROCOUNT
+ISEDITING = False : Global ISEDITING
+
+Global CONNECTINGCOUNT, CONNECTINGFLASH, INITIALIZED
+Global XCYBERPI, YCYBERPI, WIDTHCYBERPI, HEIGHTCYBERPI
+Global FONTINFO$, FONTINFOSIZE, FONTCYBERPI$
+Global XLED, YLED, WIDTHLED, HEIGHTLED
+Global GRIDWIDTH#, GRIDDEPTH#
+Global XPANEL, YPANEL, WIDTHPANEL, HEIGHTPANEL
+Global PANELALPHA#, SCREENONLY, SIMSCREEN, CONNECTED$, CONSOLEON, RECORDON, RECORDINGFLASH, RECORDINGCOUNT, RECORDING$
+Global GROUNDWIDTH#, GROUNDDEPTH#, PLAYING, PLAYINGSPEED, PLAYINGCOUNT, NOCOMMANDCOUNT, PLAYINGFIRST, PREVIOUSPLAYING, LOOPING
+Global IDCOPY, IDDELETELINE, IDDELETE, IDREWIND, IDRUN, IDPLAY, IDPAUSE, IDLOOP, IDCONNECT, IDRESET, IDCONSOLE, IDRECORD
+Global BOTSPEED#, IDLECOUNT
+Dim NITEMS( 10 ), ITEMNAMES$( 10, 200 ) : Global NITEMS(), ITEMNAMES$()
+
+// Open loading front-screen
+Sprite 0, 0, 0, Image$ = "title-screen.png"
+
+// Open 3D screen
+Degree
+nLines = 64
+editorWidth = 40
+Screen Open SIMSCREEN, 1920, 1080, 32, ThreeD, lines = nLines, skyType$ = "360", sky$ = "moonless_golf_4k"
+Curs Off : Cls 0
+//Screen Hide SIMSCREEN
+
+// Palette
+// 0- transparent
+// 1- White
+// 2- Text window back
+// 3- Text window back activated
+// 4- Text window font
+// 5- Text window font activated
+// 6- Non-transperent black
+// 7- Temp LED Color
+// 8- Alpha Black
+// 9- Info text
+// 10- Tooltip back
+// 11- Tooltip text
+// 12- Info text shadow
+Palette $000000, $FFFFFF, $1D1F21, $282A2E, $869296, $C5C8C6, $000000, $000000, \
+$000000, $6bf9fe, $00ff7d, $0e0e0d, $070d0a
+
+Hot Spot imageIndex$ = "joystick-back-disabled", $11
+Hot Spot imageIndex$ = "joystick-back-down", $11
+Hot Spot imageIndex$ = "joystick-back-up", $11
+Hot Spot imageIndex$ = "joystick-back-hi", $11
+Hot Spot imageIndex$ = "joystick-disabled", $11
+Hot Spot imageIndex$ = "joystick-down", $11
+Hot Spot imageIndex$ = "joystick-up", $11
+Hot Spot imageIndex$ = "joystick-hi", $11
+
+// Connect to Bot
+Bot Connect index$ = "bot", ScreenOnly = SCREENONLY
+
+// Create scene
+GROUND@ = Cube( "ground", Y# = -10, Width# = GROUNDWIDTH# * 1000, Height# = 1, Depth# = GROUNDDEPTH# * 1000, RepeatX = 1, RepeatY = 1, Image$ = "marble", ReceiveShadow = True )
+
+// Create mBot
+MBOT@ = Mesh( "mbot", Y# = 17, Scale# = 40, AngleY# = 0 )
+MBOT@ Movement = BotMovement( BotIndex$ = "bot", ScaleX# = 1000, ScaleY# = 1000 )
+Global MBOT@
+
+// Camera when playing
+PLAYCAMERA@ = Camera( "playcamera" )
+PLAYCAMERA@ Attach( "mbot" )
+PLAYCAMERA@ AngleY# = -90 : Global PLAYCAMERA@
+
+// Set automatic camera movement
+CAMERA@ = Camera( "DefaultCamera", X# = 1000, Y# = 1000, Z# = 0 ) : Global CAMERA@
+CAMERA@ LookAt( "mbot" )
+
+// Add lights
+LIGHT1@ = Light( "light1", Type$ = "Point", Color = $FFFFFF, Intensity = 0.5, CastShadows = True, X# = -1000, Y# = 10, Z# = -1000 )
+LIGHT2@ = Light( "light2", Type$ = "Point", Color = $FFFFFF, Intensity = 0.5, CastShadows = True, X# = 1000, Y# = 10, Z# = -1000 )
+LIGHT3@ = Light( "light3", Type$ = "Point", Color = $FFFFFF, Intensity = 0.5, CastShadows = True, X# = -1000, Y# = 10, Z# = 1000 )
+LIGHT4@ = Light( "light4", Type$ = "Point", Color = $FFFFFF, Intensity = 0.5, CastShadows = True, X# = 1000, Y# = 10, Z# = 1000 )
+
+// Create the grid
+Dim GRID@() : Global GRID@()
+
+CreateGrid
+CreateInterface
+Wait 0.5
+
+Sprite 0, 16, 16, Image$ = "aoz-logo.png"
+
+// Display management
+//Wait 1
+Every 0.020 Proc UPDATESCREEN
+Procedure UPDATESCREEN
+
+	If INITIALIZED
+		CURRENTSCREEN = Screen()
+		Screen SIMSCREEN
+		Screen Show SIMSCREEN
+		Screen To Front SIMSCREEN
+
+		If Not ISEDITING
+			DrawPanel
+			HandleLoop
+			If INTRO > 0
+				IntroCamera
+			End If
+		End If
+
+		If CURRENTSCREEN >= 0
+			Screen CURRENTSCREEN
+		End If
+	End If
+	Every On
+
+End Proc
+
+// Open Console
+If NOCONSOLE = 0
+
+	Console On Prompt$ = "Aoz> ", Output$ = "application", NoHelpers = True
+	Console Print text$ = ""
+	Console Print text$ = "----------------------------"
+	Console Print text$ = "Welcome to the Bot emulator!"
+	Console Print text$ = "----------------------------"
+	Console Print text$ = "Type any BOT or AOZ Basic command"
+	Console Print text$ = "and it will be executed."
+	Console Print text$ = "The name of the robot is...'bot'."
+	Console Print text$ = "Try the command: Bot Move " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", 10"
+	Console Print text$ = ""
+	Console Hide
+
+	// Main loop
+	Repeat
+		Wait Vbl
+	Until False
+
+End If
+
+Procedure DrawPanel
+
+	Cls 0, XPANEL, YPANEL - 64, WIDTHPANEL, HEIGHTPANEL + 64
+
+	If Not RECORDON
+		If Key State( $26 )
+			Add YPANEL, -8 : YPANEL = Max( 0, YPANEL )
+			Cls 0 : RepositionInterface
+		End If
+		If Key State( $28 )
+			Add YPANEL, 8 : YPANEL = Min( 1080 - HEIGHTPANEL, YPANEL )
+			Cls 0 : RepositionInterface
+		End If
+	End If
+
+	Set Alpha 8, PANELALPHA# : Ink 8 : Bar XPANEL, YPANEL, WIDTHPANEL, HEIGHTPANEL
+	DrawInfoPanel
+	DrawCyberpi
+	DrawLEDBar
+
+End Proc
+
+Procedure CameraNext
+	Inc INTRO
+End Proc
+Procedure IntroCamera
+	If INTRO = 3
+		CAMERA@ LookAt( X# = 0, Y# = 0, Z# = 0 )
+		CAMERA@ Movement = CameraMovement()
+		INTRO = 0
+	Else If INTRO = 2
+		CAMERA@ LookAt( X# = 0, Y# = 0, Z# = 0 )
+	Else If INTRO = 1
+		CAMERA@ Movement = TweenMovement( EndX# = 100, EndY# = 25, EndZ# = 50, Duration# = 5, InOut$ = "inout", Easing$ = "cubic", OnComplete$ = "CameraNext" )
+		Inc INTRO
+	End If
+End Proc
+
+Procedure RepositionInterface
+
+	xButton = XPANEL + 524 : yButton = YPANEL + 24 : syButton = 40
+
+	AButton "sound" ForceY yButton
+	UI Select "UISelectSound", y = yButton + 4 : Add yButton, syButton
+	AButton "drums" ForceY yButton
+	UI Select "UISelectDrum", y=yButton + 4 : Add yButton, syButton
+	AButton "led" ForceY yButton
+	UI Select "UISelectLed", y=yButton + 4 : Add yButton, syButton
+	AButton "music" ForceY yButton
+	UI Select "UISelectNote", y=yButton + 4 : Add yButton, syButton
+
+	yButton = YPANEL + 30
+	AButton "record" ForceY yButton : Add yButton, 40
+	AButton "console" ForceY yButton : Add yButton, 40
+	AButton "reset" ForceY yButton : Add yButton, 40
+	AButton "connect" ForceY yButton
+	UI Select "UISelectCommands", y = YPANEL + 28
+
+	yButton = YPANEL + 28
+	AButton "copy" ForceY yButton : Add yButton, 30
+	AButton "deleteLine" ForceY yButton : Add yButton, 30
+	AButton "delete" ForceY yButton
+
+	yButton = YPANEL + 28
+	AButton "rewind" ForceY yButton : Add yButton, 30
+	AButton "run" ForceY yButton : Add yButton, 30
+	AButton "play" ForceY yButton : Add yButton, 30
+	AButton "pause" ForceY yButton : Add yButton, 30
+	AButton "loop" ForceY yButton
+
+	yButton = YPANEL + 33 : AButton "buttona" ForceY yButton
+	yButton = YPANEL + 81 : AButton "buttonb" ForceY yButton
+	yButton = YPANEL + 72 : AJoystick "joystick" ForceY yButton
+
+End Proc
+Procedure CreateInterface
+
+	count = 0 : items$ = ""
+	sxButton = 40 : syButton = 40
+	xButton = XCOMMANDS : yButton = YPANEL + 24
+
+	w = 200
+	Restore SOUNDS : id = 1 : Gosub SETDATA : NITEMS( id ) = count
+
+	AButton "sound", id, xButton, yButton, "button-sound", "Play one of the preset sounds", "OnButtonDown"
+	UI Select "UISelectSound", x=xButton + sxButton, y=yButton + 4, width = w, fontSize=13, value$="1", class$="btn-primary", items$=items$
+	Add yButton, syButton
+
+	Restore DRUMS : Inc id : Gosub SETDATA : NITEMS( id ) = count
+	AButton "drums", id, xButton, yButton, "button-drum", "Play one of the preset drums", "OnButtonDown"
+	UI Select "UISelectDrum", x=xButton + sxButton, y=yButton + 4, width = w, fontSize=13, value$="1", class$="btn-primary", items$=items$
+	Add yButton, syButton
+
+	Restore LEDS : Inc id : Gosub SETDATA : NITEMS( id ) = count
+	AButton "led", id, xButton, yButton, "button-led", "Play one of the preset LED animations", "OnButtonDown"
+	UI Select "UISelectLed", x=xButton + sxButton, y=yButton + 4, width = w, fontSize=13, value$="1", class$="btn-primary", items$=items$
+	Add yButton, syButton
+
+	Restore NOTES : Inc id : Gosub SETDATA : NITEMS( id ) = count
+	AButton "music", id, xButton, yButton, "button-music", "Play one note", "OnButtonDown"
+
+	UI Select "UISelectNote", x = xButton + sxButton, y=yButton + 4, width = w, fontSize=13, value$="1", class$="btn-primary", items$=items$
+	Add yButton, syButton
+
+	xButton = XCYBERPI - 40 : yButton = YPANEL + 30 : Inc id : IDRECORD = id
+	AButton "record", id, xButton, yButton, "button-joystick", "Move robot with keys or joystick", "OnButtonDown"
+	Add yButton, 40  : Inc id : IDCONSOLE = id
+	AButton "console", id, xButton, yButton, "button-console", "Open Aoz Console to enter code", "OnButtonDown"
+	If NOCONSOLE
+		AButton "console" Activate False
+	End If
+	Add yButton, 40  : Inc id : IDRESET = id
+	AButton "reset", id, xButton, yButton, "button-reset", "Reset robot to start conditions", "OnButtonDown"
+	Add yButton, 40  : Inc id : IDCONNECT = id
+	AButton "connect", id, xButton, yButton, "button-connect", "Connect to real MBot", "OnButtonDown"
+
+	// Open the list of commands
+	xPan = WIDTHPANEL - 496 - 32 : wPan = 496
+	UI Select "UISelectCommands", x = XLIST, y = YPANEL + 28, width = WIDTHLIST, size = 7, multiple = True, value$="", fontSize = 15, fontName$="roboto mono", class$="bg-dark text-light border", items$=""
+
+	// Edit buttons
+	xButton = XLIST - 25 : yButton = YPANEL + 28 : Inc id : IDCOPY = Id
+	AButton "copy", id, xButton, yButton, "buttonsquare-copy", "Copy the list of commands to the clipboard", "OnButtonDown", 0.3
+	Add yButton, 30  : Inc id : IDDELETELINE = Id
+	AButton "deleteLine", id, xButton, yButton, "buttonsquare-cross", "Delete the current line", "OnButtonDown", 0.3
+	Add yButton, 30  : Inc id : IDDELETE = Id
+	AButton "delete", id, xButton, yButton, "buttonsquare-bin", "Delete all commands", "OnButtonDown", 0.3
+
+	// Command buttons
+	xButton = XLIST + WIDTHLIST :  yButton = YPANEL + 28 : Inc id : IDREWIND = Id
+	AButton "rewind", id, xButton, yButton, "buttonsquare-rewind", "Set the pointer to the beginning", "OnButtonDown", 0.3
+	Add yButton, 30 : Inc id : IDRUN = Id
+	AButton "run", id, xButton, yButton, "buttonsquare-run", "Play from the start", "OnButtonDown", 0.3
+	Add yButton, 30 : Inc id : IDPLAY = Id
+	AButton "play", id, xButton, yButton, "buttonsquare-play", "Play from the current line", "OnButtonDown", 0.3
+	Add yButton, 30 : Inc id : IDPAUSE = Id
+	AButton "pause", id, xButton, yButton, "buttonsquare-pause", "Pause playing", "OnButtonDown", 0.3
+	Add yButton, 30 : Inc id : IDLOOP = Id
+	AButton "loop", id, xButton, yButton, "buttonsquare-loop", "Loop playing", "OnButtonDown", 0.3
+
+	// Cyberpi
+	xButton = XCYBERPI + WIDTHCYBERPI - 70 : yButton = YPANEL + 33 : Inc id : IDBUTTONA = Id
+	AButton "buttona", id, xButton, yButton, "buttona", "Button A of the Cyberpi", "OnButtonDown", 0.5
+	yButton = YPANEL + 81 : Inc id : IDBUTTONB = Id
+	AButton "buttonb", id, xButton, yButton, "buttonb", "Button B of the Cyberpi", "OnButtonDown", 0.5
+	xButton = XCYBERPI + 47 : yButton = YPANEL + 72 : Inc id : IDJOYSTICK = Id
+	AJoystick "joystick", id, xButton, yButton, "joystick-back", "joystick", 0.5
+
+	INITIALIZED = True
+	Pop Proc
+
+	SETDATA:
+	count = 1
+	items$ = ""
+	Read a$
+	Repeat
+		ITEMNAMES$( id, count ) = a$
+		items$ = items$ + ( Str$( count ) - " " ) + ":" + a$
+		Read a$
+		If a$ <> "" Then items$ = items$ + ","
+		Inc count
+	Until a$ = ""
+	Return
+	SOUNDS:
+	Data "Random Sound", "hello", "hi", "bye", "yeah", "wow", "laugh", "hum"
+	Data "sad", "sigh", "annoyed", "angry", "surprised", "yummy", "curious"
+	Data "embarrassed", "ready", "sprint", "sleepy", "meow", "start", "switch"
+	Data "beeps", "buzzing", "explosion", "jump", "laser", "level-up", "low-energy"
+	Data "prompt-tone", "right", "wrong", "ring", "score", "wake", "warning", "metal-clash"
+	Data "shot", "glass-clink", "inflator", "running water", "clockwork", "click", "current"
+	Data "switch", "wood-hit", "iron", "drop", "bubble", "wave", "magic", "spitfire", "heartbeat", "load"
+	Data  ""
+	LEDS:
+	Data "Random Animation", "rainbow","spoondrift","meteor_blue","meteor_green","flash_red","flash_orange","firefly"
+	Data ""
+	DRUMS:
+	Data "Random Drum", "snare", "bass-drum", "side-stick", "crash-cymbal", "open-hit-hat", "closed-hit-hat", "tambourine", "hand-clap", "claves"
+	Data ""
+	NOTES:
+	Data "Random Note"
+	Data "A0", "A#0", "B0", "C1", "C#1", "D1", "D#1", "E1", "F1", "F#1", "G1", "G#1"
+	Data "A1", "A#1", "B1", "C2", "C#2", "D2", "D#2", "E2", "F2", "F#2", "G2", "G#2"
+	Data "A2", "A#2", "B2", "C3", "C#3", "D3", "D#3", "E3", "F3", "F#3", "G3", "G#3"
+	Data "A3", "A#3", "B3", "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4"
+	Data "A4", "A#4", "B4", "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5", "G#5"
+	Data "A5", "A#5", "B5", "C6", "C#6", "D6", "D#6", "E6", "F6", "F#6", "G6", "G#6"
+	Data "A6", "A#6", "B6", "C7", "C#7", "D7", "D#7", "E7", "F7", "F#7", "G7", "G#7"
+	Data "A7", "A#7", "B7", "C8", "C#8", "D8", "D#8", "E8", "F8", "F#8", "G8", "G#8"
+	Data "A8", "A#8", "B8"
+	Data ""
+
+End Proc
+Procedure ResetBot
+	MBOT@ X# = 0, Z# = 1, AngleY# = 0
+End Proc
+Procedure OnButtonDown[ Id ]
+
+	command$ = ""
+	If Id = 1
+		number = Val( UI Value$( "UISelectSound" ) )
+		If number = 1 Then number = Rnd( 2 To NITEMS( Id ) - 1 )
+		command$ = "Bot Audio Play " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", " + Chr$( $22 ) + ITEMNAMES$( Id, number ) + Chr$( $22 )
+	Else If Id = 2
+		number = Val( UI Value$( "UISelectDrum" ) )
+		If number = 1 Then number = Rnd( 2 To NITEMS( Id ) - 1 )
+		command$ = "Bot Drum Play " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", " + Chr$( $22 ) + ITEMNAMES$( Id, number ) + Chr$( $22 )
+	Else If Id = 3
+		number = Val( UI Value$( "UISelectLed" ) )
+		If number = 1 Then number = Rnd( 2 To NITEMS( Id ) - 1 )
+		command$ = "Bot LED Play " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", " + Chr$( $22 ) + ITEMNAMES$( Id, number ) + Chr$( $22 )
+	Else If Id = 4
+		number = Val( UI Value$( "UISelectNote" ) )
+		If number = 1 Then number = Rnd( 2 To NITEMS( Id ) - 1 )
+		command$ = "Bot Sound Play " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", " + Chr$( $22 ) + ITEMNAMES$( Id, number ) + Chr$( $22 )
+	Else If Id = IDCONNECT
+		If SCREENONLY
+			CONNECTED$ = "Connecting"
+			Trap Bot Connect index$ = "bot", ScreenOnly = False
+			If ErrTrap <> 0
+				CONNECTED$ = ""
+				NotConnected
+				Wait 3
+				CloseNotConnected
+			Else
+				CONNECTED$ = ""
+				SCREENONLY = False
+				YesConnected
+				Wait 3
+				CloseYesConnected
+			End If
+		End If
+	Else If Id = IDRESET
+		ResetBot
+	Else If Id = IDRECORD
+		RECORDON = 1 - RECORDON
+	Else If Id = IDCONSOLE
+		CONSOLEON = 1 - CONSOLEON
+		If CONSOLEON
+			Console Show
+		Else
+			Console Hide
+		End If
+	Else If Id = IDCOPY
+		text$ = ""
+		nLines = GetUISelectLength[ "UISelectCommands" ]
+		For n = 0 To nLines - 1
+			line$ = GetUISelectValue$[ "UISelectCommands", n ]
+			pos = Instr( Lower$( line$ ), "bot " )
+			text$ = text$ + Mid$( line$, pos ) + Chr$( 10 )
+		Next
+		Clipboard Copy text$
+		Copied
+		Wait 3
+		CloseCopied
+	Else If Id = IDDELETELINE
+		UISelectDeleteLine[ "UISelectCommands", -1 ]
+	Else If Id = IDDELETE
+		UISelectReset[ "UISelectCommands" ]
+	Else If Id = IDREWIND
+		UISelectSetCurrent[ "UISelectCommands", 0 ]
+	Else If Id = IDRUN
+		UISelectSetCurrent[ "UISelectCommands", 0 ]
+		ResetBot
+		PLAYING = True
+		RECORDING = False
+	Else If Id = IDPLAY
+		PLAYING = True
+		RECORDING = False
+	Else If Id = IDPAUSE
+		PLAYING = False
+	Else If Id = IDLOOP
+		LOOPING = 1 - LOOPING
+		AButton "loop" ForceDown( LOOPING )
+	End If
+
+	If command$ <> "" And IDLECOUNT <= 0 And BOT Idle( "bot" )
+		IDLECOUNT = 50
+		AButton "sound" Activate( False )
+		AButton "drums" Activate( False )
+		AButton "led" Activate( False )
+		AButton "music" Activate( False )
+		result$ = Console Interpret$( command$ )
+		{ console.log( "Command-> " + vars.command$ ); }
+	End If
+
+End Proc
+Procedure HandleLoop
+
+	// Display last command in list?
+	command$ = ""
+	{
+		vars.command$ = this.aoz.root.vars.MBOT_c.bot.lastCommand;
+		this.aoz.root.vars.MBOT_c.bot.lastCommand = '';
+	}
+	If command$ <> ""
+		If NOCOMMANDCOUNT = 0
+			UISelectAdd[ "UISelectCommands", command$, -1 ]
+		Else
+			Dec NOCOMMANDCOUNT
+		End If
+	End If
+
+	// Set state of buttons
+	current = GetUISelectCurrent[ "UISelectCommands" ]
+	nLines = GetUISelectLength[ "UISelectCommands" ]
+	If Not PLAYING
+		If nLines > 0
+			AButton "rewind" Activate( True )
+			AButton "run" Activate( True )
+			AButton "copy" Activate( True )
+			AButton "delete" Activate( True )
+		Else
+			AButton "rewind" Activate( False )
+			AButton "run" Activate( False )
+			AButton "copy" Activate( False )
+			AButton "delete" Activate( False )
+		End If
+		If current >= 0
+			AButton "play" Activate( True )
+			AButton "deleteLine" Activate( True )
+		Else
+			AButton "play" Activate( False )
+			AButton "deleteLine" Activate( False )
+		End If
+		AButton "pause" Activate( False )
+		AButton "reset" Activate( True )
+	Else
+		AButton "reset" Activate( False )
+		AButton "rewind" Activate( True )
+		AButton "run" Activate( False )
+		AButton "play" Activate( False )
+		AButton "pause" Activate( True )
+		AButton "copy" Activate( False )
+		AButton "deleteLine" Activate( False )
+		AButton "delete" Activate( False )
+	End If
+	If RECORDON
+		AButton "reset" Activate( False )
+		Dec RECORDINGCOUNT
+		If RECORDINGCOUNT < 0
+			RECORDINGCOUNT = 25
+			RECORDINGFLASH = Not RECORDINGFLASH
+			AButton "record" ForceDown( RECORDINGFLASH )
+			RECORDING$ = "Recording"
+		End If
+	Else
+		AButton "record" ForceDown( False )
+		RECORDING$ = ""
+	End IF
+	AButton "console" ForceDown( CONSOLEON )
+	If CONNECTED$ <> "Connecting"
+		If Bot Connected( "bot" )
+			CONNECTED$ = "Connected"
+			AButton "connect" ForceDown( True )
+		Else
+			CONNECTED$ = "Disconnected"
+			AButton "connect" ForceDown( False )
+		End If
+	Else
+		Dec CONNECTINGCOUNT
+		If CONNECTINGCOUNT < 0
+			CONNECTINGCOUNT = 25
+			CONNECTINGFLASH = Not CONNECTINGFLASH
+			AButton "connect" ForceDown( CONNECTINGFLASH )
+		End If
+	End If
+	Dec IDLECOUNT
+	If IDLECOUNT <= 0 And BOT Idle( "bot")
+		AButton "sound" Activate( True )
+		AButton "drums" Activate( True )
+		AButton "led" Activate( True )
+		AButton "music" Activate( True )
+	Else
+		AButton "sound" Activate( False )
+		AButton "drums" Activate( False )
+		AButton "led" Activate( False )
+		AButton "music" Activate( False )
+	End If
+
+	// Recording joystick
+	If RECORDON
+		command$ = ""
+		joyX# = AJoystick "joystick" PositionX#
+		joyY# = AJoystick "joystick" PositionY#
+		If JUp( 0 ) Or joyY# < -0.3
+			command$ = "Bot Move " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", " + Str$( BOTSPEED# * 6 ) + ", 1"
+		End If
+		If JDown( 0 ) Or joyY# > 0.3
+			command$ = "Bot Move " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", " + Str$( -BOTSPEED# * 6 ) + ", 1"
+		End If
+		If JLeft( 0 ) Or joyX# < -0.3
+			command$ = "Bot Turn " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", " + Chr$( $22 ) + "left" + Chr$( $22 ) + ", " + Str$( BOTSPEED# ) + ", 1"
+		End If
+		If JRight( 0 ) Or joyX# > 0.3
+			command$ = "Bot Turn " + Chr$( $22 ) + "bot" + Chr$( $22 ) + ", " + Chr$( $22 ) + "right" + Chr$( $22 ) + ", " + Str$( BOTSPEED# ) + ", 1"
+		End If
+		If ( command$ <> "" )
+			result$ = Console Interpret$( command$ )
+		End IF
+	End If
+
+	// Playing the list of commands
+	If PLAYING <> PREVIOUSPLAYING
+		PREVIOUSPLAYING = PLAYING
+		If PLAYING
+			PLAYINGCOUNT = 0
+			PLAYINGFIRST = True
+			Scene Camera "playcamera"
+		Else
+			Scene Camera "defaultcamera"
+		End If
+	End If
+	If PLAYING
+		x# = MBOT@ X#
+		z# = MBOT@ Z#
+		angle# = Int( MBOT@ AngleY# ) + 90
+		Dec PLAYINGCOUNT
+		If PLAYINGCOUNT < 0
+			PLAYINGCOUNT = PLAYINGSPEED
+			current = GetUISelectCurrent[ "UISelectCommands" ]
+			If current < 0
+				PLAYING = False
+			Else
+				If Not PLAYINGFIRST
+					Inc current
+					nLines = GetUISelectLength[ "UISelectCommands" ]
+					If current >= nLines
+						If LOOPING
+							UISelectSetCurrent[ "UISelectCommands", 0 ]
+						Else
+							PLAYING = False
+						End If
+					Else
+						UISelectSetCurrent[ "UISelectCommands", current ]
+					End If
+				End If
+				PLAYINGFIRST = False
+				command$ = GetUISelectValue$[ "UISelectCommands", current ]
+				If command$ <> ""
+					pos = Instr( Lower$( command$ ), "bot " )
+					command$ = Mid$( command$, pos )
+					Inc NOCOMMANDCOUNT
+					result$ = Console Interpret$( command$ )
+				End If
+			End If
+		End If
+	End If
+End Proc
+
+
+Procedure UISelectAdd[ id$, options$, index ]
+	//
+	{
+		var el =  document.getElementById( vars.id$ );
+		var index = vars.index;
+		if ( index < 0 )
+		{
+			if ( el.selectedIndex >= 0 )
+				index = el.selectedIndex + 1;
+			else
+				index = el.length;
+		}
+		var option = document.createElement( 'option' );
+		option.text = '' + ( index + 1 ) + ' - ' + vars.options$;
+		option.value = '' + index;
+		el.add( option, index );
+		el.selectedIndex = index;
+		el.aozOptionHeight = option.offsetHeight;
+		var position = el.scrollTop / el.aozOptionHeight;
+		if ( index >= position + el.size )
+			el.scrollTop = ( index - el.size + 1 ) * el.aozOptionHeight;
+	}
+End Proc
+Procedure UISelectSetCurrent[ id$, index ]
+	//
+	{
+		var el =  document.getElementById( vars.id$ );
+		var index = vars.index;
+		if ( index < 0 )
+		{
+			if ( el.selectedIndex >= 0 )
+				index = el.selectedIndex + 1;
+			else
+				index = el.length;
+		}
+		if ( index < el.length )
+		{
+			el.selectedIndex = index;
+			var position = el.scrollTop / el.aozOptionHeight;
+			if ( index >= position + el.size )
+				el.scrollTop = ( index - el.size + 1 ) * el.aozOptionHeight;
+			else if ( index < position )
+				el.scrollTop = index * el.aozOptionHeight;
+		}
+	}
+End Proc
+Procedure UISelectDeleteLine[ id$, index ]
+	//
+	{
+		var el =  document.getElementById( vars.id$ );
+		var index = vars.index;
+		if ( index < 0 )
+			index = el.selectedIndex;
+		if ( index >= 0 )
+		{
+			el.remove( index );
+			if ( index < el.length )
+			{
+				el.selectedIndex = index;
+				var position = el.scrollTop / el.aozOptionHeight;
+				if ( index >= position + el.size )
+					el.scrollTop = ( index - el.size + 1 ) * el.aozOptionHeight;
+				else if ( index < position )
+					el.scrollTop = index * el.aozOptionHeight;
+			}
+		}
+	}
+End Proc
+Procedure UISelectReset[ id$ ]
+	//
+	{
+		var el =  document.getElementById( vars.id$ );
+		while ( el.length > 0 )
+			el.remove( 0 );
+	}
+End Proc
+Procedure GetUISelectCurrent[ id$ ]
+	//
+	temp = 0
+	{
+		vars.temp =  document.getElementById( vars.id$ ).selectedIndex;
+	}
+End Proc[ temp ]
+Procedure GetUISelectLength[ id$ ]
+	//
+	temp = 0
+	{
+		vars.temp =  document.getElementById( vars.id$ ).length;
+	}
+End Proc[ temp ]
+Procedure GetUISelectValue$[ id$, index ]
+	//
+	temp$ = ""
+	{
+		var el = document.getElementById( vars.id$ );
+		var option = el.options[ vars.index ]
+		if ( option )
+			vars.temp$ =  option.text;
+	}
+End Proc[ temp$ ]
+Procedure GetUIElement[ id$, property$, index, options$ ]
+	//
+	{
+		var el =  document.getElementById( vars.id$ );
+		el[ vars.function$ ]( vars.index, vars.options$ );
+	}
+End Proc
+Procedure DrawInfoPanel
+
+	xInfo = 0 : yInfo = YPANEL + 12
+
+	x# = MBOT@ X# / 1000
+	y# = MBOT@ Y# / 1000
+	angle# = Int( MBOT@ AngleY# / PI# * 180 )
+	left# = 0 : right# = 0 : speed# = 0
+	gyroX# = 0 : gyroY# = 0 : gyroZ# = 0
+	accX# = 0 : accY# = 0 : accZ# = 0
+
+	Set Font FONTINFO$, FONTINFOSIZE : Ink 9
+	Text Shadow 0.1, 0.1, 5.5, Color( 12 ) : Fix 2
+	xText = xInfo + 192 : yText = yInfo + 16 : deltaY = FONTINFOSIZE * 1.2
+	Text xText, yText, "X (m): ", "#top #right" : Text xGr, yText, Str$( x# ), "#top #left" : Add yText, deltaY
+	Text xText, yText, "Y (m): ", "#top #right" : Text xGr, yText, Str$( y# ), "#top #left" : Add yText, deltaY
+	Text xText, yText, "Angle (degrees): ", "#top #right" : Text xGr, yText, Str$( angle# ), "#top #left" : Add yText, deltaY
+	Text xText, yText, "Speed (m/s): ", "#top #right" : Text xGr, yText, Str$( speed# ), "#top #left" : Add yText, deltaY
+	Text xText, yText, "Left Motor (RPM): ", "#top #right" : Text xGr, yText, Str$( left# ), "#top #left" : Add yText, deltaY
+	Text xText, yText, "Right Motor (RPM): ", "#top #right" : Text xGr, yText, Str$( right# ), "#top #left" : Add yText, deltaY
+
+	ss# = AJoystick "joystick" PositionX#
+	joystick$ = Str$( AJoystick "joystick" PositionX# ) + "," + Str$( AJoystick "joystick" PositionY# )
+	buttonA$ = AButton "buttona" State$ //TODO: If buttonA$ = "hi" buttonA$ = "up"
+	buttonB$ = AButton "buttonb" State$ //TODO: If buttonB$ = "hi" Then buttonB$ = "up"
+	xText = xInfo + 375 : yText = yInfo + 16
+	Text xText, yText, "Joystick (x/y):", "#top #right" : Text xGr + 8, yText, joystick$, "#top #left" : Add yText, deltaY
+	Text xText, yText, "Button A: ", "#top #right" : Text xGr + 8, yText, buttonA$, "#top #left" : Add yText, deltaY
+	Text xText, yText, "Button B: ", "#top #right" : Text xGr + 8, yText, buttonB$, "#top #left" : Add yText, deltaY
+	Text xText, yText, "Gyro (x/y/z): ", "#top #right" : Text xGr, yText, Str$( gyroX# ) + "," + Str$( gyroY# ) + "," + Str$( gyroZ# ), "#top #left" : Add yText, deltaY
+	Text xText, yText, "Accel (x/y/z): ", "#top #right" : Text xGr, yText, Str$( accX# ) + "," + Str$( accY# ) + "," + Str$( accZ# ), "#top #left" : Add yText, deltaY
+
+	xText = XCYBERPI - 48 : yText = YPANEL + 158
+	Text xText, yText, CONNECTED$, "#top #right" : Add yText, deltaY
+	yText = YPANEL + 38
+	Text xText, yText, RECORDING$, "#top #right" : Add yText, deltaY
+
+End Proc
+
+Procedure DrawCyberpi
+
+	SCALE# = WIDTHCYBERPI / 1000
+	YCYBERPI = YPANEL + 10
+	Paste Image XCYBERPI, YCYBERPI, index$ = "cyberpi", scaleX# = SCALE#, scaleY# = SCALE#
+
+	xScreen = XCYBERPI + 292 * SCALE#
+	yScreen = YCYBERPI + 33 * SCALE#
+	widthScreen = 455 * SCALE#
+	heightScreen = 333 * SCALE#
+	Ink 6 : Bar xScreen, yScreen, widthScreen, heightScreen
+	Ink 1 : Box xScreen, yScreen, widthScreen, heightScreen
+	Set Font FONTINFO$, 12
+	Text xScreen + widthScreen / 2, yScreen + heightScreen / 2, "Cyberpi", "#center"
+
+End Proc
+
+Procedure DrawLEDBar
+
+	XLED = XCYBERPI : YLED = YCYBERPI + HEIGHTCYBERPI
+	Ink 6 : Bar XLED, YLED, WIDTHLED, HEIGHTLED
+	Ink 1 : Box XLED, YLED, WIDTHLED, HEIGHTLED
+
+	Draw Filter "blur", 10
+	dxLED = WIDTHLED / 5
+	xStart = XLED + dxLED / 2
+	Clip XLED, YLED, WIDTHLED, HEIGHTLED
+
+	Dim lRGB( 5 )
+	lRGB( 0 ) = MBOT@ Movement LED0
+	lRGB( 1 ) = MBOT@ Movement LED1
+	lRGB( 2 ) = MBOT@ Movement LED2
+	lRGB( 3 ) = MBOT@ Movement LED3
+	lRGB( 4 ) = MBOT@ Movement LED4
+	For l = 0 To 4
+		Colour 7, lRGB( l ) : Ink 7 // Set Alpha 7, SCREENALPHA#
+		Disc xStart + dxLED * l, YLED + HEIGHTLED / 2, HEIGHTLED * 0.5
+	Next
+	Clip
+	Draw Filter Del
+
+End Proc
+
+Procedure CreateGrid
+	Dim GRIDX( 2 ), GRIDY( 2 ), GRIDZ( 2 )
+	nX = ( GROUNDWIDTH# / GRIDWIDTH# )
+	nZ = ( GROUNDDEPTH# / GRIDDEPTH# )
+	COLORLINES = $808080
+
+	GRIDX( 0 ) = 0
+	GRIDZ( 0 ) = 0
+	GRIDY( 0 ) = 0
+	GRIDX( 1 ) = 0
+	GRIDZ( 1 ) = GROUNDDEPTH# * 1000
+	GRIDY( 1 ) = 0
+	count = 0
+	For x = 0 To nX
+	GRID@( count ) = Lines( X# = ( -GROUNDWIDTH# / 2 + x * GRIDWIDTH# ) * 1000, Z# = ( -GROUNDDEPTH# / 2 ) * 1000, PointsX# = GRIDX(), PointsY# = GRIDY(), PointsZ# = GRIDZ(), Loop = False, Color = COLORLINES )
+	Inc count
+Next
+GRIDX( 1 ) = GROUNDWIDTH# * 1000
+GRIDZ( 1 ) = 0
+For z = 0 To nZ
+GRID@( count ) = Lines( X# = ( -GROUNDWIDTH# / 2 ) * 1000, Z# = ( -GROUNDDEPTH# / 2 + z * GRIDDEPTH# ) * 1000, PointsX# = GRIDX(), PointsY# = GRIDY(), PointsZ# = GRIDZ(), Loop = False, Color = COLORLINES  )
+Inc count
+Next
+End Proc
+
+Class AButton, BobNumber, X, Y, ImName$, ToolTip$, OnChange$, Scale# = 0.4, State$ = "up"
+
+ForcedState$ = ""
+ForcedDown = 0
+PreviousState$ = ""
+PreviousMouseKey = 0
+Activated = True
+TipOn = False
+Bob BobNumber, X, Y, Image$ = ImName$ + "-" + State$
+Bob Scale BobNumber, Scale#, Scale#
+
+Method ForceState, St$
+ForcedState$ = St$
+End Method
+Method Activate, OnOff
+Activated = OnOff
+End Method
+Method ForceDown, OnOff
+ForcedDown = OnOff
+End Method
+Method ForceY, yy
+Y = yy
+End Method
+Method Update, DeltaTime
+If Activated
+	If Bob Point( BobNumber, X Mouse, Y Mouse )
+		If Mouse Key <> 0
+			State$ = "down"
+		Else
+			State$ = "hi"
+		End If
+	Else
+		State$ = "up"
+	End If
+	PreviousMouseKey = Mouse Key
+	If ForcedState$ <> "" Then State$ = ForcedState$
+	If ForcedDown
+		Bob BobNumber, X, Y, Image$ = ImName$ + "-down"
+	Else
+		Bob BobNumber, X, Y, Image$ = ImName$ + "-" + State$
+	End If
+
+	If State$ = "hi"
+		If Not TipOn And ToolTip$ <> ""
+			Set Font FONTINFO$, 12
+			w = Text Length( ToolTip$ )
+			UI TextBlock "UITextBlockTip", x = X - w - 16, y = Y - 32, width = w + 16, height = 28, content$ = ToolTip$, fontSize = 12, class$="text-dark text-center alert-warning border-dark shadow-lg"
+			TipOn = True
+		End If
+	Else
+		If TipOn
+			UI Delete "UITextBlockTip"
+			TipOn = False
+		End If
+	End If
+
+	If State$ = "down" And PreviousState$ <> "down"
+		If OnChange$ <> ""
+			{
+				aoz.runProcedure( this.root.vars.OnChange$, { Id: this.root.vars.BobNumber } );
+			}
+		End If
+	End If
+	PreviousState$ = State$
+Else
+	Bob BobNumber, X, Y, Image$ = ImName$ + "-" + "disabled"
+End If
+End Method( 1 )
+End Class
+
+Class AJoystick, BobNumber, X, Y, BackName$, FrontName$, Scale#, PositionX# = 0, PositionY# = 0, State$ = "center"
+
+Activated = True
+IsDown = False
+XDown = 0
+YDown = 0
+
+AButton "joystick-back", BobNumber, X, Y, BackName$, "", "", Scale#
+Bob BobNumber + 1, X, Y, Image$ = FrontName$ + "-up"
+Bob Scale BobNumber + 1, Scale#, Scale#
+
+Method ForceY, yy
+Y = yy
+AButton "joystick-back" ForceY yy
+End Method
+Method Update, DeltaTime
+If Activated
+	xx = 0 : yy = 0
+	If Not IsDown
+		If Mouse Key
+			If Bob Point( BobNumber + 1, X Mouse, Y Mouse )
+				IsDown = True
+				XDown = X Bob( BobNumber + 1 )
+				YDown = Y Bob( BobNumber + 1 )
+			End If
+		End If
+	End If
+	If IsDown
+		If Not Mouse Key
+			IsDown = False
+		Else
+			xx = X Mouse - XDown
+			yy = Y Mouse - YDown
+
+			State$ = ""
+			If xx < 8 Then State$ = "left"
+			If xx > 8 Then State$ = "right"
+			If yy < 8 Then State$ = State$ + "up"
+			If yy > 8 Then State$ = State$ + "down"
+			If State$ = "" Then State$ = "center"
+
+			ray = 32
+			PositionX# = ( xx - 8 ) / ray
+			If Abs( PositionX# ) > 1 Then PositionX# = Sgn( PositionX# )
+			PositionY# = ( yy - 8 ) / ray
+			If Abs( PositionY# ) > 1 Then PositionY# = Sgn( PositionY# )
+			Bob BobNumber + 1, XDown + ray * PositionX#, YDown + ray * PositionY#
+		End If
+	Else
+		Bob BobNumber + 1, X, Y
+	End If
+End If
+End Method( 1 )
+End Class
+
+
+Procedure CloseNotConnected
+UI Delete "UIIFrame0"
+UI Delete "UITextBlock0"
+UI Delete "UITextBlock3"
+End Proc
+Procedure CloseYesConnected
+UI Delete "UIIFrame0"
+UI Delete "UITextBlock0"
+End Proc
+Procedure CloseCopied
+UI Delete "UIIFrame0"
+UI Delete "UITextBlock0"
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure NotConnected
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI IFrame "UIIFrame0", x=620, y=420, width=696, height=151, class$="shadow shadow-lg bg-light border rounded text-dark"
+UI TextBlock "UITextBlock0", x=720, y=440, width=492, height=102, fontSize=26, content$="Connection to MBot2 failed.", fontName$="red hat display", class$="text-center"
+UI TextBlock "UITextBlock3", x=720, y=480, width=492, height=102, content$="Please make sure the robot is connected to the computer and powered on.", fontName$="red hat display", class$="text-center"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure YesConnected
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI IFrame "UIIFrame0", x=620, y=420, width=696, height=111, class$="shadow shadow-lg bg-light border rounded text-dark"
+UI TextBlock "UITextBlock0", x=720, y=440, width=492, height=102, fontSize=26, content$="Connection successful!", fontName$="red hat display", class$="text-center"
+End Proc
+Procedure Copied
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI IFrame "UIIFrame0", x=620, y=420, width=696, height=111, class$="shadow shadow-lg bg-light border rounded text-dark"
+UI TextBlock "UITextBlock0", x=720, y=450, width=492, height=102, fontSize=26, content$="Text copied to clipboard", fontName$="red hat display", class$="text-center"
+End Proc

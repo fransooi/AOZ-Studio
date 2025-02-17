@@ -1,0 +1,20 @@
+<i>Screen Skew</i>
+<b>Screen Skew</b> xxxxxxx
+=
+@code
+Degree
+
+// Open a screen and display some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Make the screen go berzerk!
+Do
+Screen Skew 0, Rnd( 16 ) - 8, Rnd( 16 ) - 8
+Wait Vbl
+Next
+@code
+Warning: on software renderers this instruction will slow down the application
+

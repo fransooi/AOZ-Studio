@@ -1,0 +1,22 @@
+<i>Mid$</i>
+<b>Mid$</b> xxxxxxx
+=
+The MID$ function returns characters from the middle of a string, with the first number specified in
+brackets setting the offset from the start of the string and the second number setting how many characters are to be
+fetched.
+
+If the number of characters to be fetched is omitted from your instruction, then the characters will be read
+right up to the end of the string being examined. Here are some examples:
+
+@code
+Print Mid$("AOZ Studio",4)
+Print Mid$("AOZ Studio",0,4)
+@code
+
+@code
+A$="AOZ ******"
+Mid$(A$,4)="Studio"
+Print A$
+Mid$(A$,4,3)="AOZ"
+Print A$
+

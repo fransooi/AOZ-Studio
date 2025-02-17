@@ -1,0 +1,19 @@
+<i>Anim</i>
+<b>Anim</b> xxxxxxx
+=
+ANIM is used to take an Object through a sequence of different images, creating smooth animation effects.
+These animations are performed in the background, so they can be executed simultaneously with
+AOZ programs. After the ANIM command, a channel number must be given to specify the
+Object to be animated.
+
+Then an animation string is given, with each operation composed of a pair of brackets
+holding an image number and a delay time (in 50ths of a second).
+
+For example:
+@code
+Load "AMOSPro_Tutorial:Objects/Sprites.abk"
+Channel 1 To Sprite 8: Sprite 8,200,100,1
+Anim 1,"(1,10)(2,10)(3,10)(4,10)"
+Anim On : Wait Key
+@code
+

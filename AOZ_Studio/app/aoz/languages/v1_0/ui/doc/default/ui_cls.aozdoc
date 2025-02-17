@@ -1,0 +1,18 @@
+<i>UI Cls</i>
+<b>UI Cls</b> xxxxxxx
+=
+The UI Cls is used to UI components from the display. You can also use the UI Delete to remove individual components.
+
+The UI components are overlayed on top of the AOZ canvas and are not part of an AOZ screen
+
+They use the manifest screen dimensions for sizing and positioning and are not affected by the Cls or Screen commands.
+@code
+UI TextBox "MyTextBox1"
+UI TextBox "MyTextBox2"
+UI TextBox "MyTextBox3"
+UI TextBox "MyTextBox4"
+UI TextBox "MyTextBox5"
+
+UI Cls
+@code
+

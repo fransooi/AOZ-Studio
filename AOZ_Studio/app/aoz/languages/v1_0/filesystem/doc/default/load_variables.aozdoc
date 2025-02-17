@@ -1,0 +1,10 @@
+<i>Load Variables</i>
+<b>Load Variables</b> xxxxxxx
+=
+This function will load a file previously saved with the Save Variables command, read all the
+values of the variables and arrays contained in it, and assign them to the variables in your application.
+
+Warning: the previous content of variables with the same name as the ones saved in the file will be erased.
+
+If a variable which value is contained in the file does not exists in the current application, it will be created.
+

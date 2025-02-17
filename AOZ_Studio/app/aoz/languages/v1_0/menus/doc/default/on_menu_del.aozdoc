@@ -1,0 +1,7 @@
+<i>On Menu Del</i>
+<b>On Menu Del</b> xxxxxxx
+=
+Use ON MENU DEL to erase the internal list of labels or procedures created by the range of ON MENU
+commands. You are warned that this command can only be used after menus have been deactivated by ON MENU
+OFF.
+

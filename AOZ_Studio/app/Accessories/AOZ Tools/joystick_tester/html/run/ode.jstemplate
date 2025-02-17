@@ -1,0 +1,48 @@
+<HEADER-START>
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+//
+// %APPLICATIONNAME%
+// %AUTHORNAME%
+// %VERSIONNUMBER%
+// %DATE%
+// %COPYRIGHT%
+//
+// %COMPILERINFOS%
+//
+function Application( canvasId, args )
+{
+	this.root=this;
+	this.parent=this;
+	this.contextName='application';
+	this.manifest=JSON.parse(atob('MANIFEST'));
+	var options =
+	{
+		manifest: this.manifest,
+		sources: JSON.parse(atob('SOURCELIST')),
+		localTags: JSON.parse(atob('LOCALTAGS')),
+		globalTags: JSON.parse(atob('GLOBALTAGS')),
+		developerMode: DEVELOPPERMODE,
+		gotoDirectMode: GOTODIRECTMODE,
+		useSounds: USESOUNDS,
+		loadFilesAfter: JSON.parse(atob('LOADFILESAFTER'))
+	};
+	this.aoz=new AOZ(canvasId,options, '@key@');
+	this.vars = ( typeof args == 'undefined' ? {} : args );
+	this.procParam$='';
+	this.procParam=0;
+	this.objects={};
+	// Compiled program begins here
+	// ----------------------------
+<HEADER-END>
+<FOOTER-START>
+};
+<FOOTER-END>

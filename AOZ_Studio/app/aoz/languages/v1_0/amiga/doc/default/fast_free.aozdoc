@@ -1,0 +1,16 @@
+<i>Fast Free</i>
+<b>Fast Free</b> xxxxxxx
+=
+For an example of a function in operation, the FREE function checks how many "bytes" of memory are currently
+available to hold your variables, and it can be used to make a report, like this:
+@code
+Print "The number of bytes available is:;Free
+@code
+Now use the FREE function with the SET BUFFER command (which is explained earlier in this Chapter) as
+follows:
+@code
+Set Buffer 13
+Print "The number of bytes now available is:;Free
+@code
+
+

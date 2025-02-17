@@ -1,0 +1,28 @@
+<i>IFF Anim</i>
+<b>IFF Anim</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This function provides the most straightforward way of displaying a complete IFF animation sequence directly on
+screen. The "filename" must refer to a valid IFF animation saved in "compressed" (Mode 5) format. The screen
+number defines the screen to be created for the animation sequence. If the requested screen number already exists, it
+will be replaced by the new definition automatically. There is an optional parameter to set the number of times the
+animated sequence is to be played. If this number is omitted, the animation will be played once.
+
+Remember that frame number 1 is the background screen that serves as the basis for the entire sequence, so that your
+animation will always re-start from frame number 2.
+
+After the animation has been played the requested number of times it will stop. The memory consumed will
+automatically be released back to AOZ Studio for re-use.
+
+If you have a disc containing an IFF animation file, place it into any drive and call up the standard file selector, like this:
+@code
+Iff Anim Fsel$("**") To 0,10
+@code
+When the file is requested, your animation sequence will be loaded into screen 0 and cycled through ten times.
+
+Direct IFF animation
+Because the standard AOZ Studio drawing commands may be used with IFF animations, you are provided
+with a range of functions for loading and manipulating animated sequences directly in your programs.
+
+

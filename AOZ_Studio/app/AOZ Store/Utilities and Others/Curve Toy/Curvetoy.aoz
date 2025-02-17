@@ -1,0 +1,260 @@
+////////////////////////////////////////////////
+//                                            //
+//  CURVE TOY - by Dave Baldwin - Sept 2021   //
+//                                            //
+//  A simple program to show how curves are   //
+//  drawn using the Curve instruction, and    //
+//  how the control points work in the        //
+//  different types of curve.                 //
+//                                            //
+////////////////////////////////////////////////
+
+// V1.1 28/12/22 Added Help Window and Clipboard Copy function
+// V1.2 Corrected Arc To curves and added radius control
+{
+	window.copyToClipboard = function (text) {
+		if (window.clipboardData && window.clipboardData.setData) {
+			return window.clipboardData.setData("Text", text);
+			}
+			else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+			var textarea = document.createElement("textarea");
+			textarea.textContent = text;
+			textarea.style.position = "fixed";
+			document.body.appendChild(textarea);
+			textarea.select();
+			try {
+			return document.execCommand("copy");
+			}
+			catch (ex) {
+			return false;
+			}
+			finally {
+			document.body.removeChild(textarea);
+			}
+		}
+	}
+}
+#speed:"graphics"
+screen open 0,1920,1080,lines=27
+Scroll Off
+Screen Open 1,1280,900,lines=30
+screen hot spot 1,$11
+screen display 1,960,540
+Set transparent 0
+Scroll Off
+Screen filter 1,"drop-shadow", 0,0,20,$005050
+colour 3,$202020
+set alpha 3,0.75
+ink 3
+border on
+line width 3
+border ink 4 : colour 4,$00ffff
+filled squircle 1,1 to 1278,898,24
+Print
+Print "                             Curve Toy Help"
+Print
+Print " Curve Toy was designed to help you understand how the various different"
+Print " curves are drawn and how their parameters work."
+Print
+Print " Curve can draw three different types of curve with each of the two"
+Print " instructions, Curve and Curve To"
+Print
+Print " Quadratic curves have a start point, an end point and one control point."
+Print
+Print " Arc-To curves have a start point, two control points and a radius. "
+Print " An imaginary line is drawn between the two control points, and the drawing"
+Print " starts as a straight line from the start point towards the first control"
+Print " point, then breaks off and curves at the chosen radius towards the control"
+Print " point line, meeting it in the direction it is drawn and continuing on to"
+Print " the second control point."
+Print
+Print " Bezier curves have a start point, an end point and two control points."
+Print
+Print " Grab the coloured points with the left mouse button, move them to anywhere"
+Print " on the screen and watch your curve change. The colours correspond to the"
+Print " coloured text on the left, so you know which point you are moving."
+Print
+Print " Change the line thickness by pressing '-' or '=' on the keyboard."
+Print
+Print " Change the Curve type by pressing 'q', 'a' or 'b' on the keyboard."
+Print
+Print " Click anywhere on the code at the bottom to copy it to the clipboard."
+Screen Hide 1
+screen 0
+cpx1=600 : cpy1=700 : cpx2=1900 : cpy2=200 : radius=200 : rx=0 : ry=0
+x1=700 : y1=200 : x2=1300 : y2=900
+lw=20 : r=lw/2 : type=3 : hud=1 : c$="" : help=-1
+global x1,y1,x2,y2,cpx1,cpy1,cpx2,cpy2,lw,r,type,hud,c$,radius,rx,ry
+Reserve Zone 20
+Set Zone 6, 0,1028 to 1400,1080
+set transparent 0
+Ink 4
+pen 4
+Paper 0
+Limit mouse 0,0 to screen width,screen height
+Line Cap "round"
+do
+	Limit mouse 0+r,0+r to screen width-3*r,screen height-3*r
+	Line Width lw
+	cls
+	Curve_Toy
+	Draw_Points
+	Zones
+	Display
+	Refresh
+	z=mouse zone
+	if z and mouse key
+		repeat
+			If z=1 then x1=x mouse : y1=y mouse
+			If z=2 then x2=x mouse : y2=y mouse
+			If z=3 then cpx1=x mouse : cpy1=y mouse
+			if z=5 then radius=Max(lw,get distance(cpx2,cpy2,x mouse,y mouse))
+			If z=4 then cpx2=x mouse : cpy2=y mouse
+			if z=6
+				{ window.copyToClipboard(this.vars.c$); }
+				shoot
+				repeat until not mouse key
+			end if
+			Curve_Toy
+			Zones
+			Draw_Points
+			Display
+			Refresh
+			cls
+		until not mouse key
+	end if
+	i$=inkey$
+	if i$="=" then add lw,1 : r=Max(lw/2,8)
+	if i$="-" and lw>2 then add lw,-1 : r=Max(lw/2,8)
+	if i$="b" then type=3
+	if i$="a" then type=1
+	if i$="q" then type=2
+	if i$="c" then hud=-hud
+	if i$="h"
+		help=-help
+		if help=1 then screen show 1
+		if help=-1 then screen hide 1
+	end if
+loop
+
+Procedure Draw_Points
+	if type=1
+		line width 2
+		colour 4,$a0a0a0
+		draw cpx1,cpy1 to cpx2,cpy2
+		circle rx,ry,radius
+	end if
+	Colour 4,$ffff00
+	line width lw
+	if type=1 then Curve x1,y1,cpx1,cpy1,cpx2,cpy2,radius
+	if type=2 then Curve x1,y1,cpx1,cpy1,x2,y2
+	if type=3 then Curve x1,y1,cpx1,cpy1,cpx2,cpy2,x2,y2
+	Colour 4,$00ff00
+	circle x1,y1,r,true
+	colour 4,$ff0000
+	if type=2 or type=3 then circle x2,y2,r,true
+	Colour 4,$0000ff
+	circle cpx1,cpy1,r,true
+	colour 4,$00ffff
+	if type=1 or type=3 then circle cpx2,cpy2,r,true
+	colour 4,$df3d20
+	if type=1 then circle rx,ry,r,true
+End proc
+Procedure Zones
+	zr=max(5,lw/2)
+	Set Zone 1,max(0,x1-zr),max(0,y1-zr) to min(1919,x1+zr),min(1079,y1+zr)
+	Set Zone 2,max(0,x2-zr),max(0,y2-zr) to min(1919,x2+zr),min(1079,y2+zr)
+	Set Zone 3,max(0,cpx1-zr),max(0,cpy1-zr) to min(1919,cpx1+zr),min(1079,cpy1+zr)
+	Set Zone 4,max(0,cpx2-zr),max(0,cpy2-zr) to min(1919,cpx2+zr),min(1079,cpy2+zr)
+	if type=1
+		a#=get angle(cpx2,cpy2,cpx1,cpy1)
+		rx=cpx2+cos(a#)*radius
+		ry=cpy2+sin(a#)*radius
+	end if
+	Set Zone 5,max(0,rx-zr),max(0,ry-zr) to min(1919,rx+zr),min(1079,ry+zr)
+End proc
+Procedure Display
+	if hud=1
+		Colour 4,$ff88ff
+		Locate 60,3 : Print "by Dave Baldwin"
+		colour 4,$008800
+		Locate 0,6 : Print "Start x1 =";x1;"   "
+		Locate 0,7 : Print "Start y1 =";y1;"   "
+		if type=2 or type=3
+			colour 4,$880000
+			Locate 0,9 : Print "End x2 =";x2;"   "
+			Locate 0,10 : Print "End y2 =";y2;"   "
+		end if
+		colour 4,$000088
+		Locate 0,12 : Print "Control cpx1 =";cpx1;"   "
+		Locate 0,13 : Print "Control cpy1 =";cpy1;"   "
+		if type=1 or type=3
+			colour 4,$008888
+			Locate 0,15 : Print "Control cpx2 =";cpx2;"   "
+			Locate 0,16 : Print "Control cpy2 =";cpy2;"   "
+		end if
+		If type=1
+			colour 4,$df3d20
+			Locate 0,18: Print "Radius =";radius;"  "
+		end if
+		colour 4,$888888
+		locate 0,20 : Print "Line Width (-/=) =";lw
+		locate 0,22 : Print "Curve Type (q/a/b) =";
+		If type=1 then print " Arc To"
+		If type=2 then print " Quadratic"
+		If type=3 then print " Bezier"
+		locate 0,24 : Print "Console ON/OFF (c)"
+		locate 78,26: Print "Help (H)";
+		locate 0,26
+		colour 4,$aaaaaa
+		Print "CODE:-  ";
+		colour 4,$880088
+		c$="Curve"+str$(x1)+","+str$(y1)+","+str$(cpx1)+","+str$(cpy1)
+		print "Curve";
+		colour 4,$008800
+		print x1;",";y1;",";
+		colour 4,$000088
+		print cpx1;",";cpy1;
+		if type=1 or type=3
+			c$=c$+","+str$(cpx2)+","+str$(cpy2)
+			print ",";
+			colour 4,$008888
+			print cpx2;",";cpy2;
+		end if
+		if type=2 or type=3
+			c$=c$+","+str$(x2)+","+str$(y2)
+			print ",";
+			colour 4,$880000
+			print x2;",";y2;
+		end if
+		if type=1
+			c$=c$+","+str$(radius)
+			print ",";
+			colour 4,$df3d20
+			print radius;
+		end if
+	end if
+end proc
+
+Procedure Curve_Toy
+	if hud=1
+		line width 20
+		Colour 4,$aa33aa
+		Curve 224,54,23,13,59,250,221,195
+		Colour 4,$25457d
+		Curve 323,55,282,211,452,211,414,55
+		Colour 4,$b4810e
+		Curve 472,144,493,17,411,47,575,44
+		Colour 4,$1b6c77
+		Curve 615,44,676,172,622,242,699,45
+		Colour 4,$aa3345
+		Curve 870,182,519,63,1050,10,767,130
+		Colour 4,$298b36
+		Curve 943,93,1280,23,931,21,1019,193
+		Colour 4,$6e1470
+		Curve 1130,41,955,246,1365,193,1140,34
+		Colour 4,$758625
+		Curve 1215,41,1352,137,1124,378,1331,40
+	end if
+end proc
+

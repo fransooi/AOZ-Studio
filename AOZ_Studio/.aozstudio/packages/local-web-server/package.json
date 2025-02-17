@@ -1,0 +1,48 @@
+{
+  "_from": "https://www.atom.io/api/packages/local-web-server/versions/0.1.0/tarball",
+  "_id": "local-web-server@0.1.0",
+  "_inBundle": false,
+  "_integrity": "sha512-3GokyleDGb6DsREMZ+Ww9M+l5apIygw1s5hGIGy4QKz2vTJ7FMFXcCqXMkxHDf8X81Y0g7SZTIlCVSVQZTDKaQ==",
+  "_location": "/local-web-server",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "remote",
+    "raw": "https://www.atom.io/api/packages/local-web-server/versions/0.1.0/tarball",
+    "rawSpec": "https://www.atom.io/api/packages/local-web-server/versions/0.1.0/tarball",
+    "saveSpec": "https://www.atom.io/api/packages/local-web-server/versions/0.1.0/tarball",
+    "fetchSpec": "https://www.atom.io/api/packages/local-web-server/versions/0.1.0/tarball"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://www.atom.io/api/packages/local-web-server/versions/0.1.0/tarball",
+  "_shasum": "44b7b6e58a264d4444c8f389b1835f65d532384c",
+  "_spec": "https://www.atom.io/api/packages/local-web-server/versions/0.1.0/tarball",
+  "_where": "C:\\Users\\jeglo\\AppData\\Local\\Temp\\apm-install-dir-120229-3608-zjuhfu.msvi",
+  "activationCommands": {
+    "atom-workspace": "local-web-server:start"
+  },
+  "bugs": {
+    "url": "https://github.com/TrevorBurnham/local-web-server/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "live-server": "^1.2.0"
+  },
+  "deprecated": false,
+  "description": "Spin up a Live-Server pointing at the page you're working on.",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "homepage": "https://github.com/TrevorBurnham/local-web-server#readme",
+  "keywords": [],
+  "license": "MIT",
+  "main": "./lib/local-web-server",
+  "name": "local-web-server",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TrevorBurnham/local-web-server.git"
+  },
+  "version": "0.1.0"
+}

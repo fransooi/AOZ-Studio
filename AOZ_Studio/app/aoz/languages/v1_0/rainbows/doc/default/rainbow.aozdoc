@@ -1,0 +1,17 @@
+<i>Rainbow</i>
+<b>Rainbow</b> xxxxxxx
+=
+The last example also demonstrates the parameters of the RAINBOW command, which is used to display one of the
+rainbows created with SET RAINBOW.
+
+The rainbow number is obvious, and refers to one of the four possible rainbow patterns from 0 to 3. The offset sets
+the value for the first colour in the table created with SET RAINBOW, and it governs the cycling or repetition of the
+rainbow on screen.
+
+The vertical position is a coordinate which must have a minimum value of 40, and it affects the starting point of the rainbow's vertical display on screen. If a lower coordinate is used, the rainbow will be displayed from line number 40 onwards.
+
+Finally, the height number sets the rainbow's vertical height in screen scan lines.
+
+Please note that normally only one rainbow at a time can be displayed at a particular scan line, and the one with the lowest identification number will be drawn in front of any others However, experienced Amiga users will be able to start more than one rainbow at the same line, using the Copper. See Appendix F for an explanation of this technique.
+
+

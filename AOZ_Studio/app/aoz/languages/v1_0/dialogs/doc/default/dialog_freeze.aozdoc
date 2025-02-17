@@ -1,0 +1,6 @@
+<i>Dialog Freeze</i>
+<b>Dialog Freeze</b> xxxxxxx
+=
+This command is used to freeze all input from one or more active dialogue channels. The number of a single dialogue routine that is to be suspended is specified in square brackets. If this number is omitted all current channels will be frozen
+
+

@@ -1,0 +1,23 @@
+<i>Screen Copy</i>
+<b>Screen Copy</b> xxxxxxx
+=
+SCREEN COPY is the most important screen command of all. It can be used to achieve classic screen techniques
+like "wiping" from one screen to another, as well as providing all sorts of special effects. At its simplest level, use
+this command to copy the whole contents of one screen to another screen.
+Then determine the number of the destination screen, which is where you want the image copied to.
+
+For example:
+@code
+Screen Copy 1 To 2
+@code
+Exact sections of screens can be copied by giving the coordinates of the top left-hand and bottom right-hand corners
+of the areas to be copied, followed by the number of the destination screen and the coordinates where the copy's top
+left-hand corner should be placed. If the destination screen number is omitted, the copied image will appear at the
+new coordinates on the current screen. For example:
+@code
+Circle 50,50,10 : Wait 50
+Screen Copy 0,20,20,70,70 To 0,100,100
+@code
+Note that there are no limits to these coordinates, and any parts of the image that fall outside of the current visible
+screen area will be clipped automatically.
+

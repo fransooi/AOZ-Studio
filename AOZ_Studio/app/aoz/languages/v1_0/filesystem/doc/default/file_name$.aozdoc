@@ -1,0 +1,15 @@
+<i>File Name$</i>
+<b>File Name$</b> xxxxxxx
+=
+This function is useful when you have a path to a file but only want to know the name of the file.
+@code
+F$ = FSel$( "*.PNG", " ", "Please choose a file not named hello.png" )
+If F$ <> ""
+If Lower$( File Name$( F$ ) ) = "hello.png"
+Print "Sorry not this one... :)"
+End
+End If
+Load Image F$
+End If
+
+

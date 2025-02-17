@@ -1,0 +1,9 @@
+<i>Get Disc Fonts</i>
+<b>Get Disc Fonts</b> xxxxxxx
+=
+This instruction has no effect in AOZ and is left for compatibility with AMOS applications.
+
+(extracted from the AMOSPro manual)
+
+This instruction is exactly the same as the GET FONTS command, except that it triggers a search through the Fonts" folder of your current disc only. If new fonts are to be used, then they must first be copied into this folder.
+

@@ -1,0 +1,68 @@
+Instruction StackEdit Open, URL$, OnSuccess$="", OnError$=""
+{
+	#errors
+	if( MDParser == undefined )
+	{
+		throw "md_parser_js_not_loaded";
+	}
+
+	if( %URL$ == undefined || %URL$ == '' )
+	{
+		throw "md_load_url_missed";
+	}
+
+	MDParser.open( %URL$, %OnSuccess$, %OnError$ );
+}
+End Instruction
+
+
+Instruction StackEdit Show, CODE$, HTML_ID$
+{
+	#errors
+	if( MDParser == undefined )
+	{
+		throw "md_parser_js_not_loaded";
+	}
+
+	if( %CODE$ == undefined || %CODE$ == '' )
+	{
+		throw "no_markdown_code_to_parse";
+	}
+
+	if( Stackedit == undefined )
+	{
+		throw "stackedit_lib_not_loaded";
+	}
+
+	MDParser.show( %CODE$, %HTML_ID$ );
+}
+End Instruction
+
+Instruction StackEdit Edit, CODE$, OnChange$ = "", OnClose$ = ""
+{
+	#errors
+	if( MDParser == undefined )
+	{
+		throw "md_parser_js_not_loaded";
+	}
+
+	if( %CODE$ == undefined || %CODE$ == '' )
+	{
+		throw "no_markdown_code_to_parse";
+	}
+
+	if( Stackedit == undefined )
+	{
+		throw "stackedit_lib_not_loaded";
+	}
+
+	MDParser.edit( %CODE$, %OnChange$, %OnClose$ );
+}
+End Instruction
+
+Instruction StackEdit Save, Page$, Code$, OnSuccess$="", OnError$=""
+{
+	#errors
+	MDParser.save( %Page$, %Code$, %OnSuccess$, %OnError$ );
+}
+End Instruction

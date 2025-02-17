@@ -1,0 +1,379 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ System Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:System Informations
+@description:Instructions and functions to access the system resources. Will be implemented in the future if possible in Javascript.
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Dev Open
+@description:Open a device. May be implemented in AOZ, has no effect in current version
+@param:channelIndex:index
+@param:deviceName:string
+@param:ioLength:integer
+@param:unitNuber:integer
+@param:flags:integer
+@content:
+The DEV OPEN command opens a communication port and prepares the device for use by AOZ
+programs. If this device is not already installed, it will be loaded from the "DEVS" folder of your current start-up
+disc automatically. Floppy disc users may be requested to swap discs at this point.
+
+The selected device will now remain active during the course of the program, and will only be closed if a DEV
+CLOSE command is called, or a RUN command is used to clear the variable area, or a CLEAR operation is
+undertaken.
+
+The specified channel number should be from zero to 4, the "name.device" parameter enters the name of the device
+to be initialised in normal AmigaDOS format, and IOlength specified the length of the IO structure to be created for
+the device. If in doubt, use a value of 256, which should be sufficient for most devices. The final flags parameter
+sets the status of the device flags if applicable. Please refer to your system documentation for details.
+
+DEV OPEN performs the following operations:
+
+- Firstly, a communication port is created and initialised.
+- Next, an IO Ext structure is opened, ready for communication.
+- Lastly, the OPEN DEVICE function is executed with the new structure.
+
+api*/
+Instruction Dev Open, channelIndex=(index), deviceName$, ioLength, unitNumber, flags
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Dev Close
+@description:Close a device. May be implemented in AOZ, has no effect in current version
+@param:channelIndex:index
+@content:
+Use this command to close one or more open devices.
+Memory used by the IO structure will be returned back to AOZ and the message port is released for
+subsequent use. If the channel number is omitted, all active devices are closed simultaneously, otherwise the single
+specified device is closed down. Note that if a specified channel is not already open, no error will be reported.
+
+api*/
+Instruction "Dev Close", channelIndex=(index)
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Dev Base
+@description:Get base address of an IO structure. May be implemented in AOZ later
+@param:channelIndex:index
+@return:integer:0 in this version
+@content:
+This function returns the base address of the IO structure assigned to the current device. The structure can now be
+manipulated directly, using the STRUC commands, as required.
+
+api*/
+Function Dev Base, channelIndex=(index)
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Dev Do
+@description:Call a command using DoI0. May be implemented in AOZ, has no effect in current version
+@param:channelIndex:index
+@param:commandNumber:integer
+@content:
+The DEV DO instruction executes a DoIO operation via the specified channel. Obviously the correct internal
+structure parameters must be set using a STRUC command, before this operation is called. The specified channel
+number refers to a previously opened device channel. The command number holds the number of the IO command
+you wish to Do. This command may be entered directly by name, using the EQU function explained earlier. You are
+warned to take great care when using this instruction!"
+
+api*/
+Instruction Dev Do, channelIndex=(index), commandNumber
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Dev Send
+@description:Call a command using SendIO. May be implemented in AOZ, has no effect in current version
+@param:channelIndex:index
+@param:commandNumber:integer
+@content:
+This calls the SendIO command from Exec, and runs your operation using the Amiga's multi- tasking system. The
+new process will run invisibly in the background, and your AOZ program will continue from the next
+instruction immediately.
+
+api*/
+Instruction Dev Send, chnanelIndex, commandNumber
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Dev Abort
+@description:Abort an IO operation. May be implemented in AOZ, has no effect in current version
+@param:channelIndex:integer
+@content:
+This instruction executes an AbortIO and a WaitIO command, clearing all pending action from the specified device
+channel. It can be used to exit directly from a multi-tasking operation, without waiting for it to complete.
+
+api*/
+Instruction Dev Abort, channelIndex
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Dev Check
+@description:Check status of a device with a CheckIO. May be implemented in AOZ, has no effect in current version
+@param:channelIndex:index
+@return:integer:0 in this version
+@content:
+Use this function to perform a CheckIO on the specified channel. The resulting value is passed back to AOZ Studio.
+
+api*/
+Function Dev Check, channelIndex
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Dev First$
+@description:Get the first device from the current device list. May be implemented in AOZ, has no effect in current version
+@param:path$:string
+@return:string:"" in this version
+@content:
+This function is similar to DIR FIRST$. A string is returned identifying the first device that satisfies a chosen search
+path in the current device list.
+
+DEV FIRST$("**") will list everything, DEV FIRST$("D/**") will only list disks, and DEV FIRST$(A/**") is used
+if you only want to list assigns.
+api*/
+Function Dev First$, path$
+{
+	#notimplemented
+}
+End Function( {""} )
+
+/**api
+@name:Dev Next$
+@description:Get the next device from the current device list. May be implemented in AOZ, has no effect in current version
+@return:string:"" in this version
+@content:
+This function is similar to DIR FIRST$. A string is returned identifying the first device that satisfies a chosen search
+path in the current device list.
+
+DEV FIRST$("**") will list everything, DEV FIRST$("D/**") will only list disks, and DEV FIRST$(A/**") is used
+if you only want to list assigns.
+api*/
+Function Dev Next$
+{
+	#notimplemented
+}
+End Function( {""} )
+
+/**api
+@name:Lib Open
+@description:Open a library. May be implemented in AOZ (for example for Windows DLLs), has no effect in current version
+@param:channelIndex:index
+@param:libraryName:string
+@param:version:integer
+@content:
+The LIB OPEN command calls the OPEN LIBRARY function from EXEC. If the library is external, it will be
+loaded into memory from the "Libs: folder of your current start-up disc. If a problem is encountered, you will be
+helped by the relevant error message from AOZ, and the error can easily be intercepted using a
+TRAP command.
+
+After the library has been initialised successfully, it remains open until the program is run again from the Editor, or
+your variables are re-set using a CLEAR command, or a LIB CLOSE command is called.
+
+Three parameters are needed for a LIB OPEN instruction. The number of a new AOZ channel, to be
+used to refer to this library throughout the AOZ program. Then the name of the library that is to be
+opened, given in standard Commodore format. Lastly, the minimum version number of the library that is to be
+installed in memory should be specified. If you are unsure of this parameter, use a value of zero.
+
+api*/
+Instruction Lib Open, channelIndex=(index), libraryName, version
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Lib Close
+@description:Close a library. May be implemented in AOZ (for example for Windows DLLs), has no effect in current version
+@param:channnelIndex:integer
+@content:
+Used on its own, the LIB CLOSE command closes all open libraries in a single operation. If an optional Channel
+number is included, an individual library may be closed. Please note that if a selected library does not exist, no error
+will be reported!"
+~~~                
+
+~~~
+
+api*/
+Instruction Lib Close, channelIndex
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Lib Call
+@description:Call a function from the libraryEnd Function. May be implemented in AOZ (for example for Windows DLLs), has no effect in current version
+@param:channelIndex:integer
+@param:function:integer
+@content:
+This important function acts as the gateway to all the functions in the selected library. It calls the required function
+and returns the result to your AOZ program.
+
+The function offset parameter holds the offset value to the library function that you wish to execute, and if it is
+entered directly this value must be exact. Any mistakes will crash the computer. Alternatively, you are recommended
+to use a safer method via the LVO function to call the command by name, which is explained below.
+
+Before calling this function, the appropriate parameter values need to be loaded into the Address and Data registers,
+using the AREG and DREG commands. The precise format of these parameters depends on the function in question,
+and should be checked from the appropriate reference manual.
+
+After the function has been successfully executed, any return values will be available for immediate use from the
+AREG and DREG variables. Note that AREG only allows the registers from A0 to A3 to be accessed. (Registers
+A4, A5 and A6 are not used by the libraries at all.)"
+
+api*/
+Instruction Lib Call, channelIndex = (index), function
+{
+	#notimplemented
+}
+End Instruction
+
+/**api
+@name:Lib Base
+@description:Get the base address of the library. May be implemented in AOZ, has no effect in current version
+@param:channelIndex:integer
+@return:integer:0 in this version
+@content:
+LIB BASE is used to return the base address of the selected library. This can be used in conjunction with the
+STRUC function to manipulate the internal data structures directly. Obviously, the normal PEEK and POKE
+functions can be used for this purpose as well.
+
+api*/
+Function Lib Base, channelIndex=(index)
+{
+	#notimplemented
+}
+End Function( {0} )
+
+/**api
+@name:Exec
+@description:Execute a system command. This instruction will be implemented in executable and node.js transpiled applications
+@param:command$:string:The command with it parameters
+@param:output$:string:The DOS-like output, like "StdOut"
+@content:
+The EXEC instruction executes the specified CLI command, via the named output. Output refers to the name of an
+AmigaDos device, and is held in inverted commas. If these are empty , NIL: will be used, otherwise the name of
+the output device must end with a colon.
+
+CUR: specifies that the current CLI window is to be used. If this window does not exist, because AMOS
+Professional was booted from the Workbench, then the EXEC command cannot operate. If "CON: is used, then a
+CLI window is opened under the Workbench screen, if possible. Any other Amiga device can be specified, as long
+as it is interactive, and it will be opened before the CLI command is sent, and closed again after the command has
+been sent, unless it is the current CLI window.
+
+For example, to execute an external program copied into the C: directory of AOZ Studio, and wait for its
+completion, this could be used:
+~~~                
+Amos To Back : Rem Reveal the Workbench
+Rem Now launch the program in a small CLI window
+Exec "Program Name","CON:0/0/160/48/Program Name"
+Amos To Front : Rem Return to AMOS Pro after the program
+~~~
+
+api*/
+Instruction Exec, command$, output$
+	#notimplemented
+End Instruction
+
+
+
+/**api
+@name:Open Port
+@description:Open a communication port on the machine
+@param:channel:integer:Number of the input channel
+@param:port$:string:Name of the port to open
+@compatible: notimplemented
+@content:
+The three versions of the OPEN PORT command are shown above, and they are used to open a channel to the
+Parallel Interface, or the RS232 Port, or the printer chosen in your preferences settings. All standard sequential file
+commands can be performed as usual, except for commands that are specific to disc operations, such as LOF and
+POF.
+
+This example would print out ten lines via the device connected to the Amiga's RS232 port:
+~~~                
+Open Port 1,"SER:
+For X=0 To 10
+Print #1 ,"Greetings from AOZ Studio!"
+Next X
+Close 1
+~~~
+api*/
+Instruction Open Port, number, string$
+{
+	#notimplemented
+	//#waiting
+	//return{type:12,waitThis:aoz.extensionFilesystem,callFunction:"openPort",waitFunction:"load_wait",args:[%number,%string$]};
+}
+End Instruction
+
+/**api
+@name:Port
+@description:Return the content of an opened harware port
+@param:channel:integer:Number of the port
+@return:integer:Value reported by the port
+@compatible: notimplemented
+@content:
+The PORT function is used to test the status of readiness of the specified channel. If the device is waiting to be read True is returned, otherwise False.
+
+api*/
+Function Port, number
+{
+	#notimplemented
+}
+End Function( {0} )
+

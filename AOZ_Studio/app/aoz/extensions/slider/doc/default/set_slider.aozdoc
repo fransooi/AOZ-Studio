@@ -1,0 +1,23 @@
+<i>Set Slider</i>
+<b>Set Slider</b> xxxxxxx
+=
+SET SLIDER is used to set up the colours and patterns used for your slider bars and their control boxes.
+
+Simply give the index numbers of the ink, paper, outline and pattern to be used for the slider bar, followed by the
+ink paper, outline and pattern to be used by the slider control box. If negative values are used for either pattern, a
+sprite image will be commandeered from the sprite bank, allowing even more spectacular effects. Try this example:
+@code
+Centre "<Press a key>" : Curs Off
+Do
+A1=Rnd(15) : B1=Rnd(15) : C1=Rnd(15) : D1=Rnd(24)
+A2=Rnd(15) : B2=Rnd(15) : C2=Rnd(15) : D2=Rnd(24)
+Set Slider Al ,B1,C1,D1,A2,B2,C2,D2
+Hslider 10,10 To 300,60,100,20,25
+Vslider 10,60 To 20,190,100,20,25
+Wait Key
+Loop
+@code
+Having set up your slider bars, you will want to activate them using the mouse. A simple routine to create working
+slider bars needs to be included in your main program. As always, remember to test out the ready-made example
+programs, for a working guide.
+

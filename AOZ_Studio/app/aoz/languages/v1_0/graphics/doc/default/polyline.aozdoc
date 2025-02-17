@@ -1,0 +1,12 @@
+<i>Polyline</i>
+<b>Polyline</b> xxxxxxx
+=
+The POLYLINE is identical to DRAW except that it accepts multiple coordinate settings at the same time. In this
+way, complex many-sided outlines can be drawn with a single statement. In its POLYLINE TO form, drawing
+begins at the current graphic cursor position. For example:
+@code
+Circle 160,100,95
+Polyline 160,6 To 100,173 To 250,69 To 71,69 To 222,173 To 160,6
+@code
+
+

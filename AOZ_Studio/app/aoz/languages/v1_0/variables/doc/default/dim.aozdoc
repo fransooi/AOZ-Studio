@@ -1,0 +1,33 @@
+<i>instruction: dimension an array</i>
+<b>Dim</b> variable name(number,number,number...)
+=
+The DIM command is used to dimension an array, and the variables in your record collection table could be set up with a first line like this:
+@code
+Dim ARTIST$(99),TITLE$(99),YEAR(99),PRICE#(99)
+@code
+=
+Each dimension in the table is held inside round brackets, and if there is more than one element in a dimension each number must be separated from the next by a comma.
+=
+Element numbers in arrays always start from zero, so your first and last entries might contain these variables:
+@code
+ARTIST$(0)="Aaron Copeland"
+TITLE$(0)="Appalachian Spring"
+YEAR(0)=1944
+PRICE#(0)=12.99
+ARTIST$(99)="ZZ Top"
+TITLE$(99)="Afterburner"
+YEAR(99)=1985
+PRICE#(99)=9.95
+@code
+=
+To extract elements from your array, you could then add something like this to your example program:
+@code
+Print TITLE$(0),PRICE#(0)
+Print TITLE$(99),YEAR(99),PRICE#(99)
+@code
+=
+These tables can have as many dimensions as you like, and each dimension can have up to 65,0(K) elements. Here are some more modest examples:
+@code
+Dim LIST(5),NUMBER#(5,5,5),WORD$(5,5)
+@code
+=

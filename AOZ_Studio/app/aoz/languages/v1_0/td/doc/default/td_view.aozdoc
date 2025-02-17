@@ -1,0 +1,15 @@
+<i>Td View</i>
+<b>Td View</b> xxxxxxx
+=
+@code
+Rem Load a 3D scene
+Load Asset "my_scene.gltf", "my_scene"
+
+Rem Initialize the 3D engine
+Td Init
+
+Rem Set a view with the loaded scene.
+Td View "my_view", Scene$ = "my_scene", Camera$ = "main_camera"
+
+@code
+

@@ -1,0 +1,9 @@
+<i>Sam Loop On</i>
+<b>Sam Loop On</b> xxxxxxx
+=
+There are many instances where a single sample needs to be repeated over and over again. SAM LOOP ON ensures
+that all sound samples which follow this instruction will be looped continuously. To turn off the looping facility,
+simply call the SAM LOOP OFF command. Add a SAM LOOP ON instruction to the last example, before the SAM
+RAW command, and hear the result.
+
+

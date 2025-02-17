@@ -1,0 +1,123 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Robot Extension
+ *
+ * Simple Robot commands that work with any brand of robots, as best as possible.
+ *
+ * such as: 
+ *
+ * Robot Connect robotIndex$, BRAND$, APIKEY$, bWait, onConnectedProc$, onErrorProc$
+ * Robot Disconnect robotIndex$
+ * Robot Move robotIndex$, distanceX#, distanceY#, speed#, onReachedProc$
+ * Robot Say robotIndex$, textToSay$, voiceName$, speed#, tone$, pitch#, onEndedProc$
+ * Robot Smile robotIndex$, intensity$
+ * Robot Play Animation robotIndex$, animationName$, speed#, numberOfLoops, bWait, onAnimationEndProc$
+
+ *
+ * @author FL
+ * @date first pushed on 04/12/2021
+ */
+#noWarning:"instruction_not_implemented"
+#need_extension:"companion"
+
+{
+    this.error = undefined;
+    this.connected = false;
+    this.running = false;
+    this.executeResult = 0;
+    this.executeDone = false;
+
+    this.connect = function( args )
+    {
+        if ( this.connected )
+            throw { error: 'companion_already_connected' }
+
+    };
+    this.waitConnect = function()
+    {
+        if ( error = this.error )
+        {
+            this.error = null;
+            throw error;
+        }
+        return this.running;
+    }
+
+    this.onMessage = function( timeStamp, event )
+    {
+        var message = JSON.parse( event.data );
+        switch ( message.response )
+        {
+            default:
+                debugger;
+                console.log( 'Unsupported response from server: ' + message );
+                break;
+        }
+    }
+    this.disconnect = function( index )
+    {
+        if ( !this.webSocket )
+            throw { error: 'companion_not_connected' }
+        this.webSocket.close();
+    };
+
+}
+
+/**doc
+@name:Aoz Companion extension
+@description:The Aoz Companion extension establishes the connection with an eventual Aoz Companion Server running on the local machine.
+@description:The Companion application enables you to connect to various APIs , in Python at first, and in other languages when the Companion has been implemented in other languages.
+@description:The Companion server opens a WebSocket server on port ### and starts listening for messages originating ferom the SAME, LOCAL machine (it will refuse any connection from outside), and after handshake is effective, allows you to connect to the APIs that have been implemented in the server.
+@keywords:robot,websocket,hardware,python
+@author:Francois Lionet
+@since:Beta 10
+@last:0.9.5.1
+doc*/
+
+
+/**api
+@name:Robot Connect
+@description:Establishes the connection with a local server, if it is running.
+@param:onMessage$:string:The name of a procedure to call when a message is received from the companion server
+@param:onError$:string:The name of a procedure to call when an error occurs.
+@compatible: aoz
+@content:
+api*/
+Instruction Robot Connect, onMessage$, onError$
+{
+    #errors
+    #waiting
+    return{type:12,waitThis:aoz.extensionCompanion,callFunction:"connect", waitFunction:"waitConnect", args:[%onMessage$,%onError$]};
+}
+End Instruction
+
+/**api
+@name:Robot Disconnect
+@description:Close a running connection to the companion server.
+@compatible: aoz
+@content:
+api*/
+Instruction Robot Disconnect
+{
+    #errors
+    aoz.extensionCompanion.disconnect();
+}
+End Instruction
+

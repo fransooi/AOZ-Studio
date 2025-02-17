@@ -1,0 +1,2486 @@
+// #################################################################
+// CYBLOC V1.0 - Demo Level 1 to 5
+// By Phil Bell
+// Created Sept 2020
+// phil@aozwithphil.com
+//
+// Play the complete game at http://cybloc.online/
+//
+// #################################################################
+
+#manifest: "aoz"
+#appTitle: "Cybloc - By Phil Bell"
+#displayWidth:1920
+#displayHeight:1080
+#fullScreen:true
+#splashScreen:false
+#fps:true
+#googleFont:"faster one"
+#googleFont:"allerta stencil"
+
+// Using a custom JavaScript library for playing audio
+Load JS "resources/custom/audio.js"
+AUDIO_LOADED = 0
+
+{
+	// Enable developer mode so we can press F12 to get to the browser developer tools
+	window.application.aoz.developerMode = true;
+	var audioMgr = null;
+	var loadingCustomAudio = false;
+
+	// Load audio files into custom audio library
+	Application.loadCustomAudio = function () {
+		try{
+			if (loadingCustomAudio === true) return;
+			loadingCustomAudio = true;
+
+			audioMgr = new AudioManager({
+
+				   1:       { filename: "resources/custom/audio/wallhit.mp3",      samples: 1, },
+				   2:       { filename: "resources/custom/audio/reverse_direction.wav",      samples: 1, },
+				   3:       { filename: "resources/custom/audio/wallhit_updown.wav",      samples: 1, },
+				   4:       { filename: "resources/custom/audio/collect_green.wav",      samples: 1, },
+				   5:       { filename: "resources/custom/audio/time_warning.wav",      samples: 1, },
+				   6:       { filename: "resources/custom/audio/level_menu_select.wav",      samples: 1, },
+				   7:       { filename: "resources/custom/audio/key1.wav",      samples: 1, },
+				   8:       { filename: "resources/custom/audio/power_down.mp3",      samples: 1, },
+				   9:       { filename: "resources/custom/audio/pause.mp3",      samples: 1, },
+				   10:      { filename: "resources/custom/audio/unpause.mp3",      samples: 1, },
+				   11:      { filename: "resources/custom/audio/score_tally_up.mp3",      samples: 1, },
+				   12:      { filename: "resources/custom/audio/new_best_score.wav",      samples: 1, },
+				   13:      { filename: "resources/custom/audio/new_high_score.mp3",      samples: 1, },
+				   14:      { filename: "resources/custom/audio/no_fire.wav",      samples: 1, },
+				   15:      { filename: "resources/custom/audio/computer_short.wav",      samples: 1, },
+				   16:      { filename: "resources/custom/audio/computer_long.wav",      samples: 1, },
+				   17:      { filename: "resources/custom/audio/level_complete.wav",      samples: 1, },
+				   18:      { filename: "resources/custom/audio/score_finished.wav",      samples: 1, },
+				   19:      { filename: "resources/custom/audio/login_error.wav",      samples: 1, },
+				   26:      { filename: "resources/custom/audio/password_enter.wav",      samples: 1, },
+				   27:      { filename: "resources/custom/audio/teleport.wav",      samples: 1, },
+				   28:      { filename: "resources/custom/audio/shield_on.wav",      samples: 1, },
+				   29:      { filename: "resources/custom/audio/shield_off.wav",      samples: 1, },
+				   30:      { filename: "resources/custom/audio/drone_detect.wav",      samples: 1, },
+				   31:      { filename: "resources/custom/audio/drone_lose.wav",      samples: 1, },
+				   20:      { filename: "resources/custom/audio/FireExplosion1.mp3",      samples: 1, },
+				   21:      { filename: "resources/custom/audio/FireExplosion2.mp3",      samples: 1, },
+				   22:      { filename: "resources/custom/audio/FireExplosion3.mp3",      samples: 1, },
+				   23:      { filename: "resources/custom/audio/FireExplosion4.mp3",      samples: 1, },
+				   24:      { filename: "resources/custom/audio/FireExplosion5.mp3",      samples: 1, },
+				   25:      { filename: "resources/custom/audio/surge_blast.mp3",      samples: 1, },
+				   100:     { filename: "resources/custom/audio/Level1Music.mp3",      samples: 1, },
+				   101:     { filename: "resources/custom/audio/Level2Music.mp3",      samples: 1, },
+				   102:     { filename: "resources/custom/audio/Level3Music.mp3",      samples: 1, },
+				   50:      { filename: "resources/custom/audio/level_select_music.mp3",      samples: 1, },
+				   51:      { filename: "resources/custom/audio/intro_background.mp3",      samples: 1, },
+			},
+			{
+				startedOnTouchCallback: function (){
+				},
+				callback: function (){
+					// Using an AOZ variable so we can detect when all audio files have been loaded
+					// and continue program execution
+					window.application.root.vars.AUDIO_LOADED = 1;
+				}
+			});
+		}
+		catch {
+			// an error will occur if the "resources/custom/audio.js" file has not yet been loaded
+			audioMgr = null;
+			loadingCustomAudio = false;
+			window.application.root.vars.AUDIO_LOADED = 0;
+		}
+	}
+
+	Application.playAudio = function (audioID, loopon) {
+		audioMgr.playSound(audioID, 0, loopon);
+	}
+
+	Application.stopAudio = function (audioID) {
+		audioMgr.stopSound(audioID);
+	}
+}
+
+Degree
+Randomize Timer
+
+// Set the browser title
+{document.title = "Cybloc - By Phil Bell"}
+
+// LCD Text Images - images 65 to 90 (Asc A to Z) - width of each char in pixels
+999 Data 54,55,47,55,47,47,54,55,21,49,54,48,53,54,53,54,57,54,53,44,54,54,55,54,54,47
+
+// Grab the LCD characters into image bank
+Screen Open 0, 1334, 79, 32, Lowres
+Screen 0: Screen Hide 0: Paste Bob 0, 0, 7
+Dim LCDCHAR(26)
+Global LCDCHAR()
+Restore 999
+x = 0
+For i = 0 to 25
+	Read LCDCHAR(i)
+	Get Bob 65 + i, x, 0, LCDCHAR(i)
+	x = x + LCDCHAR(i)
+Next i
+
+// Orange LCD
+Cls 0: Paste Bob 0, 0, 8
+Restore 999
+x = 0
+For i = 0 to 25
+	Read LCDCHAR(i)
+	Get Bob 565 + i, x, 0, LCDCHAR(i)
+	x = x + LCDCHAR(i)
+Next i
+
+// Arrays used for displaying values using the LCD images
+Dim LCDX(30): Dim LCDY(30): Dim LCDI(30)
+LCD_LENGTH = 0: LCDCI# = 0: LCDPI# = 0: LCD_SUBTEXT$ = "": LCD_COMPLETED = 0: LCD_DISPLAY_WIDTH = 0: LCD_SUBTEXTY = 0: LCD_SUBTEXT_COLOUR = 0
+Global LCDX(), LCDY(), LCDI(), LCDCI#, LCD_SUBTEXT$, LCD_COMPLETED, LCD_LENGTH, LCDPI#, LCD_DISPLAY_WIDTH, LCD_SUBTEXTY, LCD_SUBTEXT_COLOUR
+
+// Screen display width and height
+DW = 1920: DH = 1080
+Global DW, DH
+
+// Game loop variables used to calculate the time elasped between each frame
+CURRENT_TIME# = 0
+LAST_TIME# = 0
+DELTA_TIME# = 0
+Global DELTA_TIME#
+
+// Scrolling Text
+SCRTXT$ = "YOU ARE IN CONTROL OF A HIGHLY CHARGED CYBLOC IN A STRANGE ELECTRICAL REALM     "
+SCRTXT$ = SCRTXT$ + "YOUR CONTROL IS LIMITED TO VERTICAL INPUTS WHILE CYBLOC IS IN A CONSTANT STATE OF HORIZONTAL MOTION     "
+SCRTXT$ = SCRTXT$ + "CYBLOC WILL EXPERIENCE AN ELECTRICAL SURGE WHEN COLLIDING WITH AREA WALLS CAUSING AN INSTANT REBOUND     "
+SCRTXT$ = SCRTXT$ + "COLLECTING AND USING THE REVERSE THRUST CHARGERS ALLOWS YOU TO CHANGE HORIZONTAL DIRECTION ON DEMAND     "
+SCRTXT$ = SCRTXT$ + "YOU MUST COLLECT ALL THE REVERSE THRUST CHARGERS WITHIN THE ALLOCATED TIME LIMIT TO ESCAPE EACH AREA    "
+SCRTXT$ = SCRTXT$ + "COLLIDING WITH ANY OTHER OBJECT WILL CAUSE CYBLOC TO BE ATOMISED AND INSTANTLY RECONSTRUCTED AT THE START OF THE AREA"
+SCRTXT$ = SCRTXT$ + "                                              "
+SCRTXTPOS = 0
+SCRTXTIMAGE = 0
+SCRPOS# = 0
+SCRSPEED# = 0
+
+// Game title/hud
+Screen Open 0, DW, DH, 32, Lowres
+Screen 0: Cls 0: Flash Off: Curs Off: Screen Show 0
+Colour 1, $E8E500
+
+// Scrolling text screens
+Screen Open 21, DW + 60, 80, 32, Lowres
+Screen 21: Flash Off: Curs Off
+Set Transparent 0
+Screen Display 21, 0, 830, DW, 80
+Screen Hide 21
+
+Screen Open 22, DW + 60, 80, 32, Lowres
+Screen 22: Flash Off: Curs Off
+Set Transparent 0
+Screen Hide 22
+
+// Setup game screen
+GAME_SCREEN_Y_OFFSET = 128
+Global GAME_SCREEN_Y_OFFSET
+Screen Open 5, DW, DH, 32, Lowres
+Screen Display 5, 0, GAME_SCREEN_Y_OFFSET, DW, DH
+Screen 5: Curs Off: Flash Off
+Colour 11, $FFFFFF
+Colour 10, $FBE500
+Colour 9, $F6E000
+Colour 8, $ECD600
+Colour 7, $DDC700
+Colour 6, $C9B300
+Colour 5, $927C00
+Colour 4, $887200
+Colour 3, $745E00
+Colour 2, $564000
+Colour 1, $A0A0A0
+
+Priority On
+
+// Mini map screen - resized when level loaded
+Screen Open 6, 320, 320, 32 , Lowres
+Screen 6: Curs Off: Flash Off
+
+// Level select Screen
+Screen Open 1, DW, DH, 32, Lowres
+Screen 1: Cls 0: Flash Off: Curs Off
+Screen Display 1, 0, GAME_SCREEN_Y_OFFSET, DW, DH
+Colour 1, $E8E500
+Colour 10, $E8E500
+Colour 11, $010101
+Colour 12, $FFFFFF
+Colour 13, $00C800
+Screen Hide 1
+
+// Level select Screen title
+Screen Open 2, DW, 180, 32, Lowres
+Screen 2: Cls 0: Flash Off: Curs Off
+Screen Display 2, 0, GAME_SCREEN_Y_OFFSET, DW, DH
+Screen Hide 2
+
+// Info screen ("READY" etc)
+INFO_ENABLED = 0: ISX# = 0: ISW = 400: ISH = 150: ISXT# = 0
+Global INFO_ENABLED, ISX#, ISW, ISH, ISXT#
+Screen Open 3, 300, 200, 32, Lowres
+Screen 3: Flash Off: Curs Off
+Screen Display 3, -DW, 0, 300, 200
+Screen Hide 3
+
+// Info screen (ready, pause, game over, level complete)
+Screen Open 9, DW, DH, 32, Lowres
+Screen 9: Cls 0: Flash Off: Curs Off
+Set Transparent 0
+Screen Display 9, 0, GAME_SCREEN_Y_OFFSET, DW, DH
+Colour 1, $FFFFFF: Colour 2, $00C800: Colour 3, $E8E500: Colour 4, $FF3300: Colour 5, $0310EA: Colour 6, $000001
+Colour 10, $E8E500:	Colour 11, $010101:	Colour 12, $FFFFFF:	Colour 13, $00C800: Colour 14, $0094FF
+Screen Hide 9
+
+// Screen for fade effect
+Screen Open 10, DW, DH, 32, Lowres
+Screen Display 10, 0, GAME_SCREEN_Y_OFFSET, DW, DH
+Screen 10: Curs Off: Flash Off
+Cls 0: Set Transparent 0
+Screen To Front 10
+Screen Hide 10
+ALPHA# = 0.0
+FADE_COMPLETE = 0
+Global ALPHA#, FADE_COMPLETE
+
+// Game intro
+Screen Open 20, DW, DH, 32, Lowres
+Screen 20: Cls 0: Flash Off: Curs Off
+Set Transparent 0
+Screen Display 20, 0, 0, DW, DH
+Colour 1, $E8E500
+Colour 2, $0094FF
+Colour 3, $808080
+Colour 4, $FFFFFF
+Colour 10, $E8E500
+Colour 11, $010101
+Colour 12, $FFFFFF
+Colour 13, $00C800
+Screen Hide 20
+
+// Game intro back ground (star field)
+Screen Open 19, DW, DH, 32, Lowres
+Screen 19: Cls 0: Flash Off: Curs Off
+Screen Display 19, 0, 0, DW, DH
+Colour 1, $A0A0A0
+Screen Hide 19
+
+// Set image hot spots
+Hot Spot 100, $11		// Player
+Hot Spot 200, 0, 0		// Kill Item - Left Wall
+Hot Spot 201, -48, 0	// Kill Item - Right Wall
+Hot Spot 202, 0, -48	// Kill Item - Bottom Wall
+Hot Spot 203, 0, 0		// Kill Item - Top Wall
+Hot Spot 300, $11		// Collectable - Reverse Thrust
+Hot Spot 400, 0, 0		// Moving Kill Pad - Left Wall
+Hot Spot 401, -48, 0	// Moving Kill Pad - Right Wall
+Hot Spot 402, 0, -48	// Moving Kill Pad - Bottom Wall
+Hot Spot 403, 0, 0		// Moving Kill Pad - Top Wall
+
+// Map variables
+TMAP_WIDTH = 0: TMAP_HEIGHT = 0: MAP_TILE_WIDTH = 64: MAP_TILE_HEIGHT = 64
+Dim MAP_TERRAIN(110, 50): Dim MAP_COLLECT(110, 50): Dim DRONE_MAP(110, 50)
+Global TMAP_WIDTH, TMAP_HEIGHT, MAP_TILE_WIDTH, MAP_TILE_HEIGHT, MAP_TERRAIN(), MAP_COLLECT(), DRONE_MAP()
+
+GAME_LEVEL = 0								// Current level
+LEVEL_COLLECT_COUNT = 0						// Number of collects required to complete level
+LEVEL_STATE = 0								// 0 = In play, 1 = Completed, 2 out of time
+LEVEL_TIMER# = 0							// Time elapsed in current level
+LEVEL_DEATH_COUNT = 0						// Number of "deaths"
+LEVEL_TIME_LIMIT = 0						// Time limit for the ccurrent level
+LEVEL_TIME_TICKER = 0						// Used to display remaining seconds
+Global GAME_LEVEL
+
+INTRO_MUSIC = 51							// Music for intro screen
+GAME_MUSIC = 100							// Variable used for each level
+Global GAME_MUSIC
+
+// Game level ready messages
+Dim LEVEL_INTRO$(9)
+LEVEL_INTRO$(1) = "Welcome to basic training"
+LEVEL_INTRO$(2) = "Ready to be atomised"
+LEVEL_INTRO$(3) = "This strange electrical realm"
+LEVEL_INTRO$(4) = "Teleportation is the future"
+LEVEL_INTRO$(5) = "Timing is everything"
+
+// Player variables
+PBN = 1										// Player bob number
+PR# = 0: PRT# = 0: PRS# = 10: PMR = 35		// Player rotation, target, smooth, max rotation
+PX# = 300: PY# = 196						// Player world X and Y position
+PSX# = PX#: PSY# = PY#						// Player start world X and Y position
+PXT# = PX#: PXMS# = 20						// Player X target and smooth movement
+PYT# = PY#: PYMS# = 6						// Player X target and smooth movement
+PGT = 0: PGB = 0							// Used to test if player is "grounded" to wall (top/bottom)
+PALPHA# = 0.0								// Used to fade player when level complete
+PYSPEED# = 560: PXSPEED# = 640				// Player X and Y move speed
+PXS# = PXSPEED#								// Player X current speed (+/-)
+PFI# = 100									// Player current image number
+FIRE_TRIGGER = 0							// Used to control the fire/spacebar press
+PLAYER_STATE = 0                        	// Player status - 0 = live, 1 = Dead, 2 = waiting 3 = Game over
+PLAYER_TRIGGER_COUNT = 0					// Number of reverse triggers the player has
+PLAYER_SCORE = 0							// The current player score
+PLAYER_LEVEL_SCORE = 0						// Points scored in current level
+PLAYER_HIGH_SCORE = 0						// Player high score
+Global PX#, PY#, PFI#, PR#, PRT#, PXT#, PYT#, PXS#, PBN, PXSPEED#, FIRE_TRIGGER, PSX#, PSY#, PLAYER_STATE, PALPHA#
+
+// Camera variables
+CX# = 0: CY# = 0							// Camera world X and Y position (top left of camera)
+CTX# = 0: CTY# = 0							// Camera X and Y Target world position
+CW = 1920: CH = 960							// Camera viewport width and height
+CS# = 2.7									// Camera smooth
+Global CX#, CY#, CTX#, CTY#, CS#
+
+// Collision check variables
+TL = 0: TR = 0: BL = 0: BR = 0
+
+// Mini map variables, setup when level map loaded
+MINIW = 0: MINIH = 0: MINIMAP_RATIOX# = 0: MINIMAP_RATIOY# = 0
+Global MINIH, MINIW, MINIMAP_RATIOX#, MINIMAP_RATIOY#
+
+// Background star field
+STARS = 300
+Dim SX#(STARS) : Dim SY#(STARS) : Dim SXV#(STARS): Dim SYV#(STARS): Dim SS(STARS)
+Global SX#(), SY#(), SXV#(), SYV#(), SS(), STARS
+
+// Particle system
+MAX_PARTICLE_SYSTEMS = 50
+MAX_PARTICLES = 400
+
+Dim PARTICLE_SYSTEM_STATUS(MAX_PARTICLE_SYSTEMS)
+Dim PARTICLE_SYSTEM_X#(MAX_PARTICLE_SYSTEMS)
+Dim PARTICLE_SYSTEM_Y#(MAX_PARTICLE_SYSTEMS)
+Dim PARTICLE_SYSTEM_GRAVITY(MAX_PARTICLE_SYSTEMS)
+Dim PARTICLE_SYSTEM_PARTICLE_SIZE(MAX_PARTICLE_SYSTEMS)
+Dim PARTICLE_SYSTEM_PARTICLE_END_COLOUR(MAX_PARTICLE_SYSTEMS)
+Dim PARTICLE_SYSTEM_PARTICLE_SPEED_COLOUR(MAX_PARTICLE_SYSTEMS)
+
+Dim PARTICLE_SYSTEM_PARTICLE_STATUS(MAX_PARTICLE_SYSTEMS, MAX_PARTICLES)
+Dim PARTICLE_SYSTEM_PARTICLE_X#(MAX_PARTICLE_SYSTEMS, MAX_PARTICLES)
+Dim PARTICLE_SYSTEM_PARTICLE_Y#(MAX_PARTICLE_SYSTEMS, MAX_PARTICLES)
+Dim PARTICLE_SYSTEM_PARTICLE_VX#(MAX_PARTICLE_SYSTEMS, MAX_PARTICLES)
+Dim PARTICLE_SYSTEM_PARTICLE_VY#(MAX_PARTICLE_SYSTEMS, MAX_PARTICLES)
+Dim PARTICLE_SYSTEM_PARTICLE_LIFE#(MAX_PARTICLE_SYSTEMS, MAX_PARTICLES)
+Dim PARTICLE_SYSTEM_PARTICLE_COLOUR#(MAX_PARTICLE_SYSTEMS, MAX_PARTICLES)
+
+Global MAX_PARTICLE_SYSTEMS, MAX_PARTICLES
+Global PARTICLE_SYSTEM_STATUS(), PARTICLE_SYSTEM_X#(), PARTICLE_SYSTEM_Y#(), PARTICLE_SYSTEM_PARTICLE_STATUS(), PARTICLE_SYSTEM_PARTICLE_X#(), PARTICLE_SYSTEM_GRAVITY(), PARTICLE_SYSTEM_PARTICLE_SIZE()
+Global PARTICLE_SYSTEM_PARTICLE_Y#(), PARTICLE_SYSTEM_PARTICLE_VX#(), PARTICLE_SYSTEM_PARTICLE_VY#(), PARTICLE_SYSTEM_PARTICLE_LIFE#(), PARTICLE_SYSTEM_PARTICLE_COLOUR#(), PARTICLE_SYSTEM_PARTICLE_END_COLOUR(), PARTICLE_SYSTEM_PARTICLE_SPEED_COLOUR()
+
+// Items that kill the player when hit
+KILL_ITEM_BOB_START = 200
+KILL_ITEMS_MAX = 50
+Dim KILL_ITEM_STATUS(KILL_ITEMS_MAX)	// 0 = Dead, 1 = Live
+Dim KILL_ITEM_X#(KILL_ITEMS_MAX)        // World X Position
+Dim KILL_ITEM_Y#(KILL_ITEMS_MAX)        // World Y Pistion
+Dim KILL_ITEM_IFRAME#(KILL_ITEMS_MAX)	// Current Image
+Global KILL_ITEM_BOB_START, KILL_ITEMS_MAX, KILL_ITEM_STATUS(), KILL_ITEM_X#(), KILL_ITEM_Y#(), KILL_ITEM_IFRAME#()
+
+// Collectable items
+COLLECT_ITEM_BOB_START = 250
+COLLECT_ITEMS_MAX = 50
+Dim COLLECT_ITEM_STATUS(COLLECT_ITEMS_MAX)		// 0 = null, 1 = Live, 2 = collected (fading)
+Dim COLLECT_ITEM_X#(COLLECT_ITEMS_MAX)        	// World X Position
+Dim COLLECT_ITEM_Y#(COLLECT_ITEMS_MAX)        	// World Y Pistion
+Dim COLLECT_ITEM_IFRAME#(COLLECT_ITEMS_MAX)		// Current Image
+Dim COLLECT_ITEM_R#(COLLECT_ITEMS_MAX)			// Rotation
+Dim COLLECT_ITEM_RS#(COLLECT_ITEMS_MAX)			// Rotation Speed
+Dim COLLECT_ITEM_ALPHA#(COLLECT_ITEMS_MAX)		// Alpha value
+Dim COLLECT_ITEM_AUDIO(COLLECT_ITEMS_MAX)		// Audio to play when collected
+Global COLLECT_ITEM_BOB_START, COLLECT_ITEMS_MAX, COLLECT_ITEM_STATUS(), COLLECT_ITEM_X#(), COLLECT_ITEM_Y#(), COLLECT_ITEM_IFRAME#(), COLLECT_ITEM_R#(), COLLECT_ITEM_RS#(), COLLECT_ITEM_AUDIO(), COLLECT_ITEM_ALPHA#()
+
+// Functional map items
+MAP_ITEM_BOB_START = 350
+MAP_ITEMS_MAX = 50
+Dim MAP_ITEM_STATUS(MAP_ITEMS_MAX)		// 0 = Dead, 1 = Live
+Dim MAP_ITEM_X#(MAP_ITEMS_MAX)        	// World X Position
+Dim MAP_ITEM_Y#(MAP_ITEMS_MAX)        	// World Y Pistion
+Dim MAP_ITEM_IFRAME#(MAP_ITEMS_MAX)		// Current Image
+Dim MAP_ITEM_TYPE(MAP_ITEMS_MAX)		// 1 = Teleport, 2 = Kill Pad Move
+Dim MAP_ITEM_PARAM_1#(MAP_ITEMS_MAX)	// Custom params 1 to 10 (specific to each item type)
+Dim MAP_ITEM_PARAM_2#(MAP_ITEMS_MAX)
+Dim MAP_ITEM_PARAM_3#(MAP_ITEMS_MAX)
+Dim MAP_ITEM_PARAM_4#(MAP_ITEMS_MAX)
+Dim MAP_ITEM_PARAM_5#(MAP_ITEMS_MAX)
+Dim MAP_ITEM_PARAM_6#(MAP_ITEMS_MAX)
+Dim MAP_ITEM_PARAM_7#(MAP_ITEMS_MAX)
+Dim MAP_ITEM_PARAM_8#(MAP_ITEMS_MAX)
+Dim MAP_ITEM_PARAM_9#(MAP_ITEMS_MAX)
+Dim MAP_ITEM_PARAM_10#(MAP_ITEMS_MAX)
+
+Global MAP_ITEM_BOB_START, MAP_ITEMS_MAX, MAP_ITEM_STATUS(), MAP_ITEM_X#(), MAP_ITEM_Y#(), MAP_ITEM_IFRAME#(), MAP_ITEM_TYPE()
+Global MAP_ITEM_PARAM_1#(), MAP_ITEM_PARAM_2#(), MAP_ITEM_PARAM_3#(), MAP_ITEM_PARAM_4#(), MAP_ITEM_PARAM_5#()
+Global MAP_ITEM_PARAM_6#(), MAP_ITEM_PARAM_7#(), MAP_ITEM_PARAM_8#(), MAP_ITEM_PARAM_9#(), MAP_ITEM_PARAM_10#()
+
+// Level selection screen
+SELECTED_LEVEL = 1			// The selected level when in the level select screen
+HARD_MAX_LEVEL = 5			// Max number of levels in the game
+MAX_LEVEL = 1 				// Max level unlocked by player
+LEVEL_SELECT_MUSIC = 50		// Audio to play while in the level select screen
+
+// Game statistics
+STATS_GAME_HISCORE = 0
+STATS_LEVEL_TOTAL_SCORE = 0
+STATS_NO_COLLISION_BONUS = 0
+STATE_ANIM_CV# = 0
+STATE_ANIM_PV# = 0
+STATS_CURRENT_BEST_SCORE = 0
+STATS_NEW_PLAYER_HIGH_SCORE = 0
+Dim STATS_LEVEL_BEST_SCORE(15)
+
+// Load saved data from browser local storage
+Gosub LOAD_MAX_LEVEL_DATA
+Gosub LOAD_BEST_SCORE_DATA
+Gosub LOAD_PLAYER_HIGHT_SCORE_DATA
+
+GAME_INTRO:
+
+	// Screen config
+	Screen 0 : Cls 0
+	Screen Hide 3
+	Screen 5 : Cls 0: Bob Off: Screen Hide 5
+	Screen 6 : Cls 0: Bob Off: Screen Hide 6
+	Screen 19: Cls 0: Screen To Front 19: Screen Show 19
+
+	// Wait for audio to be loaded into the custom JS library
+	Do
+		{ Application.loadCustomAudio(); }
+
+		If AUDIO_LOADED = 1
+			Exit
+		End If
+
+		Wait Vbl
+	Loop
+
+	// Music setup
+	{ Application.stopAudio(this.vars.GAME_MUSIC); }
+	{ Application.playAudio(this.vars.INTRO_MUSIC, true); }
+
+	// Generate star field
+	CX# = 0: CY# = 0
+	TMAP_WIDTH = 30
+	TMAP_HEIGHT = 16
+	STARS = 25
+	Gosub GENERATE_STAR_FIELD
+
+	Screen 20: Cls 0: Screen To Front 20: Screen Show 20
+
+	// Title
+	Set Font "faster one", 150
+	Ink 1: Text DW / 2, 120,"CYBLOC","#center"
+
+	// Reset player start state
+	PLAYER_TRIGGER_COUNT = 0
+	PLAYER_SCORE = 0
+	SELECTED_LEVEL = 1
+
+	// Fade the screen in
+	Gosub INIT_FADE_IN
+
+	// Animiation variables
+	GISTEPC# = 0
+	GISTEPP = 0
+	GINEXT = 0
+	GISTEPS# = 6.1
+
+	// Reset scrolling text
+	SCRPOS# = 0
+	SCRTXTPOS = 0
+	Screen 21: Cls 0: Screen 22: Cls 0
+
+	// Display the current player high score
+	DisplayValue[((DW / 2) - 3.5 * 32) + 48, 150, 6, PLAYER_HIGH_SCORE, 20, 20]
+	Paste Bob ((DW / 2) - 3.5 * 32) - 48, 150, 31
+
+	InitLCDText["WELCOME TO CYBLOC", 0, 260, True, DW, "", 20, 20, 0]
+
+	Do
+		Gosub START_DELTA_LOOP
+
+		AnimFadeIn[20]
+
+		Gosub UPDATE_STAR_FIELD
+		Screen 19: Cls 0
+		Gosub DRAW_STAR_FIELD
+		Screen 20
+
+		If FADE_COMPLETE = 1
+
+			AnimLCDText[20, 20, 10]
+
+			IF LCD_COMPLETED = 1
+				If GINEXT = 1 and GISTEPP = 1
+					Reserve Zone 3
+					//[x, y, width, height, borderWidth, txt$, fontSize, txtYoffset, mouseZone, borderColour]
+					SetupButton[ 760, 420, 420, 300, 10, "PLAY", 80, 25, 3, 13]
+
+					GINEXT = 0
+					GISTEPS# = 1.5
+					{ Application.playAudio(15, false); }
+				End If
+
+				If GINEXT = 1 and GISTEPP = 2
+					Ink 1: 	Set Font "allerta stencil", 30
+					Text DW / 2, 800, "Use Joystick or Keyboard [Arrow Keys, Space Bar]", "#center"
+					GINEXT = 0
+					GISTEPS# = 1.5
+					{ Application.playAudio(16, false); }
+				End If
+
+				If GINEXT = 1 and GISTEPP = 3
+					Ink 3: Set Font "allerta stencil", 20
+					Text DW / 2, 950, "Game designed and developed by Phil Bell in AOZ Studio", "#center"
+					Text DW / 2, 980, "Music by Mikolaj Holowko", "#center"
+					Ink 4: Set Font "allerta stencil", 20
+					Text DW / 2, 1020, "Version: Demo - Levels 1 to 5", "#center"
+					GINEXT = 0
+					GISTEPS# = 0
+					{ Application.playAudio(15, false); }
+				End If
+
+				// Move to next step
+				Add GISTEPC#, GISTEPS# * DELTA_TIME#
+				If Int(GISTEPC#) > GISTEPP
+					Inc GISTEPP
+					GINEXT = 1
+				End If
+			End If
+
+			// Reset player fire trigger
+			If (Key State(32) = False and Fire(0) = False)
+				FIRE_TRIGGER = 0
+			End If
+
+			If FIRE_TRIGGER = 0 and (Key State(32) or Fire(0))
+				{ Application.playAudio(6, false); }
+				// Hide intro screen
+				Screen Hide 19
+				Screen Hide 20
+				Screen Hide 21
+				// Show level select screen
+				Goto SELECT_LEVEL
+			End If
+
+			If Mouse Click
+				// Play button
+				If Mouse Zone = 3
+					{ Application.playAudio(6, false); }
+					// Hide intro screen
+					Screen Hide 19
+					Screen Hide 20
+					Screen Hide 21
+					//{ Application.stopAudio(16); }
+					// Show level select screen
+					Goto SELECT_LEVEL
+				End If
+			End If
+
+			If GISTEPP = 3
+				Gosub GAME_INTO_SCROLL_TEXT
+			End If
+
+		End If
+
+		Gosub END_DELTA_LOOP
+	loop
+
+SELECT_LEVEL:
+	// Setup the level selection screen
+	Screen 0: Cls 0
+	Set Font "faster one", 150
+	Ink 1: Text DW / 2, 120,"CYBLOC","#center"
+
+	// Screen config
+	Screen 5 : Cls 0: Bob Off: Screen Hide 5
+	Screen 6 : Cls 0: Bob Off: Screen Hide 6
+	Screen 1: Screen Show 1: Screen To Front 1
+	Screen 2: Cls 0: Screen Show 2: Screen To Front 2
+
+	InitLCDText["SELECT AREA", 0, 80, True, DW, "", 0, 0, 0]
+
+	// Music setup
+	{ Application.stopAudio(this.vars.INTRO_MUSIC); }
+
+	//Stop Audio GAME_MUSIC
+	{ Application.stopAudio(this.vars.GAME_MUSIC); }
+
+	//Play Audio LEVEL_SELECT_MUSIC
+	{ Application.playAudio(this.vars.LEVEL_SELECT_MUSIC, true); }
+
+	SELECT_LEVEL_TRIGGER = 0
+	Gosub DRAW_LEVEL_SELECT_SCREEN
+
+	// Fade the screen in
+	Gosub INIT_FADE_IN
+	FIRE_TRIGGER = 1
+
+	Do
+		Gosub START_DELTA_LOOP
+
+		AnimFadeIn[1]
+		AnimLCDText[2, 1, 10]
+
+		// Reset player fire trigger
+		If (Key State(32) = False and Fire(0) = False)
+			FIRE_TRIGGER = 0
+		End If
+
+		If FIRE_TRIGGER = 0 and (Key State(32) or Fire(0))
+			// Hide level select screen
+			Screen 0: Cls 0
+			Screen Hide 1
+			Screen Hide 2
+			GAME_LEVEL = SELECTED_LEVEL
+			Goto START_LEVEL
+		End If
+
+		// Left
+		If SELECT_LEVEL_TRIGGER = 0 and SELECTED_LEVEL > 1 and (Key State(37) Or jLeft(0))
+			SELECT_LEVEL_TRIGGER = 1
+			Add SELECTED_LEVEL, -1
+			{ Application.playAudio(6, false); }
+			Gosub DRAW_LEVEL_SELECT_SCREEN
+		End If
+
+		// Right
+		If SELECT_LEVEL_TRIGGER = 0 and SELECTED_LEVEL < MAX_LEVEL and (Key State(39) Or jRight(0))
+			SELECT_LEVEL_TRIGGER = 1
+			Add SELECTED_LEVEL, 1
+			{ Application.playAudio(6, false); }
+			Gosub DRAW_LEVEL_SELECT_SCREEN
+		End If
+
+		// Up
+		If SELECT_LEVEL_TRIGGER = 0 and (SELECTED_LEVEL - 4) > 0 and (Key State(38) Or jUp(0))
+			SELECT_LEVEL_TRIGGER = 1
+			Add SELECTED_LEVEL, -4
+			{ Application.playAudio(6, false); }
+			Gosub DRAW_LEVEL_SELECT_SCREEN
+		End If
+
+		// Down
+		If SELECT_LEVEL_TRIGGER = 0 and (SELECTED_LEVEL + 4) <= MAX_LEVEL and (Key State(40) Or JDown(0))
+			SELECT_LEVEL_TRIGGER = 1
+			Add SELECTED_LEVEL, 4
+			{ Application.playAudio(6, false); }
+			Gosub DRAW_LEVEL_SELECT_SCREEN
+		End If
+
+		// Reset trigger when no input
+		If Key State(37) = False and jLeft(0) = False and Key State(39) = False and jRight(0) = False and Key State(40) = False and JDown(0) = False and Key State(38) = False and jUp(0) = False
+			SELECT_LEVEL_TRIGGER = 0
+		End If
+
+		If Mouse Click
+			// Back button
+			If Mouse Zone = 1
+				{ Application.playAudio(6, false); }
+				{ Application.stopAudio(this.vars.LEVEL_SELECT_MUSIC); }
+				Screen Hide 1
+				Screen Hide 2
+				Goto GAME_INTRO
+			Else
+				// Play button
+				If Mouse Zone = 3
+					Screen 0: Cls 0
+					Screen Hide 1
+					Screen Hide 2
+					GAME_LEVEL = SELECTED_LEVEL
+					Goto START_LEVEL
+				Else
+					// Level buttons
+					If Mouse Zone >= 11 and Mouse Zone <= 26 and SELECTED_LEVEL <> (Mouse Zone - 10)
+						SELECTED_LEVEL = (Mouse Zone - 10)
+						{ Application.playAudio(6, false); }
+						Gosub DRAW_LEVEL_SELECT_SCREEN
+					End If
+				End If
+			End If
+		End If
+
+		// Esc key = back
+		If Key State(27)
+			{ Application.playAudio(6, false); }
+			{ Application.stopAudio(this.vars.LEVEL_SELECT_MUSIC); }
+
+			Screen Hide 1
+			Screen Hide 2
+			Goto GAME_INTRO
+		End If
+
+		Gosub END_DELTA_LOOP
+	Loop
+
+START_LEVEL:
+	// Clear the game screen
+	Screen 5: Bob Off: Cls 0
+	Screen Show 5: Screen To Front 5
+
+	{ Application.stopAudio(this.vars.LEVEL_SELECT_MUSIC); }
+
+	// Reset player state
+	PLAYER_STATE = 0
+	PXS# = PXSPEED#: PX# = PSX#: PY# = PSY#: PXT# = PX#: PYT# = PY#: PR# = 0: PRT# = 0:	PGT = 0: PGB = 0
+
+	Gosub SETUP_LEVEL
+
+	// Play game music and set auto loop on
+	{ Application.playAudio(this.vars.GAME_MUSIC, true); }
+
+	FIRE_TRIGGER = 1
+	LEVEL_TIMER# = 0
+	Gosub UPDATE_LEVEL_TIME
+
+	Gosub DISPLAY_MINI_MAP
+	Gosub DISPLAY_HUD
+	Gosub DRAW_PLAYER
+
+	// Reset player bob
+	Bob Alpha PBN, 1
+	Bob Scale PBN, 1
+
+	// Set the info sub text
+	Screen 9: Screen Show 9: Cls 0: Screen To Front 9
+	//InitLCDText[tx$, x, y, centreX, displayWidth, subText$, subTextY, fontSize]
+	InitLCDText["READY", 200, 50, True, DW, LEVEL_INTRO$(GAME_LEVEL), 200, 40, 4]
+	Ink 10: Bar (DW / 2) - 300, 20, 600, 250
+	Ink 6:Bar (DW / 2) - 290, 30, 580, 230
+
+	Do
+		Gosub START_DELTA_LOOP
+
+		AnimLCDText[9, 5, 10]
+
+		// Update and draw game screen
+		Gosub UPDATE_STAR_FIELD
+		Gosub UPDATE_PARTICLE_SYSTEMS
+		Gosub UPDATE_CAMERA_FOLLOW_PLAYER
+		Gosub UPDATE_COLLECT_ITEMS
+		Gosub UPDATE_MAP_ITEMS
+		Gosub DRAW_BACKGROUND
+		Gosub DRAW_STAR_FIELD
+		Gosub DRAW_TERRAIN
+		Gosub DRAW_PARTICLE_SYSTEMS
+		Gosub DRAW_KILL_ITEMS
+		Gosub DRAW_COLLECT_ITEMS
+		Gosub DRAW_MAP_ITEMS
+		Gosub DRAW_PLAYER
+		Gosub UPDATE_MINI_MAP
+
+		// Reset fire trigger variable
+		If (Key State(32) = False and Fire(0) = False and Key State(37) = False and jLeft(0) = False and Key State(39) = False and jRight(0) = False and Key State(40) = False and JDown(0) = False and Key State(38) = False and jUp(0) = False)
+			FIRE_TRIGGER = 0
+		End If
+
+		// Wait for player input to restart
+		If FIRE_TRIGGER = 0 and (Key State(32) or Fire(0) or Key State(37) or jLeft(0) or Key State(39) or jRight(0) or Key State(40) or JDown(0) or Key State(38) or jUp(0))
+			PLAYER_STATE = 0
+			FIRE_TRIGGER = 1
+			Screen Hide 9
+			Goto MAIN_GAME_LOOP
+		End If
+
+		Gosub END_DELTA_LOOP
+	Loop
+
+MAIN_GAME_LOOP:
+	// Screen config
+	Screen Hide 10
+	Screen 5
+
+	// Show hud and minimap
+	Gosub DISPLAY_MINI_MAP
+	Gosub DISPLAY_HUD
+
+    Do
+		Gosub START_DELTA_LOOP
+
+		Gosub ANIM_INFO_OUT
+
+		Gosub UPDATE_LEVEL_TIME
+		Gosub UPDATE_PLAYER
+		Gosub UPDATE_STAR_FIELD
+		Gosub UPDATE_PARTICLE_SYSTEMS
+		Gosub UPDATE_CAMERA_FOLLOW_PLAYER
+		Gosub UPDATE_MINI_MAP
+		Gosub UPDATE_COLLECT_ITEMS
+		Gosub UPDATE_MAP_ITEMS
+
+		Gosub CHECK_COLLISIONS
+
+		Gosub DRAW_BACKGROUND
+		Gosub DRAW_STAR_FIELD
+		Gosub DRAW_TERRAIN
+		Gosub DRAW_PARTICLE_SYSTEMS
+		Gosub DRAW_KILL_ITEMS
+		Gosub DRAW_COLLECT_ITEMS
+		Gosub DRAW_MAP_ITEMS
+		Gosub DRAW_PLAYER
+
+		If PLAYER_STATE = 1
+			GOTO PLAYER_DEAD
+		End If
+
+		If LEVEL_STATE = 1
+			Goto LEVEL_COMPLETE
+		End If
+
+		If LEVEL_STATE = 2
+			Goto LEVEL_FAILED
+		End If
+
+		If Key State(27)
+			Goto DO_GAME_PAUSED
+		End If
+
+		Gosub END_DELTA_LOOP
+    Loop
+
+DO_GAME_PAUSED:
+
+	{ Application.playAudio(9, false); }
+	Gosub INIT_FADE_OUT
+
+	// Setup the info box
+	Screen 9: Screen Show 9: Cls 0: Screen To Front 9
+	InitLCDText["PAUSED", 150, 40, True, DW, "", 0, 0, 0]
+	Ink 5: Bar (DW / 2) - 300, 0, 600, 250
+	Ink 6: Bar (DW / 2) - 290, 10, 580, 230
+
+	// Add the Quit button
+	Reserve Zone 1
+	//[x, y, width, height, borderWidth, txt$, fontSize, txtYoffset, mouseZone, borderColour]
+	SetupButton[ (DW / 2) - 100, 250 - 110, 200, 80, 10, "QUIT", 40, 16, 1, 10]
+
+	Do
+		Gosub START_DELTA_LOOP
+
+		// Animiate the info box and LCD text
+		AnimFadeOut[5]
+		AnimLCDText[9, 9, 10]
+
+		// Wait for the fade to complete
+		If FADE_COMPLETE = 1
+
+			// Wait for player input to restart
+			If Key State(32) or Fire(0) or Key State(37) or jLeft(0) or Key State(39) or jRight(0) or Key State(40) or JDown(0) or Key State(38) or jUp(0)
+				// Reset player state
+				PLAYER_STATE = 0
+				FIRE_TRIGGER = 1
+				Screen Hide 9
+				Goto MAIN_GAME_LOOP
+			End If
+
+			If Mouse Click
+				// Quit button
+				If Mouse Zone = 1
+					// Back to intro
+					Screen Hide 9
+					{ Application.playAudio(6, false); }
+					Goto GAME_INTRO
+				End If
+			End If
+
+		End If
+
+		Gosub END_DELTA_LOOP
+	Loop
+
+LEVEL_COMPLETE:
+
+	{ Application.playAudio(17, false); }
+
+	// Used to control the level stats animation
+	LEVEL_STATS_STATE = 0
+
+	// Used in the player fade animation
+	PALPHA# = 1
+
+	// Unlock next level
+	If GAME_LEVEL < HARD_MAX_LEVEL
+		IF GAME_LEVEL + 1 > MAX_LEVEL
+			// Increase the max level
+			MAX_LEVEL = GAME_LEVEL + 1
+
+			// Save max level in broswer storage
+			Gosub SAVE_MAX_LEVEL_DATA
+		End If
+	End If
+
+	// Show score summary/level stats
+	Gosub INIT_FADE_OUT
+
+	INFO_ENABLED = 0
+
+	Do
+		Gosub START_DELTA_LOOP
+
+		AnimFadeOut[5]
+
+		Gosub UPDATE_STAR_FIELD
+		Gosub UPDATE_PARTICLE_SYSTEMS
+		Gosub UPDATE_CAMERA_FOLLOW_PLAYER
+		Gosub UPDATE_COLLECT_ITEMS
+		Gosub UPDATE_MAP_ITEMS
+		Gosub DRAW_BACKGROUND
+		Gosub DRAW_STAR_FIELD
+		Gosub DRAW_TERRAIN
+		Gosub DRAW_PARTICLE_SYSTEMS
+		Gosub DRAW_KILL_ITEMS
+		Gosub DRAW_COLLECT_ITEMS
+		Gosub DRAW_MAP_ITEMS
+
+		Gosub DRAW_PLAYER_END
+
+		If FADE_COMPLETE = 1
+
+			If INFO_ENABLED = 0
+				Screen 9: Screen Show 9: Cls 0: Screen To Front 9
+				InitLCDText["AREA CLEARED", 150, 40, True, DW, "", 0, 0, 0]
+				Ink 10: Bar (DW / 2) - 400, 0, 800, 750
+				Ink 6: Bar (DW / 2) - 390, 10, 780, 730
+				INFO_ENABLED = 1
+			End If
+
+			AnimLCDText[9, 5, 10]
+
+			IF LCD_COMPLETED = 1
+				If LEVEL_STATS_STATE = 0
+					Gosub INIT_LEVEL_STATS
+				End If
+
+				If LEVEL_STATS_STATE = 1
+					Gosub ANIM_LEVEL_STATS
+				End If
+			End If
+
+			// Wait for player input
+			If Key State(32) or Fire(0)
+				{ Application.stopAudio(11); }
+				FIRE_TRIGGER = 1
+				Screen Hide 9
+
+				// Load next level
+				If GAME_LEVEL < HARD_MAX_LEVEL
+					Inc GAME_LEVEL
+					{ Application.stopAudio(this.vars.GAME_MUSIC); }
+					Goto START_LEVEL
+				Else
+					// no more levels, back to intro
+					SELECTED_LEVEL = 1
+					PLAYER_TRIGGER_COUNT = 0
+					PLAYER_SCORE = 0
+					Goto GAME_INTRO
+				End If
+			End If
+		End If
+
+		Gosub END_DELTA_LOOP
+	Loop
+
+INIT_LEVEL_STATS:
+
+	// Setup the info screen to show the level stats
+	Screen 9
+
+	// Animation variables
+	STATE_ANIM_CV# = 0
+	STATE_ANIM_PV# = 0
+
+	// Bonus score variables
+	STATS_NO_COLLISION_BONUS = 0
+	STATS_NEW_PLAYER_HIGH_SCORE = 0
+
+	If LEVEL_DEATH_COUNT = 0
+		STATS_NO_COLLISION_BONUS = GAME_LEVEL * 200
+	End If
+
+	// Calculate the total area score
+	STATS_LEVEL_TOTAL_SCORE = (PLAYER_TRIGGER_COUNT * 10) + Max(0, (LEVEL_TIME_TICKER * 10) + STATS_NO_COLLISION_BONUS + PLAYER_LEVEL_SCORE - (LEVEL_DEATH_COUNT * (25 * GAME_LEVEL)))
+
+	Set Font "allerta stencil", 35
+	Ink 2
+
+	Text 600, 200, "Time Bonus"
+	DisplayValue[1192, 150, 4, LEVEL_TIME_TICKER * 10, 9, 9]
+
+	Text 600, 270, "Zero Atomised Bonus"
+	DisplayValue[1192, 220, 4, STATS_NO_COLLISION_BONUS, 9, 9]
+
+	s$ = Str$(PLAYER_TRIGGER_COUNT)
+	{ this.vars.s$ = this.vars.s$.trim();}
+
+	Text 600, 340, s$ + " Unused Thrusters"
+	DisplayValue[1192, 290, 4, (PLAYER_TRIGGER_COUNT * 10), 9, 9]
+
+	Ink 1: Text 600, 410, "Area Score"
+	DisplayValue[1192, 360, 4, PLAYER_LEVEL_SCORE, 9, 9]
+
+	s$ = "Atomised"
+	If LEVEL_DEATH_COUNT > 0
+		s$ = "Atomised : " + Str$(LEVEL_DEATH_COUNT) + " x" + Str$((25 * GAME_LEVEL))
+	End If
+	Ink 4: Text 600, 480, s$
+	DisplayValue[1160, 430, 5, -(LEVEL_DEATH_COUNT * (25 * GAME_LEVEL)), 9, 9]
+
+	Ink 1: Text 600, 580, "Total Score"
+	DisplayValue[1160, 540, 5, 0, 9, 9]
+
+	Ink 1: Text 600, 650, "Best Score"
+	DisplayValue[1160, 600, 5, STATS_LEVEL_BEST_SCORE(GAME_LEVEL - 1), 9, 9]
+
+	Add PLAYER_SCORE, STATS_LEVEL_TOTAL_SCORE
+
+	//Track the player high score
+	If PLAYER_SCORE > PLAYER_HIGH_SCORE
+		STATS_NEW_PLAYER_HIGH_SCORE = 1
+		PLAYER_HIGH_SCORE = PLAYER_SCORE
+		Gosub SAVE_PLAYER_HIGH_SCORE_DATA
+	End If
+
+	// Store the current best score
+	STATS_CURRENT_BEST_SCORE = STATS_LEVEL_BEST_SCORE(GAME_LEVEL - 1)
+
+	// Update best score in local browser storage if player score is better
+	If STATS_LEVEL_TOTAL_SCORE > 0
+		If STATS_LEVEL_TOTAL_SCORE > STATS_LEVEL_BEST_SCORE(GAME_LEVEL - 1)
+			STATS_LEVEL_BEST_SCORE(GAME_LEVEL - 1) = STATS_LEVEL_TOTAL_SCORE
+			Gosub SAVE_BEST_SCORE_DATA
+		End If
+
+		{ Application.playAudio(11, false); }
+	End If
+
+	LEVEL_STATS_STATE = 1
+
+	// Back to game screen
+	Screen 5
+Return
+
+ANIM_LEVEL_STATS:
+
+	// Animate the level stats
+	Screen 9
+	STATE_ANIM_PV# = STATE_ANIM_CV#
+
+	// Set the duration of 3 seconds to display score (Length of the sound effect)
+	Add STATE_ANIM_CV#, (STATS_LEVEL_TOTAL_SCORE / 180) * 60 * DELTA_TIME#
+
+	If Int(STATE_ANIM_CV#) > Int(STATE_ANIM_PV#)
+
+		// Desired score value has been reached
+		If STATE_ANIM_CV# > STATS_LEVEL_TOTAL_SCORE
+
+			DisplayValue[1160, 540, 5, STATS_LEVEL_TOTAL_SCORE, 9, 9]
+			DisplayValue[1160, 600, 5, STATS_LEVEL_BEST_SCORE(GAME_LEVEL - 1), 9, 9]
+
+			// Play audio
+			If STATS_LEVEL_BEST_SCORE(GAME_LEVEL - 1) > STATS_CURRENT_BEST_SCORE
+				{ Application.playAudio(12, false); }
+			Else
+				If STATS_NEW_PLAYER_HIGH_SCORE = 1
+					{ Application.playAudio(13, false); }
+				Else
+					{ Application.playAudio(18, false); }
+				End If
+			End If
+
+			Gosub UPDATE_HUD
+
+			LEVEL_STATS_STATE = 2
+		Else
+			DisplayValue[1160, 540, 5, Int(STATE_ANIM_CV#), 9, 9]
+
+			If Int(STATE_ANIM_CV#) > STATS_CURRENT_BEST_SCORE
+				DisplayValue[1160, 600, 5, Int(STATE_ANIM_CV#), 9, 9]
+				Gosub SAVE_BEST_SCORE_DATA
+			End If
+		End If
+	End If
+
+	// Back to game screen
+	Screen 5
+Return
+
+LEVEL_FAILED:
+
+	Gosub INIT_FADE_OUT
+
+	// Setup the failed info screen
+	Screen 9: Screen Show 9: Cls 0: Screen To Front 9
+	InitLCDText["FAILED", 150, 40, True, DW, "Better Luck Next Time !!", 190, 30, 4]
+	Ink 10: Bar (DW / 2) - 400, 0, 800, 250
+	Ink 6:Bar (DW / 2) - 390, 10, 780, 230
+
+	{ Application.playAudio(8, false); }
+
+	Do
+		Gosub START_DELTA_LOOP
+
+		AnimFadeOut[5]
+		AnimLCDText[9, 5, 10]
+
+		// Update and draw game screen
+		Gosub UPDATE_STAR_FIELD
+		Gosub UPDATE_PARTICLE_SYSTEMS
+		Gosub UPDATE_CAMERA_FOLLOW_PLAYER
+		Gosub UPDATE_MINI_MAP
+		Gosub UPDATE_COLLECT_ITEMS
+		Gosub UPDATE_MAP_ITEMS
+		Gosub DRAW_BACKGROUND
+		Gosub DRAW_STAR_FIELD
+		Gosub DRAW_TERRAIN
+		Gosub DRAW_PARTICLE_SYSTEMS
+		Gosub DRAW_KILL_ITEMS
+		Gosub DRAW_PLAYER
+		Gosub DRAW_COLLECT_ITEMS
+		Gosub DRAW_MAP_ITEMS
+
+		If FADE_COMPLETE = 1
+
+			// Wait for player input
+			If Key State(32) or Fire(0)
+				// Back to intro
+				Screen Hide 9
+				Goto GAME_INTRO
+			End If
+		End If
+
+		Gosub END_DELTA_LOOP
+	Loop
+
+PLAYER_DEAD:
+
+	// Count the number of deaths
+	Inc LEVEL_DEATH_COUNT
+
+	// Remove the player off the mini map
+	Screen 6: Bob Off 1000:
+
+	// Remove player off the game screen
+	Screen 5: Bob Off PBN
+
+	// Add particle system, destroy player effect
+	ADD_PARTICLE_SYSTEM[PX#, PY#, 400, 200, 0, 6, 700, 359, 12, 1, 6]
+
+	{ Application.playAudio(21, false); }
+	{ Application.playAudio(25, false); }
+	{ Application.playAudio(8, false); }
+
+	Gosub INIT_FADE_OUT
+
+	// Setup the info screen to show time remaining
+	Screen 9: Screen Show 9: Cls 0: Screen To Front 9
+	InitLCDText["READY", 200, 50, True, DW, Str$(LEVEL_TIME_TICKER) + " Seconds Remaining", 200, 40, 10]
+	Ink 10: Bar (DW / 2) - 300, 20, 600, 250
+	Ink 6:Bar (DW / 2) - 290, 30, 580, 230
+
+	Do
+		Gosub START_DELTA_LOOP
+
+		AnimFadeOut[5]
+
+		// Update and draw game screen (not player)
+		Gosub UPDATE_STAR_FIELD
+		Gosub UPDATE_PARTICLE_SYSTEMS
+		Gosub UPDATE_COLLECT_ITEMS
+		Gosub UPDATE_MAP_ITEMS
+
+		Gosub UPDATE_CAMERA_FOLLOW_PLAYER
+
+		AnimLCDText[9, 5, 10]
+
+		// Wait for the particle system to finish
+		If FADE_COMPLETE = 1
+			// Reset player to start level state, camera will point at player position
+			PXS# = PXSPEED#: PX# = PSX#: PY# = PSY#: PXT# = PX#: PYT# = PY#: PR# = 0: PRT# = 0:	PGT = 0: PGB = 0
+			Gosub DRAW_PLAYER
+			Gosub UPDATE_MINI_MAP
+
+			// Wait for player input to restart
+			If Key State(32) or Fire(0) or Key State(37) or jLeft(0) or Key State(39) or jRight(0) or Key State(40) or JDown(0) or Key State(38) or jUp(0)
+				// Reset player state
+				PLAYER_STATE = 0
+				FIRE_TRIGGER = 1
+				Screen Hide 9
+				Goto MAIN_GAME_LOOP
+			End If
+		End If
+
+		Gosub DRAW_BACKGROUND
+		Gosub DRAW_STAR_FIELD
+		Gosub DRAW_TERRAIN
+		Gosub DRAW_PARTICLE_SYSTEMS
+		Gosub DRAW_KILL_ITEMS
+		Gosub DRAW_COLLECT_ITEMS
+		Gosub DRAW_MAP_ITEMS
+
+		Gosub END_DELTA_LOOP
+	Loop
+
+DRAW_LEVEL_SELECT_SCREEN:
+
+	// Clear the screen
+	Screen 1: Cls 0
+
+	Reserve Zone 16
+
+	// Position the level matrix in centre of screen
+	LOFFX = (DW / 2) - ((84 + 140 * 4) / 2) + 5
+	LOFFY = 300
+	i = 1: y = 0
+
+	For x = 0 to 4
+		If i <= MAX_LEVEL
+			// Unlocked
+			Paste Bob LOFFX + x * 140, LOFFY + y * 140, 6
+
+			// Set a zone for mouse clicks
+			Set Zone i + 10, LOFFX + x * 140, LOFFY + y * 140, 120, 120
+		Else
+			// Locked
+			Paste Bob LOFFX + x * 140, LOFFY + y * 140, 4
+		End If
+
+		// Highlight selected level
+		If SELECTED_LEVEL = i
+			Paste Bob LOFFX + x * 140 - 5, LOFFY + y * 140 - 5, 5
+		End If
+
+		// Display the level number using the LCD images
+		DisplayValue[LOFFX + x * 140 + 10, LOFFY + y * 140 + 10, 2, i, 1, 1]
+		Inc i
+	Next x
+
+	//[x, y, width, height, borderWidth, txt$, fontSize, txtYoffset, mouseZone, borderColour]
+	SetupButton[LOFFX + 150, 620, 170, 80, 10, "BACK", 50, 15, 1, 10]
+	SetupButton[LOFFX + 330, 620, 170, 80, 10, "PLAY", 50, 15, 3, 13]
+
+Return
+
+ANIM_INFO_OUT:
+	// Moves the info box out to the right
+	If INFO_ENABLED = 1
+		Add ISX#, ((DW + (ISW / 2)) - ISX#) * 5 * DELTA_TIME#
+		Screen Display 3, ISX#, (DH / 2) - (ISH / 2) , ISW, ISH
+		If ISX# > DW + 10
+			INFO_ENABLED = 0
+			Screen Hide 3
+			// Reset position to off left of screen
+			ISX# = (0 - ISW)
+		End If
+	End If
+Return
+
+DRAW_BACKGROUND:
+	Cls 0
+Return
+
+RESET_GAME_OBJECTS:
+	// Resets the status of each game object variable
+	For i = 0 to KILL_ITEMS_MAX - 1
+		KILL_ITEM_STATUS(i) = 0
+	Next i
+
+	For i = 0 to MAP_ITEMS_MAX - 1
+		MAP_ITEM_STATUS(i) = 0
+	Next i
+
+	For i = 0 to MAX_PARTICLE_SYSTEMS - 1
+		PARTICLE_SYSTEM_STATUS(i) = 0
+	Next i
+
+	For i = 0 to COLLECT_ITEMS_MAX - 1
+		COLLECT_ITEM_STATUS(i) = 0
+	Next i
+Return
+
+LEVEL_DATA:
+
+// PX#, PY#, GameMusic, Star Count, Level Time Limit
+1 Data 320, 320, 100, 20, 40
+2 Data 320, 320, 101, 40, 60
+3 Data 320, 320, 102, 60, 80
+4 Data 2432, 960, 100, 100, 200
+5 Data 576, 448, 102, 80, 150
+
+SETUP_LEVEL:
+
+	// Reset game object variables
+	Gosub RESET_GAME_OBJECTS
+
+	// Read level settings
+	Restore (GAME_LEVEL)
+	Read PX#, PY#, GAME_MUSIC, STARS, LEVEL_TIME_LIMIT
+
+	// Set the player level start position
+	PSX# = PX#: PSY# = PY#
+
+	// Set the player target position
+	PXT# = PX#: PYT# = PY#
+
+	// Set the level tilemap filename and load
+	Reset Maps
+
+	Load Map "maps/Level" + Str$(GAME_LEVEL) + ".tmx"
+	MAP$ = "Level" + Str$(GAME_LEVEL)
+
+	// Set the camera target position to the player level start position
+	CTX# = PX#
+	CTY# = PY#
+
+	Load Tileset "maps/Level1Tiles.tsx", 200
+
+	// Open the tilemap layers
+	Open View "view1", MAP$, "Level1Tiles", 0
+	Open View "view2", MAP$, "Level1Tiles", 1
+	Open View "view3", MAP$, "Level1Tiles", 2
+	Open View "view4", MAP$, "Level1Tiles", 3
+
+	// Get the map size in tiles and set the mini map size
+	TMAP_WIDTH = Map Width ("view1")
+	TMAP_HEIGHT = Map Height ("view1")
+	MINIW = TMAP_WIDTH * 4
+	MINIH = TMAP_HEIGHT * 4
+
+	// Set the ratio used for scaling/drawing on the mini map screen
+	MINIMAP_RATIOX# = MINIW / (TMAP_WIDTH * MAP_TILE_WIDTH)
+	MINIMAP_RATIOY# = MINIH / (TMAP_HEIGHT * MAP_TILE_HEIGHT)
+
+	// Define screen for the mini map
+	Screen Open 6, MINIW, MINIH, 32 ,Lowres
+	Screen Display 6, (DW / 2) - (MINIW / 2), 10, MINIW, MINIH
+	Screen 6: Curs Off: Flash Off
+	Screen Show 6: Screen To Front 6
+	Colour 1, $606060	// Terrain
+	Colour 2, $00C800	// Collect green
+	Colour 3, $010101   // Border
+	Screen 5
+
+	// Generates a new star field using the level map size
+	Gosub GENERATE_STAR_FIELD
+
+	LEVEL_COLLECT_COUNT = 0				// Number of collects required to complete the level
+	LEVEL_STATE = 0						// 0 = In Play, 1 = Complete, 2 = Failed
+	LEVEL_DEATH_COUNT = 0				// Track how many player "deaths"
+	PLAYER_LEVEL_SCORE = 0				// Reset the score for the level
+	PLAYER_TRIGGER_COUNT = 0			// Reset the number of reverse thrusters
+	tileID = 0
+
+	// Load the map terrain and collectitems into array
+	For x = 0 to TMAP_WIDTH - 1
+		For y = 0 to TMAP_HEIGHT - 1
+			tileID = Tile Value("view1", x, y)
+			If tileID <> 0
+				MAP_TERRAIN(x, y) = tileID - 1
+			Else
+				MAP_TERRAIN(x, y) = 0
+			End If
+
+			tileID = Tile Value("view4", x, y)
+			If tileID <> 0
+				MAP_COLLECT(x, y) = tileID - 1
+				AddCollectItem[x * MAP_TILE_WIDTH, y * MAP_TILE_HEIGHT, MAP_COLLECT(x, y)]
+				// Count the number of collect items required to complete the level
+				Inc LEVEL_COLLECT_COUNT
+			Else
+				MAP_COLLECT(x, y) = 0
+			End If
+		Next y
+	Next x
+
+	// Add the kill items
+ 	For x = 0 to TMAP_WIDTH - 1
+		For y = 0 to TMAP_HEIGHT - 1
+			// The tileID maps directly to an image number
+			// First item layer
+			tileID = Tile Value("view2", x, y)
+
+			If tileID <> 0
+				tileID = tileID - 1
+
+				// Static Kill items
+				If tileID >= 200 and tileID <= 203
+					AddKillItem[x * MAP_TILE_WIDTH, y * MAP_TILE_HEIGHT, tileID]
+				End If
+
+				// Map items
+				If tileID >= 204
+					AddMapItem[x * MAP_TILE_WIDTH, y * MAP_TILE_HEIGHT, tileID]
+				End If
+			End If
+
+			// Second item layer
+			tileID = Tile Value("view3", x, y)
+
+			If tileID <> 0
+				tileID = tileID - 1
+
+				// Static Kill items
+				If tileID >= 200 and tileID <= 203
+					AddKillItem[x * MAP_TILE_WIDTH, y * MAP_TILE_HEIGHT, tileID]
+				End If
+
+				// Map items
+				If tileID >= 204
+					AddMapItem[x * MAP_TILE_WIDTH, y * MAP_TILE_HEIGHT, tileID]
+				End If
+			End If
+		Next y
+	Next x
+
+	// Im only using the MapView to read the data (not to display on screen) so no need to keep the maps open
+ 	Close View "view1"
+	Close View "view2"
+	Close View "view3"
+	Close View "view4"
+
+Return
+
+DISPLAY_MINI_MAP:
+	// Clear the screen
+	Screen 6: Cls 0: Screen To Front 6
+
+	// Draw a scaled version of the level map
+	For x = 0 to TMAP_WIDTH - 1
+		For y = 0 to TMAP_HEIGHT - 1
+			// Terrain
+			If MAP_TERRAIN(x, y) <> 0
+				Ink 1
+				Bar x * 4, y * 4 To x * 4 + 4, y * 4 + 4
+			End If
+
+			// Collect items
+			If MAP_COLLECT(x, y) <> 0
+				Ink 2
+				Bar x * 4, y * 4 To x * 4 + 6, y * 4 + 6
+			End If
+		Next y
+	Next x
+
+	// Draw a border
+	Ink 3: Box 0, 0, MINIW, MINIH
+
+	// Back to game screen
+	Screen 5
+Return
+
+GAME_INTO_SCROLL_TEXT:
+	Screen 21: Screen Show 21: Screen To Front 21
+
+	// Ready for next character
+	If SCRPOS# = 0
+
+		// Reset to first character
+		If SCRTXTPOS = Len(SCRTXT$) Then SCRTXTPOS = 0
+
+		// Get the ASCII value of the character
+		SCRTXTIMAGE = Asc(Mid$(SCRTXT$, SCRTXTPOS, 1))
+
+		Add SCRTXTPOS, 1
+
+		// If space then just add 50 pixels
+		If SCRTXTIMAGE = 32
+			SCRPOS# = 50
+		Else
+			// Get the length in pixels of this character
+			SCRPOS# = LCDCHAR(SCRTXTIMAGE - 65)
+			// Put the character image on screen, beyond the visible width
+			Paste Bob DW, 0, SCRTXTIMAGE + 500
+		End If
+	End If
+
+	SCRSPEED# = 8
+
+	IF SCRPOS# - SCRSPEED# < 0
+		SCRPOS# = 0
+		SCRSPEED# = Abs(SCRSPEED# - SCRPOS#)
+	Else
+		Add SCRPOS#, -SCRSPEED#
+	End If
+
+	// Copy screen using the speed as an X offset
+	Screen Copy 21, 0, 0, DW + 60, 80 To 22, -SCRSPEED#, 0,
+	Screen 21: Cls
+	Screen Copy 22, 0, 0, DW + 60, 80 To 21, 0, 0,
+	Screen 22: Cls
+	Screen 20
+Return
+
+UPDATE_MINI_MAP:
+	// Draw a scaled version of the player on the mini map
+	Screen 6
+		// Adjust x,y as AOZ does not seem to be respecting the hot spot when scaled
+		Bob 1000, (PX# + 32) * MINIMAP_RATIOX#, (PY# + 32) * MINIMAP_RATIOY#, 250
+		Bob Rotate 1000, PR#
+	Screen 5
+Return
+
+START_DELTA_LOOP:
+	// Game frame time calculation
+	CURRENT_TIME# = Timer
+	DELTA_TIME# = Min(1, CURRENT_TIME# - LAST_TIME#)
+Return
+
+END_DELTA_LOOP:
+	// Used to calculate the game frame time
+	LAST_TIME# = CURRENT_TIME#
+	Wait Vbl
+Return
+
+UPDATE_STAR_FIELD:
+	For i = 0 To STARS
+		// Update positions (left and down)
+		SX#(i) = SX#(i) - SXV#(i) * DELTA_TIME#
+		SY#(i) = SY#(i) + SYV#(i) * DELTA_TIME#
+
+		// If outside world then generate new position at the far right
+		If SX#(i) < 0 or SY#(i) > (TMAP_HEIGHT * MAP_TILE_HEIGHT)
+			SX#(i) = TMAP_WIDTH * MAP_TILE_WIDTH
+			SY#(i) = Rnd(TMAP_HEIGHT * MAP_TILE_HEIGHT)
+			SXV#(i) = Rnd(500) + 50
+			SYV#(i) = Rnd(50) + 10
+			SS(i) = Rnd(4) + 1
+		End If
+	Next i
+Return
+
+DRAW_STAR_FIELD:
+	// Draw star field
+	For i = 0 To STARS
+		// Only draw if within the camera viewport
+		IsItemVisible[SX#(i), SY#(i), CW, CH]
+
+		If PARAM = True
+			Ink 1
+			Bar SX#(i) - CX#, SY#(i) - CY# To SX#(i) - CX# + SS(i), SY#(i) - CY# + SS(i)
+		End If
+	Next i
+Return
+
+GENERATE_STAR_FIELD:
+	// Setups the arrays for the background star field
+	For i = 0 To STARS
+		SX#(i) = RND(TMAP_WIDTH * MAP_TILE_WIDTH)
+		SY#(i) = RND(TMAP_HEIGHT * MAP_TILE_HEIGHT)
+		SXV#(i) = RND(500) + 50
+		SYV#(i) = RND(50) + 10
+		SS(i) = RND(4) + 1
+	Next i
+Return
+
+UPDATE_LEVEL_TIME:
+	// Controls the level time ticker
+	Add LEVEL_TIMER#, DELTA_TIME#
+
+	ot = LEVEL_TIME_TICKER
+	LEVEL_TIME_TICKER = LEVEL_TIME_LIMIT - Int(LEVEL_TIMER#)
+
+	// Update the display every second (not every frame)
+	If ot > LEVEL_TIME_TICKER
+		DisplayValue[244, 0, 3, LEVEL_TIME_TICKER, 0, 5]
+
+		// Play alarm effect for last 10 ticks
+		If LEVEL_TIME_TICKER <= 10
+			{ Application.playAudio(5, false); }
+		End If
+
+		// Out of time, failed
+		If LEVEL_TIME_TICKER <= 0
+			LEVEL_STATE = 2
+		End If
+	End If
+Return
+
+LOAD_MAX_LEVEL_DATA:
+	LSDATA$ = ""
+	MAX_LEVEL = 1
+
+	{ if (window.localStorage.getItem("cyblocgamedata0")) {this.vars.LSDATA$ = window.localStorage.getItem("cyblocgamedata0");} }
+
+	If LSDATA$ <> ""
+		MAX_LEVEL = Val(LSDATA$)
+	End If
+Return
+
+LOAD_BEST_SCORE_DATA:
+	For i = 0 to 14
+		itemName$ = "cyblocgamedata" + Str$(i + 1)
+		itemValue$ = ""
+
+		{ if (window.localStorage.getItem(this.vars.itemName$)) {this.vars.itemValue$ = window.localStorage.getItem(this.vars.itemName$);} }
+
+		If itemValue$ <> ""
+			STATS_LEVEL_BEST_SCORE(i) = Val(itemValue$)
+		End If
+
+	Next
+Return
+
+LOAD_PLAYER_HIGHT_SCORE_DATA:
+	LSDATA$ = ""
+	PLAYER_HIGH_SCORE = 0
+
+	{ if (window.localStorage.getItem("cyblocgamedata99")) {this.vars.LSDATA$ = window.localStorage.getItem("cyblocgamedata99");} }
+
+	If LSDATA$ <> ""
+		PLAYER_HIGH_SCORE = Val(LSDATA$)
+	End If
+Return
+
+INIT_FADE_IN:
+	ALPHA# = 1: Screen To Front 10: Screen Show 10
+	FADE_COMPLETE = 0
+Return
+
+UPDATE_CAMERA_FOLLOW_PLAYER:
+	// Move camera towards player position, smooth out the movement
+	Add CTX#, (PX# - CTX#) * DELTA_TIME# * CS#
+	Add CTY#, (PY# - CTY#) * DELTA_TIME# * CS#
+
+	// Reposition so the player is in the centre of the viewport
+	CX# = CTX# - (CW / 2)
+	CY# = Max(0, CTY# - (CH / 2))
+
+	// Clamp to the map height of the viewport
+	CY# = Min(CY#, (TMAP_HEIGHT * MAP_TILE_HEIGHT) - CH)
+Return
+
+DRAW_KILL_ITEMS:
+	For i = 0 to KILL_ITEMS_MAX - 1
+		If KILL_ITEM_STATUS(i) = 1
+			// Only draw if within camera viewport
+			IsItemVisible[KILL_ITEM_X#(i), KILL_ITEM_Y#(i), CW, CH]
+
+			If PARAM = True
+				Bob i + KILL_ITEM_BOB_START, KILL_ITEM_X#(i) - CX#, KILL_ITEM_Y#(i) - CY#, Int(KILL_ITEM_IFRAME#(i))
+			Else
+				Bob Off i + KILL_ITEM_BOB_START
+			End If
+		End If
+	Next i
+Return
+
+DRAW_COLLECT_ITEMS:
+	For i = 0 to COLLECT_ITEMS_MAX - 1
+		If COLLECT_ITEM_STATUS(i) > 0
+			// Only draw if within camera viewport
+			IsItemVisible[COLLECT_ITEM_X#(i), COLLECT_ITEM_Y#(i), CW, CH]
+
+			If PARAM = True
+				Bob i + COLLECT_ITEM_BOB_START, COLLECT_ITEM_X#(i) - CX# + 32, COLLECT_ITEM_Y#(i) - CY# + 32, Int(COLLECT_ITEM_IFRAME#(i))
+				Bob Rotate i + COLLECT_ITEM_BOB_START, COLLECT_ITEM_R#(i)
+				// Set alpha if being removed
+				If COLLECT_ITEM_STATUS(i) = 2
+					Bob Alpha i + COLLECT_ITEM_BOB_START, COLLECT_ITEM_ALPHA#(i)
+					Bob Scale i + COLLECT_ITEM_BOB_START, COLLECT_ITEM_ALPHA#(i), COLLECT_ITEM_ALPHA#(i)
+				End If
+			End If
+		End If
+	Next i
+Return
+
+DRAW_TERRAIN:
+	// Draw the visible map tiles based on the camera viewport
+	xw = Int(CW / MAP_TILE_WIDTH)
+	xy = Int(CH / MAP_TILE_HEIGHT)
+
+	For x = 0 to xw
+		For y = 0 to xy
+			// Calculate the next map cell position to get, clamp to map size
+			cellX = x + Int(CX# / MAP_TILE_WIDTH)
+			cellY = Min(TMAP_HEIGHT - 1, y + Int(CY# / MAP_TILE_HEIGHT))
+
+			If cellX >= 0 and cellX <= (TMAP_WIDTH - 1)
+				// Get the tile ID from the terrain map layer
+				tileID = MAP_TERRAIN(cellX, cellY)
+
+				If tileID <> 0
+					// Put the tile image on screen using the camera world position offset
+					Paste Bob (x * MAP_TILE_WIDTH) - CX# mod MAP_TILE_WIDTH, (y * MAP_TILE_HEIGHT) - CY# mod MAP_TILE_HEIGHT, tileID + (GAME_LEVEL - 1)
+				End If
+			End If
+		Next y
+	Next x
+Return
+
+DISPLAY_HUD:
+	// Display static hud images
+	Screen 0
+	Paste Bob 0, 0, 1
+	Paste Bob 32, 96, 300
+	Paste Bob 160, 0, 2
+	Paste Bob 160, 64, 3
+	Paste Bob DW - 286, 0, 30
+	Paste Bob DW - 286, 64, 31
+
+	// Display hud values
+	DisplayValue[84, 0, 2, PLAYER_TRIGGER_COUNT, 0, 5]
+	DisplayValue[84, 64, 2, LEVEL_COLLECT_COUNT, 0, 5]
+	DisplayValue[244, 0, 3, LEVEL_TIME_TICKER, 0, 5]
+	DisplayValue[244, 64, 3, GAME_LEVEL, 0, 5]
+	DisplayValue[(DW - (6 * 32)) - 20, 0, 6, PLAYER_SCORE, 0, 5]
+	DisplayValue[(DW - (6 * 32)) - 20, 64, 6, PLAYER_HIGH_SCORE, 0, 5]
+Return
+
+UPDATE_HUD:
+	// Update hud values
+	DisplayValue[84, 0, 2, PLAYER_TRIGGER_COUNT, 0, 5]
+	DisplayValue[84, 64, 2, LEVEL_COLLECT_COUNT, 0, 5]
+	DisplayValue[(DW - (6 * 32)) - 20, 0, 6, PLAYER_SCORE, 0, 5]
+	DisplayValue[(DW - (6 * 32)) - 20, 64, 6, PLAYER_HIGH_SCORE, 0, 5]
+Return
+
+DRAW_PLAYER:
+	// Draw the Player - transform world to screen position using the camera position
+	Bob PBN, PX# - CX#, PY# - CY#, PFI#
+	Bob Rotate PBN, PR#
+Return
+
+DRAW_PLAYER_END:
+	// Animate the player
+	Screen 5
+	// Update the alpha
+	If PALPHA# >= 0.0
+		Add PALPHA#, -0.7 * DELTA_TIME#
+	End If
+
+	// Spin, Fade, Scale Down
+	Add PR#, 600 * DELTA_TIME#
+	Bob PBN, PX# - CX#, PY# - CY#, PFI#
+	Bob Rotate PBN, PR#
+	Bob Alpha PBN, Max(0, PALPHA#)
+	Bob Scale PBN, Max(0, PALPHA#), Max(0, PALPHA#)
+
+	// Update the mini map
+	Screen 6
+	Bob 1000, (PX# + 32) * MINIMAP_RATIOX#, (PY# + 32) * MINIMAP_RATIOY#, PFI#
+	Bob Scale 1000, Max(0, PALPHA#) * MINIMAP_RATIOX# * 2, Max(0, PALPHA#) * MINIMAP_RATIOY# * 2
+	Bob Alpha 1000, Max(0, PALPHA#)
+	Bob Rotate 1000, PR#
+
+	Screen 5
+Return
+
+UPDATE_COLLECT_ITEMS:
+	For i = 0 to COLLECT_ITEMS_MAX - 1
+		If COLLECT_ITEM_STATUS(i) > 0
+
+			// Is the item within the camera viewport
+			IsItemVisible[COLLECT_ITEM_X#(i), COLLECT_ITEM_Y#(i), CW, CH]
+
+			// Only draw if within camera viewport
+			If PARAM = True
+				Add COLLECT_ITEM_R#(i), COLLECT_ITEM_RS#(i) * DELTA_TIME#
+
+				If COLLECT_ITEM_STATUS(i) = 2
+					// Update the alpha
+					Add COLLECT_ITEM_ALPHA#(i), -1.8 * DELTA_TIME#
+
+					// Remove when completely faded out
+					If COLLECT_ITEM_ALPHA#(i) < 0
+						Bob Off i + COLLECT_ITEM_BOB_START
+						COLLECT_ITEM_STATUS(i) = 0
+					End If
+				End If
+			End If
+		End If
+	Next i
+Return
+
+CHECK_COLLISIONS:
+	// Only check when player is live
+    If PLAYER_STATE = 0 and LEVEL_STATE = 0
+		// Kill items
+		c = Bob Col (PBN, KILL_ITEM_BOB_START to KILL_ITEM_BOB_START + KILL_ITEMS_MAX - 1)
+		If c = True
+			PLAYER_STATE = 1
+		End If
+
+		// Collect items
+		c = Bob Col (PBN, COLLECT_ITEM_BOB_START to COLLECT_ITEM_BOB_START + COLLECT_ITEMS_MAX - 1)
+
+		If c = True
+			// Get the bob number for the collision
+			i = Col(-1) - COLLECT_ITEM_BOB_START
+
+			If COLLECT_ITEM_STATUS(i) = 1
+				// Set status to "Remove"
+				COLLECT_ITEM_STATUS(i) = 2
+
+				Add PLAYER_LEVEL_SCORE, GAME_LEVEL * 10
+				Gosub UPDATE_HUD
+
+				// Increase the player trigger counter (max 100)
+				If PLAYER_TRIGGER_COUNT < 99
+					Inc PLAYER_TRIGGER_COUNT
+				End If
+
+				// Play sound effect and remove the bob
+				se = COLLECT_ITEM_AUDIO(i)
+				{ Application.playAudio(this.vars.se, false); }
+				Bob Off i + COLLECT_ITEM_BOB_START
+
+				// Remove from the tile map
+				MAP_COLLECT(Int(COLLECT_ITEM_X#(i) / MAP_TILE_WIDTH), Int(COLLECT_ITEM_Y#(i) / MAP_TILE_WIDTH)) = 0
+
+				// Update the mini map
+				Gosub DISPLAY_MINI_MAP
+
+				// Check if all items collected
+				Dec LEVEL_COLLECT_COUNT
+				Gosub UPDATE_HUD
+				If LEVEL_COLLECT_COUNT = 0
+					LEVEL_STATE = 1
+				End If
+			End If
+		End If
+
+		// Map Items
+
+		c = Bob Col (PBN, MAP_ITEM_BOB_START to MAP_ITEM_BOB_START + MAP_ITEMS_MAX - 1)
+
+		If c = True
+			// Get the bob number for the collision
+			i = Col(-1) - MAP_ITEM_BOB_START
+
+			If MAP_ITEM_STATUS(i) = 1
+				// Teleport
+				If MAP_ITEM_TYPE(i) = 1
+
+					// Move player to new world location
+					PYT# = (MAP_ITEM_PARAM_2#(i) * MAP_TILE_HEIGHT) + 32
+					PY# = PYT#
+
+					PX# = (MAP_ITEM_PARAM_1#(i) * MAP_TILE_WIDTH) + 32
+					PXT# = PX#
+
+					Add PX#, PXS# * DELTA_TIME#
+
+					// Check x direction for placemnet of particle effect
+					If PXS# > 0
+						ADD_PARTICLE_SYSTEM[PX# - 32, PY#, 100, 70, 0, 4, 540, -180, 5, 1, 15]
+					Else
+						ADD_PARTICLE_SYSTEM[PX# + 32, PY#, 100, 70, 0, 4, 540, -180, 5, 1, 15]
+					End If
+
+					// Remove all bobs while the camera is repositioned (else phantom collisions will occur)
+					Bob Off
+
+					//Play Audio 27
+					{ Application.playAudio(27, false); }
+				End If
+
+				// Moving Kill Pad
+				If PLAYER_HAS_SHIELD = 0 and MAP_ITEM_TYPE(i) = 2
+					PLAYER_STATE = 1
+					Return
+				End If
+
+			End If
+		End If
+
+	End If
+Return
+
+UPDATE_PLAYER:
+	// Only update when player is live
+	If PLAYER_STATE = 0
+
+		JFIRE = False
+		JYUP = False
+		JYDOWN = False
+		ESC = False
+
+		// Reverse horizontal direction
+		If FIRE_TRIGGER = 0 and (Key State(32) or JFIRE)
+
+			FIRE_TRIGGER = 1
+
+			If PLAYER_TRIGGER_COUNT > 0
+				//x, y, particle_count, max_life, gravity, particle_size, vx, vy, startColour, endColour, speedColour
+				ADD_PARTICLE_SYSTEM[PX#, PY#, Rnd(200) + 50, 70, 0, 4, 540, -180, 7, 1, 15]
+				PXS# = -PXS#
+				Dec PLAYER_TRIGGER_COUNT
+				Gosub UPDATE_HUD
+				{ Application.playAudio(2, false); }
+			Else
+				{ Application.playAudio(14, false); }
+			End If
+		End If
+
+		// Reset trigger
+		If (Key State(32) = False and JFIRE = False)
+			FIRE_TRIGGER = 0
+		End If
+
+		// Store current player X
+		OPX# = PX#
+
+		// Move towards target, smooth out the player movement
+		Add PXT#, PXS# * DELTA_TIME#
+		Add PX#, (PXT# - PX#) * PXMS# * DELTA_TIME#
+
+		// Check collision left
+		If PXS# < 0
+			TL = MAP_TERRAIN(Int((PX# - 32) / MAP_TILE_WIDTH), Int((PY# - 30) / MAP_TILE_HEIGHT))
+			BL = MAP_TERRAIN(Int((PX# - 32) / MAP_TILE_WIDTH), Int((PY# + 30) / MAP_TILE_HEIGHT))
+			If TL <> 0 or BL <> 0
+				PXS# = PXSPEED#
+
+				// Restore player X
+				PX# = OPX#
+
+				PX# = (Int(PX# / MAP_TILE_WIDTH) * MAP_TILE_WIDTH) + 32
+				PXT# = PX#
+				Add PXT#, PXS# * DELTA_TIME#
+				Add PX#, (PXT# - PX#) * DELTA_TIME#
+
+				ADD_PARTICLE_SYSTEM[PX# - 32, PY#, Rnd(100) + 100, 25, 0, 3, 300, 359, 27, 20, 15]
+				{ Application.playAudio(1, false); }
+			End If
+		Else
+			// Check collision right
+			BR = MAP_TERRAIN(Int((PX# + 32) / MAP_TILE_WIDTH), Int((PY# + 30) / MAP_TILE_HEIGHT))
+			TR = MAP_TERRAIN(Int((PX# + 32) / MAP_TILE_WIDTH), Int((PY# - 30) / MAP_TILE_HEIGHT))
+			If TR <> 0 or BR <> 0
+				PXS# = -PXSPEED#
+
+				// Restore player X
+				PX# = OPX#
+
+				PX# = (Int(PX# / MAP_TILE_WIDTH) * MAP_TILE_WIDTH) + 31
+				PXT# = PX#
+				Add PXT#, PXS# * DELTA_TIME#
+				Add PX#, (PXT# - PX#) * DELTA_TIME#
+
+				ADD_PARTICLE_SYSTEM[PX# + 32, PY#, Rnd(100) + 100, 25, 0, 3, 300, 359, 27, 20, 15]
+				{ Application.playAudio(1, false); }
+			End If
+		End If
+
+		// Player input up
+		PRT# = 0
+		If Key State(38) or JYUP or Key State(87)
+			PYT# = PYT# - PYSPEED# * DELTA_TIME#
+			If PXS# > 0
+				PRT# = -PMR
+			Else
+				PRT# = PMR
+			End If
+		else
+			// Player input down
+			If Key State(40) or JYDOWN or Key State(83)
+				PYT# = PYT# + PYSPEED# * DELTA_TIME#
+				If PXS# > 0
+					PRT# = PMR
+				Else
+					PRT# = -PMR
+				End If
+			End If
+		End If
+
+		// Move towards target, smooth out the player movement
+		Add PY#, (PYT# - PY#) * PYMS# * DELTA_TIME#
+
+		// Reset Rotation when very little verticle movement
+		If Abs(Int((PYT# - PY#))) < 20
+			PR# = 0
+			PRT# = 0
+		End If
+
+		// Check collision up
+		If PYT# < PY#
+			TL = MAP_TERRAIN(Int((PX# - 32) / MAP_TILE_WIDTH), Int((PY# - 31) / MAP_TILE_HEIGHT))
+			TR = MAP_TERRAIN(Int((PX# + 32) / MAP_TILE_WIDTH), Int((PY# - 31) / MAP_TILE_HEIGHT))
+			If TL <> 0 or TR <> 0
+				PY# = (Int(PY# / MAP_TILE_HEIGHT) * MAP_TILE_HEIGHT) + 32
+				// If player not grounded then play sound and add particle
+				If PGT = 0
+					{ Application.playAudio(3, false); }
+					ADD_PARTICLE_SYSTEM[PX#, PY# - 32, Rnd(30) + 25, 10, 0, 2, 300, 359, 27, 20, 15]
+				End If
+				PYT# = PY#: PRT# = 0: PR# = 0: PGT = 1
+			End If
+		Else
+			// Check collision down
+			If PYT# > PY#
+				BL = MAP_TERRAIN(Int((PX# - 32) / MAP_TILE_WIDTH), Int((PY# + 31) / MAP_TILE_HEIGHT))
+				BR = MAP_TERRAIN(Int((PX# + 32) / MAP_TILE_WIDTH), Int((PY# + 31) / MAP_TILE_HEIGHT))
+				If BL <> 0 or BR <> 0
+					PY# = (Int(PY# / MAP_TILE_HEIGHT) * MAP_TILE_HEIGHT) + 31
+					// If player not grounded then play sound and add particle
+					If PGB = 0
+						{ Application.playAudio(3, false); }
+						ADD_PARTICLE_SYSTEM[PX#, PY# + 32, Rnd(30) + 25, 10, 0, 2, 300, 359, 27, 20, 15]
+					End If
+					PYT# = PY#: PRT# = 0: PR# = 0: PGB = 1
+				End If
+			End If
+		End If
+
+		// Move towards target rotation
+		Add PR#, (PRT# - PR#) * PRS# * DELTA_TIME#
+
+		// Reset the player grounded triggers
+		If Abs(Int(PYT# - PY#)) > 20
+			PGT = 0: PGB = 0
+		End If
+
+	End If
+Return
+
+UPDATE_PARTICLE_SYSTEMS:
+	For i = 0 to MAX_PARTICLE_SYSTEMS - 1
+		If PARTICLE_SYSTEM_STATUS(i) = 1
+
+			// Used to trigger the removal of the particle system
+			HAS_LIVE_PARTICLE = 0
+
+			For p = 0 to MAX_PARTICLES - 1
+				If PARTICLE_SYSTEM_PARTICLE_STATUS(i, p) = 1
+
+					// Apply gravity
+					Add PARTICLE_SYSTEM_PARTICLE_VY#(i, p), PARTICLE_SYSTEM_GRAVITY(i) * DELTA_TIME#
+					// Add velocity
+					Add PARTICLE_SYSTEM_PARTICLE_X#(i, p), PARTICLE_SYSTEM_PARTICLE_VX#(i, p) * DELTA_TIME#
+
+					// Check if hit terrain - particles bounce off terrain
+					px = Int((PARTICLE_SYSTEM_PARTICLE_X#(i, p) + (PARTICLE_SYSTEM_PARTICLE_SIZE(i) / 2)) / MAP_TILE_WIDTH)
+					py = Int((PARTICLE_SYSTEM_PARTICLE_Y#(i, p) + (PARTICLE_SYSTEM_PARTICLE_SIZE(i) / 2)) / MAP_TILE_HEIGHT)
+
+					t = MAP_TERRAIN(px, py)
+
+					If t <> 0
+						// Reverse the X velocity
+						PARTICLE_SYSTEM_PARTICLE_VX#(i, p) = -PARTICLE_SYSTEM_PARTICLE_VX#(i, p)
+						Add PARTICLE_SYSTEM_PARTICLE_X#(i, p), PARTICLE_SYSTEM_PARTICLE_VX#(i, p) * DELTA_TIME#
+					End If
+
+					Add PARTICLE_SYSTEM_PARTICLE_Y#(i, p), PARTICLE_SYSTEM_PARTICLE_VY#(i, p) * DELTA_TIME#
+
+					// Check if hit terrain - particles bounce off terrain
+					px = Int((PARTICLE_SYSTEM_PARTICLE_X#(i, p) + (PARTICLE_SYSTEM_PARTICLE_SIZE(i) / 2)) / MAP_TILE_WIDTH)
+					py = Int((PARTICLE_SYSTEM_PARTICLE_Y#(i, p) + (PARTICLE_SYSTEM_PARTICLE_SIZE(i) / 2)) / MAP_TILE_HEIGHT)
+
+					t = MAP_TERRAIN(px, py)
+
+					If t <> 0
+						// Reverse the Y velocity
+						PARTICLE_SYSTEM_PARTICLE_VY#(i, p) = -PARTICLE_SYSTEM_PARTICLE_VY#(i, p)
+						Add PARTICLE_SYSTEM_PARTICLE_Y#(i, p), PARTICLE_SYSTEM_PARTICLE_VY#(i, p) * DELTA_TIME#
+					End If
+
+					// Update colour
+					If PARTICLE_SYSTEM_PARTICLE_END_COLOUR(i) <> PARTICLE_SYSTEM_PARTICLE_COLOUR#(i, p)
+						nc# = Max(PARTICLE_SYSTEM_PARTICLE_END_COLOUR(i), PARTICLE_SYSTEM_PARTICLE_COLOUR#(i, p) -(PARTICLE_SYSTEM_PARTICLE_SPEED_COLOUR(i) * DELTA_TIME#))
+						PARTICLE_SYSTEM_PARTICLE_COLOUR#(i, p) = nc#
+					End If
+
+					// Remove particle when life has elapsed
+					If PARTICLE_SYSTEM_PARTICLE_LIFE#(i, p) <= 0
+						PARTICLE_SYSTEM_PARTICLE_STATUS(i, p) = 0
+					else
+						HAS_LIVE_PARTICLE = 1
+					End If
+					// Reduce life
+					Add PARTICLE_SYSTEM_PARTICLE_LIFE#(i, p), -(60 * DELTA_TIME#)
+				End If
+			Next p
+
+			// Remove particle system when all particles have been removed
+			If HAS_LIVE_PARTICLE = 0
+				PARTICLE_SYSTEM_STATUS(i) = 0
+			End If
+		End If
+	Next i
+Return
+
+DRAW_PARTICLE_SYSTEMS:
+	// Draw particle systems
+	For i = 0 to MAX_PARTICLE_SYSTEMS - 1
+		If PARTICLE_SYSTEM_STATUS(i) = 1
+			For p = 0 to MAX_PARTICLES - 1
+				If PARTICLE_SYSTEM_PARTICLE_STATUS(i, p) = 1
+					Ink Int(PARTICLE_SYSTEM_PARTICLE_COLOUR#(i, p))
+					Bar PARTICLE_SYSTEM_PARTICLE_X#(i, p) - CX#, PARTICLE_SYSTEM_PARTICLE_Y#(i, p) - CY# to PARTICLE_SYSTEM_PARTICLE_X#(i, p) - CX# + PARTICLE_SYSTEM_PARTICLE_SIZE(i), PARTICLE_SYSTEM_PARTICLE_Y#(i, p) - CY# + PARTICLE_SYSTEM_PARTICLE_SIZE(i)
+				End If
+			Next p
+		End If
+	Next i
+Return
+
+INIT_FADE_OUT:
+	ALPHA# = 0.0: Screen To Front 10: Screen Show 10
+	FADE_COMPLETE = 0
+Return
+
+SAVE_BEST_SCORE_DATA:
+	For i = 0 to 5
+		itemName$ = "cyblocgamedata" + Str$(i + 1)
+		itemValue$ = Hex$(STATS_LEVEL_BEST_SCORE(i))
+		{ window.localStorage.setItem(this.vars.itemName$, this.vars.itemValue$); }
+	Next
+Return
+
+SAVE_MAX_LEVEL_DATA:
+	LSDATA$ = Hex$(MAX_LEVEL)
+	{ window.localStorage.setItem("cyblocgamedata0", this.vars.LSDATA$); }
+Return
+
+SAVE_PLAYER_HIGH_SCORE_DATA:
+	LSDATA$ = Hex$(PLAYER_HIGH_SCORE)
+	{ window.localStorage.setItem("cyblocgamedata99", this.vars.LSDATA$); }
+Return
+
+UPDATE_MAP_ITEMS:
+
+	For i = 0 to MAP_ITEMS_MAX - 1
+		If MAP_ITEM_STATUS(i) = 1
+
+			// Moving Pad Kill
+			If MAP_ITEM_TYPE(i) = 2
+				//PARAMS (maxspeed(1), currentSpeedX(2), currentSpeedY(3), rangeStart(4), rangeEnd(5))
+				Add MAP_ITEM_Y#(i), MAP_ITEM_PARAM_3#(i) * DELTA_TIME#
+				Add MAP_ITEM_X#(i), MAP_ITEM_PARAM_2#(i) * DELTA_TIME#
+				// Moving Y
+				If MAP_ITEM_PARAM_3#(i) <> 0
+					If MAP_ITEM_Y#(i) >= MAP_ITEM_PARAM_5#(i)
+						MAP_ITEM_PARAM_3#(i) = -MAP_ITEM_PARAM_1#(i)
+					End If
+					If MAP_ITEM_Y#(i) <= MAP_ITEM_PARAM_4#(i)
+						MAP_ITEM_PARAM_3#(i) = MAP_ITEM_PARAM_1#(i)
+					End If
+				End If
+
+				// Moving X
+				If MAP_ITEM_PARAM_2#(i) <> 0
+					If MAP_ITEM_X#(i) >= MAP_ITEM_PARAM_5#(i)
+						MAP_ITEM_PARAM_2#(i) = -MAP_ITEM_PARAM_1#(i)
+					End If
+					If MAP_ITEM_X#(i) <= MAP_ITEM_PARAM_4#(i)
+						MAP_ITEM_PARAM_2#(i) = MAP_ITEM_PARAM_1#(i)
+					End If
+				End If
+			End If
+
+		End If
+	Next i
+Return
+
+DRAW_MAP_ITEMS:
+	For i = 0 to MAP_ITEMS_MAX - 1
+		If MAP_ITEM_STATUS(i) = 1
+			// Only draw if within camera viewport
+			IsItemVisible[MAP_ITEM_X#(i), MAP_ITEM_Y#(i), CW, CH]
+
+			If PARAM = True
+				If MAP_ITEM_TYPE(i) = 3
+					Bob i + MAP_ITEM_BOB_START, MAP_ITEM_X#(i) - CX# + 32, MAP_ITEM_Y#(i) - CY# + 32, Int(MAP_ITEM_IFRAME#(i))
+				Else
+					Bob i + MAP_ITEM_BOB_START, MAP_ITEM_X#(i) - CX#, MAP_ITEM_Y#(i) - CY#, Int(MAP_ITEM_IFRAME#(i))
+				End If
+			Else
+				Bob Off i + MAP_ITEM_BOB_START
+			End If
+
+		End If
+	Next i
+Return
+
+Procedure DisplayValue[x, y, requiredLength, value, scr, scrReturn]
+	Screen scr
+	// Draw the "blanks"
+	For i = 0 To requiredLength - 1
+		Paste Bob x + i * 32, y, 9
+	Next i
+
+	// Draw the digits
+	v$ = Str$(value): vLen = Len(v$)
+
+	// Draw minus
+	minusAdjust = 0
+	If value < 0
+		Paste Bob x + (requiredLength - vLen) * 32, y, 50
+		minusAdjust = 30
+	End If
+
+	For i = 0 To vLen - 1
+		s$ = Mid$(v$, i, 1)
+		If Asc(s$) >= 48
+			Paste Bob x + (requiredLength - vLen + i) * 32, y, (Asc(s$) -38) + minusAdjust
+		End If
+	Next i
+	Screen scrReturn
+End Proc
+
+Procedure InitLCDText[tx$, x, y, centreX, displayWidth, subText$, subTextY, fontSize, subTextColour]
+	textLength = 0
+	charImage = 0
+
+	// Get the textLength in pixels if we want to centre the text horizontal
+	If centreX = True
+		For i = 0 to Len(tx$) - 1
+			charImage = Asc(Mid$(tx$, i, 1))
+			// Ignore spaces
+			If charImage = 32
+				Add textLength, 50
+			Else
+				Add textLength, LCDCHAR(charImage - 65)
+			End If
+		Next i
+		// Set the start x position
+		x = (displayWidth / 2) - (textLength / 2)
+	End If
+
+	// Set variables required for the AnimLCDText
+	LCDCI# = -4: LCDPI# = -3
+	For i = 0 to 30
+		LCDX(i) = 0
+		LCDY(i) = 0
+		LCDI(i) = 0
+	Next i
+
+	// Add each character image number, x and y positions
+	For i = 0 to Len(tx$) - 1
+		charImage = Asc(Mid$(tx$, i, 1))
+		LCDX(i) = x
+		LCDY(i) = y
+		LCDI(i) = charImage
+		If charImage = 32
+			Add x, 50
+		Else
+			Add x, LCDCHAR(charImage - 65)
+		End If
+	Next i
+
+	// Set variable for animation
+	LCD_COMPLETED = 0
+	LCD_LENGTH = Len(tx$)
+	LCD_SUBTEXT$ = subText$
+	LCD_DISPLAY_WIDTH = displayWidth
+	LCD_SUBTEXTY = subTextY
+	LCD_SUBTEXT_COLOUR = subTextColour
+End Proc
+
+Procedure AnimFadeIn[returnScreen]
+	If FADE_COMPLETE = 0
+		Screen 10
+		If ALPHA# > 0.01
+			Add ALPHA#, -0.8 * DELTA_TIME#
+			Bob 2000, 0, 0, 2000
+			Bob Alpha 2000, Max(0, ALPHA#)
+		Else
+			ALPHA# = 0
+			FADE_COMPLETE = 1
+		End If
+		Screen returnScreen
+	End If
+End Proc
+
+Procedure AnimLCDText[scrin, scrout, animSpeed]
+	// Displays each image in the array one by one with short delay
+	If LCD_COMPLETED = 0
+		Screen scrin
+		Screen To Front scrin
+		ci = Int(LCDCI#)
+		If ci > LCD_LENGTH - 1
+			LCD_COMPLETED = 1
+
+			Set Font "allerta stencil", 35
+			Ink LCD_SUBTEXT_COLOUR: Text LCD_DISPLAY_WIDTH / 2, LCD_SUBTEXTY, LCD_SUBTEXT$, "#center"
+		Else
+			If ci > LCDPI# and ci >= 0 and LCDI(ci) <> 32
+				Paste Bob LCDX(ci), LCDY(ci), LCDI(ci)
+				LCDPI# = Int(LCDCI#)
+
+				If animSpeed > 0
+					{ Application.playAudio(7, false); }
+				End If
+			End If
+
+			If animSpeed = 0
+				LCDCI# = Int(LCDCI#) + 1
+			Else
+				Add LCDCI#, Min(0.4, animSpeed * DELTA_TIME#)
+			End If
+		End If
+	End If
+	Screen scrout
+End Proc
+
+Procedure IsItemVisible[x#, y#, width, height]
+	isVisible = False
+
+	// Get a new viewport size adding a one maptile size border
+	Add width, MAP_TILE_WIDTH * 2
+	Add height, MAP_TILE_HEIGHT * 2
+	lcx# = CX# - MAP_TILE_WIDTH
+	lcy# = CY# - MAP_TILE_HEIGHT
+
+	If x# - lcx# > -MAP_TILE_WIDTH and x# - lcx# < width and y# - CY# > -MAP_TILE_HEIGHT and y# - lcy# < height
+		isVisible = True
+	End If
+End Proc[isVisible]
+
+Procedure AnimFadeOut[returnScreen]
+	If FADE_COMPLETE = 0
+		Screen 10
+		If ALPHA# < 0.69
+			Add ALPHA#, 0.8 * DELTA_TIME#
+			Bob 2000, 0, 0, 2000
+			Bob Alpha 2000, Min(1, ALPHA#)
+		Else
+			ALPHA# = 0.7
+			FADE_COMPLETE = 1
+		End If
+		Screen returnScreen
+	End If
+End Proc
+
+Procedure AnimFadeIn[returnScreen]
+	If FADE_COMPLETE = 0
+		Screen 10
+		If ALPHA# > 0.01
+			Add ALPHA#, -0.8 * DELTA_TIME#
+			Bob 2000, 0, 0, 2000
+			Bob Alpha 2000, Max(0, ALPHA#)
+		Else
+			ALPHA# = 0
+			FADE_COMPLETE = 1
+		End If
+		Screen returnScreen
+	End If
+End Proc
+
+Procedure AddKillItem[x#, y#, image#]
+	For i = 0 to KILL_ITEMS_MAX - 1
+		If KILL_ITEM_STATUS(i) = 0
+			KILL_ITEM_STATUS(i) = 1
+			KILL_ITEM_X#(i) = x#
+			KILL_ITEM_Y#(i) = y#
+			KILL_ITEM_IFRAME#(i) = image#
+			Exit
+		End If
+	Next i
+End Proc
+
+Procedure AddCollectItem[x#, y#, image#]
+	For i = 0 to COLLECT_ITEMS_MAX - 1
+		If COLLECT_ITEM_STATUS(i) = 0
+			COLLECT_ITEM_STATUS(i) = 1
+			COLLECT_ITEM_X#(i) = x#
+			COLLECT_ITEM_Y#(i) = y#
+			COLLECT_ITEM_IFRAME#(i) = image#
+			COLLECT_ITEM_R#(i) = Rnd(360)
+			COLLECT_ITEM_RS#(i) = 60
+			COLLECT_ITEM_AUDIO(i) = 4
+			COLLECT_ITEM_ALPHA#(i) = 1
+			Exit
+		End If
+	Next i
+End Proc
+
+Procedure ADD_PARTICLE_SYSTEM[x, y, particle_count, max_life, gravity, particle_size, vx, vy, startColour, endColour, speedColour]
+	For i = 0 to MAX_PARTICLE_SYSTEMS - 1
+		If PARTICLE_SYSTEM_STATUS(i) = 0
+
+			PARTICLE_SYSTEM_STATUS(i) = 1
+			PARTICLE_SYSTEM_X#(i) = x
+			PARTICLE_SYSTEM_Y#(i) = y
+			PARTICLE_SYSTEM_GRAVITY(i) = gravity
+			PARTICLE_SYSTEM_PARTICLE_SIZE(i) = particle_size
+			PARTICLE_SYSTEM_PARTICLE_END_COLOUR(i) = endColour
+			PARTICLE_SYSTEM_PARTICLE_SPEED_COLOUR(i) = speedColour
+
+			For p = 0 to MAX_PARTICLES - 1
+				If PARTICLE_SYSTEM_PARTICLE_STATUS(i, p) = 0
+					If particle_count > 0
+						PARTICLE_SYSTEM_PARTICLE_STATUS(i, p) = 1
+						PARTICLE_SYSTEM_PARTICLE_X#(i, p) = x
+						PARTICLE_SYSTEM_PARTICLE_Y#(i, p) = y
+						PARTICLE_SYSTEM_PARTICLE_VX#(i, p) = Rnd(vx) * Sin(Rnd(vx))
+						PARTICLE_SYSTEM_PARTICLE_VY#(i, p) = Rnd(vy) * Cos(Rnd(vy))
+						PARTICLE_SYSTEM_PARTICLE_LIFE#(i, p) = Rnd(max_life) + 5
+						PARTICLE_SYSTEM_PARTICLE_COLOUR#(i, p) = startColour
+					Else
+						PARTICLE_SYSTEM_PARTICLE_STATUS(i, p) = 0
+					End If
+					Dec particle_count
+				End If
+			Next p
+			Exit
+		End If
+	Next i
+	// Returns the array index of the particle system that was added
+End Proc[i]
+
+Procedure AddMapItem[x#, y#, tileID]
+
+	// Level 4
+	// Teleport PARAMS (destination x (1), y(2), cooloff(3))
+	4204 Data 1, 204, 36, 24, 0, 0, 0, 0, 0, 0, 0, 0
+	4205 Data 1, 205, 19, 24, 0, 0, 0, 0, 0, 0, 0, 0
+	4206 Data 1, 204, 72, 8, 0, 0, 0, 0, 0, 0, 0, 0
+	4207 Data 1, 205, 60, 8, 0, 0, 0, 0, 0, 0, 0, 0
+
+	// Level 5
+	// Teleport PARAMS (destination x (1), y(2), cooloff(3))
+	5204 Data 1, 204, 2, 19, 0, 0, 0, 0, 0, 0, 0, 0
+	5205 Data 1, 205, 21, 9, 0, 0, 0, 0, 0, 0, 0, 0
+	// Kill Pad Move PARAMS (maxspeed(1), currentSpeedX(2), currentSpeedY(3), rangeStart(4), rangeEnd(5), range(6))
+	5208 Data 2, 400, 175, 0, 1, 0, 0, 7, 0, 0, 0, 0
+	5209 Data 2, 402, 100, 1, 0, 0, 0, 16, 0, 0, 0, 0
+	5210 Data 2, 401, 25, 0, 1, 0, 0, 2, 0, 0, 0, 0
+	5211 Data 2, 403, 50, 1, 0, 0, 0, 8, 0, 0, 0, 0
+	5212 Data 2, 400, 200, 0, 1, 0, 0, 4, 0, 0, 0, 0
+	5213 Data 2, 402, 150, 1, 0, 0, 0, 20, 0, 0, 0, 0
+	5214 Data 2, 401, 200, 0, 1, 0, 0, 10, 0, 0, 0, 0
+	5215 Data 2, 403, 250, 1, 0, 0, 0, 6, 0, 0, 0, 0
+
+	// Restore the Data line for this tile
+	Restore ((1000 * GAME_LEVEL) + tileID)
+
+	Read item_type
+
+	For i = 0 to MAP_ITEMS_MAX - 1
+		If MAP_ITEM_STATUS(i) = 0
+			MAP_ITEM_STATUS(i) = 1: MAP_ITEM_X#(i) = x#: MAP_ITEM_Y#(i) = y#
+
+			// Read the tile configuration
+			MAP_ITEM_TYPE(i) = item_type
+			Read MAP_ITEM_IFRAME#(i)
+			Read MAP_ITEM_PARAM_1#(i): Read MAP_ITEM_PARAM_2#(i): Read MAP_ITEM_PARAM_3#(i): Read MAP_ITEM_PARAM_4#(i): Read MAP_ITEM_PARAM_5#(i)
+			Read MAP_ITEM_PARAM_6#(i): Read MAP_ITEM_PARAM_7#(i): Read MAP_ITEM_PARAM_8#(i): Read MAP_ITEM_PARAM_9#(i): Read MAP_ITEM_PARAM_10#(i)
+
+			// Moving pad - set range start and end using the range and starting position
+			If MAP_ITEM_TYPE(i) = 2
+				If MAP_ITEM_PARAM_2#(i) > 0
+					MAP_ITEM_PARAM_2#(i) = MAP_ITEM_PARAM_1#(i)
+					MAP_ITEM_PARAM_4#(i) = x#
+					MAP_ITEM_PARAM_5#(i) = x# + (MAP_ITEM_PARAM_6#(i) * MAP_TILE_WIDTH)
+				Else
+					MAP_ITEM_PARAM_3#(i) = MAP_ITEM_PARAM_1#(i)
+					MAP_ITEM_PARAM_4#(i) = y#
+					MAP_ITEM_PARAM_5#(i) = y# + (MAP_ITEM_PARAM_6#(i) * MAP_TILE_HEIGHT)
+				End If
+			End If
+			Exit
+		End If
+	Next i
+
+End Proc
+
+Procedure SetupButton[x, y, width, height, borderWidth, txt$, fontSize, txtYoffset, mouseZone, borderColour]
+	Ink borderColour
+	Bar x, y, width, height
+	Ink 11
+	Bar x + borderWidth, y + borderWidth, width - borderWidth * 2, height - borderWidth * 2
+	Ink 12: Set Font "allerta stencil", fontSize
+	Text x + (width / 2), y + (height / 2) + txtYoffset, txt$, "#center"
+
+	Set Zone mouseZone, x, y, width, height
+End Proc

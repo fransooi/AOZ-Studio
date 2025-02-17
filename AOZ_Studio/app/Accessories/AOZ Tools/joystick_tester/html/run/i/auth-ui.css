@@ -1,0 +1,142 @@
+.auth-ui {
+  display: inline-block;
+  left: 0;
+  position: absolute;
+  top: 0; }
+  .auth-ui *, .auth-ui ::after, .auth-ui ::before {
+    box-sizing: border-box; }
+  .auth-ui button {
+    cursor: pointer;
+    padding: 0; }
+  .auth-ui > h2 {
+    font-size: 32px;
+    margin: 0 0 24px;
+    text-align: center; }
+  .auth-ui > ul {
+    list-style: none;
+    margin: 0;
+    padding: 0; }
+    .auth-ui > ul > li {
+      margin: 0;
+      padding: 0; }
+    .auth-ui > ul.fieldset > li:not(.remember-me) {
+      height: 40px;
+      position: relative; }
+      .auth-ui > ul.fieldset > li:not(.remember-me) > input {
+        background: none;
+        border: none;
+        font-size: 20px;
+        height: 100%;
+        outline: none;
+        position: absolute;
+        top: 0;
+        width: 100%; }
+        .auth-ui > ul.fieldset > li:not(.remember-me) > input::placeholder {
+          opacity: 1;
+          text-transform: capitalize; }
+        .auth-ui > ul.fieldset > li:not(.remember-me) > input:-webkit-autofill {
+          -webkit-text-fill-color: white !important;
+          caret-color: white;
+          transition: background-color 5000s ease-in-out 0s; }
+      .auth-ui > ul.fieldset > li:not(.remember-me) > label {
+        display: block;
+        height: 100%;
+        font-size: 0;
+        width: 100%; }
+    .auth-ui > ul.fieldset > li.remember-me {
+      left: 20px;
+      position: absolute; }
+      .auth-ui > ul.fieldset > li.remember-me > input {
+        appearance: none;
+        border-radius: 3px;
+        height: 14px;
+        margin: 0;
+        padding: 0;
+        position: relative;
+        width: 14px; }
+      .auth-ui > ul.fieldset > li.remember-me > label {
+        font-size: 14px;
+        left: 24px;
+        line-height: 18.5px;
+        position: absolute;
+        white-space: nowrap; }
+    .auth-ui > ul.actions > li.close {
+      font-size: 0;
+      position: absolute;
+      right: 8px;
+      top: 8px; }
+      .auth-ui > ul.actions > li.close > button {
+        border-radius: 4px;
+        font-size: 0;
+        height: 20px;
+        width: 20px; }
+    .auth-ui > ul .close > button,
+    .auth-ui > ul .remember-me > input {
+      border: 1.25px solid;
+      box-sizing: content-box; }
+    .auth-ui > ul .close > button::before,
+    .auth-ui > ul .remember-me > input:checked::before {
+      content: '';
+      height: 100%;
+      left: 0;
+      mask: url(cross.svg) no-repeat center;
+      -webkit-mask: url(cross.svg) no-repeat center;
+      mask-size: 60%;
+      -webkit-mask-size: 60%;
+      position: absolute;
+      top: 0;
+      width: 100%; }
+  .auth-ui.forgot-password .confirm-email, .auth-ui.forgot-password .remember-me, .auth-ui.forgot-password .sign-up, .auth-ui.login .confirm-email, .auth-ui.login .confirm-password, .auth-ui.sign-up .forgot-password {
+    display: none; }
+  .auth-ui.forgot-password .forgot-password, .auth-ui.login .login, .auth-ui.sign-up .sign-up {
+    display: block;
+    text-align: center; }
+    .auth-ui.forgot-password .forgot-password > button, .auth-ui.login .login > button, .auth-ui.sign-up .sign-up > button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      font-weight: bold;
+      text-decoration: underline;
+      text-transform: uppercase; }
+  .auth-ui.forgot-password .forgot-password, .auth-ui.sign-up .sign-up {
+    padding: 10px 0 60px; }
+  .auth-ui.login .forgot-password {
+    margin-top: 4.5px;
+    position: absolute;
+    right: 20px; }
+    .auth-ui.login .forgot-password > button {
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-style: italic;
+      line-height: 18.5px; }
+      .auth-ui.login .forgot-password > button:after {
+        content: " ?"; }
+  .auth-ui.login .login {
+    padding: 40px 0 60px; }
+  .auth-ui.login .remember-me {
+    margin-top: 8px; }
+  .auth-ui.sign-up .remember-me {
+    bottom: 13px; }
+  .auth-ui:not(.login) .login, .auth-ui:not(.sign-up) .sign-up {
+    bottom: 16px;
+    position: absolute;
+    right: 20px; }
+    .auth-ui:not(.login) .login > button, .auth-ui:not(.sign-up) .sign-up > button {
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 400;
+      text-decoration: underline; }
+  .auth-ui > .messages {
+    bottom: 48px;
+    position: absolute;
+    text-align: center;
+    width: 100%;
+    z-index: 1; }
+    .auth-ui > .messages > li {
+      display: inline-block;
+      padding: .5em 1em;
+      white-space: nowrap; }
+      .auth-ui > .messages > li:empty {
+        display: none; }

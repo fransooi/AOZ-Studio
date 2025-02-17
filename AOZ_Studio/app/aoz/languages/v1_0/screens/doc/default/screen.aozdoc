@@ -1,0 +1,8 @@
+<i>Screen</i>
+<b>Screen</b> xxxxxxx
+=
+SCREEN can be used as a function to return the number of the screen which is currently active. This screen is used
+for all drawing operations, but it is not necessarily visible.
+
+Warning: this function will return -1 if the screen index is a string!
+

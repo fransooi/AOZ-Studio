@@ -1,0 +1,109 @@
+{
+    icon_commands:
+    { 
+        name: "Icon Commands"
+        intro: ""
+        conclusion: ""
+        commands:
+        {
+
+
+            "paste_icon":
+            [
+                Use the PASTE ICON command to draw the specified Icon number already stored in Bank 2, on screen. The screen position is defined by graphic coordinates, and can be anywhere you like. Icon images will be clipped in the normal way, if they exceed the standard limitations. Here is a simple example:
+                '''
+                ~~~                
+		   Flash Off : Load Iff "AMOSPro_Examples:Iff/logo.iff"
+		   Z=0
+		   For A=0 To 304 Step 16
+			Inc Z
+			Get Block Z,A,1,16,199
+		   Next A
+		   Cls 0
+		   For A=0 To 304 Step 16
+			Put Block Z,A,0
+			Dec Z
+			Wait Vbl
+		   Next A
+                ~~~
+                '''
+If the DOUBLE BUFFER system in engaged, a copy of the Icon will be drawn into both the logical and physical
+screens, and because this takes a little time, you are advised to add a call to AUTOBACK 0 before drawing Icons on
+screen. This restricts the Icon to the current logical screen, and then the entire background may be copied to the
+physical screen, using SCREEN COPY, which is a much faster process.
+            ]
+            "make_icon_mask":
+            [
+                Normally, any Icons that are drawn on screen completely replace the existing background image, and the Icon
+appears in a rectangular box filled with colour zero. If you prefer to overlay Icons on top of the current graphics, a
+mask must be created. This is achieved by the MAKE ICON MASK command, and sets colour zero to transparent.
+All Icons in Bank 2 will be affected by this instruction, unless an optional Icon number is given, in which case only
+that Icon will be masked.
+
+            ]
+            "no_icon_mask":
+            [
+                This command performs exactly the same task as the NO MASK instruction, explained in Chapter 7.2, except that it
+is used with Icons instead of Bobs.
+
+            ]
+            "icon":
+            [
+                Icon draws the given icon number at the current cursor position. Colour zero is not normally transparent in this case, but transparency can be achieved with MAKE ICON MASK, as detailed in Chapter 7.7.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "ins_icon":
+            [
+                The INS ICON instruction operates in exactly the same way as INS BOB, which is explained in Chapter 7.2.
+
+            ]
+            "del_icon":
+            [
+                DEL ICON erases the Icon whose number is specified from Bank 2. A second Icon number may also be given, in
+which case, all Icons from the first number TO the second number will be deleted. When the final Icon in the bank
+has been deleted, the whole bank will be removed from memory.
+
+            ]
+            "get_icon":
+            [
+                The GET ICON command grabs an image from the screen and loads it into an Icon. Specify the Icon number, and
+then give the coordinates of the rectangle that is to be grabbed, from the top left-hand corner to the bottom righthand
+corner. If the Icon whose number you specify does not already exist, it will be created in Bank 2. If the
+memory bank has not been reserved, this will also be done automatically.
+""
+An optional screen number can also be given, immediately after the GET ICON instruction, and this will select the
+screen to be used as the source of the Icon's image. If this screen number is omitted, the image is taken from the
+current screen.
+
+            ]
+            "get_sprite":
+            [
+                Use this command to grab images directly from the screen and transform them into Sprites. Simply define the new image number, then give the coordinates, from top left-hand to bottom right-hand corner, of the rectangular area to be loaded into the Sprite Bank. The image will be grabbed from the current screen unless an optional screen number is specified.
+""
+Provided that the given coordinates lie inside of existing screen borders, there are no limitations to the area that can be grabbed in this way.
+""
+If there is no existing Sprite with the selected number, it will be created automatically. Similarly, the Sprite Bank will be reserved by AMOS Professional, if it is not already defined.
+
+It should be noted that the GET BOB instruction is identical to GET SPRITE, making them interchangeable.
+            ]
+            "get_icon_palette":
+            [
+                This instruction is usually employed to initialise a screen, after Icons have been loaded from disc.
+
+GET ICON PALETTE grabs the colours of the Icon images stored in Bank 2, and loads them in to the current
+screen.
+
+            ]
+            "icon_base":
+            [
+                ICON BASE returns the address of the Icon whose number is specified in brackets. The format of this information is exactly the same as for the SPRITE BASE function, explained below.
+
+            ]
+            
+        }
+    }
+}

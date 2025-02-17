@@ -1,0 +1,11 @@
+<i>Load Asset</i>
+<b>Load Asset</b> xxxxxxx
+=
+@code
+Rem Load an image from the "resources/assets/images" folder, and store it in the image bank with the name "hero"
+Load Asset "resources/assets/images/hero.png", "hero"
+
+Rem Show the loaded image as Bob 1
+Bob 1, 100,100, "hero"
+@code
+

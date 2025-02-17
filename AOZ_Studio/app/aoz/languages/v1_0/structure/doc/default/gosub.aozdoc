@@ -1,0 +1,27 @@
+<i>Gosub</i>
+<b>Gosub</b> xxxxxxx
+=
+Packages of program instructions that perform a specific task can be thought of as "routines". When such routines
+are split into smaller packages of instructions, they can be thought of as "sub-routines".
+
+GOSUB is another antiquated command, and is used to perform a jump to a sub-routine. The execution of the application is restored at the next instruction after GOSUB by a RETURN statement.
+
+As with GOTO, there are three alternative targets for a GOSUB instruction: labels, line numbers or expressions.
+
+To make sub-routines easier to spot in your program listings, it is good practice to place them at the end of the main
+program. A statement such as EDIT or DIRECT should also be used to end the main program, which prevents
+AOZ from executing any GOSUBs after the main program has finished.
+
+For example:
+@code
+Print "I am the main program"
+For N=1 To 3
+Gosub TEST
+Next N
+End
+TEST:
+Print "Here we go GOSUB" : Wait 50
+Print "Number =";N
+Return
+@code
+

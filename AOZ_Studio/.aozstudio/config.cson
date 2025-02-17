@@ -1,0 +1,204 @@
+"*":
+  "atom-material-ui":
+    colors:
+      abaseColor: "#ffa726"
+      accentColor: "#9f6918"
+      genAccent: true
+      paintCursor: true
+      predefinedColor: "Orange"
+    fonts:
+      fontSize: 19
+    tabs: {}
+    ui:
+      panelContrast: true
+      panelShadows: true
+  "atom-minimap-titles":
+    font: "ANSI Shadow"
+  "autocomplete-plus":
+    enableAutoActivation: true
+  autosave:
+    enabled: true
+  core:
+    autoHideMenuBar: true
+    automaticallyUpdate: false
+    closeDeletedFileTabs: true
+    disabledPackages: [
+      "github"
+      "git-diff"
+      "language-git"
+      "open-on-github"
+      "welcome"
+      "metrics"
+      "language-yaml"
+      "language-xml"
+      "language-typescript"
+      "language-toml"
+      "language-todo"
+      "language-sass"
+      "language-ruby-on-rails"
+      "language-ruby"
+      "language-perl"
+      "language-mustache"
+      "language-gfm"
+      "language-clojure"
+      "encoding-selector"
+      "deprecation-cop"
+      "dalek"
+      "autoflow"
+      "autocomplete-html"
+      "autocomplete-css"
+      "autocomplete-snippets"
+      "grammar-selector"
+      "language-c"
+      "language-coffee-script"
+      "language-csharp"
+      "language-css"
+      "language-go"
+      "language-hyperlink"
+      "language-java"
+      "language-make"
+      "language-objective-c"
+      "language-php"
+      "language-property-list"
+      "language-python"
+      "language-rust-bundled"
+      "language-source"
+      "language-sql"
+      "package-generator"
+      "snippets"
+      "spell-check"
+      "symbols-view"
+      "archive-view"
+      "background-tips"
+      "bookmarks"
+      "command-palette"
+      "dev-live-reload"
+      "exception-reporting"
+      "fuzzy-finder"
+      "incompatible-packages"
+      "language-less"
+      "language-shellscript"
+      "markdown-preview"
+      "notifications"
+      "styleguide"
+      "timecop"
+    ]
+    excludeVcsIgnoredPaths: false
+    ignoredNames: [
+      "*.zip"
+      "*.ZIP"
+      "*.rar"
+      "*.RAR"
+      "*.lha"
+      "*.LHA"
+      "*.tar"
+      "*.TAR"
+      "*.gz"
+      "*.GZ"
+      "*.7z"
+      "*.7Z"
+      "*.sh"
+      "*.SH"
+      "*.bat"
+      "*.BAT"
+      "*.app"
+      "*.APP"
+      "*.exe"
+      "*.EXE"
+      "*.dll"
+      "*.DLL"
+      "*.com"
+      "*.COM"
+      "*.sys"
+      "*.SYS"
+      "*.cfg"
+      "*.CFG"
+      "*.ini"
+      "*.INI"
+      "*.php"
+      "*.PHP"
+      "*.java"
+      "*.JAVA"
+      "*.c"
+      "*.C"
+      "*.cpp"
+      "*.CPP"
+      "*.cs"
+      "*.CS"
+      "*.vb"
+      "*.VB"
+      "*.jar"
+      "*.JAR"
+      "*.apk"
+      "*.APK"
+      "*.swf"
+      "*.SWF"
+      "*.fla"
+      "*.FLA"
+      "*.psd"
+      "*.PSD"
+      "*.ai"
+      "*.AI"
+      "*.ds_store"
+      "*.DS_Store"
+      "*.cson"
+      "*.CSON"
+      "*.empty"
+      "*.EMPTY"
+    ]
+    openEmptyEditorOnStart: false
+    packagesWithKeymapsDisabled: [
+      "atom-terminal"
+      "tree-view"
+      "minimap"
+    ]
+    packagesWithSnippetsDisabled: [
+      "aoz-studio"
+    ]
+    restorePreviousWindowsOnStart: "yes"
+    telemetryConsent: "no"
+    themes: [
+      "atom-material-ui"
+      "aoz-pb-syntax"
+    ]
+    uriHandlerRegistration: "always"
+  customFileTypes:
+    "source.aoz": [
+      "aoz"
+      "aozinc"
+    ]
+  editor:
+    fontFamily: "Roboto, monospace"
+    fontSize: 50
+    lineHeight: "1.0666666666666667%"
+    preferredLineLength: 500
+    scrollPastEnd: true
+    showIndentGuide: false
+    showInvisibles: false
+    softTabs: false
+    tabLength: 4
+    tabType: "hard"
+  "exception-reporting":
+    userId: "7a238d61-c851-4d6a-b0b5-61a369c46586"
+  "flex-tool-bar":
+    persistentProjectToolBar: true
+    useBrowserPlusWhenItIsActive: true
+  "markdown-preview":
+    openPreviewInSplitPane: false
+  minimap:
+    moveCursorOnMinimapClick: true
+    scrollAnimation: true
+  "project-manager": {}
+  "terminal-plus":
+    toggles:
+      autoClose: true
+  "tool-bar":
+    fullWidth: true
+  "tree-ignore": {}
+  "tree-view":
+    alwaysOpenExisting: true
+    autoReveal: true
+    hideIgnoredNames: true
+  uriHandlerRegistration: "always"
+  welcome:
+    showOnStartup: false

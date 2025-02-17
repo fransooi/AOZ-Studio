@@ -1,0 +1,41 @@
+Procedure SHOW_CATEGORIES
+	N = JSON Asset Property( 1, "categories.length" )
+	CODE$ = ""
+	If N > 0
+		// Install DOM components
+		For R = 1 To N
+			If CUR_CAT = -1
+				CUR_CAT = R - 1
+				CTX$ = JSON Asset Property$( 1, "categories[" + Trim$( Str$( CUR_CAT ) ) + "].context" )
+				JSON_ID = JSON Asset Property( 1, "categories[" + Trim$( Str$( CUR_CAT ) ) + "].json_id" )
+			End If
+
+			CAT_SELECTED$ = ""
+			If CUR_CAT = (R - 1) Then CAT_SELECTED$ = "selected"
+
+			CAT_ID$ = "C" + Trim$( Str$( R ) )
+			CAT_TITLE_ID$ = "CT" + Trim$( Str$( R ) )
+			CAT_TITLE$ = JSON Asset Property$( 1, "categories[ " + Trim$( Str$( R - 1 ) ) + " ].title." + LANG$ )
+
+			CODE$ = CODE$ + HTML Code$( "category" )
+		Next R
+		HTML Element "categories", Content$ = CODE$
+
+		// Install listeners
+		For R = 1 To N
+			If CUR_CAT = (R - 1)
+				HTML Element "C" + Trim$( Str$( R ) ), Enable = False
+			End If
+			HTML Element "C" + Trim$( Str$( R ) ), OnClick$="CLICK_CATEGORY"
+		Next R
+	Else
+		HTML Element "categories", Content$ = CODE$
+	End If
+End Proc
+
+Procedure CLICK_CATEGORY[ EVENT$, INDEX$ ]
+	CUR_CAT = Val( Right$( INDEX$, 1 ) ) - 1
+	CTX$ = JSON Asset Property$( 1, "categories[" + Trim$( Str$( CUR_CAT ) ) + "].context" )
+	JSON_ID = JSON Asset Property( 1, "categories[" + Trim$( Str$( CUR_CAT ) ) + "].json_id" )
+	REQUEST$ = "update_categories"
+End Proc

@@ -1,0 +1,24 @@
+<i>Screen Rotate</i>
+<b>Screen Rotate</b> xxxxxxx
+=
+@code
+Degree
+
+// Open a screen and display some text in it.
+Screen Open 0, 1280, 720, 16
+For N = 0 To 100
+Ink Rnd( 16 ) : Print "AOZ";
+Next
+
+// Set the hot-spot of the screen to center/middle
+Screen Hot Spot 0, $11
+
+// Rotates the hot spot of the screen in the center
+For A = 0 To 360
+Screen Rotate A
+Wait Vbl
+Next
+Wait Key
+@code
+Warning: on software renderers this instruction will slow down the application
+

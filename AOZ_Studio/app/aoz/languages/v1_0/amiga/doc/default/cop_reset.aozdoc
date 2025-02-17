@@ -1,0 +1,7 @@
+<i>Cop Reset</i>
+<b>Cop Reset</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This command is used to add a pair of MOVE commands, forcing the copper list to re-start from the very first instruction. This may be used to generate simple loops.
+

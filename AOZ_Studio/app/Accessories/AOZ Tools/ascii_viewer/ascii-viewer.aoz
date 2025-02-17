@@ -1,0 +1,294 @@
+#displayWidth: 890
+#displayHeight: 1024
+#splashScreen:False
+{
+    window.copyToClipboard = function (text)
+	{
+        if (window.clipboardData && window.clipboardData.setData)
+		{	return window.clipboardData.setData("Text", text);	}
+        else if (document.queryCommandSupported && document.queryCommandSupported("copy"))
+		{
+            var textarea = document.createElement("textarea");
+            textarea.textContent = text;
+            textarea.style.position = "fixed";
+            document.body.appendChild(textarea);
+            textarea.select();
+            try 		{	return document.execCommand("copy");	}
+            catch (ex)	{	return false;	}
+            finally		{	document.body.removeChild(textarea);	}
+        }
+    }
+}
+
+Clp$="Clipped stuff"
+Li=28
+Screen Open 0,890,1024,32,Lowres, lines=Li ' was 890 x 1024
+Palette 0,$FFFFFF,$FFFF00,$00FFFF,$00FF00,$FF0000
+Ver$="v0.91"
+Curs Off : Cls 0
+charWidth#=X Graphic(1)
+charHeight#=Y Graphic(1)
+  //
+ // Create yellow box for cursor
+//
+Line Width 3
+Ink 2 : Box 0,0 To charWidth#+1,charHeight#+1
+Get Bob 1,0,0 To charWidth#+1,charHeight#+1
+Cls 0
+Bob 1,-charWidth#-1,-charHeight#-1,1 ' Initially draw the cursor (off-screen)
+      //
+     // ASCII / Unicode Selector
+    // by Brian Flanagan (aka: ising4jesus)
+   // 	Thanks @Dave B for the copyToClipboard JavaScript
+  //	
+ //	v0.91 - disabled copyToClipboard feature temporarily
+//
+Global cursXofs,cursYOfs,Li,charWidth#,charHeight#
+prevpage=-1 : page=0
+cursXofs = 7 : cursYOfs = 4
+cursX=0 : cursY=0
+cursVisible=true
+
+Global upLefArr$,upArr$,upRightArr$
+Global leftArr$,rightArr$
+Global downLeftArr$,downArr$,downRightArr$
+Global page,cursX,cursXOfs,cursY,cursYOfs
+Global charWidth#,charHeight#
+Global cursorVisible
+  upLeftArr$=Chr$($2196) :   upArr$=Chr$($2191) :   upRightArr$=Chr$($2197)
+    leftArr$=Chr$($2190) :                            rightArr$=Chr$($2192)
+downLeftArr$=Chr$($2199) : downArr$=Chr$($2193) : downRightArr$=Chr$($2198)
+
+Ink 1
+Box 0,0 To Screen Width-1,Screen Height-1
+Locate 7,1 : Under On: Shadow On : Print "AOZ: ASCII/Unicode View/Select" : Under Off : Shadow Off
+
+ShowHeadings ' Show 0 - F columns (initially)
+ShowHelp ' Show navigation keys and help text.
+ShowChar[0]
+
+Locate 1,1 : Print Ver$
+' Every 0.5 Gosub FlashCursor
+'
+' Mouse Zones
+'
+CharZones=256
+ColumnZones=16
+RowZones=16
+ArrowZones=4
+PageZones=2 ' PageUp/Dn
+CopyZones=2 ' Copy to Chr$() to clipboard
+AllZones = CharZones+ColumnZones+RowZones+ArrowZones+PageZones+CopyZones
+Reserve Zone AllZones
+SetZones ' Create zones to click on each char
+
+Do
+	If page <> prevpage
+		prevpage=page
+
+		// Work around Print bug (no clipping)
+		ClearGrid		' Erase entire character grid
+		ShowHeadings	' Re-draw all headings (erases artifacts above top row)
+		ShowChar[page*256+cursY*16+cursX] ' Re-highlight proper column heading.
+		// End work-around
+
+		For row = 0 to 15
+			If row=cursY
+				ShowRowID[row,true]
+			Else
+				ShowRowID[row,false]
+			End If
+
+			For colm=0 To 15
+	  			Locate colm*2+7,row+cursYOfs
+	  			chr = page*256+row*16+colm
+	  			If chr >31
+	  				Print Chr$(chr);
+	  			Else
+	    			Print " ";
+	  			End If
+			Next colm
+			Print
+		Next Row
+		Locate cursX*2+cursXOfs,CursY+cursYOfs
+	End If
+
+	I$=Inkey$:SC=Scancode
+	'
+	' ScanCode values:
+	' PgUp: $21 PgDn: $22
+	' Up: $26 Down: $28 Left: $25 Right: $27
+	'
+	If I$ <> ""
+		  //
+		 // Change Page
+		//
+		If SC=$21
+			Dec page : If page<0 Then page=255
+			ShowChar[page*256+cursY*16+cursX]
+		End If
+		If SC=$22
+			Inc page : If page>255 Then page=0
+			ShowChar[page*256+cursY*16+cursX]
+		End If
+		  //
+		 // Move Cursor
+		//
+		If SC=$26
+			ShowRowID[cursY,false] ' reset previous
+			Dec cursY : If cursY<0 Then cursY=15
+			ShowChar[page*256+cursY*16+cursX]
+		End If
+		If SC=$28
+			ShowRowID[cursY,false] ' reset previous
+			Inc cursY : If cursY>15 Then cursY=0
+			ShowChar[page*256+cursY*16+cursX]
+		End If
+		If SC=$25
+			ShowColID[cursX,false] ' reset previous
+			Dec cursX : If cursX<0 Then cursX=15
+			ShowChar[page*256+cursY*16+cursX]
+		End If
+		If SC=$27
+			ShowColID[cursX,false] ' reset previous
+			Inc cursX : If cursX>15 Then cursX=0
+			ShowChar[page*256+cursY*16+cursX]
+		End If
+	End If
+'
+' Check for mouse clicks
+'
+	MZ=Mouse Zone
+	MK=Mouse Key
+	If MZ >0 And MZ < 257
+		ShowRowID[cursY,false] ' reset previous
+		ShowColID[cursX,false] ' reset previous
+		cursX=(MZ-1) Mod 16
+		cursY=(MZ-1) / 16
+		ShowChar[page*256+cursY*16+cursX]
+		If MK<>0
+			Repeat Until Mouse Key = 0
+'			CopyToClipboard["Chr$("+Hex$(page*256+MZ-1,4)+")"]
+		End If
+	End If
+	Wait Vbl
+Loop
+
+HideCursor:
+	Bob 1,-charWidth#-2,-charHeight#-2
+Return
+
+FlashCursor:
+	If cursVisible
+		Bob Hide 1
+	Else
+		Bob Show 1
+	End If
+	cursVisible = Not cursVisible
+	Every On
+Return
+
+Procedure ClearGrid
+	i=Ink
+	Ink 0
+	upLeftX#=charWidth#*6
+	upLeftY#=charHeight#*4
+	lowRightX#=charWidth#*(6+33)
+	lowRightY#=charHeight#*(4+17)
+	Bar upLeftX#,upLeftY# To lowRightX#,lowRightY#
+	Ink i
+End Procedure
+
+' Procedure FlashCursor
+''	If cursVisible Then Bob Hide 1 Else Bob Show 1
+''	cursVisible = Not cursVisible
+''	Every On
+'End Procedure
+
+Procedure FixChar[chr]
+' Tix for artifacts on char display at bottom of screen
+' due to Print bug (clipping not working).
+	p=Pen
+	Pen 4
+	Locate 2,Li-4 : Print "  ";upArr$;" "
+	Locate 2,Li-3 : Print leftArr$;"   ";rightArr$
+	Locate 2,Li-2 : Print "  ";downArr$;" "
+	Pen 1
+	Locate 4,Li-3 : Print Chr$(chr)
+	Pen p
+End Procedure
+
+Procedure ShowChar[chr]
+	FixChar[chr] ' Line below should normally be fine.  (See FixChar)
+'	Locate 4,Li-3 : Print Chr$(chr)
+	Locate 8,Li-3 : Pen 3 : Print "Chr$("; : Pen 2 : Print Hex$(chr,4); : Pen 3 : Print ")"
+	Locate 8,Li-2 : Pen 3 : Print "Chr$("; : Pen 2 : Print Using "#####";chr; : Pen 3 : Print ")"
+	Bob 1,cursX*2*charWidth#+cursXOfs*charWidth#-1,cursY*charHeight#+cursYOfs*charHeight#-1
+	ShowRowID[cursY,true]
+	ShowColID[cursX,true]
+	Pen 1
+	Locate cursX*2+cursXOfs,CursY+cursYOfs
+End Procedure
+
+Procedure ShowRowId[r,i]
+	Pen 2
+	If i Then Inverse On Else Inverse Off
+	Locate 1,r+cursYOfs : Print Left$(Hex$(page*256+r*16,4),4);"_" : Pen 1	: Inverse Off
+End Procedure
+
+Procedure ShowColId[c,i]
+	Pen 2
+	If i Then Inverse On Else Inverse Off
+	Locate cursX*2+cursXOfs,cursYOfs-1 : Print Right$(Hex$(cursX,1),1); : Pen 1 : Inverse Off
+End Procedure
+
+Procedure ShowHelp
+	Locate 2,Li-7 : Pen 4 : Print "Green";
+	  Pen 1 : Print " indicates navigation keys."
+	Locate 2,Li-6 : Print "Arrow keys change selected char."
+	Locate 2,Li-5 : Print "Or click mouse on a character."
+	Pen 4
+    Locate 2,Li-4 : Print "  ";upArr$;
+	Locate 2,Li-3 : Print leftArr$;"   ";rightArr$
+	Locate 2,Li-2 : Print "  ";downArr$;" "
+	Pen 4
+	Locate 20,Li-3 : Print "PgUp"; : Pen 1 : Print ": Prev Page"
+	Pen 4
+	Locate 20,Li-2 : Print "PgDn"; : Pen 1 : Print ": Next Page";
+End Procedure
+
+Procedure ShowHeadings
+	Pen 2
+	Locate 1,cursYOfs-1
+	Print "     ";
+	For h=0 to 15
+		Print Using " ~";Right$(Hex$(h,1),1);
+	Next h
+	Pen 1
+End Procedure
+
+Procedure SetZones
+// Zones for character view/select area
+	For c=0 To $F
+		For l=0 To $F
+			xStart=(cursXOfs*charWidth#)+(c*2)*charWidth#
+			xEnd=(cursXOfs*charWidth#)+(c*2)*charWidth#+charWidth#-1
+			yStart=(cursYOfs*charHeight#)+l*charHeight#
+			yEnd=(cursYOfs*charHeight#)+l*charHeight#+charHeight#-1
+
+		/* This was to test the areas before creating them.
+			Draw xStart,yStart To xEnd,yStart
+			Draw xStart,yEnd To xEnd,yEnd
+			Draw xStart,yStart To xStart,yEnd
+			Draw xEnd,yStart To xEnd,yEnd
+		*/
+			zoneIndex = c+l*16+1
+			Set Zone zoneIndex,xStart,yStart To xEnd,yEnd
+		Next l
+	Next c
+
+End Procedure
+
+Procedure CopyToClipboard[clp$]
+	{	window.copyToClipboard(this.vars.clp$);	}
+End Procedure

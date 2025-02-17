@@ -1,0 +1,616 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝   ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗    ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║    ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Account linking features
+ * By Francois Lionet
+ *
+ * @author Baptiste Pillot
+ * @date first pushed on 09/05/2022
+ */
+
+#need_css_file:"ui/auth-ui.css"
+#need_css_file:"ui/aoz-ui.css"
+#need_css_file:"ui/modern-ui.css"
+#need_file:"lang/account.fr.json"
+#need_file:"ui/aoz-studio.svg"
+#need_file:"ui/confirm-password.svg"
+#need_file:"ui/cross.svg"
+#need_file:"ui/email.svg"
+#need_file:"ui/lucie.svg"
+#need_file:"ui/password.svg"
+#need_file:"ui/username.svg"
+#need_file:"ui/stars.svg"
+#need_javascript_file:"ui/auth-ui.js"
+#need_module: "lang"
+
+// MODULE IMPLEMENTATION
+
+{
+	this.aoz.moduleAccount = this
+	this.authenticated     = false
+	this.authenticating    = false
+	this.authUi            = undefined
+	this.certificate       = undefined
+	this.lang              = this.aoz.moduleLang
+	this.last_synchronous  = undefined
+	this.onClose           = undefined
+	this.onDone            = undefined
+	this.onError           = undefined
+	this.onSuccess         = undefined
+	this.synchronous       = true
+	this.token             = ''
+	this.user              = ''
+	this.visual_aspect     = 'aoz'
+
+	const DEBUG = false
+
+	//const base_url = 'http://localhost/aoz-app'
+	const base_url = 'https://account.aoz.studio/app'
+
+	const urlAnd = (url, get) => url + (url.includes('?') ? '&' : '?') + get;
+
+	this.accountAuthenticate = function(args = {})
+	{
+		if (DEBUG) console.log('accountAuthenticate', args, 'this =', this)
+		if (this.authenticating) return
+
+		let [left, mandatory, onClose, onDone, onError, onSuccess, synchronous, top, use_token, visual_aspect]
+			= [args.left, args.mandatory, args.onClose, args.onDone, args.onError, args.onSuccess, args.synchronous, args.top, args.use_token, args.visual_aspect]
+
+		if (left        === undefined) left        = 0
+		if (mandatory   === undefined) mandatory   = false
+		if (synchronous === undefined) synchronous = true
+		if (top         === undefined) top         = 0
+		if (use_token   === undefined) use_token   = true
+
+		this.authenticated    = false
+		this.authenticating   = true
+		this.certificate      = undefined
+		this.last_synchronous = this.synchronous
+		this.onClose          = onClose
+		this.onDone           = onDone
+		this.onError          = onError
+		this.onSuccess        = onSuccess
+		this.token            = ''
+		this.user             = ''
+
+		if (synchronous >= 0) {
+			this.synchronous = synchronous
+		}
+
+		const beforeDone = () =>
+		{
+			this.authenticating = false
+			if (this.last_synchronous !== undefined) {
+				this.synchronous      = this.last_synchronous
+				this.last_synchronous = undefined
+			}
+		}
+
+		const whenDone = (status, action = '') =>
+		{
+			beforeDone()
+			if (status !== 'ok') {
+				whenError(action)
+				return
+			}
+			this.authenticated = true
+			let code, message, messages = []
+			if (action.includes('register')) {
+				messages[0] = [1, this.lang.translate('account', 'You successfully registered')]
+				messages[1] = [2, this.lang.translate('account', 'You successfully authenticated')]
+			}
+			else if (action.includes('authenticate')) {
+				messages[0] = [2, this.lang.translate('account', 'You successfully authenticated')]
+			}
+			else if (action.includes('reset')) {
+				messages[0] = [3, this.lang.translate('account', 'Please check your email to validate password change')]
+			}
+			else {
+				messages[0] = [-1, this.lang.translate('account', 'Unknown action done :action', { action: action })]
+			}
+			if (DEBUG) console.log('messages', messages)
+			for (message of messages) {
+				if (DEBUG) console.log('message', message);
+				[code, message] = message
+				if (DEBUG) console.log('runProcedure', this.onSuccess, code, message)
+				if (this.onSuccess) this.aoz.runProcedure(this.onSuccess, { Event$: 'onsuccess', Code: code, Message$: message })
+				if (DEBUG) console.log('runProcedure', this.onDone, code, message)
+				if (this.onDone)    this.aoz.runProcedure(this.onDone,    { Event$: 'ondone', Code: code, Message$: message })
+			}
+		}
+
+		const whenError = (action) =>
+		{
+			let code
+			let message
+			if (action.includes('close')) {
+				[code, message] = [200, this.lang.translate('account', 'You closed the authentication window without authenticating')]
+			}
+			else if (action.includes('register')) {
+				[code, message] = [103, this.lang.translate('account', 'Could not register : probably already existing account')]
+				if (this.authUi) this.authUi.error(message)
+			}
+			else if (action.includes('authenticate')) {
+				[code, message] = [102, this.lang.translate('account', 'Could not authenticate : bad user or password')]
+				if (this.authUi) this.authUi.error(message)
+			}
+			else if (action.includes('reset')) {
+				[code, message] = [3, this.lang.translate('account', 'Please check your email to validate password change')]
+				if (this.authUi)    this.authUi.information(message)
+				if (this.onSuccess) this.aoz.runProcedure(this.onSuccess, { Event$: 'onsuccess', Code: code, Message$: message })
+				if (this.onDone)    this.aoz.runProcedure(this.onDone,    { Event$: 'ondone',    Code: code, Message$: message });
+				[code, message] = [0, '']
+			}
+			else {
+				[code, message] = [-101, this.lang.translate('account', 'Unknown connexion error')]
+			}
+			if (code && this.onError) {
+				this.aoz.runProcedure(this.onError, { Event$: 'onerror', Code: code, Message$: message})
+			}
+		}
+
+		if (use_token && getCookie('aoz-token')) {
+			if (DEBUG) console.log('accountAuthenticate using token')
+			postForm(
+				base_url,
+				{ checkToken: true, TOKEN: getCookie('aoz-token') },
+				response => {
+					if (DEBUG) console.log('authenticated using token', response)
+					this.authenticating = false
+					if (response.status === 'ok') {
+						this.token = response.token
+						this.user  = getCookie('aoz-user') ? getCookie('aoz-user') : ''
+						whenDone(response.status, base_url)
+						return
+					}
+					this.accountAuthenticate(mandatory, false)
+				}
+			)
+			return
+		}
+
+		// create authentication form widget
+		if (DEBUG) console.log('accountAuthenticate using form')
+		const form = document.createElement('form')
+		form.setAttribute('class', (visual_aspect ? visual_aspect : this.visual_aspect) + ' auth-ui login')
+		form.setAttribute('id', 'aoz-authentication')
+		form.setAttribute('method', 'POST')
+		form.style.left = left + 'px'
+		form.style.top  = top + 'px'
+		form.innerHTML = `
+		<h2>Login</h2>
+		<ul class="general actions">
+			<li class="close"><button keys-binding="yes" type="button">Close</button></li>
+		</ul>
+		<ul class="fieldset">
+			<li class="email">
+				<label for="email-1">Email</label>
+				<input keys-binding="yes" id="email-1" name="email" placeholder="email" type="text">
+			</li>
+			<li class="confirm-email">
+				<label for="confirm-email-1">Confirm email</label>
+				<input keys-binding="yes" id="confirm-email-1" name="confirm-email" placeholder="confirm email" type="text">
+			</li>
+			<li class="password">
+				<label for="password-1">Password</label>
+				<input keys-binding="yes" id="password-1" name="password" placeholder="password" type="password">
+			</li>
+			<li class="confirm-password">
+				<label for="confirm-password-1">Confirm password</label>
+				<input keys-binding="yes" id="confirm-password-1" name="confirm-password" placeholder="confirm password" type="password">
+			</li>
+			<li class="remember-me">
+				<label for="remember-me-1">Remember me</label>
+				<input keys-binding="yes" id="remember-me-1" name="remember-me" type="checkbox" value="1">
+			</li>
+		</ul>
+		<ul class="form actions">
+			<li class="forgot-password"><button data-action="app://User/Password/reset" keys-binding="yes" type="button">Forgot password</button></li>
+			<li class="login"><button data-action="app://User/authenticate" keys-binding="yes" type="button">Login</button></li>
+			<li class="sign-up"><button data-action="app://User/register" keys-binding="yes" type="button">Sign up</button></li>
+		</ul>
+		<ul class="messages"></ul>
+		`
+			.replace('placeholder="email"', 'placeholder="' + this.lang.translate('account', 'email') + '"')
+			.replace('placeholder="confirm email"', 'placeholder="' + this.lang.translate('account', 'confirm email') + '"')
+			.replace('placeholder="password"', 'placeholder="' + this.lang.translate('account', 'password') + '"')
+			.replace('placeholder="confirm password"', 'placeholder="' + this.lang.translate('account', 'confirm password') + '"')
+			.replace('>Email<', '>' + this.lang.translate('account', 'Email') + '<')
+			.replace('>Confirm email<', '>' + this.lang.translate('account', 'Confirm email') + '<')
+			.replace('>Password<', '>' + this.lang.translate('account', 'Password') + '<')
+			.replace('>Confirm password<', '>' + this.lang.translate('account', 'Confirm password') + '<')
+			.replace('>Remember me<', '>' + this.lang.translate('account', 'Remember me') + '<')
+			.replace('>Forgot password<', '>' + this.lang.translate('account', 'Forgot password') + '<')
+			.replace('>Login<', '>' + this.lang.translate('account', 'Login') + '<')
+			.replace('>Sign up<', '>' + this.lang.translate('account', 'Sign up') + '<')
+
+		document.getElementsByTagName('body')[0].append(form)
+		if (mandatory) {
+			form.getElementsByClassName('close')[0].remove()
+		}
+		this.authUi = new authUi(
+			form,
+			// onClose
+			() => {
+				setTimeout(() => {
+					beforeDone()
+					if (this.onClose) this.aoz.runProcedure(this.onClose, {
+						Event$:   'onclose',
+						Code:     0,
+						Message$: this.lang.translate('account', 'You closed the authentication form')
+					})
+					whenDone('no', 'close')
+				})
+			},
+			// onError
+			(code, message) => {
+				if (DEBUG) console.log('run onError', code, message)
+				if (this.onError) this.aoz.runProcedure(this.onError, {
+					Event$:   'onerror',
+					Code:     code,
+					Message$: this.lang.translate('account', message)
+				})
+			},
+			this.lang
+		)
+
+		form.submit = () => {
+			const action = form.getAttribute('action').replace('app://', base_url + '/ITRocks/Framework/')
+			if (DEBUG) console.log('authentication: submit form', action)
+			const data = {
+				login:     document.getElementById('email-1').value,
+				password:  document.getElementById('password-1').value,
+				password2: document.getElementById('confirm-password-1').value
+			}
+			if (!action.includes('reset')) {
+				data.newToken = true
+			}
+			postForm(
+				action,
+				data,
+				response => {
+					if (DEBUG) console.log('authenticated using form', response)
+					if (response.status !== 'ok') {
+						whenError(action)
+						return
+					}
+					this.token = response.token
+					this.user  = document.getElementById('email-1').value
+					if (document.getElementById('remember-me-1').checked) {
+						setCookie('aoz-token', this.token)
+						setCookie('aoz-user', this.user)
+					}
+					whenDone(response.status, action)
+					this.authUi.onClose = undefined
+					this.authUi.close()
+				}
+			)
+		}
+	}
+
+	this.accountAuthenticate_wait = function()
+	{
+		return !(this.synchronous && this.authenticating)
+	}
+
+	this.accountCertificate = function()
+	{
+		if (this.certificate || !this.authenticated || !this.token) {
+			this.certificate = ''
+			return
+		}
+		this.certificate = undefined
+		postForm(
+			base_url + '/Aoz/Account/API/getCertificate',
+			{ TOKEN: this.token },
+			response => {
+				const text = response.text ? response.text.trim() : ''
+				this.certificate = (text.startsWith('CERT:[') && text.endsWith(']'))
+					? text.substring(6, text.length - 1)
+					: ''
+			}
+		)
+	}
+
+	this.accountCertificate_wait = function()
+	{
+		return this.certificate !== undefined
+	}
+
+	const deleteCookie = function(name)
+	{
+		document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+	}
+
+	const getCookie = function(name)
+	{
+		const find = document.cookie.split(';').find(cookie => cookie.trim().startsWith(name + '='))
+		return find ? find.split('=')[1].trim() : undefined
+	}
+
+	const postForm = function(url, post, callback)
+	{
+		fetch(urlAnd(url, 'X'), {
+			body:    postData(post),
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			method:  'post',
+			timeout: 5000
+		}).then(response => {
+			return response.text()
+		}).then(text => {
+			text = text.trim()
+			if (text.startsWith('OK:TOKEN:[') && text.endsWith(']')) {
+				const token = text.substring(10, text.length - 1)
+				callback({ status: 'ok', token: token })
+			}
+			else {
+				callback({ status: 'NO', text: text })
+			}
+		}).catch(error => {
+			callback({ status: 'NO', text: error })
+			if (DEBUG) console.error('aoz account authenticate fetch error', error, url, post)
+		})
+	}
+
+	const postData = function(post)
+	{
+		const pairs = []
+		for (const name in post) {
+			pairs.push(encodeURIComponent(name) + '=' + encodeURIComponent(post[name]))
+		}
+		return pairs.join('&').replace('/%20/g', '+')
+	}
+
+	const setCookie = function(name, value)
+	{
+		const date = new Date()
+		date.setTime(date.getTime() + (365*24*60*60*1000))
+		const expires = date.toUTCString()
+		document.cookie = name + '=' + value + '; expires: ' + expires + '; path=/;'
+	}
+
+}
+
+// END MODULE IMPLEMENTATION
+
+// MODULE API
+
+/**api
+@name:Account Authentication Asynchronous
+@description:Enables the asynchronous account authentication mode
+@content:
+The default authentication mode is synchronous: if you call ACCOUNT AUTHENTICATE, the program will wait until the authentication process is done.
+You can change this behaviour and allow your program to continue with animation, pre-loading, etc. during the authentication process using a call to ACCOUNT AUTHENTICATION ASYNCHRONOUS or ACCOUNT AUTHENTICATION SYNCHRONOUS FALSE before you call ACCOUNT AUTHENTICATE.
+Then you can monitor the authentication process until it is complete using calls to ACCOUNT AUTHENTICATING().
+The behaviour can be set back to synchronous when you call ACCOUNT AUTHENTICATION SYNCHRONOUS.
+
+Example:
+
+~~~
+Account Authentication Asynchronous
+Account Authenticate
+While Account Authenticating()
+	Print "Waiting..."
+	Wait 1
+Wend
+Print "Done."
+~~~
+api*/
+Instruction Account Authentication Asynchronous
+{
+	aoz.moduleAccount.last_synchronous = undefined
+	aoz.moduleAccount.synchronous = false
+}
+End Instruction
+
+/**api
+@name:Account Authentication Synchronous
+@description:Enables or disables the asynchronous account authentication mode
+@param:Synchronous:boolean:Switch mode to synchronous if TRUE (default), asynchronous if FALSE
+@content:
+The default authentication mode is synchronous: if you call ACCOUNT AUTHENTICATE, the program will wait until the authentication process is done.
+You can change this behaviour and allow your program to continue with animation, pre-loading, etc. during the authentication process using a call to ACCOUNT AUTHENTICATION SYNCHRONOUS FALSE or ACCOUNT AUTHENTICATION ASYNCHRONOUS before you call ACCOUNT AUTHENTICATE.
+Then you can monitor the authentication process until it is complete using calls to ACCOUNT AUTHENTICATING().
+The behaviour can be set back to synchronous when you call ACCOUNT AUTHENTICATION SYNCHRONOUS.
+
+Example:
+
+~~~
+Account Authentication Synchronous false
+Account Authenticate
+While Account Authenticating()
+	Print "Waiting..."
+	Wait 1
+Wend
+Print "Done."
+~~~
+api*/
+Instruction Account Authentication Synchronous, Synchronous = true
+{
+	aoz.moduleAccount.last_synchronous = undefined
+	aoz.moduleAccount.synchronous = %Synchronous
+}
+End Instruction
+
+/**api
+@name:Account Authenticate
+@description:Runs the AOZ account authentication process
+@param:Mandatory:boolean:If TRUE, the authentication is mandatory, and the user is not allowed to close the authentication form
+@param:Left:integer:Left coordinate of the popup dialog, in browser pixels. Default is 0.
+@param:Top:integer:Top coordinate of the popup dialog, in browser pixels. Default is 0.
+@param:UseToken:boolean:Default is FALSE. If TRUE, the authentication will be done without displaying the for if an authentication token exists
+@content:
+The first time this is called, an authentication form is displayed for the user to register or login a free AOZ account.
+If the authentication process succeeds, an authentication token is saved into your local storage memory.
+The next time this is called, the authentication token will be used for automatic authentication: nothing will be asked to the user.
+You can force the authentication form to display even if a valid token exists using the UseToken = FALSE parameter.
+You can set the coordinates where the popup will be displayed using Left = 10, Top = 50 parameters.
+By default, the program waits until the user is authenticated before continuing its execution. You can use a call to ACCOUNT AUTHENTICATION ASYNCHRONOUS or ACCOUNT AUTHENTICATION SYNCHRONOUS FALSE before to allow your program to continue its execution.
+The Mandatory parameter allow you to remove the "abort" button, to force the user to authenticate.
+
+Example:
+
+A synchronous authentication process:
+~~~
+Account Authenticate
+Print "Done."
+~~~
+
+An asynchronous authentication process:
+~~~
+Account Authentication Asynchronous
+Account Authenticate
+While Account Authenticating()
+	Print "Waiting..."
+	Wait 1
+Wend
+Print "Done."
+~~~
+
+Authenticate without taking care of the token, with mandatory authentication before you can continue...
+with all options:
+~~~
+Account Authenticate Mandatory = TRUE, Left = 50, Top = 50, UseToken = FALSE
+Print "Done."
+~~~
+api*/
+Instruction Account Authenticate, Mandatory = false, Synchronous = -1, Left = 0, Top = 0, UseToken = true, OnDone$ = "", OnSuccess$ = "", OnError$ = "", OnClose$ = "", VisualAspect$ = ""
+{
+	#errors
+	#waiting
+	return {
+		type: 12,
+		waitThis:     aoz.moduleAccount,
+		callFunction: 'accountAuthenticate',
+		waitFunction: 'accountAuthenticate_wait',
+		args: {
+			left:          %Left,
+			mandatory:     %Mandatory,
+			onClose:       %OnClose$,
+			onDone:        %OnDone$,
+			onError:       %OnError$,
+			onSuccess:     %OnSuccess$,
+			synchronous:   %Synchronous,
+			top:           %Top,
+			use_token:     %UseToken,
+			visual_aspect: %VisualAspect$
+		}
+	}
+}
+End Instruction
+
+/**api
+@name:Account Authenticating
+@description:Tells if the asynchronous authentication process is still running or not
+@return:boolean:TRUE if the authentication process is still running, else FALSE
+@content:
+When in asynchronous account authentication mode using ACCOUNT AUTHENTICATE ASYNCHRONOUS or ACCOUNT AUTHENTICATE SYNCHRONOUS FALSE, you can monitor the authentication process until it is complete.
+
+Example:
+
+An asynchronous authentication process:
+~~~
+Account Authentication Asynchronous
+Account Authenticate
+While Account Authenticating()
+	Print "Waiting..."
+	Wait 1
+Wend
+Print "Done."
+~~~
+api*/
+Function Account Authenticating
+{
+	#errors
+}
+End Function({ aoz.moduleAccount.authenticating })
+
+/**api
+@name:Account Authenticated
+@description:Tells if the application is authenticated to an AOZ account
+@return:boolean:TRUE if an account has been authenticated, else FALSE
+@content:
+This function returns FALSE until you call ACCOUNT AUTHENTICATE and the authentication process succeeds.
+
+Example:
+
+~~~
+Account Authenticate
+If Account Authenticated()
+	Print "You are connected to your AOZ account."
+Else
+	Print "You are not connected to your AOZ account."
+End If
+~~~
+api*/
+Function Account Authenticated
+{
+	#errors
+}
+End Function({ aoz.moduleAccount.authenticated })
+
+/**api
+@name:Account Certificate
+@description:Gets the currently authenticated user account unique certificate
+@return:string:The certificate string
+@content:
+The account certificate is unique and stable for each user account.
+You should pay attention to not make it visible by anyone: this must stay private for the user, as it guarantees accesses to its private data.
+You must call ACCOUNT AUTHENTICATE and ensure an account is authenticated using ACCOUNT ANTHENTICATED() before getting the user certificate.
+
+Example:
+
+~~~
+Account Authenticate
+If Account Authenticated()
+	Certificate = Account Certificate()
+End If
+~~~
+api*/
+Function Account Certificate
+{
+	#errors
+	#waiting
+	return { type: 12, waitThis: aoz.moduleAccount, callFunction: 'accountCertificate', waitFunction: 'accountCertificate_wait' }
+}
+End Function({ aoz.moduleAccount.certificate })
+
+/**api
+@name:UI Visual Aspect
+@description:Choose the visual aspect for your UI calls
+@content:
+The authentication can take different visual aspects: choose it here.
+If you don't call this, a default "modern" visual aspect will be used.
+Visual aspects are: "aoz", "modern".
+
+Example:
+
+~~~
+UI Visual Aspect "modern"
+Account Authenticate
+~~~
+api*/
+Instruction UI Visual Aspect, Design$
+{
+	aoz.moduleAccount.visual_aspect = %Design$
+}
+End Instruction
+
+// END MODULE API

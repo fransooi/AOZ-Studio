@@ -1,0 +1,6 @@
+<i>EOF</i>
+<b>EOF</b> xxxxxxx
+=
+This tests to see if the end of a file has been reached at the current reading position, returning true for yes and false if this has not happened.
+
+

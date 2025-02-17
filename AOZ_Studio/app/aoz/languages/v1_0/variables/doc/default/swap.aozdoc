@@ -1,0 +1,10 @@
+<i>structure: swap the contents of two variables</i>
+<b>Swap</b> a,b
+<b>Swap</b> a#,b#
+<b>Swap</b> a$,b$
+=
+Use the SWAP command to swap over the data between any two variables of the same type. For example:
+@code
+A=10 : B=99: Print A,B
+Swap A,B : Print A,B
+@code

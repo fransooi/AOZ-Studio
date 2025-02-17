@@ -1,0 +1,12 @@
+<i>Menu Movable</i>
+<b>Menu Movable</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The default condition is that the menu items at a particular level may be moved directly by the user. Any level can be repositioned by moving the mouse pointer over the first item in the menu and holding down the left mouse button. A rectangular box will appear around the selected menu item, and it can be dragged to its new screen position. When the left mouse button is released, the menu is re-drawn at this location, along with all of its
+associated items.
+
+Use MENU MOVABLE to set the status of entire menu levels, or selected items in a menu hierarchy, but please
+note that this command does not allow you to change the status of any items below the selected level.
+
+

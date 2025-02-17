@@ -1,0 +1,10 @@
+<i>Dev Do</i>
+<b>Dev Do</b> xxxxxxx
+=
+The DEV DO instruction executes a DoIO operation via the specified channel. Obviously the correct internal
+structure parameters must be set using a STRUC command, before this operation is called. The specified channel
+number refers to a previously opened device channel. The command number holds the number of the IO command
+you wish to Do. This command may be entered directly by name, using the EQU function explained earlier. You are
+warned to take great care when using this instruction!"
+
+

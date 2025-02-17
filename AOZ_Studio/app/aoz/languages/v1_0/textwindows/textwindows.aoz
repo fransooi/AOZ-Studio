@@ -1,0 +1,1658 @@
+ /*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Text Window Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Texts
+@description:Instructions and functions to print and manage fixed character text output in AOZ screens
+@author:Francois Lionet
+doc*/
+
+
+//
+// Initialization
+//
+{
+	this.aoz.moduleTextWindows = this;
+
+	this.readText = function( args )
+	{
+		var self = this;
+		this.read_done = false;
+		var address = args[ 1 ];
+		var length = args[ 2 ];
+
+		if ( typeof address == 'undefined' )
+		{
+			var descriptor = this.aoz.filesystem.getFile( args[ 0 ] );
+
+			this.aoz.filesystem.loadFile( descriptor, { responseType: 'text' }, function( response, text, extra )
+			{
+				if ( response )
+				{
+					var reader = new TextReader( this.aoz, descriptor.filename, text, {}, function( response, data, extra )
+					{
+						self.read_done = true;
+					} );
+				}
+				else
+				{
+					self.read_done = false;
+					self.error = { error: 'cannot_load_file', parameter: address };
+				}
+			} );
+		}
+		else
+		{
+			var info = self.aoz.getMemory( address );
+			var text = info.block.extractString( info.start, typeof length != 'undefined' ? length : info.length );
+			var reader = new TextReader( this.aoz, args[ 0 ], text, {}, function( response, data, extra )
+			{
+				self.read_done = true;
+			} );
+		}
+	};
+	this.read_wait = function()
+	{
+		if ( this.read_done )
+		{
+			if ( this.error )
+				throw this.error;
+			return true;
+		}
+		return false;
+	};
+
+}
+
+/**api
+@name:Wind Open
+@description:Open a new text window in the current screen
+@param:index:index:The index of text window to open
+@param:x:integer:The horizontal coordinate of the left border of the window in the screen
+@param:y:integer:The vertical coordinate of the left border of the window in the screen
+@param:width:integer:The width in characters of the new text window
+@param:height:integer:The width in characters of the new text window
+@param:border:integer:The number of the border character to use (optional)
+@compatible: aoz, stos, amos
+@examples:instructions:i_31
+@content:
+The window opened by this instruction will be displayed on screen and used for all subsequent text operation until
+you command otherwise. WIND OPEN must be qualified by a window number (don't forget that zero has already
+been allocated to the current screen), followed by the x,y graphic coordinates setting the top left-hand corner of the
+new window, followed by the width and height of the new window in the number of characters needed. You may
+also specify an optional border style, with values ranging from 1 to 16.
+
+Try this example:
+~~~
+For W=1 To 3
+	Wind Open W,(W-1)*96,50,10,15,W
+	Paper W+3 : Pen W+6 : Clw
+	Print "Window";W
+Next W
+~~~
+api*/
+Instruction Wind Open, index, x, y, width, height, border
+{
+	#errors
+	aoz.currentScreen.windOpen(%index,{x:%x,y:%y,width:%width,height:%height},{border:%border});
+}
+End Instruction
+
+/**api
+@name:Wind Close
+@description:Close the current text window
+@compatible: aoz, stos, amos
+@examples:instructions:i_32
+@content:
+The WIND CLOSE command deletes the current window. If the WIND SAVE command has been activated, the
+deleted window will be replaced by the saved graphics, otherwise the area will be totally erased from the screen.
+
+Here is an example:
+~~~
+Wind Open 1,1,8,35,18,1 : Print "Press a key to close this window"
+Wait Key
+Wind Close
+~~~
+api*/
+Instruction Wind Close
+{
+	#errors
+	aoz.currentScreen.windClose();
+}
+End Instruction
+
+/**api
+@name:Wind Save
+@description:Save the character content of the the currenttext window so that it can be restored later
+@compatible: aoz, stos, amos
+@examples:instructions:i_31
+@content:
+This command is extremely valuable for the AOZ Studio programmer. Once activated, the WIND SAVE
+feature allows you to move your windows anywhere on screen without corrupting the existing display, by the
+following method. The contents of the current window is saved as soon as the command is used, and then every
+time a new window is opened, the contents of the windows underneath get saved automatically. The screen is then
+re-drawn whenever a window is moved to a new position or closed.
+api*/
+Instruction Wind Save
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.windSave();
+}
+End Instruction
+
+/**api
+@name:Wind Move
+@description:Move the current text window horizontally and vertically
+@param:dx:integer:Signed horizontal displacement
+@param:dy:integer:Signed vertical displacement
+@examples:instructions:i_32
+@compatible: aoz, stos, amos
+@examples:instructions:i_31
+@content:
+The current window can be moved to any acceptable graphic coordinates. Give the new x,y- coordinates after the
+WIND MOVE command, and the x-coordinate will be rounded to the nearest 16-pixel boundary automatically.
+
+Here is an example:
+~~~
+Wind Save : Wind Open 1,0,2,30,10,1 : Wind Save
+For M=1 To 100
+	Pen Rnd(15) : Paper Rnd(15) : Print : Centre "Making Movies"
+	Wind Move Rnd(30)+1,Rnd(100)+1
+	Wait Vbl
+Next
+~~~
+api*/
+Instruction Wind Move, dx, dy
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.windMove({x:%dx,y:%dy});
+}
+End Instruction
+
+/**api
+@name:Wind Size
+@description:Resize the current text window horizontally and vertically
+@param:newWidth:integer:New width in number of characters
+@param:newHeight:integer:New height in number of characters
+@compatible: aoz, stos, amos
+@examples:instructions:i_32
+@content:
+To change the size of the current window, specify the new width and new height in terms of the number of
+characters. If WIND SAVE has been activated, the original contents of the window will be re-drawn by this
+instruction. If the new window size is smaller than the original, any parts of the original image that lie outside of the
+new window boundaries will be lost. Alternatively, if the new window is larger, the space around the saved area will
+be filled with the current paper colour. Please note that the text cursor is always re-set to coordinates 0,0. For
+example:
+~~~
+Wind Open 1,16,16,22,10,2
+Print "I want to be wider!"
+Wind Save
+Wait 50
+Wind Size 30,10
+~~~
+api*/
+Instruction Wind Size, width, height
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.windSize({width:%width,height:%height});
+}
+End Instruction
+
+/**api
+@name:Window
+@description:Activate the given window in the current screen
+@param:index:index:Index of the window to activate
+@compatible: aoz, stos, amos
+@examples:instructions:i_32
+@content:
+This command sets the window number specified as the active window, to be used for all future text operations.
+There is an automatic saving system for re-drawing the contents of windows, which is explained below.For now, run the last example from Direct mode and enter the following statements:
+~~~
+Window 1: Print "AMOS"
+Window 3: Print "open windows on the world"
+Window 2: "lets me"
+~~~
+The active window is host to the flashing text cursor, unless it has been made invisible with a CURS OFF command.
+api*/
+Instruction Window, index=(index)
+{
+	#errors
+	aoz.currentScreen.setWindow(%index);
+}
+End Instruction
+
+/**api
+@name:Windon
+@description:Return the index of the current window in the current screen
+@return:any:The index of the current window in the current screen
+@compatible: aoz, stos, amos
+@examples:instructions:i_32
+@content:
+Before using windows in your programs, you will need to refer to their identification numbers. This function returns
+the value of the current window. For example:
+~~~
+Do
+	Cls : Wind Open Rnd(99)+1,1,1,25,5,1
+	Print "Window number ";Windon : Wait Key
+Loop
+~~~
+api*/
+Function Windon
+{
+}
+End Function( {aoz.currentScreen.currentTextWindow.number} )
+
+/**api
+@name:Locate
+@description:Set the position of the text cursor of the current window in the current screen
+@param:x:integer:The new horizontal position of the cursor in text coordinates
+@param:y:integer:The new vertical position of the cursor in text coordinates
+@examples:instructions:i_17
+@compatible: aoz, stos, amos
+@content:
+The Locate embedded command moves the graphics cursor to coordinates x,y measured relative to the top left-hand
+corner of the 'menu line. Please note that after this command, the graphics cursor will always be positioned at the
+bottom right of the object which has just be drawn. These coordinates will also be used to determine the location of
+any further items in your menu. For example:
+~~~
+Home : Print "Hello"
+Locate 0, 20 : Print "AOZ"
+~~~
+api*/
+Instruction Locate, x, y
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.locate({x:%x,y:%y});
+}
+End Instruction
+
+/**api
+@name:Clw
+@description:Clear the current text window with the Paper color, and restores the cursor at position 0, 0
+@compatible: aoz, stos, amos
+@examples:instructions:i_32
+@content:
+This simple command erases the contents of the current window and replaces it with a block of the current PAPER
+colour, like this:
+~~~
+Cls: Paper 4 : Wind Open 1,1,1,12,5,1
+Window 1: Print "Clear Off" : Wait 2
+Paper 9 : Clw
+~~~
+api*/
+Instruction Clw, paper
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.clw(%paper);
+}
+End Instruction
+
+/**api
+@name:Home
+@description:Move the text cursor at position 0, 0. The next text output with a "Print" instructions will be locate on the top-left of the windows
+@compatible: aoz, stos, amos
+@examples:instructions:i_18
+@content:
+Whenever you need to move the text cursor back to the top left-hand corner of the screen in a hurry, simply tell it to
+go HOME and it will automatically be relocated to coordinates 0,0, like this:
+~~~
+Cls: Locate 10,10: Print "I am going"
+Wait 100: Home : Print "Home!"
+~~~
+api*/
+Instruction Home
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.home();
+}
+End Instruction
+
+/**api
+@name:Curs Pen
+@description:Move the text cursor at position 0, 0. The next text output with a "Print" instructions will be locate on the top-left of the windows
+@param:color:integer:Index of the colour in teh palette of the screen the text window belongs to
+@examples:instructions:i_20
+@compatible: aoz, stos, amos
+@content:
+As a default, whenever your screen mode provides four or more colours the text cursor is set to index number 2,
+which is endowed with a built-in flash. The flashing can be turned off and back on again at any time using the
+FLASH OFF and FLASH commands, but as soon as you select another colour for your text cursor, the automatic
+flash will not apply. To change colours, use the CURS PEN command, followed by the index number of your
+choice.
+
+For example:
+~~~
+Curs Pen 2
+~~~
+Note that the new colour only effects the text cursor in the current open window, and has no influence over other
+cursors used by any other windows. If you want to introduce a flash to that last example, you could add this line
+before the CURS PEN command:
+~~~
+Flash 2,"(FFF,15)(000,15)"
+~~~
+api*/
+Instruction Curs Pen, color
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setCursPen(%color);
+}
+End Instruction
+
+/**api
+@name:Pen$
+@description:Return a magical string to use in a "Print" statement and change the colour of the pen used to draw the following texts
+@param:color:integer:Index of the colour to use in the palette of the screen
+@return:string:A magical string that will be understood by the "Print" command
+@examples:instructions:i_15
+@compatible: aoz, stos, amos
+@content:
+This function returns a special control sequence that changes the pen colour inside a string. This means that
+whenever the string is printed on the screen, the pre-set pen colour is automatically assigned to it. The format of the
+string returned by PEN$ is: Chr$(27)+"Pen"+Chr$(48+number). Here is an example:
+~~~
+P$=Pen$(2)+"Well all WHITE, "+Pen$(6)+" I still got the BLUES"
+Print P$
+Pen 4
+Print "In the RED"
+~~~
+api*/
+Function Pen$, color
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.pen$(%color)} )
+
+/**api
+@name:Paper$
+@description:Return a magical string to use in a "Print" statement and change the colour of the paper used to draw the following texts
+@param:color:integer:Index of the colour to use in the palette of the screen
+@return:string:A magical string that will be understood by the "Print" command
+@examples:instructions:i_15
+@compatible: aoz, stos, amos
+@content:
+Similarly to the PEN$ function, PAPER$ returns a character string that automatically sets the background colour
+when the string is printed on the screen. For example:
+~~~
+Pen 1
+B$=Paper$(3)+"Flash Harry"+Paper$(1)+"The Invisible Man"
+Print B$
+~~~
+api*/
+Function Paper$, color
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.paper$(%color)} )
+
+/**api
+@name:Print
+@description:Print items in the current window of the current screen. A semi-column at the end of will prevent a new-line
+@param:ITEMS:any:List of items separated byy commas or semi-columns
+@content:
+Items are printed on the screen, starting from the current cursor position, and they may include the characters in any
+group of variables or constants, up to the maximum line length of 255 characters. The PRINT command is also used
+to display graphics and information on screen, as is demonstrated throughout this User Guide. This Chapter will deal
+with printing text only.
+
+Print statements can occupy their own lines, but if more than one element to be printed is written as a single line of
+your program, each element must be separated from the next by either a semi-colon character or a comma. An
+element to be printed can be a string, a variable or a constant, and is placed inside a pair of quotation marks.
+
+A semi-colon is used to print elements immediately after one another, like this:
+~~~
+Print "Follow";"on"
+~~~
+A comma moves the cursor to the next "Tab" position on the screen, as follows:
+~~~
+Print "Next","Tab"
+~~~
+A Tab is an automatic marker that sets up a location for printing, and is often used to lay out columns of figures, or
+to make indentations in text, and setting Tab positions is explained later.
+
+Normally, the cursor is advanced downwards by one line after every PRINT command, but by using the semi-colon
+or comma, the rule can be changed. Here is an example:
+~~~
+Print "AOZ"
+Print "Studio"
+Print "is";
+Print "COOL!",
+~~~
+api*/
+
+/**api
+@name:Print Using
+@description:Print formatted text and numbers in the current window of the current screen. A semi-column at the end of will prevent a new-line
+@param:item:any:The item to print
+@compatible: aoz, stos, amos
+@content:
+PRINT USING allow you to format the data that you print. It works by using a series of special characters in the definition string.
+
+### The tilde character "~"
+Every ~ in the string variable is replaced by a single character from left to right, taken from an output string.
+
+For example:
+~~~
+Print Using "This is a ~~~~~~ example";"simple"
+~~~
+### The hash character: "#"
+
+Each # specifies one digit at a time, to be printed out from a given variable, with any unused digits being replaced
+by spaces. For example:
+~~~
+Print Using "###";123456
+~~~
+
+### The plus character: "+"
+
+This adds a plus sign to a positive number or a minus sign if the number is negative. For example:
+~~~
+Print Using "+##";10 : Print Using "+##";-10
+~~~
+### The minus character: "-"
+
+This gives a minus sign to negative numbers only. Positive numbers will be preceded by a space. For example:
+~~~
+Print Using "-##";10:Print Using "-##";-10
+~~~
+
+###The full stop character: "."
+
+When used with PRINT USING, the full stop (period) character places a decimal point in a number, and
+automatically centres it on screen. For example:
+~~~
+Print Using ".###";Pi#
+~~~
+
+### The semi-colon character: ";"
+
+This centres a number, but will not output a decimal point. For example:
+~~~
+Print Using "Pl is #;###";Pi#
+~~~
+
+### The exponential (circumflex) character: "^"
+
+This causes a number to be printed out in exponential format. For example:
+~~~
+Print Using "This is an exponential number^";10000*10000.5
+~~~
+api*/
+
+/**api
+@name:At
+@description:Return a magical string to use in a "Print" statement that changes the location of the cursor for the next characters
+@param:X:integer:Horizontal text coordinates where to print
+@param:Y:integer:Vertical text coordinates where to print
+@return:string:A magical string that will be understood by the "Print" command
+@examples:instructions:i_17
+@compatible: aoz, stos, amos
+@content:
+You may also change the position of the text cursor directly from inside a character string. This is ideal for
+positioning text once and for all on screen, no matter what happens in the program, because the text cursor can be set
+during the program's initialisation phase. The string that is returned takes the following format:
+~~~
+Chr$(27)+"MX" + x + "\r" + Chr$(27) + "MY" + y + "\r"
+~~~
+So whenever this string is printed, the text cursor will be moved to the text coordinates held by X and Y. For
+example:
+~~~
+A$="A"+At(10,10)+"Of"+At(2,4)+"String"+At(20,20)+"Pearls"
+Print A$
+~~~
+Imagine a Hi-Score table positioned like this:
+~~~
+SCORE=999
+Locate 12,10: Print "Hi Score ";SCORE
+~~~
+By using the AT function, the same table can be moved by editing a single string, no matter how many times it is
+used in the program, like this:
+~~~
+HI_SCORES=At(12,10)+"Hi Score"
+SCORE=999
+Print HI_SCORE$;SCORE
+~~~
+api*/
+Function At, x, y
+{
+	#errors
+	#returns:"string"
+}
+End Function( {aoz.currentScreen.currentTextWindow.at$({x:%x,y:%y})} )
+
+/**api
+@name:Pen
+@description:Change the colour of the pen used to draw characters during a "Print" statement
+@param:colorIndex:integer:The index of the colour in the current screen palette
+@compatible: aoz, stos, amos
+@examples:instructions:i_15
+@content:
+This command sets the colour of the text displayed in the current window, when followed by the colour index
+number of your choice. The default setting of the pen colour is index number 2, which is white, and alternative
+colours may be selected from one of up to 64 choices, depending on the current graphics mode. For example:
+~~~
+For INDEX=0 To 15
+	Pen INDEX
+	Print "Pen number ";INDEX
+Next INDEX
+~~~
+api*/
+Instruction Pen, colorIndex
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setPen(%colorIndex);
+}
+End Instruction
+
+/**api
+@name:Paper
+@description:Change the colour of the paper used to draw the background space of the characters during a "Print" statement
+@param:colorIndex:integer:The index of the colour in the current screen palette
+@examples:instructions:i_15
+@compatible: aoz, stos, amos
+@content:
+To select a background colour on which your text is to be printed, the PAPER command is followed by a colour
+index number between 0 and 63, depending on the graphics mode in use, in exactly the same way as PEN. The
+normal default colour index number is 1, giving an orange background colour, with other possibilities listed under
+the SCREEN OPEN command in this User Guide. Run the following simple example:
+~~~
+Pen 2:
+For INDEX=0 To 15
+	Paper INDEX: Print "Paper number ";INDEX;Space$(23)
+Next INDEX
+~~~
+api*/
+Instruction Paper, colorIndex
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setPaper(%colorIndex);
+}
+End Instruction
+
+/**api
+@name: Pen
+@author: Brian Flanagan
+@description: Function to return the current text Pen color index.
+@compatible: aoz, stos, amos
+@return: Integer color index for the current text Pen color.
+@content:
+~~~
+Pen 2
+Print Pen			// Will print 2
+Pen 3
+Print Pen			// Will print 3
+~~~
+api*/
+Function Pen
+{
+}
+End Function( { aoz.currentScreen.currentTextWindow.pen } )
+
+/**api
+@name: Paper
+@author: Brian Flanagan
+@description: Function to return the current text Paper color index.
+@compatible: aoz
+@return: Integer index for the current text Paper color.
+@content:
+~~~
+Paper 2
+Print Paper			// Will print 2
+Paper 3
+Print Paper			// Will print 3
+~~~
+api*/
+Function Paper
+{
+}
+End Function( { aoz.currentScreen.currentTextWindow.paper } )
+
+/**api
+@name:Centre
+@description:Display and centre a string in the middle of the current text window at the current vertical position of the text cursor
+@param:TEXT$:string:The text to centre in the text window
+@compatible: aoz, stos, amos
+@examples:instructions:i_20
+@content:
+Programmers often need to position text in the centre of the screen, and to save you the effort of calculating the text
+coordinates in order to achieve this, the CENTRE command takes a string of characters and prints it in the middle of
+the line currently occupied by the cursor. For example:
+~~~
+Locate 0,1
+Centre "ABOVE"
+Cmove ,3
+Centre "suspicion"
+~~~
+Please note that this instruction will have unpredicatable result if the string is larger than the width of the text window.
+api*/
+Instruction Centre, text$
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.centre(%text$);
+}
+End Instruction
+
+/**api
+@name:Border
+@description:Change teh text window character border to one of the pre-defined ones
+@param:borderNumber:integer:The number of the pre-defined text window borders to use
+@param:paper:integer:The color index of the background of the paper
+@param:pen:integer:The coloro index of the border
+@examples:instructions:i_31
+@compatible: aoz, stos, amos
+@content:
+This command allows you to change the style and colour of the current window border. Border style numbers range
+from 1 to 16, and the paper and pen colours can be selected from any available colour index numbers. Any of these
+parameters can be omitted from the BORDER instruction as long as the commas are included for any missing
+values: If the last example is still on screen, enter these lines from direct mode:
+~~~
+Border 3,2,3
+Border 2,,
+~~~
+api*/
+Instruction Border, borderNumber, paper, pen
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setBorder(%borderNumber,%paper,%pen);
+}
+End Instruction
+
+/**api
+@name:Writing
+@description:Define the logical operation done during the display of characters by the "Print" statement
+@param:mode1:integer:An Integer whose value indicates the writing mode.   0=REPLACE, 1=OR, 2=XOR, 3=AND, 4=IGNORE.
+@param:mode2:integer:An Integer whose value indicates the optional second writing mode.  0=Normal = Print Text and Background, 1=Paper = Only change the background (paper) color.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+
+The WRITING command is used to control how the subsequent text interacts with what is already on the screen,
+and it can be followed by either one or two values.The first value selects one of five writing modes:
+~~~
+Value   Mode     Effect
+0       REPLACE  New text replaces any existing screen data
+1       OR       Merge new text with screen data, using logical OR
+2       XOR      Combine new text with screen data, using OR
+3       AND      Combine new text and screen data, using logical AND
+4       IGNORE   Ignore all subsequent printing instructions.
+~~~
+A number set as the optional second value selects which parts of the text are to be printed on the screen, as follows:
+~~~
+Value   Mode    Effect
+0       Normal  Print text and background together
+1       Paper   The background is drawn in the Paper colour.  The text is drawn transparent.
+2       Pen     The text is drawn int the Pen colour.         The background is drawn transparent.
+~~~
+The default value for both of the WRITING parameters is zero, giving normal printed output.
+
+api*/
+/*
+	NOTE:  Corrections made above:
+		mode1 is NOT a "Mask containing bits as flags."  It is a number indicating which mutually exclusive option is selected.
+ 		mode2 is NOT a "Mask containing bits as flags."  It is a number indicating which mutually exclusive option is selected.
+*/
+Instruction Writing, mode1, mode2
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setWriting(%mode1,%mode2);
+}
+End Instruction
+
+/**api
+@name:Title Top
+@description:Display a title in the top of the current text window with a border. Will have no effect if the window has no border
+@param:title$:string:The text of the title to display
+@compatible: aoz, stos, amos
+@examples:instructions:i_31
+@content:
+Use this command to set a border title at the top of the current window to your chosen title string. This facility will
+only operate with bordered windows, as follows:
+~~~
+Cls: Wind Open 4,1,1,20,10,1
+Title Top "Top of the morning"
+~~~
+api*/
+Instruction Title Top, title$
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setTitleTop(%title$);
+}
+End Instruction
+
+/**api
+@name:Title Bottom
+@description:Display a title in the bottom of the current text window with a border. Will have no effect if the window has no border
+@param:title$:string:The text of the title to display
+@compatible: aoz, stos, amos
+@examples:instructions:i_31
+@content:
+Similarly, this instruction assigns a string to the bottom title of the current window, like this:
+~~~
+Cls : Wind Open 5,75,50,24,15
+Border 5,6,
+Title Bottom "Bottom of the barrel"
+~~~
+api*/
+Instruction Title Bottom, title$
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setTitleBottom(%title$);
+}
+End Instruction
+
+/**api
+@name:Curs Off
+@description:Hide the text cursor and stop all associated colour animation. Use this instruction before graphical output to speed up the display
+@compatible: aoz, stos, amos
+@content:
+This pair of commands is use to hide and reveal the text cursor in the current window. It has no effect at all on any cursors used in other windows.
+api*/
+Instruction Curs Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setCursor(false);
+}
+End Instruction
+
+/**api
+@name:Curs On
+@description:Show the text cursor and restarts all associated colour animation
+@compatible: aoz, stos, amos
+@examples:instructions:i_19
+@content:
+This pair of commands is use to hide and reveal the text cursor in the current window. It has no effect at all on any
+cursors used in other windows.
+api*/
+Instruction Curs On
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setCursor(true);
+}
+End Instruction
+
+/**api
+@name:Inverse On
+@description:Switch on Inverse setting for printing text in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+Inverse On swaps over the text and background colours already selected by the Pen and Paper
+instructions, and so sets up an inverse mode for printing. Example
+~~~
+Pen 2 : Paper 4: Print "I appear normal"
+Inverse On : Print "Poetry inverse"
+Inverse Off : Print "Don't be so negative"
+~~~
+api*/
+Instruction Inverse On
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setInverse(true);
+}
+End Instruction
+
+/**api
+@name:Inverse Off
+@description:Switch off Inverse setting for printing text in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+For example, see 'Inverse On'
+api*/
+Instruction Inverse Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setInverse(false);
+}
+End Instruction
+/**api
+@name:Bold On
+@description:Switch on Bold setting for printing text in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+To use Bold text, use the Bold On instructions, as follows:
+~~~
+Bold On : Print "This is BOLD"
+Bold Off: Print "This is normal"
+~~~
+api*/
+Instruction Bold On
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setBold(true);
+}
+End Instruction
+/**api
+@name:Bold Off
+@description:Switch off Bold setting for printing in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+For examples, see 'Bold On'
+api*/
+Instruction Bold Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setBold(false);
+}
+End Instruction
+/**api
+@name:Italic On
+@description:Switch on Italic setting for printing in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+To use Italic text, use the Italic On instruction as follows:
+~~~
+Italic On : Print "This is in Italics"
+Italic Off: Print "This is normal"
+~~~
+api*/
+Instruction Italic On
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setItalic(true);
+}
+End Instruction
+/**api
+@name:Italic Off
+@description:Switch off Italic setting for printing in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+For examples, see 'Italic On'
+api*/
+Instruction Italic Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setItalic(false);
+}
+End Instruction
+/**api
+@name:Under On
+@description:Switch on Underline setting for printing in the current text window.
+@param:width:integer:Optional. Width of the line used to underline the text. Default width is 2 if omitted.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+To use underlined text, use the Under On instruction as follows:
+~~~
+Under On : Print "This is where we draw the line"
+Under Off: Print "This is normal"
+~~~
+The line width used to underline can be set with the optional parameter 'width',  like this:
+~~~
+For S=1 To 7
+	Under On S    // S is the width
+	Print "Underlined Text - Line Width";Str$(S)
+Next
+Under Off
+Print "Back To Normal"
+~~~
+api*/
+Instruction Under On, width
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setUnder(true, %width);
+}
+End Instruction
+
+/**api
+@name:Under Off
+@description:Switch off Underline setting for printing in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:See 'Under On' for examples
+api*/
+Instruction Under Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setUnder(false);
+}
+End Instruction
+/**api
+@name:Outline On
+@description:Switch on Outline setting for printing in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+To use outline text, use the Outline On instruction, as follows:
+~~~
+Outline On : Print "This is Outlined"
+Outline Off: Print "This is normal"
+~~~
+api*/
+Instruction Outline On
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setOutline(true);
+}
+End Instruction
+/**api
+@name:Outline Off
+@description:Switch off Outline setting for printing in the current text window.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+For examples, see 'Outline On'
+api*/
+Instruction Outline Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setOutline(false);
+}
+End Instruction
+/**api
+@name:Shade On
+@description:Switch on Shade setting for printing in the current text window.
+@param:intensity:integer:Optional. Percentage value to apply to the colour to brighten or darken it. To darken the colour, the value should be between 0 and 100. To brighten it, above 100. Be aware that if you over-brighten a colour.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content:
+To use Shaded text, use the Shade On instruction like this:
+~~~
+Pen 4
+Colour 4,$008800 //set Pen colour to dull green
+Print "No Shade - Normal Colour"
+Shade On : Print "Shade On (default 50%)"
+Shade On 20 : Print "Shade On 20 - Dark at 20%"
+Shade On 170 : Print "Shade On 170 - Brighter by 70%"
+Shade Off : Print "Back To Normal"
+~~~
+api*/
+Instruction Shade On, intensity
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setShade(true, %intensity);
+}
+End Instruction
+/**api
+@name:Shade Off
+@description:Switch Off shading for Printed text.
+@compatible: aoz, stos, amos
+@examples:instructions:i_16
+@content: See 'Shade On' for examples.
+api*/
+Instruction Shade Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setShade(false);
+}
+End Instruction
+/**api
+@name:Shadow On
+@description:Turn ON the shadow effect for printing in the current text window.
+@compatible: aoz, stos, amos
+@examples:
+@content:
+Shadow On applies any shadow effect defined with Text Shadow to be used with Printed text. Example:-
+~~~
+Cls 1
+Pen 0 : Paper 1
+Text Shadow 2,6,8,$000000ff
+Shadow On
+Print "Shadow On"
+~~~
+api*/
+Instruction Shadow On
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setShadow(true);
+}
+End Instruction
+/**api
+@name:Shadow Off
+@description:Turn OFF the shadow effect for printed text.
+@compatible: aoz, stos, amos
+@examples:
+@content:
+Turn off the shadow effect for printed text. Note that the shadow defined with Text Shadow will still be active for all text drawn with the Text instruction. See example below:-
+~~~
+Cls 1
+Pen 0 : Paper 1
+Text Shadow 2,6,8,$000000ff
+Shadow On
+Print "Shadow On"
+Shadow Off
+Print "Shadow Off"
+~~~
+api*/
+Instruction Shadow Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setShadow(false);
+}
+End Instruction
+/**api
+@name:Scroll On
+@description:Turn ON the automatic scrolling of the content of the current text window when the cursor pass the bottom line
+@compatible: aoz, stos, amos
+@examples:instructions:i_22
+@content:
+The SCROLL commands are used to control the scrolling of the current window. SCROLL OFF turns off the
+scrolling, and whenever the cursor passes beyond the bottom of the window it will reappear from the top. SCROLL
+ON starts the scrolling process again, so that a new line is inserted when the cursor tries to pass beyond the bottom
+of the window.
+api*/
+Instruction Scroll On
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setScroll(true);
+}
+End Instruction
+
+/**api
+@name:Scroll Off
+@description:Turn OFF the automatic scrolling of teh content of the current text window when the cursor pass the bottom line, enforcing all further printing to be done in the top of the window
+@compatible: aoz, stos, amos
+@examples:instructions:i_22
+@content:
+The SCROLL commands are used to control the scrolling of the current window. SCROLL OFF turns off the
+scrolling, and whenever the cursor passes beyond the bottom of the window it will reappear from the top. SCROLL
+ON starts the scrolling process again, so that a new line is inserted when the cursor tries to pass beyond the bottom
+of the window.
+api*/
+Instruction Scroll Off
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setScroll(false);
+}
+End Instruction
+
+/**api
+@name:CUp$
+@description:Return a magical string to be used during a "Print" statement, moving the cursor one line up
+@return:string:A magical string understood by the "Print" statement
+@examples:instructions:i_18
+@compatible: aoz, stos, amos
+@content:
+Return the control character (30) to move cursor up one line.
+
+~~~
+Print
+Print "AO" + CUp$ + "Z"
+~~~
+api*/
+Function "CUp$"
+{
+}
+End Function( {String.fromCharCode(30)} )
+
+/**api
+@name:CDown$
+@description:Return a magical string to be used during a "Print" statement, moving the cursor one line down
+@return:string:A magical string understood by the "Print" statement
+@examples:instructions:i_18
+@compatible: aoz, stos, amos
+@content:
+Return the control character (31) to move cursor up one line.
+
+~~~
+Print "AO" + CDown$ + "Z"
+~~~
+api*/
+Function CDown$
+{
+}
+End Function( {String.fromCharCode(31)} )
+
+/**api
+@name:CLeft$
+@description:Return a magical string to be used during a "Print" statement, moving the cursor one character left
+@compatible: aoz, stos, amos
+@return:string:A magical string understood by the "Print" statement
+@examples:instructions:i_18
+@content:
+Return the control character (29) to move cursor up one line.
+
+~~~
+Print "AO" + CLeft$ + "Z"		// "Z" will replace "O"
+~~~
+api*/
+Function CLeft$
+{
+}
+End Function( {String.fromCharCode(29)} )
+
+/**api
+@name:CRight$
+@description:Return a magical string to be used during a "Print" statement, moving the cursor one character right
+@compatible: aoz, stos, amos
+@examples:instructions:i_18
+@return:string:A magical string understood by the "Print" statement
+@content:
+Return the control character (28) to move cursor up one line.
+
+~~~
+Print "AO" + CLeft$ + "Z"		// "Z" will replace "O"
+~~~
+api*/
+Function CRight$
+{
+}
+End Function( {String.fromCharCode(28)} )
+
+/**api
+@name:CUp
+@description:Move the cursor of the current text window one line up.
+@compatible: aoz, stos, amos
+@examples:instructions:i_18
+@content:
+This instruction will force a scrolling of all text down if the cursor is already on the first line and scrolling is enabled.
+api*/
+Instruction Cup
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.cursorUp();
+}
+End Instruction
+
+/**api
+@name:CDown
+@description:Move the cursor of the current text window one line down.
+@examples:instructions:i_18
+@compatible: aoz, stos, amos
+@content:
+This instruction will force a scrolling of all text up if the cursor is already on the last line and scrolling is enabled.
+api*/
+Instruction CDown
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.cursorDown();
+}
+End Instruction
+
+/**api
+@name:CLeft
+@description:Move the cursor of the current text window one character left.
+@compatible: aoz, stos, amos
+@examples:instructions:i_18
+@content:
+Cursor will wrap to the right and up if it was located at position zero, and eventual generate a scrolling down of the content of the window if scrolling is enabled.
+api*/
+Instruction CLeft
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.cursorLeft();
+}
+End Instruction
+
+/**api
+@name:CRight
+@description:Move the cursor of the current text window one character right.
+@compatible: aoz, stos, amos
+@examples:instructions:i_18
+@content:
+Cursor will wrap to the left and down if it was located at the rightmost position, and eventual generate a scrolling up of the content of the window if scrolling is enabled.
+api*/
+Instruction CRight
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.cursorRight();
+}
+End Instruction
+
+/**api
+@name:Memorize X
+@description:Store the horizontal position of the cursor in internal memory so that you can retreive it later
+@compatible: aoz, stos, amos
+@examples:instructions:i_19
+@content:
+The MEMORIZE commands store the current position of the x or y text cursor, so that you can print any text on the
+screen without destroying the original cursor coordinates. These may be reloaded using the REMEMBER X and REMEMBER Y commands:
+api*/
+Instruction Memorize X
+{
+	aoz.currentScreen.currentTextWindow.memoryX=aoz.currentScreen.currentTextWindow.xCursor;
+}
+End Instruction
+
+/**api
+@name:Memorize Y
+@description:Store the vertical position of the cursor in internal memory so that you can retreive it later
+@compatible: aoz, stos, amos
+@examples:instructions:i_19
+@content:
+The MEMORIZE commands store the current position of the x or y text cursor, so that you can print any text on the
+screen without destroying the original cursor coordinates. These may be reloaded using the REMEMBER X and REMEMBER Y commands:
+api*/
+Instruction Memorize Y
+{
+	aoz.currentScreen.currentTextWindow.memoryY=aoz.currentScreen.currentTextWindow.yCursor;
+}
+End Instruction
+
+/**api
+@name:Remember X
+@description:Recall the horizontal position of the cursor from internal memory and move the cursor to the position
+@compatible: aoz, stos, amos
+@examples:instructions:i_19
+@content:
+Use REMEMBER to position the text cursor at the coordinates saved by a previous MEMORIZE X or MEMORIZE Y command. If
+MEMORIZE has not been used, the relevant coordinate will automatically be set to zero. There is a ready-made
+example demonstrating these commands to be found under the SET CURS command, which is below.
+api*/
+Instruction Remember X
+{
+	aoz.currentScreen.currentTextWindow.locate({x:aoz.currentScreen.currentTextWindow.memoryX});
+}
+End Instruction
+
+/**api
+@name:Remember Y
+@description:Recall the vertical position of the cursor from internal memory and move the cursor to the position
+@compatible: aoz, stos, amos
+@examples:instructions:i_19
+@content:
+Use REMEMBER to position the text cursor at the coordinates saved by a previous MEMORIZE X or MEMORIZE Y command. If
+MEMORIZE has not been used, the relevant coordinate will automatically be set to zero. There is a ready-made
+example demonstrating these commands to be found under the SET CURS command, which is below.
+api*/
+Instruction Remember Y
+{
+	aoz.currentScreen.currentTextWindow.locate({y:aoz.currentScreen.currentTextWindow.memoryY});
+}
+End Instruction
+
+/**api
+@name:CMove$
+@description:Return a magical string to be used during a "Print" statement, moving the cursor by the given character displacements
+@param:dx:integer:Signed horizontal displacement
+@param:dy:integer:Signed vertical displacement
+@return:string:A magical string understood by the "Print" statement
+@examples:instructions:i_17
+@compatible: aoz, stos, amos
+@content:
+Characters can be printed relative to the current cursor position by setting up a string using the CMOVE$ function.
+The following example prints a string at coordinates 10,10 from the current text cursor:
+~~~
+A$=Cmove$(10,10)
+A$=A$+"AOZ Studio"
+Print A$
+~~~
+api*/
+Function CMove$, dx, dy
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.move$({x:%dx,y:%dy})} )
+
+/**api
+@name:CMove
+@description:Move the text cursor by a horizontal and/or vertical displacement
+@param:dx:integer:Signed horizontal displacement
+@param:dy:integer:Signed vertical displacement
+@examples:instructions:i_17
+@compatible: aoz, stos, amos
+@content:
+Characters can be printed relative to the current cursor position by setting up a string using the CMOVE$ function.
+The following example prints a string at coordinates 10,10 from the current text cursor:
+~~~
+Print "AOZ"
+CMove( 10, 0
+Print "Studio"
+~~~
+api*/
+Instruction CMove, x, y
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.cursorMove({x:%x,y:%y});
+}
+End Instruction
+
+/**api
+@name:CLine
+@description:Clear the line (paint with the Paper colour) located at the current vertical position of the cursor.
+@param:length:integer:Eventual number of characters to clear (optional)
+@compatible: aoz, stos, amos
+@examples:instructions:i_20
+@content:
+This command is used to clear the line currently occupied by the text cursor. If CLINE is qualified by a number,
+then that number of characters get cleared, starting from the current cursor position and leaving the cursor exactly
+where it is. For example:
+~~~
+Print "Testing Testing Testing";
+Cmove -7,
+Cline 7
+Wait Key
+Cline
+~~~
+This instruction does not move the cursor.
+api*/
+Instruction CLine, length
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.cLine(%length);
+}
+End Instruction
+
+/**api
+@name:HScroll
+@description:Scroll the content of the current window or line by one character horizontally
+@param:type:integer:Specifies what should scroll
+@examples:instructions:i_22
+@compatible: aoz, stos, amos
+@content:
+This command scrolls all text in the current open window horizontally, by a single character position. The following
+numbers can be used:
+~~~
+Number 	Effect
+1 		Scroll current line to the left
+2 		Scroll entire screen to the left
+3 		Scroll current line to the right
+4 		Scroll entire screen to the right
+~~~
+api*/
+Instruction HScroll, dx
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.hScroll(%dx);
+}
+End Instruction
+
+/**api
+@name:VScroll
+@description:Scroll the content of the current window or line by one character vertically
+@param:type:integer:Specifies what should scroll
+@compatible: aoz, stos, amos
+@examples:instructions:i_22
+@content:
+Similarly to HSCROLL, the values given to this command result in different vertical scrolling effects, one character at a time.
+~~~
+Number 	Effect
+1 		Scroll down text on and below current cursor Line
+2 		Scroll down text from top of screen to current cursor line only
+3 		Scroll up text from top of screen to current cursor line only
+4 		Scroll up text on or below current cursor line
+~~~
+Note that blank lines are inserted to fill any gaps left by these scrolling operations.
+api*/
+Instruction VScroll, dy
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.vScroll(%dy);
+}
+End Instruction
+
+/**api
+@name:Tab$
+@description:Return a string containing the Tab character (ASCII: 9) to be used in a "Print" statement
+@return:string:A string containing the Tab character
+@examples:instructions:i_20
+@content:
+The TAB$ function returns a special control character called TAB, which carries the Ascii code of 9. When this
+character is printed, the text cursor is automatically moved to the next tabulated column setting (Tab) to the right.
+The default setting for this is four characters, which can be changed with the SET TAB instruction.
+api*/
+Function Tab$
+{
+	#errors
+}
+End Function( {"\t"} )
+
+/**api
+@name:Set Tab
+@description:Set the width in characters used when printing the TAB character. Default is 4
+@param:width:integer:The number of characters to use for further printing of the TAB characters
+@examples:instructions:i_20
+@compatible: aoz, stos, amos
+@content:
+This simple command specifies the number of characters that the text cursor will move to the right when the next
+TAB$ is printed. For example:
+~~~
+Cls : Print "Home"
+Print Tab$;"And"
+Set Tab 10 : Print Tab$;"Away"
+~~~
+api*/
+Instruction Set Tab, width
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setTab(%width);
+}
+End Instruction
+
+/**api
+@name:Repeat$
+@description:Repeat a string
+@param:text$:string:The string to be repeated
+@param:number:integer:The number of repetitions
+@return:string:A string containing the original string repeated NUMBER of times
+@examples:instructions:i_20
+@content:
+To repeat the same string of characters using a single PRINT statement, follow your string of text with the number
+of times you want the repetition. Whenever the string is printed, a
+sequence of control characters is automatically added to the r$ variable, in the following format:
+~~~
+Chr$(27) + "R1" + A$ + Chr$( 13 ) + Chr$(27) + "R1" + Str$( n ) + Chr$( 13 )
+~~~
+api*/
+Function Repeat$, text$, number
+{
+	#errors
+}
+End Function( {aoz.repeat$(%text$,%number)} )
+
+/**api
+@name:Set Curs
+@description:Define the shape of the text cursor
+@param:l1:integer:Byte mask representing the first line
+@param:l2:integer:Byte mask representing the second line
+@param:l3:integer:Byte mask representing the third line
+@param:l4:integer:Byte mask representing the fourth line
+@param:l5:integer:Byte mask representing the fifth line
+@param:l6:integer:Byte mask representing the sixth line
+@param:l7:integer:Byte mask representing the seventh line
+@param:l8:integer:Byte mask representing the nineth line
+@examples:instructions:i_19
+@compatible: aoz, stos, amos
+@content:
+To customise the text cursor into something a little more personalised, you can change its shape into anything you
+like, providing you limit yourself to the eight lines of eight bits each that represent its appearance. Lines are
+numbered one to eight from top to bottom, and every bit set to 1 results in a pixel drawn in the current cursor pen
+colour, whereas a zero displays the current paper colour. To familiarise yourself with the technique, try the next
+example, which changes the text cursor into a Hallowe'en mask:
+~~~
+L1=%00111100
+L2=%01111110
+L3=%01011010
+L4=%11100111
+L5=%10111101
+L6=%01011010
+L7=%00100100
+L8=%00011000
+Set Curs L1 L2 , L3 L4 L5, L6 , L7, L8
+~~~
+Your routine will appear slightly different from that, because the system automatically strips away any leading zeros
+in binary listings.
+api*/
+Instruction Set Curs, b1, b2, b3, b4, b5, b6, b7, b8
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setCurs([%b1,%b2,%b3,%b4,%b5,%b6,%b7,%b8]);
+}
+End Instruction
+
+/**api
+@name:X Curs
+@description:Return the horizontal position of the text cursor, in text coordinates
+@return:integer:The horizontal coordinate of the text cursor
+@examples:instructions:i_19
+@compatible: aoz, stos, amos
+@content:
+~~~
+Print "Hello AOZ! ";X Curs			// Will print "Hello AOZ! 10"
+~~~
+api*/
+Function X Curs
+{
+}
+End Function( {aoz.currentScreen.currentTextWindow.xCursor} )
+
+/**api
+@name:Y Curs
+@description:Return the vertical position of the text cursor, in text coordinates
+@return:integer:The vertical coordinate of the text cursor
+@examples:instructions:i_19
+@compatible: aoz, stos, amos
+@content:
+~~~
+Locate 0, 15
+Print "Hello AOZ! ";Y Curs			// Will print "Hello AOZ! 15"
+~~~
+api*/
+Function Y Curs
+{
+}
+End Function( {aoz.currentScreen.currentTextWindow.yCursor} )
+
+/**api
+@name:X Graphic
+@description:Return the graphical horizontal position of a coordinate in the text window coordinate space
+@param:*x:integer:The horizontal coordinate to convert. (if ommited will return the coordinate of the text cursor)
+@return:integer:The horizontal coordinate of the given text coordinate in graphical screen space
+@examples:instructions:i_17
+@compatible: aoz, stos, amos
+@content:
+This example will display a bob at the position of the cursor...
+~~~
+Load "AMOSPRo_Examples:Objects/Bobs.abk"
+Locate 0, 10
+Print "Hello AOZ! "
+Bob 1, X Graphic( X Curs ), Y Graphic( Y Curs ), 1
+Wait Key
+~~~
+api*/
+Function X Graphic, x
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.xGraphic(%x)} )
+
+/**api
+@name:Y Graphic
+@description:Return the graphical vertical position of a coordinate in the text window coordinate space
+@param:*y:integer:The vertical coordinate to convert. (optional, if ommited will return the coordinate of the text cursor)
+@return:integer:The vertical coordinate of the given text coordinate in graphical screen space
+@examples:instructions:i_17
+@compatible: aoz, stos, amos
+@content:
+This example will display a bob at the position of the cursor...
+~~~
+Load "AMOSPRo_Examples:Objects/Bobs.abk"
+Locate 0, 10
+Print "Hello AOZ! "
+Bob 1, X Graphic( X Curs ), Y Graphic( Y Curs ), 1
+Wait Key
+~~~
+api*/
+Function Y Graphic, y
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.yGraphic(%y)} )
+
+/**api
+@name:Border$
+@description:Return a magical string understood by the "Print" statement, enforcing the drawing of a border around the given text
+@param:text$:string:The text to display
+@param:border:index:The index of the border to use
+@return:string:A magical string understood by the "Print" statement
+@examples:instructions:i_21,instructions:i_31
+@compatible: aoz, stos, amos
+@content:
+This works in much the same way as ZONES, by returning a string of characters that create a border around the
+required string of text. The AOZ Studio programmer can use it with ZONES to set up special "buttons" for
+alert windows and control consoles. In this case, the text held in the string will start at the current text cursor position. Border numbers can range from 1
+to 16, for example:
+~~~
+Locate 1,1: Print Border$("AOZ Studio",2)
+~~~
+The control sequence returned by BORDER has the following:
+~~~
+Chr$(27) + "B0" + border + Chr$(13) + Chr$(27) + "B1" + text + Chr$(13)
+~~~
+api*/
+Function Border$, text$, border=(index)
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.border$(%text$,%border)} )
+
+/**api
+@name:X Text
+@description:Convert a horizontal coordinate from the graphical coordinate space of the screen hosting the text window in a text coordinate within the window
+@param:x:integer:The horizontal coordinate to convert
+@return:integer:The converted coordinate, or -1 if the given coordinate does not lay inside of the text window
+@examples:instructions:i_17
+@compatible: aoz, stos, amos
+@content:
+api*/
+Function X Text, x
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.xText(%x)} )
+
+/**api
+@name:Y Text
+@description:Convert a vertical coordinate from the graphical coordinate space of the screen hosting the text window in a text coordinate within the window
+@param:y:integer:The vertical coordinate to convert
+@return:integer:The converted coordinate, or -1 if the given coordinate does not lay inside of the text window
+@examples:instructions:i_17
+@compatible: aoz, stos, amos
+api*/
+Function Y Text, y
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.yText(%y)} )
+
+/**api
+@name:Win Width
+@description:Returns the width of the current window in the current screen (number of columns)
+@compatible: aoz
+api*/
+Function Win Width
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.width} )
+
+/**api
+@name:Win Height
+@description:Returns the height of the current window in the current screen (number of lines)
+@compatible: aoz
+api*/
+Function Win Height
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.height} )

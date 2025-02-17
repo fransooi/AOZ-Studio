@@ -1,0 +1,19 @@
+<i>Step</i>
+<b>Step</b> xxxxxxx
+=
+Normally, the index counter is increased by 1 unit at every turn of a FOR ... NEXT loop. When the current value
+exceeds that of the last number specified, the loop is terminated.
+
+For example:
+@code
+For DAY=1 To 365
+Print DAY
+Next DAY
+@code
+STEP is used to change the size of increase in the index value, like this:
+@code
+For DAY=1 To 365 Step 7
+Print DAY
+Next DAY
+@code
+

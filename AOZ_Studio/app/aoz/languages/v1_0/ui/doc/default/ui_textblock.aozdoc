@@ -1,0 +1,21 @@
+<i>UI TextBlock</i>
+<b>UI TextBlock</b> xxxxxxx
+=
+The UI TextBlock is used to display a block of text within a defined area.
+
+If no height is set, the height of the text block will increase to fit all the text in the content$ parameter.
+
+If a height is set and the length of the content$ is split onto multiple lines, a vertical scroll bar will be automatically added to enable the text to be scrolled into view.
+
+Set the class$ parameter to apply a CSS (Cascading Style Sheet) style to the component. See the UI Demo for more examples.
+@code
+// A default text block
+UI TextBlock "MyTextBlock", content$="My Text Block"
+
+// A text block with auto vertical scroll
+UI TextBlock "MyTextBlock", height=100, content$="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s."
+
+// A Bootstrap styled text block
+UI TextBlock "MyTextBlock", content$="Warning Text Style Dark Background", class$="text-warning bg-dark", width=600
+@code
+

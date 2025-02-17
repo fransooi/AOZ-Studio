@@ -1,0 +1,42 @@
+<!-- Informations -->
+<div clas="page">
+	<div class="page_title">%CAT_TITLE$%</div>
+
+	<div class="page_field">
+		<label for="V_WIDTH">%F_RESOLUTION$%</label>
+		<select id="V_RESOLUTION$" value="%V_RESOLUTION$%" onchange="Editor.changeResolution(this.value)" autofocus tabindex=1>
+			<option value="1280x720">HD-Ready 720p (16:9)</option>
+			<option value="1920x1080">Full HD 1080p (16:9) - default</option>
+			<option value="2560x1440">Wide Quad HD 1440p (16:9)</option>
+			<option value="3840x2160">4K UDH (16:9)</option>
+		</select>
+		
+		<input type="text" class="small" id="V_WIDTH" value="%V_WIDTH%" tabindex=2></input>
+		<input type="text" class="small" id="V_HEIGHT" value="%V_HEIGHT%" tabindex=3></input>
+	</div>
+
+	<div class="page_field">
+		<label for="V_ORIENTATION$">%F_ORIENTATION$%</label>
+		<select id="V_ORIENTATION$" value="%V_ORIENTATION$%" tabindex=4>
+			<option value="autodetect">%F_AUTODETECT$%</option>
+			<option value="landscape">%F_LANDSCAPE$%</option>
+			<option value="portrait">%F_PORTRAIT$%</option>
+
+		</select>
+	</div>
+
+	<div class="page_field check-box">
+		<input type="checkbox" id="V_FPS$" %V_FPS$% tabindex=5></input>
+		<label for="V_FPS$" style="display:inline-block">%F_FPS$%</label>
+	</div>
+
+	<div class="page_field check-box">
+		<input type="checkbox" id="V_KEEP_RATIO$" %V_KEEP_RATIO$% tabindex=6></input>
+		<label for="V_KEEP_RATIO$" style="display:inline-block">%F_KEEP_RATIO$%</label>
+	</div>
+
+	<div class="page_field check-box">
+		<input type="checkbox" id="V_SMOOTH_ON$" %V_SMOOTH_ON$% tabindex=7></input>
+		<label for="V_SMOOTH_ON$" style="display:inline-block">%F_SMOOTH_ON$%</label>
+	</div>
+</div>

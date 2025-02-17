@@ -1,0 +1,18 @@
+<i>AReg</i>
+<b>AReg</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+AREG is a special array which is used to pass values to and from any of the 68000 processor's address registers.
+Specify the number of the register from 0 to 6, selected from either of the following two groups:
+A0, Al, A2. These registers can be read from AMOS Professional Basic, and changed at will. Whenever a machine
+code program is run, any new values will be transferred straight into the relevant address register.
+
+For example:
+@code
+Areg(0)=Varptr(A$) : Rem Load the address of A$ into A0
+Areg(1)=Varptr(B(0,0)) : Rem Load the address of B(0,0) into Al
+@code
+A3, A4, A5, A6. These are read-only registers. Any attempt to change their current contents will generate an "illegal
+function call" error message.
+

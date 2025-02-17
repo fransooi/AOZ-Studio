@@ -1,0 +1,23 @@
+<i>structure: set the current READ pointer</i>
+<b>Restore</b> Label
+<b>Restore</b> LABEL$
+<b>Restore</b> Line
+<b>Restore</b> number
+=
+To change the order in which your data is read from the order in which it was originally stored, you can alter the point where a READ operation expects to find the next DATA statement. The RESTORE command sets the position of this pointer by referring to a particular label or line number, and both labels and numbers may be calculated as part of an expression.
+=
+For example:
+@code
+Restore LAST
+Read A$
+Print A$
+Data "First"
+Data "Middle"
+LAST:
+Data "Last"
+@code
+=
+Each AOZ procedure has its own individual data pointer, so any calls to the command will apply to
+the current procedure only.
+=
+RESTORE is one of the AOZ programmer's most useful devices to force the computer to select information, depending on the actions of the user. It can be used for educational and business routines as well as adventure and role-playing games.

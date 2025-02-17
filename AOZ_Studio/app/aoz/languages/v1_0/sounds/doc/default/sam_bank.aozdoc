@@ -1,0 +1,23 @@
+<i>Sam Bank</i>
+<b>Sam Bank</b> xxxxxxx
+=
+The SAM BANK instruction dictates that all future SAM PLAY commands will take samples from the newly
+specified memory bank. If several parallel banks are set up, AOZ Studio can swap between them with a
+simple call to the SAM BANK command. To hear all of the samples used in one of the AOZ Studio
+example games, load the following file and listen to what is stored in the memory bank, using this routine:
+@code
+Load "AMOSPro_Productivity:Wonderland/Wonderland Samples.Abk"
+Sam Bank 6
+For A=1 To 5
+Print "Sample number ";A
+For B=1 To 3
+Sam Play A
+Wait 20
+Next B
+Next A
+@code
+Playing a sample from memory
+Samples do not have to be held in a special bank. In fact, a "raw" sound sample can be stored anywhere in the
+computer's memory using BLOAD, and then played with the following command:
+
+

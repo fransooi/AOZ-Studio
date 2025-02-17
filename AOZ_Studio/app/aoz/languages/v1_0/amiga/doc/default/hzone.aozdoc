@@ -1,0 +1,13 @@
+<i>HZone</i>
+<b>HZone</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The HZONE function is identical to ZONE, except for the fact that the position on screen is measured in hardware
+coordinates. This means that this function can be used to detect the presence of a hardware Sprite in one of the
+screen zones, in this format:
+@code
+N=Hzone(X Sprite(n),Y Sprite(n))
+@code
+
+

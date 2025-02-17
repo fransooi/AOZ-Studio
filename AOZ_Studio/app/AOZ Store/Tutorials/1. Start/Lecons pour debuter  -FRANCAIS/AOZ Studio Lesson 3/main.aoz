@@ -1,0 +1,342 @@
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+
+// Bienvenue dans votre AOZ Studio Leçon 3 - Écrit par Neil John Ives
+// Cette leçon sera complétée et améliorée plus tard par la leçon 6 avec des images et des sons.
+
+// Ce didacticiel utilisera de nouvelles instructions et concepts tels que:
+//      Print, Locate, Paper, Pen, Centre,
+//      Global, Input, Do Loop,
+//      Procedures, Integer (entier) et variables String (chaîne de caractéres),
+//      If Then, If End If,
+//      Upper$, Cls, Ink, Bar,
+//      Wait n, Wait Key,
+
+// Nous allons découvrir tout cela en construisant un jeu.
+// Le but du jeu est de traverser une rivière dans une barque avec un poulet, un renard et du maïs,
+// mais sans que personne ne soit mangé !
+
+// Commençons.
+
+// Les instructions Print, Locate, Pen, Paper, Center
+// ---------------------------------
+// Vous connaissez déjà ces instructions si vous avez suivi la leçon  1
+//  "Locate" est utilisée pour positionner le texte à l'écran avant l'instruction "Print".
+//      Ex: Locate 1,12  pour 1 colonne à partir de la gauche et 12 lignes vers le bas (à partir du haut)
+
+//  "Pen" définit la couleur du texte qui va s'afficher.
+
+//  "Paper" définir la couleur d'arrière-plan du texte
+//      Ex: Locate 1,12: Paper 11: Pen 1: Print "Hello" // Affiche "Hello" en blanc sur fond vert à l'emplacement 1,12
+
+// "Centre" indique au programme d'afficher au milieu de l'écran à l'emplacement défini
+//      Ex: Locate 0,10: Centre "Hello"
+
+// Variables (Entier et chaîne)
+// ----------------------------
+// Vous les connaissez déjà un peu si vous avez suivi la leçon 1.
+// Les variables sont utilisées pour stocker une valeur qui peut -varier-, d'où le choix du mot"variable".
+// Dans ce programme, certaines variables sont utilisées par exemple pour stocker des nombres
+// qui permettront au programme de savoir où placer le texte à l'écran.
+
+// Ces variables stockent des nombres entiers, donc elle sont appelées "variables entières"
+// Les variables entières suivantes sont utilisées dans ce programme:
+//  hx, stocke la position horizontale pour afficher le texte "Homme (H)"
+//  rx, même chose pour "Renard (R)"
+//  px, même chose pour "Poulet (P)"
+//  mx, même chose pour "Sac de Maïs (M)"
+// Utilisez des noms de variables qui représentent ce qu'elle contient, bon ici hx pour homme c'est pour faire court...
+
+// Il y a une différence entre une variable qui stocke un texte et une qui stocke un nombre.
+// Lorsqu'une variable est créée pour stocker un texte (même d'une seule lettre), et non un chiffre
+// son nom doit avoir un symbole dollar ajouté à la fin. Ex: MonNom$ = "Laurant"
+
+// Remarque : les nombres peuvent aussi être utilisés comme des textes.
+// Par exemple, un numéro de maison est généralement un texte car vous ne vous attendez pas
+// à effectuer des opérations mathématiques avec un numéro de maison, comme multiplier des numéros de maison.
+// Pour être plus précis, les lettres et les mots sont appelés chaînes en Francais ou String en AOZ
+
+// Dans ce programme, RightChoice$ et LeftChoice$ sont des variables chaîne qui contiennent la lettre
+// entrée par l'utilisateur, par exemple si il choisit le poulet (P) : RightChoice$ = "P"
+
+
+// Mise en place du programme
+// --------------------------
+// Ici, sont définies les positions de départ des mots à afficher
+hx=3     // Position horizontale de l'homme
+rx=3     // idem pour le renard
+px=3     // idem pour le poulet
+mx=3     // idem pour le maïs
+
+// Procedure
+// ---------
+// Voila les variables c'est fait, nous allons les utiliser tout le temps pour manipuler des chiffres, lettres ou mots
+// Abordons maintenant un nouveau concept, qui va vous faire passer un niveau important.
+// Les procédures : elles peuvent être considérées comme des modules ou des sections de programme,
+// chaque procédure étant comme un petit morceau de programme indépendant que l'on peut appeler quand on le désire.
+// Ceci est très utile, en particulier dans les grands programmes, pour ranger le code par fonctionnalités importantes.
+// Elles permettent de réutiliser des sections de code autant que voulu.
+// Comme elle forme un bloc indépendant cela permet aussi de la tester séparément du programme principal.
+
+// Les procédures sont exécutées simplement en les appelant par leur nom à partir de n'importe quelle partie du programme.
+// Les procédures peuvent recevoir des paramètres (valeurs dans des variables) pour permettre des calculs internes ou des décisions logiques.
+// Elles peuvent également fournir des résultats en retour, mais nous verrons cela plus tard.
+
+// Dans ce programme, nous avons créé cinq procédures: DRAWSCREEN, MOVERIGHT, MOVELEFT, CHECKIT and SHOWMESSAGES
+
+// Global
+// ------
+// Discutons d'un autre concept complexe: les variables globales. Si vous ne le comprenez de suite, pas de soucis.
+// "Global" permet de rendre "visibles" les variables dans toutes les parties du programme,
+// Sans utiliser Global elles sont locales et accessible uniquement à la procédure dans laquelle elles sont définies.
+// Ainsi vous pouvez avoir deux procédures, chacune utilisant la variable MonNom$ de facon indépendante, comme si c'était 2 variables différentes.
+
+// Ici, Nous allons définir nos variables de position hx,rx,px,mx Global,
+// afin qu'elles puissent être utilisées et modifiées partout dans le programme.
+// Donc globales à tout le programme y compris en dedans OU en dehors des procédures.
+
+Global hx,rx,px,mx
+
+// Instructions: If, Then, Else et End If
+// --------------------------------------
+// Une instruction trés utile !
+// Composée de 3 parties : "If" et "Then" et "Else", qui permet de prendre des décisions.
+//  If (si quelque chose est vrai) Then (alors exécute une série d'actions) Else (Sinon exécute d'autres actions jusqu'à) "End If" (Fin Si)
+// Par exemple, Si Highscore = 1000 Alors Affiche "Gagné" Sinon Affiche "Perdu"
+//  en AOZ cela donne : If Highscore = 1000 Then Print "Gagné" Else Print "Perdu"
+
+// Remarque : les parties Else et End If sont optionnelles.
+//  exemple : If couleur = 1 then Print "Rouge"
+// Même le Then peut être optionnel si on utilise le End If :
+
+// Instructions: If, End If
+// ------------------------
+// Un "if" peut effectuer plusieurs actions :
+// If Highscore = 1000
+//   cls   // Efface l'écran
+//   Print "Bravo"
+//   Print "tu es le meilleur"
+//   Print
+// End If
+
+// Instruction Upper$
+// -----------------------------------
+// Convertit une chaîne en MAJUSCULES
+// Upper$ ("laurant") sera converti en "LAURANT".
+// Ex: A$ = Upper$ ("francois")  // Dans la variable chaîne A$ nous trouverons "FRANCOIS".
+
+// Instruction Cls
+// ---------------
+// Pour Clear Screen
+// Efface l'écran. Par défaut (sans nombre), l'écran est effacé avec la couleur du fond actuelle.
+// Si un nombre est ajouté, l'écran sera effacé en utilisant l'une des couleurs de la palette actuelle
+//  CLS 0: l'écran est effacé avec du noir.
+//  CLS 1: l'écran est effacé avec du blanc.
+
+// Instruction Bar
+// ---------------
+// Dessine un rectangle plein.
+//   Ex: Bar 1,1 to 100,100,
+// Dessine un rectangle avec le coin supérieur gauche à 1 pixel du bord gauche et à 1 pixel du haut de l'écran
+// et le coin inférieur droit à 100 pixel de largeur (vers la droite) et 100 pixel de hauteur (vers le bas).
+// La couleur de remplissage du rectangle est celle définie par la commande Ink précédente.
+
+// Instruction Wait n
+// ------------------
+// Comme dans la leçon 2, la fonction "Wait" suivie d'un nombre met le programme en pause pendant un temps n.
+// Le temps est exprimé en secondes et peut être un nombre à virgule flottante.
+//  Wait 10   // met le programme en pause pendant 10 secondes
+//  Wait 0,5  // met le programme en pause pendant une demi-seconde
+//  Wait 0,02 // met le programme en pause pendant 1/50e de seconde
+// Cela peut être utile pour laisser un affichage (dans notre exemple lorsque le poulet obtient le maïs, puis quand le renard obtient le poulet)
+
+// Instruction Wait Key
+// --------------------
+// Arrête le programme jusqu'à ce que l'utilisateur appuie sur n'importe quelle touche.
+// Dans ce programme, il est utilisé pour permettre à l'utilisateur de prendre son temps pour lire le message
+
+// Instruction Do Loop
+// -------------------
+// Le Do Loop crée une boucle, une séquence répétitive comme la boucle principale de notre programme ci-dessous.
+
+// Voici d'ailleurs quelques explications de ce que vous trouverez dans notre boucle Do Loop :
+
+// L'instruction "Input" arrête le programme pour poser une question et stocke la réponse dans une variable.
+// Le message entre les guillemets s'affiche comme avec un Print,
+// puis un point virgule (qui sépare),
+// puis la variable qui saisie la réponse tapée au clavier.
+//  Par exemple : Input "Que doit-il prendre H, R, P, M ?"; RightChoice$
+
+// Note pour comprendre la suite dans le programme :
+//    Lorsque l'homme est à gauche de la rivière (hx = 3), la variable RightChoice$ passe la valeur à la procédure MOVERIGHT (bouge à droite).
+//    Lorsque l'homme est à droite de la rivière (hx = 60), la variable LeftChoice$ passe la valeur à la procédure MOVELEFT (bouge à gauche).
+//    Lorsque tout le groupe est au-dessus de la rivière (position 60), le jeu est gagné et l'utilisateur voit un message de félicitations.
+//   Vous remarquez que souvent j'utilise des noms de variables ou de procédures en Anglais, mais vous pouvez bien sur les nommer comme vous le désirez.
+
+
+// OK, la plupart des instructions importantes te sont connues maintenant.
+// Tu es capable de commencer à programmer.
+
+// Vérifions tout cela avec cet exemple de jeu.
+
+// Le jeu commençe par utiliser la procédure DRAWSCREEN.
+// Pour créer une procédure, il suffit de taper : "Procédure DRAWSCREEN", pour lui donner le nom DRAWSCREEN
+// de taper les instructions appartenant à cette prodécure et de terminer en plaçant "End Proc" à la fin.
+// Ensuite, pour utiliser DRAWSCREEN, nous allons simplement à taper ce nom DRAWSCREEN et il exécutera les instructions.
+// vous verrez ci-dessous, c'est plus simple avec un exemple ...
+
+// Début de la partie principale du programme:
+
+DRAWSCREEN    // Exécute la procédure DRAWSCREEN qui est définie plus bas.
+
+Do		// Début de la boucle Do..Loop
+    If hx=3               // Si l'homme est sur le côté gauche de la rivière
+        locate 1,12       // Placer la position du texte sur le côté gauche
+        Input "Que devrait-il emporter R,P,M ? ";RightChoice$ // Nous utilisons Input pour afficher la question et obtenir la réponse dans RightChoice$
+        MOVERIGHT[RightChoice$] // Envoi le choix de l'utilisateur à droite avec la procédure MOVERIGHT
+    End if     // Fin du test et des instructions qui commencait avec If hx=3
+
+    If hx = 60 and rx = 60 and px = 60 and mx = 60  // Si ils sont tous à droite de la riviére. Note: "and" (ET) veut dire ajoute la condition suivante
+        SHOWMESSAGES[4]                             // Demande à la procédure d'afficher le message 4 : 'Bravo'
+        Wait 1                                      // Attendre (1 seconde)
+        End                                         // Puis stop (tout) le programme
+    End If
+
+    If hx=60 			// Si l'homme est sur le côté droit de la rivière
+        Locate 52,11 	// Placer la position du texte sur le côté droit
+        Input "Qui revient en arrière ? ";LeftChoice$
+        MOVELEFT[LeftChoice$]
+    End If
+Loop   	// fin de la boucle inconditionnelle qui a commencé par le "Do". Le seul moyen d'en sortir sera par les "End"
+		// Note : ce n'est pas le moyen le plus joli de programmer, mais pour une premiére lecon c'est efficace.
+		// Vous pouvez reflechir à faire différemment avec des boucles conditionnelles If..Then..Else..Endif ou While..Wend par exemple
+
+// Voici maintenant les procédures. Vous voyez, vous pouvez les placer n'importe où dans le programme, pas nécessairement au début.
+
+Procedure DRAWSCREEN
+    // Cette procédure redessine tout l'écran. Ceci est nécessaire pour supprimer l'ancien texte avant d'imprimer le texte dans une nouvelle position
+
+    CLS 11 // Efface en vert (herbe)
+    Ink 20 // Définit la couleur de la rivière
+    Bar 1000,0 To 1050,1200 // Puis dessine la rivière en utilisant un rectangle
+
+    // Configurer les couleurs du texte
+    Paper 11 //Fond vert pour les mots
+    Pen 1 	 //Texte blanc
+
+    // Chaînes de texte
+	Locate 1,0:Print "Un homme doit faire traverser la riviére"
+    Locate 1,1:Print "à un renard, un poulet et du maïs."
+    Locate 1,3:Print "Mais il a une petite barque, il ne peut"
+    Locate 1,4:Print "prendre qu'une chose avec lui."
+
+    // Afficher les chaînes à des positions horizontales (hx, rx, etc.) définies au début puis dans les procédures MOVERIGHT et MOVERIGHT
+    Locate hx,6:Print "Homme (H)"
+    Locate rx,8:Print "Renard (R)"
+    Locate px,9:Print "Poulet (P)"
+    Locate mx,10:Print "Sac de Maïs (M)"
+
+    CHECKIT // Allez à la procédure qui vérifie une mauvaise décision
+End Proc
+
+Procedure MOVERIGHT[Ch$] // La procédure MOVERIGHT utilise la variable Ch$ comme paramètre
+    Ch$ = Upper$(Ch$)  // Remplace l'entrée de l'utilisateur par des majuscules car nous ne pouvons pas dire s'il entrera des majuscules ou des minuscules
+    // En effet l'une des lettres suivantes: "H", "R", "P", "M" ou "h", "r", "p", "m"
+    // a pu être envoyé à cette procédure par la variable de chaîne Ch$
+
+    // Définire les positions du texte à droite de la rivière
+    If Ch$="H" then hx=60 		// L'home seul passe la riviére
+    If Ch$="R" then rx=60:hx=60 // L'homme doit toujours traverser la rivière avec le renard, le poulet ou le sac de maïs
+    If Ch$="P" then px=60:hx=60 // car on force l'homme à traverser automatiquement si l'utilisateur à demandé
+    If Ch$="M" then mx=60:hx=60 // de faire passer le renard, le mais ou le poulet
+
+    DRAWSCREEN  // Une Procédure peut être appelée à partir d'une autre Procédure, ici pour redessiner l'écran
+End Proc
+
+Procedure MOVELEFT[Ch$]
+    // Voir les commentaires de MOVERIGHT, c'est idem
+    Ch$ = Upper$(Ch$)
+    If Ch$="H" then hx=3
+    If Ch$="R" then rx=3:hx=3
+    If Ch$="P" then px=3:hx=3
+    If Ch$="M" then mx=3:hx=3
+
+    DRAWSCREEN
+End Proc
+
+Procedure CHECKIT
+    // Vérifier une mauvaise décision, en utilisant les positions du texte, (hx, rx, etc.) pour décider quel message afficher
+    // Les caractères '<>' signifient "non égal à" (ou encore "différent de")
+	// Le "and" vérifie deux conditions simultanées (ET)
+
+	// Si le renard, le poulet et le maïs sont ensemble, mais l'homme n'est pas avec eux
+	// Cas ou l'on à les mêmes valeurs pour rx, px et mx
+	If rx=px and mx=px and hx<>px Then SHOWMESSAGES[1]
+		// Notez le paramètre envoyé à la procédure SHOWMESSAGES est entre crochets []
+
+    // Si le renard et le poulet sont ensemble, mais l'homme n'est pas avec eux
+    If rx=px and hx<>px Then SHOWMESSAGES[2]
+		// Rappels : <> signifie "différent de". Le "and" vérifie deux conditions simultanées içi rx égale à px ET hx différent de px
+
+    // Si le poulet et le sac de maïs sont ensemble, mais l'homme n'est pas avec eux
+    If px=mx and hx<>px Then SHOWMESSAGES[3]
+End Proc
+
+Procedure SHOWMESSAGES[M]
+    // Procédure pour afficher le message approprié
+
+    // Tout d'abbord on prépare le format d'affichage pour les chaînes de messages
+    Cls 0 		// Écran effacé en noir
+    Paper 0 	// Papier noir
+    Pen 4 		// Texte rouge
+    Locate 0,9 	// positionne le message
+
+    Curs Off	// Désactive le curseur clignotant à l'écran
+
+    // Remarquez comment le nombre, envoyé à la procédure par les [], est stocké dans la variable 'M'.
+    // Il est utilisé pour sélectionner et afficher l'un des trois messages
+	    If M = 1
+        Centre "Le poulet a mangé le maïs..." // Instruction pour afficher au centre à l'endroit indiqué par le Locate
+        Wait 1      // Une seconde de pause pour un effet plus dramatique !
+        Locate 1,11 // Descendre un peu le prochain texte
+        Centre "...puis le renard a mangé le poulet!"
+    End if
+
+    If M = 2 Then Centre "Le renard a mangé le poulet !"
+
+    If M = 3 Then  Centre "Le poulet a mangé le maïs !"
+
+    If M = 4 then  Centre "Félicitations, vous l'avez fait !" : Pop Proc
+
+    Paper 0: Pen 1 	// Revenir aux couleurs normales du papier et du texte
+    Locate 1,22 : Centre "appuyez sur une touche"
+    Curs On 		// Remettre le curseur clignotant
+    Wait key 		// Attendre que l'utilisateur appuie sur la touche
+
+    hx=3:rx=3:px=3:mx=3 // Réinitialiser les positions de départ
+
+    DRAWSCREEN
+
+End proc
+
+
+//    _       __     ____       __                 __
+//   | |     / /__  / / /  ____/ /___  ____  ___  / /
+//   | | /| / / _ \/ / /  / __  / __ \/ __ \/ _ \/ /
+//   | |/ |/ /  __/ / /  / /_/ / /_/ / / / /  __/_/
+//   |__/|__/\___/_/_/   \__,_/\____/_/ /_/\___(_)
+
+// Voila, on peut prendre une profonde respiration. Vous avez beaucoup appris avec ce tutorial.
+// Non seulement de nombreuses fonctions, mais aussi des concepts de programmation et de la logique.
+// Il est normal que vous ayez besoin de temps, mais je peux vous dire
+// qu'une fois que vous aurez compris tout cela ... vous serez en mesure d'accomplir de grandes choses,
+// vous serez suffisamment bien formé pour démarrer le programme dont vous rêvez.
+//
+// Félicitations, quand vous vous voulez nous pouvons passer à la Leçon 4 de cette série de tutoriaux.

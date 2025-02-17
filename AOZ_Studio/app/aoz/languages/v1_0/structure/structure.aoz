@@ -1,0 +1,1233 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Structure Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author FL
+ * @date first pushed on 27/10/2019
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:General
+@description:Basic Langage structure instructions. To be documented later.
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Multi On
+@description:Restart the multitasking inside of Aoz
+@compatible: aoz
+@content:
+Use this function if you have previously disabled multitasking.
+api*/
+Instruction Multi On
+{
+	this.aoz.multiOn = true;
+}
+End Instruction
+
+/**api
+@name:Multi Off
+@description:Stop multitasking in Aoz
+@compatible: aoz
+@content:
+Aoz can handle several concurrent threads of BASIC code, for example in the case of an Every procedure.
+
+The procedure may need to change values global to the application, for example the current screen, in order to draw in it at regular intervals.
+
+Therefore changing the current screnn in the main application at the same time, and causing the application to crash or mis-function.
+
+The Multi Off instruction offers a solution to the problem, it stops all the other threads currently running but the one wher the instruction is located.
+
+You can then modify the screen, draw into it, the main application will be paused until you restore multitask by using the "Multi On" instruction.
+
+'''
+// Display management
+Every 0.020 Proc UPDATESCREEN
+Procedure UPDATESCREEN
+
+	// Turn off multitasking
+	Multi Off
+
+	CURRENTSCREEN = Screen()
+	Screen 10
+	DrawPanel
+	Screen CURRENTSCREEN
+
+	// Turn multitasking back on
+	Multi On
+
+	Every On
+
+End Proc
+'''
+api*/
+Instruction Multi Off
+{
+	this.aoz.multiOn = false;
+}
+End Instruction
+
+
+/**api
+@name:ErrTrap
+@description:Return the number of the last Trapped error, and reset the number
+@return:integer:The number of the last trapped error, 0 if no error occured
+@compatible: aoz, stos, amos
+@content:
+This function is used to return the error status after a previous TRAP command.
+If no error has been detected, a zero is returned, otherwise the appropriate error number is given. The related error message can then be returned using the ERR$ function.
+api*/
+Function ErrTrap
+{
+	var number = this.trappedErrorNumber;
+	this.trappedErrorNumber = 0;
+}
+End Function( {number} )
+
+/**api
+@name:Err$
+@description:Return the text of an error message from it's number
+@param:errorNumber:integer:The number of the error
+@return:string:The text of the message
+@compatible: aoz, stos, amos
+@content:
+This simple function returns an error message string.
+If the error number is out of range, then an empty string will be given.
+ERR$ will return error messages as long as they are loaded in memory, but messages will not be returned from a compiled program, or if the Editor has been KILLed.
+api*/
+Function Err$, errorNumber
+{
+}
+End Function( {aoz.errors.getErrorFromNumber(%errorNumber).message} )
+Function Err$
+{
+}
+End Function( {this.lastErrorMessage} )
+
+/**api
+@name:ErrN
+@description:Return the number of the last error that occured
+@return:integer:The number of the error, or 0 if no error occurred
+@compatible: aoz, stos, amos
+@content:
+When you use ON ERROR to create error handling routines, you will want to know exactly what sort of error has
+happened in the main program. Errors discovered while your program is running each have a specific error code
+number, and the number of the last error to be isolated can be returned by using the ERRN function.
+api*/
+Function ErrN
+{
+}
+End Function( {this.lastError} )
+
+/**api
+@name:Resume Next
+@description:Resume the execution of current program after an error trapping routine to the next instruction after the error occurred.
+@compatible: aoz, stos, amos
+@content:
+Used on its own, RESUME will jump back to the statement which caused the error and try it again. To return to the
+instruction immediately after the one that caused the error, use RESUME NEXT. Alternatively, to jump to a specific
+point in your main program, simply follow RESUME with a reference to a chosen label or a normal line number.
+api*/
+
+/**api
+@name:Resume
+@description:Resume the execution of current program after an error trapping routine to the instruction that caused the error.
+@compatible: aoz, stos, amos
+@content:
+Used on its own, RESUME will jump back to the statement which caused the error and try it again. To return to the
+instruction immediately after the one that caused the error, use RESUME NEXT. Alternatively, to jump to a specific
+point in your main program, simply follow RESUME with a reference to a chosen label or a normal line number.
+
+Warning: if you do not correct the cause of error, a new error will be generated, resumed, and your computer could go in a never-ending loop.
+api*/
+
+/**api
+@name:Every On
+@description:Toggle regular EVERY calls on
+@compatible: aoz, stos, amos
+@examples:instructions:i_14
+@content:
+EVERY ON should be used before the relevant sub-routine or procedure has finished executing.
+EVERY OFF is the default condition, and is used to disable the automatic calling process altogether.
+api*/
+
+/**api
+@name:Every Off
+@description:Toggle regular EVERY calls off
+@compatible: aoz, stos, amos
+@examples:instructions:i_14
+@content:
+EVERY ON should be used before the relevant sub-routine or procedure has finished executing.
+EVERY OFF is the default condition, and is used to disable the automatic calling process altogether.
+api*/
+
+/**api
+@name:Every
+@description:Call subroutine or procedure at regular intervals
+@param:time:float:The delay between each call
+@param:procedure:procedure:A procedure to call
+@param:label:label:A routine to call
+@examples:instructions:i_14
+@compatible: aoz, stos, amos
+@content:
+The EVERY statement is used to call up a sub-routine or a procedure at regular intervals, without interfering with
+the main program. Simply specify the length of time between every call, measured in seconds. Obviously
+the time taken for a sub-routine or a procedure to be completed must be less than the interval time, or an error will
+be generated.
+
+After a sub-routine has been entered, the EVERY system is automatically disabled. This means that in order to call
+this feature continuously, an EVERY ON command must be inserted into a sub-routine before the final RETURN
+statement. Similarly, EVERY ON must be included in a procedure before returning to the main program with an
+END PROC.
+
+For example:
+~~~
+Every 50 Proc TEST
+Do
+	Print At(0,0); "Main Loop"
+Loop
+Procedure TEST
+	Shared A
+	Inc A: Print "This is call number ";A
+	Every On
+End Proc
+~~~
+api*/
+
+/**api
+@name:For
+@description:Repeat loop a specific number of times
+@compatible: aoz, stos, amos
+@examples:instructions:i_11
+@content:
+This control structure is one of the programmer's classic devices. Each FOR statement must be matched by a single
+NEXT, and pairs of FOR ... NEXT loops can be nested inside one another. Each loop repeats a list of instructions
+for a specific number of times, governed by an index which counts the number of times the loop is repeated. Once
+inside the loop, this index can be read by the program as if it is a normal variable.
+
+Here is a simple example:
+~~~
+For X=1 To 7
+	Print "SEVEN DEADLY SINS"
+Next X
+~~~
+api*/
+
+/**api
+@name:Next
+@description:Indicates the end of a For / Next loop
+@param:*variable:variable:The variable used to loop.
+@compatible: aoz, stos, amos
+@examples:instructions:i_11
+@content:
+This control structure is one of the programmer's classic devices. Each FOR statement must be matched by a single
+NEXT, and pairs of FOR ... NEXT loops can be nested inside one another. Each loop repeats a list of instructions
+for a specific number of times, governed by an index which counts the number of times the loop is repeated. Once
+inside the loop, this index can be read by the program as if it is a normal variable.
+
+Each Next must match it's "FOR" otherwise AOZ will genrate an error while transpiling.
+
+Here is a simple example:
+~~~
+For X=1 To 7
+	Print "SEVEN DEADLY SINS"
+Next X
+~~~
+api*/
+
+/**api
+@name:Step
+@description:Control increment of index in a FOR / NEXT loop
+@param:step:number:The increment to use at each loop
+@compatible: aoz, stos, amos
+@examples:instructions:i_11
+@content:
+Normally, the index counter is increased by 1 unit at every turn of a FOR ... NEXT loop. When the current value
+exceeds that of the last number specified, the loop is terminated.
+
+For example:
+~~~
+For DAY=1 To 365
+	Print DAY
+Next DAY
+~~~
+STEP is used to change the size of increase in the index value, like this:
+~~~
+For DAY=1 To 365 Step 7
+	Print DAY
+Next DAY
+~~~
+api*/
+
+/**api
+@name:Repeat
+@description:Repeat loop until a condition is satisfied
+@compatible: aoz, stos, amos
+@examples:instructions:i_13
+@content:
+Unlike that last example, instead of checking if a condition is true or false at the start of a loop, the pair of
+commands makes its check at the end of a loop. REPEAT marks the start and UNTIL the end of the loop to be
+checked.
+This means that if a condition is false at the beginning of a WHILE ... WEND structure, that loop will never be performed at all, but if it is true at the beginning of a REPEAT
+... UNTIL structure, the loop will be performed at least once. Here is an example that waits for you to press a mouse button:
+
+~~~
+Repeat
+	Print "I can go on forever" : Wait 25
+Until Mouse Key<>0
+~~~
+api*/
+
+/**api
+@name:Until
+@description:Indicates the end of a REPEAT / UNTIL loop
+@compatible: aoz, stos, amos
+@examples:instructions:i_13
+@content:
+Unlike that last example, instead of checking if a condition is true or false at the start of a loop, the pair of
+commands makes its check at the end of a loop. REPEAT marks the start and UNTIL the end of the loop to be
+checked.
+This means that if a condition is false at the beginning of a WHILE ... WEND structure, that loop will never be performed at all, but if it is true at the beginning of a REPEAT
+... UNTIL structure, the loop will be performed at least once. Here is an example that waits for you to press a mouse button:
+
+~~~
+Repeat
+	Print "I can go on forever" : Wait 25
+Until Mouse Key<>0
+~~~
+api*/
+
+/**api
+@name:While
+@description:Repeat loop while condition is true
+@compatible: aoz, stos, amos
+@examples:instructions:i_12
+@content:
+This commands, associated with WEND provides a convenient way of making the program repeat a group of instructions all the time
+a particular condition is true. WHILE marks the start of this loop, and the condition is checked for TRUE
+from this starting position through to the end position, which is marked by a WEND. The condition is then
+checked again at every turn of the loop, until it is no longer true.
+
+For example:
+~~~
+BLAZES:
+Print "Please type in the number 9"
+Input X
+While X=9
+	Cls : Print X : Wait 50 : Goto BLAZES
+Wend
+Print "That is not a 9!"
+~~~
+You are free to use AND, OR and NOT to qualify the conditions to be checked.
+api*/
+
+/**api
+@name:Wend
+@description:marks the end of a WHILE / WEND loop
+@compatible: aoz, stos, amos
+@examples:instructions:i_12
+@content:
+This commands, associated with WEND provides a convenient way of making the program repeat a group of instructions all the time
+a particular condition is true. WHILE marks the start of this loop, and the condition is checked for TRUE
+from this starting position through to the end position, which is marked by a WEND. The condition is then
+checked again at every turn of the loop, until it is no longer true.
+
+For example:
+~~~
+BLAZES:
+Print "Please type in the number 9"
+Input X
+While X=9
+	Cls : Print X : Wait 50 : Goto BLAZES
+Wend
+Print "That is not a 9!"
+~~~
+You are free to use AND, OR and NOT to qualify the conditions to be checked.
+api*/
+
+/**api
+@name:Do
+@description:Keep repeating a list of statements
+@compatible: aoz, stos, amos
+@examples:instructions:i_13
+@content:
+This command, associated with LOOP will loop a list of AMOS Professional statements forever, with DO acting as the marker
+position for the LOOP to return to. Both the DO and LOOP should occupy their own lines, as follows:
+~~~
+Do
+	Print "FOREVER AND": Wait 25
+Loop
+~~~
+api*/
+
+/**api
+@name:Loop
+@description:Mark the end of a DO / LOOP loop
+@compatible: aoz, stos, amos
+@examples:instructions:i_13
+@content:
+This command, associated with LOOP will loop a list of AMOS Professional statements forever, with DO acting as the marker
+position for the LOOP to return to. Both the DO and LOOP should occupy their own lines, as follows:
+~~~
+Do
+	Print "FOREVER AND": Wait 25
+Loop
+~~~
+api*/
+
+/**api
+@name:Exit
+@description:Break out of a loop
+@param:*numberOfLoopsToExit:integer:The number of loops to exit. This parameter must be a constant, and it's default value if ommited is 1
+@compatible: aoz, stos, amos
+@examples:instructions:i_12, instructions:i_13
+@content:
+EXIT forces the program to leave a loop immediately, and it can be used to escape from all the types of loop
+employed in AOZ, such as FOR ... NEXT, REPEAT ... UNTIL, WHILE ... WEND and DO ... LOOP.
+
+Any number of loops may be nested inside of one another, and when used on its own, EXIT will short-circuit the
+innermost loop only. By including an optional number after EXIT, that number of nested loops will be taken into
+account before the EXIT is made, and the program will jump directly to the instruction immediately after the
+relevant loop.
+
+For example:
+~~~
+Do
+	Do
+		Input "Type in a number";X
+		Print "I am the inner loop"
+		If X=1 Then Exit
+		If X=2 Then Exit 2
+	Loop
+	Print "I am the outer loop"
+Loop
+Print "And I am outside both loops!"
+api*/
+
+
+/**api
+@name:Exit If
+@description:Break out of a loop
+@param:condition:boolean:AOZ will trigger the exit if this parameter is TRUE
+@param:*numberOfLoopsToExit:integer:The number of loops to exit. This parameter must be a constant, and it's default value if ommited is 1
+@compatible: aoz, stos, amos
+@examples:instructions:i_12
+@content:
+It is often necessary to leave a loop as a result of a specific set of conditions, and this can be simplified by using the
+EXIT IF instruction. As explained above, in conditional operations, the value -1 represents True, whereas a zero
+represents False. After using EXIT IF, an expression is given which consists of one or more tests in standard AOZ format.
+The EXIT will only be performed IF the result is found to be true.
+
+As before, an optional number can be given to specify the number of loops to be jumped from, otherwise only the
+current loop will be aborted.
+
+For example:
+~~~
+While L=0
+	A=0
+	Do
+		A=A+1
+		For X=0 To 100
+			Exit If A=10,2 : Rem Exit from DO and FOR loops
+		Next X
+	Loop
+	Exit 1: Rem Exit from WHILE loop
+Wend
+api*/
+
+
+/**api
+@name:Gosub
+@description:Jump to a sub-routine
+@param:label:label:The sub-routine to call
+@compatible: aoz, stos, amos
+@examples:instructions:i_3
+@content:
+Packages of program instructions that perform a specific task can be thought of as "routines". When such routines
+are split into smaller packages of instructions, they can be thought of as "sub-routines".
+
+GOSUB is another antiquated command, and is used to perform a jump to a sub-routine. The execution of the application is restored at the next instruction after GOSUB by a RETURN statement.
+
+As with GOTO, there are three alternative targets for a GOSUB instruction: labels, line numbers or expressions.
+
+To make sub-routines easier to spot in your program listings, it is good practice to place them at the end of the main
+program. A statement such as EDIT or DIRECT should also be used to end the main program, which prevents
+AOZ from executing any GOSUBs after the main program has finished.
+
+For example:
+~~~
+Print "I am the main program"
+For N=1 To 3
+	Gosub TEST
+Next N
+End
+TEST:
+	Print "Here we go GOSUB" : Wait 50
+	Print "Number =";N
+	Return
+~~~
+api*/
+
+/**api
+@name:Return
+@description:Return from a sub-routine called by GOSUB
+@compatible: aoz, stos, amos
+@examples:instructions:i_3
+@content:
+When a program obeys a GOSUB instruction, it must be instructed to RETURN to the main program after the subroutine
+has been executed. It should be noted that a single GOSUB statement can be linked to several RETURN
+commands, allowing exits from any number of different points in the routine, depending on the circumstances. After
+the RETURN, a jump is made back to the instruction immediately after the original GOSUB.
+
+For example:
+~~~
+Print "I am the main program"
+For N=1 To 3
+	Gosub TEST
+Next N
+End
+TEST:
+	Print "Here we go GOSUB" : Wait 50
+	Print "Number =";N
+	Return
+~~~
+api*/
+
+
+/**api
+@name:Pop
+@description:Remove RETURN information
+@param:label:label:The position in the application to branch to
+@compatible: aoz, stos, amos
+@examples:instructions:i_3
+@content:
+Normally you cannot exit from a GOSUB statement using a standard GOTO, and this may be inconvenient. For
+example, there could be an error that makes it unacceptable to return to the
+program exactly where you left it. In such circumstances, the POP command can be used to remove the return
+address generated by a GOSUB, allowing you to leave the sub-routine without the final RETURN statement being
+executed.
+
+For example:
+~~~
+Do
+	Gosub THERE
+Loop
+HERE:
+	Print "I've just popped out!"
+	Direct : Rem No risk of accidental subroutine
+THERE:
+	Print "Hello There!"
+	If Mouse Key Then Pop : Goto HERE
+	Return
+api*/
+
+/**api
+@name:Goto
+@description:Jump to a specified place in the program
+@param:label:label:The position in the application to branch to
+@compatible: aoz, stos, amos
+@examples:instructions:i_3
+@content:
+A computer program that can only obey a list of instructions one after the other is a very limited computer program
+indeed. One way of forcing programs to jump to specified locations is to use the old fashioned GOTO structure,
+followed by a target destination. In AMOS Professional, these destinations can be a label, a line number or a
+variable.
+
+Label markers can consist of names that use any string of letters or numbers, as -well as the underscore character
+"_", and they must be ended with the colon character ":" as follows:
+
+~~~
+Print "Jump in two seconds" : Wait 100
+Goto LABEL_MARKER
+Wait 180000 : Rem Wait one hour
+LABEL_MARKER:
+	Print "Now is the time to jump!"
+~~~
+Numbers may be used to identify specific lines, and the program can be commanded to GOTO one of these
+optional markers, like this:
+~~~
+Goto 5
+Print "I am being ignored"
+5 Print "I am line 5"
+~~~
+It should be obvious that these identification numbers have nothing to do with the number of lines in a program, but
+they may still lead to confusion. Labels are much easier to remember and to locate.
+
+Expressions can also be used for this purpose, and the expression may be any string or integer. Strings hold the
+name of a label, and integers return a line identification number. Here is an example:
+~~~
+BEGIN:
+	Goto "BED"+"2"
+	End
+BED1:
+	Print "This Bed will never be used"
+BED2:
+	Print "Welcome to Bed Two!"
+	Wait 20
+Goto BEGIN
+api*/
+
+/**api
+@name:If
+@description:Choose between alternative actions depending on the result of an expression
+@param:condition:boolean:The expression to calculate that can be either TRUE or FALSE
+@compatible: aoz, stos, amos
+@examples:instructions:i_11
+@content:
+The IF instruction only work when associated with THEN, ELSE, ELSE IF or END IF.
+
+You can perform test on one-line with THEN, like in this example:
+~~~
+If NIGHT=DAY And NIGHT<>12 Then Goto BED
+If NIGHT<DAY Or NIGHT=12 Then Edit
+~~~
+An IF ... THEN statement is limited to a single line, of a listing, which is not very satisfactory to an AOZ programmer. This technique has been superseded by a "structured test", where IF is used to trigger off
+a whole range of instructions, depending on the outcome of a single decision.
+
+~~~
+Input "Type values A,B and C: ";A,B,C
+If A=B
+	Print "A equals B";
+Else
+	Print "A is not equal to B";
+	If A<>B And A<>C
+		Print "or to C"
+	End If
+End If
+~~~
+api*/
+
+/**api
+@name:Else
+@description:Qualify a condition
+@param:condition:boolean:The expression to calculate that can be either TRUE or FALSE
+@compatible: aoz, stos, amos
+@examples:instructions:i_11
+@content:
+ELSE is also understood when making decisions, as to what action should be taken, depending on conditions. So the
+last example could be changed to something like this:
+
+~~~
+If NIGHT+1=DAY Then Goto BED Else Shoot
+~~~
+The alternative choice of statements in this sort of structure must be a list of one or more AOZ
+instructions. Also remember to include a separate GOTO command if you want to jump to a label or a numbered
+line, otherwise the label will be treated as a procedure name and it could possibly generate an error.
+
+For example:
+~~~
+If NIGHT=1 Then Goto BED: Rem This is perfect
+If NIGHT=1 Then BED: Rem This looks for a BED procedure
+~~~
+api*/
+
+/**api
+@name:Else If
+@description:Qualify another condition
+@param:condition:boolean:The expression to calculate that can be either TRUE or FALSE
+@compatible: aoz, stos, amos
+@examples:instructions:i_11
+@content:
+ELSE IF allows you to extend structured test to a higher level... If non of the conditions in the sections above it were true, it evaluates the condition and performs the code inside when the result is TRUE.
+
+~~~
+Input "Please nter your age ";AGE
+If AGE < 10
+	Print "Hey kid!"
+Else If AGE < 20
+	Print "Hey dude!"
+Else If AGE < 60
+	Print "Bonjour Monsieur!"
+Else
+	Print "Hello grand-pa!"
+End If
+~~~
+api*/
+
+
+/**api
+@name:On Error Goto
+@description:Trap an error in your program
+@param:label:label:The location in the rpogram to branch to when an error occurs
+@compatible: aoz, stos, amos
+@content:
+By this method, when an error occurs in your Basic program, a jump is made to whatever label has been defined.
+This label acts as the starting point for your own error correction routine, and after the mistake has been corrected
+you can return to your main program without the need to go via the editor window.
+
+Try this simple routine:
+~~~
+Do
+	Input "Type in two numbers";A,B
+	Print A;" divided by ";B;" is ";A/B
+Loop
+~~~
+This will work perfectly until you try to enter a value of zero for B and it is discovered that division by zero is
+impossible. Such unforeseen problems can be catered for by setting an error trap like this:
+~~~
+On Error Goto HELP
+AGAIN:
+	Do
+		Input "Type in two numbers";A,B
+		Print A;" divided by ";B;" is ";A/B
+	Loop
+
+Rem Error Handler
+HELP:
+	Print
+	Print "Sorry, you have tried to divide"
+	Print "your number by zero."
+	Resume AGAIN : Rem Go back to input
+~~~
+If you are unfortunate enough to write an error inside your own error trapping routine, AMOS Professional will
+grind to a halt! There are two ways to deliberately disable ON ERROR GOTO.
+~~~
+On Error : Rem disable error trap
+~~~
+Call ON ERROR without any parameters like that, or force it to go to zero, like this:
+~~~
+On Error Goto 0
+~~~
+To get back to your program after ON ERROR has been called, you must use RESUME. Never use GOTO for this
+purpose.
+
+Warning! Due to the nature of Javascript, ON ERROR GOTO will *significantly* slow down your application.
+
+We highly suggest to use TRAP instead.
+api*/
+
+/**api
+@name:On Break Proc
+@description:Jump to a procedure when break in program
+@param:label:label:The location in the rpogram to branch to when an error occurs
+@compatible: aoz, stos, amos
+@content:
+This instruction will force AOZ to make a jump when the user presses CONTROL-C... You can therefore prevent the user from leaving your application.
+
+It can also be used to prevent CONTROL-C from breaking in order to use the combination of keys, for example to paste text in an editor.
+
+For example:
+~~~
+On Break Proc BROKEN
+Do
+	Print "Unbroken" : Wait 50
+Loop
+
+Procedure BROKEN
+	Print "I am the procedure"
+End Proc
+api*/
+
+/**api
+@name:On
+@description:Jump on recognising an expression
+@param:expression:integer:An expression that returns a number between 0 and the number of labels
+@compatible: aoz, stos, amos
+@examples:instructions:i_12,instructions:i_13
+@content:
+ON can be used to force the program to jump to a pre-defined position when it recognises a specified variable.
+Furthermore, jumps can be made to a choice of several positions, depending on what value is held by the variable at
+the time it is spotted. ON can force a jump to any of the following structures.
+
+###Procedures.
+
+When using an ON ... PROC structure, one or more named procedures is used as the target destination
+for a jump, depending on the contents currently held by a variable. Look at the following line:
+~~~
+On X Proc PROCEDURE1,PROCEDURE2
+~~~
+That is exactly the same as saying:
+~~~
+If X=1 Then PROCEDURE1
+If X=2 Then PROCEDURE2
+~~~
+It is important to note that procedures used in this way cannot include any parameters. If information is to be
+transferred to the procedure, it should be placed in a global variable.
+
+###Goto
+
+Goto is used to jump to one of a list of numbered lines, or a label, depending on the result of an expression. For
+example:
+~~~
+Print "Type in a value from 1 to 3"
+Input X
+On X Goto LABEL1,LABEL2,LABEL3
+LABEL1:
+	Print "Ready"
+LABEL2:
+	Print "Steady"
+LABEL3:
+	Print "Go!"
+~~~1
+For that to work properly, X must have a value from 1 up to the number of the highest possible destination. Any
+other values would cause problems. In fact the third line of that example is a very economical way of writing the
+following lines:
+~~~
+If X=1 Then Goto LABEL1
+If X=2 Then Goto LABEL2
+If X=3 Then Goto LABEL3
+~~~
+Now change the third line of the last example to this:
+~~~
+On X Goto LABEL3,LABEL2,LABEL1
+~~~
+
+###Gosub.
+
+The use of an ON GOSUB structure is identical to ON ... GOTO, except that it must employ a RETURN to
+jump back to the instruction immediately after the ON ... GOSUB statement. Destinations may be given as the name
+of a label, or the identification number of a line between 1 and the maximum number of possible destinations.
+ON is also used with the ON BREAK PROC structure, as well as ON ERROR GOTO
+api*/
+
+/**api
+@name:Procedure
+@description:Create a procedure
+@compatible: aoz, stos, amos
+@param:procedureName:name:The name of the procedure to define
+@content:
+A procedure is created in exactly the same way as a normal variable, by giving it a name. The name is then followed
+by a list of parameters and the procedure must be ended with an END PROC command. PROCEDURE and END
+PROC commands must be placed on their own individual lines.
+
+For example:
+~~~
+Procedure HELLO
+	Print "Hello, I am a procedure!"
+End Proc
+~~~
+If you try and run that program, nothing will happen. This is because a procedure must be called up by name from
+inside your program before it can do anything. Now add the following line at the start of that last example, and then
+[Run] it.
+~~~
+HELLO
+Procedure HELLO
+	Print "Hello, I am a procedure!"
+End Proc
+~~~
+There is nothing preventing a procedure from calling itself, but this recursion is limited by memory. Such a process is called recursivity.
+api*/
+
+/**api
+@name:End proc
+@description:End a procedure
+@compatible: aoz, stos, amos
+@content:
+A procedure is created in exactly the same way as a normal variable, by giving it a name. The name is then followed
+by a list of parameters and the procedure must be ended with an END PROC command. PROCEDURE and END
+PROC commands must be placed on their own individual lines.
+
+For example:
+~~~
+HELLO
+Procedure HELLO
+	Print "Hello, I am a procedure!"
+End Proc
+~~~
+
+AOZ also allow you to return values from a procedure, like this:
+~~~
+Print "1 + 2 = "; ADDITION[ 1, 2 ]
+
+Procedure ADDITION[ a, b ]
+	result = a + b
+End Proc[ result ]
+api*/
+
+/**api
+@name:Pop proc
+@description:Leave a procedure immediately
+@compatible: aoz, stos, amos
+@content:
+The POP PROC instruction provides you with a fast getaway, if you ever find yourself in need of escape.
+
+Try this:
+~~~
+ESCAPE
+Procedure ESCAPE
+	For PRISON=1 To 1000000000
+		If PRISON=10 Then Pop Proc
+		Print "I am abandoned."
+	Next PRISON
+End Proc
+Print "I'm free!"
+~~~
+AOZ also allow you to return values with POP PRO, which might proove handy in some cases.
+~~~
+Print "1 + 2 = "; REALLY$[ 1, 2 ]
+
+Procedure REALLY$[ a, b ]
+	result = a + b
+	If result = 3 Then Pop Proc[ "Yes!" ]
+End Proc[ "No!" ]
+~~~
+
+Please note that to have procedure return string, their name must end with the $ character.
+api*/
+
+/**api
+@name:Proc
+@description:Flag a procedure
+@compatible: aoz, stos, amos
+@examples:instructions:i_12
+@content:
+Another way to identify a procedure is to precede it with a PROC statement.
+
+Run the following example:
+~~~
+Rem Demonstrate that a procedure is being called not simply a command
+Proc HELLO
+
+Rem The same can be achieved without the Proc
+HELLO
+
+Procedure HELLO
+	Print "Hey!"
+End Proc
+~~~
+It is possible to place the procedure definition anywhere in your program. When AOZ encounters a
+procedure statement, the procedure is recognised and a jump is made to the final End Proc. In this way, there is no
+risk of executing your procedure by accident.
+api*/
+
+/**api
+@name:Def Fn
+@description:create a user-defined function
+@compatible: notimplemented
+@examples:instructions:i_61
+@content:
+To create a user-defined function, give it a name and follow the name with a list of variables. These variables must
+be held inside a pair of round brackets, and separated from one another by commas, like these examples:
+~~~
+Def Fn NAME$(A$)=LOWER$(A$)
+Def Fn X(A,B,C)=A*B*C
+~~~
+When a user-defined function is called up my variables that are entered with it will be substituted in the appropriate
+positions.
+
+DEF FN is a legacy instruction from the AMOS and STOS. We suggest to use the INSTRUCTION token instead.
+api*/
+
+/**api
+@name:Fn
+@description:Call a user-defined function
+@compatible: notimplemented
+@examples:instructions:i_61
+@content:
+The following examples show how DEF FN is first used to define a function, and how FN calls it up:
+~~~
+Def Fn NAME$(A$,X,Y)=Mid$(A$,X,Y)
+Print Fn NAME$("AOZ Studio",4,3)
+Def Fn X(A,B,C)=A+B+C
+Print Fn X(1,10,100)
+~~~
+The expression that equals the user-defined function can include any of the standard AOZ functions, and it is limited to a single line of a program.
+
+FN is a legacy instruction from the AMOS and STOS. We suggest to use the INSTRUCTION token instead.
+api*/
+
+/**api
+@name:Run
+@description:Execute another AOZ program
+@param:*path:string: The path of the program to execute
+@param:*commandLine$:string: Eventual parameters to transmit to the new applicaton
+@compatible: aoz, stos, amos
+@examples:instructions:i_44
+@content:
+
+When followed by a filename and used inside a program, the RUN command is extremely useful. Authors of vast
+computer games, involving many levels of play, need not be restricted by the storage space of a single disc or the
+memory available in your Amiga. Each level of play can be written as a separate program and then saved as a
+different filename. This means that at the end of one level of play, the next stage can be loaded automatically.
+
+For example:
+~~~
+Run "Next level.AOZ"
+~~~
+In order for this instruction to work in your browser, the *Path* parameter should contain the URL of the AOZ application to run.
+
+This method is known as "chaining" programs together. When programs run like this, data screens and banks will be
+kept, allowing you to pass data and display a screen of graphics while the next level is loading. But the redundant
+last program will be erased to make room for the new program, so you should remember the fact that any variables
+will be lost in the process.
+
+In fact, AMOS Professional does allow you to pass variable data from one program to another, by making use of
+"Command Lines".
+api*/
+
+
+/**api
+@name:Rem
+@description:Insert a reminder message into a program
+@compatible: aoz, stos, amos
+@content:
+The beginning of a Rem statement is marked by REM or by the double slash characters, which is simply a short-cut
+recognised by AOZ as a REM. The message or comment is then typed in from the keyboard, beginning with a capital letter.
+
+Here are some examples:
+~~~
+' An apostrophe can be used instead of the characters Rem, but only at the start of a line...
+
+Rem The next line will print a greeting
+Print "a greeting"
+
+// This line is a comment that does nothing at all
+Wait 75: // Wait one and a half seconds
+
+/  *
+This entiere portion of code will be totally ignored by AOZ...
+Rem Return to the Edit Screen
+Edit
+*  /
+
+~~~
+
+These reminders are for human intelligence only, and when a Rem statement is encountered in a program, it is
+completely ignored by the computer.
+
+Rem statements can occupy their own line, or be placed at the end of a line of the program, as long as they are
+separated from the last instruction by a colon. But the apostrophe character can only be used to mark a Rem
+statement at the beginning of a line.
+~~~
+Print "This example is fine" : Rem Fine example
+Print "Wrong!" : ' This is illegal
+~~~
+api*/
+
+/**api
+@name:Edit
+@description:Leave current program and return to Edit Screen
+@compatible: aoz, stos, amos
+@examples:instructions:i_11
+@content:
+The EDIT instruction forces the program to be abandoned, and returns you straight to the Edit Screen, like this:
+~~~
+Print "Wait four seconds and then EDIT"
+Wait 200
+Edit
+Print "I have been ignored!"
+~~~
+api*/
+
+/**api
+@name:Direct
+@description:Leave current program and return to Direct Mode
+@compatible: aoz, stos, amos
+@content:
+Use the DIRECT command to jump out of the current program and go straight to Direct Mode for testing out a programming idea.
+~~~
+Print "Take me to Direct Mode immediately"
+Direct
+~~~
+Normally, a program can be interrupted by pressing the [Ctrl] and the [C] keys together...
+This facility can be turned off and on at will, creating a crude sort of program protection.
+api*/
+
+/**api
+@name:Break On
+@description:toggle the program break keys on
+@compatible: aoz, stos, amos
+@examples:instructions:i_14
+@content:
+The BREAK OFF command can be included in a program to stop a particular routine from being interrupted while
+it is running. To re-start the interrupt feature, use BREAK ON. But be warned!
+
+Never run a program that is still being edited with BREAK OFF activated, or you will lose your work. Make a
+back-up copy first. Here are two examples, and if you insist on ignoring this advice, you may be foolhardy enough
+to try the second one!
+
+~~~
+Break Off
+Print "Try and press the Break keys now"
+Wait 500
+Break On
+Print "Break keys activated"
+Wait 100
+Direct
+~~~
+
+~~~
+Break Off
+Do
+	Print "Try to get out of that!"
+	Wait Key
+Loop
+~~~
+api*/
+
+/**api
+@name:Break Off
+@description:toggle the program break keys off
+@compatible: aoz, stos, amos
+@examples:instructions:i_14
+@content:
+Use the BREAK OFF to re-start the interrupt feature.
+
+Never run a program that is still being edited with BREAK OFF activated, or you will lose your work. Make a
+back-up copy first. Here are two examples, and if you insist on ignoring this advice, you may be foolhardy enough
+to try the second one!
+
+~~~
+Break Off
+Print "Try and press the Break keys now"
+Wait 500
+Break On
+Print "Break keys activated"
+Wait 100
+Direct
+~~~
+
+~~~
+Break Off
+Do
+	Print "Try to get out of that!"
+	Wait Key
+Loop
+~~~
+api*/
+
+/**api
+@name:Include
+@description:Inserts the source of another AOZ file into the current file
+@param:path$:string:The path to the sourcecode to include.
+@compatible: aoz
+@content:
+The INCLUDE command must occupy a line on its own, otherwise the specified file will not be detected , and so it
+will not be included.
+
+The effect of INCLUDE on a file is as follows: immediately before a program is transpiled, AOZ scans the beginning of each program line for an
+INCLUDE instruction. If an INCLUDE is encountered, AOZ opens the specified file, reads its length and checks its
+validity, and if correct, the file is inserted internally at the position of the include instruction. Just as if you were making a CUT/PASTE of the code.
+
+This process takes place for each INCLUDE that is found, in order. Included files and also include other files (like in C or other languages).
+
+AOZ maintains an internal list of files and always makes sure that the same file is only included once.
+
+The Include instruction allows you to group your most often used Procedures or Rountines separated and integrate them in your current work in just one line!
+
+Here is an example of inclusion of code from the AOZ Drive/includes directory. "fbdemo.aoz" is a set of CSS and procedures that will automatically display an "About" button
+over your application wihtout affecting how it works, to make it ready for publication on Facebook or other social networks.
+
+~~~
+// Include the code for facebook...
+Include "fbdemo"
+
+// The game main loop
+Do
+    Actor 1, "lucie.png"
+    ...
+    Exit If Inkey$ <> ""
+Loop
+
+// Call the information screen located in the fbdemo code...
+VIEW_INFOS
+~~~
+api*/
+
+
+/**api
+@name:End
+@description:End the current program
+@compatible: aoz, stos, amos
+@examples:instructions:i_13
+@content:
+As soon as the END command is recognised, it stops the program. You can either press the [Esc] key to go to Direct
+Mode, or use the [Spacebar] to get to the Edit Screen.
+
+Try this example now:
+~~~
+Print "I am the first instruction."
+Wait 150
+End
+Print "This instruction will never be executed!"
+~~~
+api*/
+
+
+/**api
+@name:Stop
+@description:Interrupt the current program
+@compatible: aoz, stos, amos
+@content:
+This command is similar to END, but it will display a message "Program Interrupted". You can use it as a signal that something went wrong when running your application.
+api*/
+
+/**api
+@name:Include
+@description:Inserts the source of another AOZ file into the current file
+@param:path$:string:The path to the sourcecode to include.
+@compatible: aoz
+@content:
+This command allows you to insert the another source-code in your current application.
+
+You simply indicate the path to the file to ionxclude as a parameter. You can also, if the file is located somewhere in the AOZ Drive, just specify the name of the file,
+Aoz will perform a search in the AOZ Drive and use the file if it is found.
+
+The new source code is inserted at the very position of the Include statement, and the code located right after the line where the include is located is resumed after the end of the included code.
+
+Include is a very powerul instruction. It allows to group all kinds of procedures or routines, or data in external files, and this way make your main code more readable and debuggable.
+
+Here is an example of inclusion of code from the AOZ Drive/includes directory. "fbdemo.aoz" is a set of CSS and procedures that will automatically display an "About" button
+over your application wihtout affecting how it works, to make it ready for publication on Facebook or other social networks.
+
+~~~
+// Include the code for facebook...
+Include "fbdemo"
+
+// The game main loop
+Do
+	Actor 1, "lucie.png"
+	...
+	Exit If Inkey$ <> ""
+Loop
+
+// Call the information screen located in the fbdemo code...
+VIEW_INFOS
+~~~
+
+Please note that it is perfectly possible to include other files in a file that is itself included, AOZ makes sure that no code is duplicated.
+api*/
+
+
+/*
+	{ token: "instruction", params: [ "" ] },
+	{ token: "end instruction", params: [ "" ] },
+	{ token: "function", params: [ "" ] },
+	{ token: "end function", params: [ "" ] },
+	{ token: "follow off", params: [ "I" ], compile: [ '' ] },
+	{ token: "follow", params: [ "I" ], compile: [ '' ] },
+	{ token: "param#", params: [ "0" ], compile: [ 'this.procParam' ] },
+	{ token: "param$", params: [ "2" ], compile: [ 'this.procParam$' ] },
+	{ token: "param", params: [ "0" ], compile: [ 'this.procParam' ] },
+	{ token: "struc", params: [ "V00,2" ], compile: [ '' ] },
+	{ token: "struc$", params: [ "V20,2" ], compile: [ '' ] },
+	{ token: "prg under", params: [ "0" ], compile: [ '' ] },
+*/

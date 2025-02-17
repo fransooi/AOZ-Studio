@@ -1,0 +1,6 @@
+<i>Reserve As Data</i>
+<b>Reserve As Data</b> xxxxxxx
+=
+This reserves the selected bank number with the number of bytes specified as its length. Data banks are permanent, and wherever possible, their memory will be allocated from fast memory, so this type of bank should not be used for information such as Objects and samples which need to be accessed directly by the Amiga's hardware chips.
+
+

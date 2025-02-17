@@ -1,0 +1,45 @@
+{
+  "_from": "https://www.atom.io/api/packages/aoz-pb-syntax/versions/0.11.0/tarball",
+  "_id": "aoz-pb-syntax@0.11.0",
+  "_inBundle": false,
+  "_integrity": "sha512-7Cudx34n1ef4TkyICFs/JjE0eO8j27/d5zUhPJL5eCYgtvrlhjyN31vUtCEiUja1TOCBYjiVfUQBSwg9atOjQg==",
+  "_location": "/aoz-pb-syntax",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "remote",
+    "raw": "https://www.atom.io/api/packages/aoz-pb-syntax/versions/0.11.0/tarball",
+    "rawSpec": "https://www.atom.io/api/packages/aoz-pb-syntax/versions/0.11.0/tarball",
+    "saveSpec": "https://www.atom.io/api/packages/aoz-pb-syntax/versions/0.11.0/tarball",
+    "fetchSpec": "https://www.atom.io/api/packages/aoz-pb-syntax/versions/0.11.0/tarball"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://www.atom.io/api/packages/aoz-pb-syntax/versions/0.11.0/tarball",
+  "_shasum": "eb6e44ac3e2ba589f29dfbdb130e7a93e47b9420",
+  "_spec": "https://www.atom.io/api/packages/aoz-pb-syntax/versions/0.11.0/tarball",
+  "_where": "C:\\Users\\fil_b\\AppData\\Local\\Temp\\apm-install-dir-12048-19072-v2yxm0.o1v79",
+  "bugs": {
+    "url": "https://github.com/fillbell/aoz-pb-syntax/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "Syntax theme for AOZ Studio",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "homepage": "https://github.com/fillbell/aoz-pb-syntax#readme",
+  "keywords": [
+    "syntax",
+    "theme"
+  ],
+  "license": "MIT",
+  "name": "aoz-pb-syntax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fillbell/aoz-pb-syntax.git"
+  },
+  "theme": "syntax",
+  "version": "0.11.0"
+}

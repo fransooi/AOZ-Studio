@@ -1,0 +1,9 @@
+<i>Del Image</i>
+<b>Del Image</b> xxxxxxx
+=
+use this version of the DEL IMAGE instruction to delete more than one image from the Images Bank. The following example would delete Sprite images 4,5,6 and 7:
+@code
+Del Image 4 To 7
+@code
+After the last image has been deleted from the Image Bank, the entire Bank is erased automatically.
+

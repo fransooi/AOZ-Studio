@@ -1,0 +1,1640 @@
+// ############################################################################
+// Tic Tac Toe V1.0
+// By Phil Bell
+// Created May 2022
+// phil@aozwithphil.com
+// ############################################################################
+// Uses The Google Firebase Platform for authentication and data storage
+// The Google Firestore Database is a NoSQL cloud database
+//
+// Login to your Firebase console here (you can create a free account)
+// https://console.firebase.google.com/
+//
+// Check out the Firebase documentation here:
+// https://firebase.google.com/docs/firestore
+//
+// Download the following guide for help with setting up a Firebase project
+// https://aozwithphil.com/download/AOZFirebaseQuickStartGuide.pdf
+// ############################################################################
+// Tic Tac Toe V1.1
+// Phil Bell - 06 May 2022
+// Added computer AI player
+// Added ability to view other players stats
+// ############################################################################
+// Tic Tac Toe V1.2
+// Phil Bell - 07 May 2022
+// Added play duration to player stats
+// Added a game timer to the game play UI
+// ############################################################################
+#fps:false
+#googleFont:"roboto mono"
+
+Break Off: Curs Off: Flash Off
+
+JS Execute "document.title = 'Tic Tac Toe - By Phil Bell'"
+
+Load Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+Load Asset "resources/assets/audio/ui_menu_button_beep_11.wav", "click"
+Load Asset "resources/assets/audio/sci-fi_computer_running_code_01.wav", "keystroke"
+Load Asset "resources/assets/audio/ui_menu_button_beep_13.wav", "new_game"
+Load Asset "resources/assets/css/styles.css"
+
+// Initialise Firebase
+// *********************************************************************
+// ** IMPORTANT !! DO NOT USE THESE CREDENTIALS IN YOUR OWN PROJECTS  **
+// *********************************************************************
+Firebase Init apiKey$ = "AIzaSyCugs4UT9q6IGOPzy1dNc-RCKjCsDwLXgs", authDomain$ = "aoztictactoe.firebaseapp.com", projectId$ = "aoztictactoe", storageBucket$ = "aoztictactoe.appspot.com", messagingSenderId$ = "804761200703", appId$ = "1:804761200703:web:a32513adec1c99f86e708a"
+
+DEFAULT_PROFILE_IMAGE$ = "data:image/png;base64,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"
+Global DEFAULT_PROFILE_IMAGE$
+
+// Vars for query & document listeners
+LOBBY_QUERY$ = "": CHAT_QUERY$ = "": USERS_QUERY$ = ""
+Global LOBBY_QUERY$, CHAT_QUERY$, USERS_QUERY$
+
+GAME_ID$ = "": GAME_DOC_REF$ = "": START_GAME_TRIGGER = 0: GAME_FINISHED = 0: USER_TIMER = 0: GET_USER_TIMER = 0: AI_MOVE = -1: GAME_TIMER = 0
+Global GAME_ID$, GAME_DOC_REF$, START_GAME_TRIGGER, GAME_FINISHED, USER_TIMER, GET_USER_TIMER, AI_MOVE, GAME_TIMER
+
+// Array used to check for a game win, holds the possible winning lines
+
+//  Game Board
+//	╔══════╗
+//	║ 0 1 2 ║
+//	║ 3 4 5 ║
+//	║ 6 7 8 ║
+//	╚══════╝
+
+Dim WIN_CONDITIONS(8, 3)
+WIN_CONDITIONS(0, 1) = 0
+WIN_CONDITIONS(0, 2) = 1
+WIN_CONDITIONS(0, 3) = 2
+WIN_CONDITIONS(1, 1) = 3
+WIN_CONDITIONS(1, 2) = 4
+WIN_CONDITIONS(1, 3) = 5
+WIN_CONDITIONS(2, 1) = 6
+WIN_CONDITIONS(2, 2) = 7
+WIN_CONDITIONS(2, 3) = 8
+WIN_CONDITIONS(3, 1) = 0
+WIN_CONDITIONS(3, 2) = 3
+WIN_CONDITIONS(3, 3) = 6
+WIN_CONDITIONS(4, 1) = 1
+WIN_CONDITIONS(4, 2) = 4
+WIN_CONDITIONS(4, 3) = 7
+WIN_CONDITIONS(5, 1) = 2
+WIN_CONDITIONS(5, 2) = 5
+WIN_CONDITIONS(5, 3) = 8
+WIN_CONDITIONS(6, 1) = 0
+WIN_CONDITIONS(6, 2) = 4
+WIN_CONDITIONS(6, 3) = 8
+WIN_CONDITIONS(7, 1) = 2
+WIN_CONDITIONS(7, 2) = 4
+WIN_CONDITIONS(7, 3) = 6
+Global WIN_CONDITIONS()
+
+If FirebaseAuth AuthState() = false
+	// User is not signed in
+	Goto SIGN_IN
+End If
+
+MAIN:
+	UI Cls
+	UpdateUser
+	LobbyUI
+	GetUsers
+	GetLobbyData
+
+	UI Value "lblSignedInUser", "Hello, " + FirebaseAuth UserDisplayName$()
+
+	// Setup timer to update the users lastHeartBeat date/time for the signed in user
+	// This is used to check if a user is still active, may have closed their browser for example
+	Clear Interval USER_TIMER
+	USER_TIMER = Set Interval(7000, "UpdateUserHeartBeat")
+
+	// Timer to get the list of users from Firebase every 5 seconds
+	Clear Interval GET_USER_TIMER
+	GET_USER_TIMER = Set Interval(5000, "GetUsers")
+
+	Do
+		If FirebaseAuth AuthState() = false
+			// User is not signed in or has signed out
+			Clear Interval GET_USER_TIMER
+			Goto SIGN_IN
+		End If
+
+		If START_GAME_TRIGGER = 1
+			// Stop retrieving the list of users
+			Clear Interval GET_USER_TIMER
+			START_GAME_TRIGGER = 0
+			Goto GAME_PLAY
+		End If
+
+		Wait Vbl
+	Loop
+
+SIGN_IN:
+	UI Cls
+	ShowSignInUI
+
+	// Wait here until the user is signed in
+	Do
+		If FirebaseAuth AuthState() = true
+			Goto MAIN
+		End If
+
+		Wait Vbl
+	Loop
+
+GAME_PLAY:
+	UI Cls
+	// Get the game document
+	Firebase DocumentGet collection$="games", docId$ = GAME_ID$, onData$ = "ON_GOT_GAME_DATA"
+	GAME_FINISHED = 0
+
+	Do
+		If FirebaseAuth AuthState() = false
+			// User is not signed in or has signed out
+			Goto SIGN_IN
+		End If
+
+		If GAME_FINISHED = 1
+			Goto MAIN
+		End If
+
+		Wait Vbl
+	Loop
+
+Procedure GetUsers
+	If FirebaseAuth AuthState() = false
+		Pop Proc
+	End If
+	// ** index required for this query
+	queryRef$ = Firebase NewQuery$ (collection$ = "users", onData$="ON_GOT_USERS_DATA")
+	Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "signedIn", direction$ = "desc"
+	Firebase QueryAddOrderBy queryRef$ = queryRef$, field$ = "displayName", direction$ = "asc"
+	Firebase QueryGet queryRef$ = queryRef$
+End Proc
+
+Procedure ON_GOT_USERS_DATA[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	users$ = ""
+
+	If DOCUMENT_COUNT > 0
+		For row = 0 to DOCUMENT_COUNT -1
+			docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+			// Read the document fields using the Firebase document ID as a reference
+			displayName$ = Firebase QueryGetString$(QUERY_REF$, docId$, "displayName")
+			photoUrl$ = Firebase QueryGetString$(QUERY_REF$, docId$, "photoUrl")
+			signedIn = Firebase QueryGetValue(QUERY_REF$, docId$, "signedIn")
+			lastHeartBeat$ = Firebase QueryGetDate$(QUERY_REF$, docId$, "lastHeartBeat")
+
+			If signedIn = true
+				// Show user as 'away' if lastHeartBeat time is older then 10 seconds
+				// We add an 'id' (the UserID) to each <div> so we can attach a click event handler
+				If Firebase DateDiff(lastHeartBeat$, Firebase DateNow$(), "seconds") > 10
+					users$ = users$ + "<div id='" + docId$ + "_users'><span class='user text-warning'>" + displayName$ + "<i style='margin-left:3px;' class='bi bi-moon-fill'></i></span></div>"
+				Else
+					// User is active
+					If docId$ = "AI"
+						users$ = users$ + "<div id='" + docId$ + "_users'><span class='user text-primary fw-bold'>" + displayName$ + "<i style='margin-left:3px;' class='bi bi-emoji-sunglasses'></i></span></div>"
+					Else
+						users$ = users$ + "<div id='" + docId$ + "_users'><span class='user text-success fw-bold'>" + displayName$ + "<i style='margin-left:3px;' class='bi bi-check-circle-fill'></i></span></div>"
+					End If
+				End If
+			Else
+				// User not signed in
+				users$ = users$ + "<div id='" + docId$ + "_users'><span class='user text-muted fst-italic'>" + displayName$ + "</span></div>"
+			End If
+
+		Next row
+	End If
+
+	UI TextBlock "lblUsers", content$ = users$
+
+	// Add a click event to each user so we can show the player stats when clicked
+	For row = 0 to DOCUMENT_COUNT -1
+		docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+		HTML Element docId$ + "_users", OnClick$ = "ON_USER_CLICK"
+	Next row
+
+	// Remove the previous query
+	Firebase QueryDispose USERS_QUERY$
+
+	// Store the new query reference in a global variable so we can remove when GetUsers is called again
+	USERS_QUERY$ = QUERY_REF$
+End Proc
+
+Procedure ON_USER_CLICK[INDEX$]
+	// Extract the userID
+	userId$ = Mid$(INDEX$, 0, Instr(INDEX$, "_"))
+	ShowPlayerStats[userId$]
+End Proc
+
+Procedure ON_USER_IMAGE_CLICK[ID$]
+	// Extract the userID
+	userId$ = Mid$(ID$, 0, Instr(ID$, "_"))
+	ShowPlayerStats[userId$]
+End Proc
+
+Procedure ShowPlayerStats[userId$]
+	PlayerStatsUI
+	UI Value "lblPlayerStatsPlayerName", Firebase QueryGetString$(USERS_QUERY$, userId$, "displayName")
+	UI Value "lblPlayerStatsGamesWon", Str$(Firebase QueryGetValue(USERS_QUERY$, userId$, "gamesWon"))
+	UI Value "lblPlayerStatsGamesLost", Str$(Firebase QueryGetValue(USERS_QUERY$, userId$, "gamesLost"))
+	UI Value "lblPlayerStatsGamesDrawn", Str$(Firebase QueryGetValue(USERS_QUERY$, userId$, "gamesDrawn"))
+	UI Value "lblPlayerStatsMatchWon", Str$(Firebase QueryGetValue(USERS_QUERY$, userId$, "matchWon"))
+	UI Value "lblPlayerStatsMatchLost", Str$(Firebase QueryGetValue(USERS_QUERY$, userId$, "matchLost"))
+	UI Value "lblPlayerStatsMatchDrawn", Str$(Firebase QueryGetValue(USERS_QUERY$, userId$, "matchDrawn"))
+
+	playDuration = Firebase QueryGetValue(USERS_QUERY$, userId$, "playDuration")
+	If playDuration < 60
+		UI Value "lblPlayerStatsPlayDuration", "Played for " + Str$(playDuration) + " seconds"
+	Else
+		UI Value "lblPlayerStatsPlayDuration", "Played for " + Str$(Int(playDuration/60)) + " minutes and " + Str$(Abs(playDuration mod 60)) + " seconds"
+	End If
+End Proc
+
+Procedure UpdateUser
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "displayName", value$ = FirebaseAuth UserDisplayName$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "photoUrl", value$ = FirebaseAuth UserPhotoUrl$()
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "signedIn", value = true
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastHeartBeat"
+	// Using DocumentSet will create the document if not exists, existing document will be updated when using "merge = true"
+	Firebase DocumentSet collection$ = "users", docRef$ = docRef$, docId$ = FirebaseAuth UserID$(), merge = true
+	Firebase DocumentDispose docRef$
+End Proc
+
+Procedure UpdateUserHeartBeat
+	If FirebaseAuth AuthState() = false
+		Pop Proc
+	End If
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "lastHeartBeat"
+	Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = FirebaseAuth UserID$()
+	Firebase DocumentDispose docRef$
+End Proc
+
+Procedure ON_GOT_GAME_DATA[ERROR$, EXISTS, DOCUMENT_ID$, DOCUMENT_REF$]
+	// New game started, setup the initial game play UI
+	GamePlayUI
+	HTML Element "txtChatMessage", OnKeyDown$ = "ON_CHAT_TEXT_KEY_DOWN"
+	UI Hide "lblTurn"
+	UI Hide "btnPlayAgain"
+	player1DisplayName$ = Firebase GetDocumentString$(DOCUMENT_REF$, "displayName")
+	player1PhotoUrl$ = Firebase GetDocumentString$(DOCUMENT_REF$, "photoUrl")
+	player2DisplayName$ = Firebase GetDocumentString$(DOCUMENT_REF$, "player2DisplayName")
+	player2PhotoUrl$ = Firebase GetDocumentString$(DOCUMENT_REF$, "player2PhotoUrl")
+	player1Score$ = Firebase GetDocumentString$(DOCUMENT_REF$, "player1Score")
+	player2Score$ = Firebase GetDocumentString$(DOCUMENT_REF$, "player2Score")
+
+	If player1PhotoUrl$ = "" Then player1PhotoUrl$ = DEFAULT_PROFILE_IMAGE$
+	If player2PhotoUrl$ = "" Then player2PhotoUrl$ = DEFAULT_PROFILE_IMAGE$
+
+	UI Image "imgPlayer1", src$ = player1PhotoUrl$
+	UI Image "imgPlayer2", src$ = player2PhotoUrl$
+	UI TextBlock "lblPlayer1Name", content$ = player1DisplayName$
+	UI TextBlock "lblPlayer2Name", content$ = player2DisplayName$
+	UI TextBlock "lblPlayer1Score", content$ = Trim$(Str$(Val(player1Score$))), class$="text-light rounded text-center bg-dark layer2"
+	UI TextBlock "lblPlayer2Score", content$ = Trim$(Str$(Val(player2Score$))), class$="text-light rounded text-center bg-dark layer2"
+
+	// Document no longer needed so release resources
+	Firebase DocumentDispose DOCUMENT_REF$
+
+	// Setup a listener on the game document
+	Firebase DocumentSubscribe collection$="games", docId$ = GAME_ID$, onData$ = "ON_UPDATE_GAME_STATE"
+
+	// Set up a query listener for the game chat messages
+	// ** index required for this query
+	CHAT_QUERY$ = Firebase NewQuery$ (collection$ = "chatMessage", onData$="ON_CHAT_DATA_RECEIVED")
+	Firebase QueryAddWhere queryRef$ = CHAT_QUERY$, field$ = "gameId", operator$ = "=", value$ = GAME_ID$
+	Firebase QueryAddOrderBy queryRef$ = CHAT_QUERY$, field$ = "created", direction$ = "desc"
+	Firebase QuerySubscribe CHAT_QUERY$, limit = 50
+
+	GAME_TIMER = Set Interval(1000, "AI_GAME_TIMER_ON_INTERVAL")
+	UI Value "lblGameTime", "00:00:00"
+End Proc
+
+Procedure AI_GAME_TIMER_ON_INTERVAL[ID]
+	startedDate$ = Firebase GetDocumentDate$(GAME_DOC_REF$, "started")
+	h = Int(Firebase DateDiff(startedDate$, Firebase DateNow$(), "hours"))
+	m = Int((Firebase DateDiff(startedDate$, Firebase DateNow$(), "minutes") mod 60))
+	s = Int((Firebase DateDiff(startedDate$, Firebase DateNow$(), "seconds") mod 60))
+	PadString[h]: hours$ = PARAM$
+	PadString[m]: minutes$ = PARAM$
+	PadString[s]: seconds$ = PARAM$
+	UI Value "lblGameTime", hours$+ ":" + minutes$ + ":" + seconds$
+End Proc
+
+Procedure PadString[value]
+	value$ = Trim$(Str$(value))
+	If value < 10 Then value$ = "0" + value$
+End Proc[value$]
+
+Procedure ON_UPDATE_GAME_STATE[DOCUMENT_REF$, ERROR$, ERROR_CODE]
+	// Procedure is called each time the game document changes (game state change)
+	// Store the ref to the game document in a global variable so we can access the document fields else where in the program
+	GAME_DOC_REF$ = DOCUMENT_REF$
+
+	// Get the required field from the document
+	player1$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player1")
+	player1DisplayName$ = Firebase GetDocumentString$(GAME_DOC_REF$, "displayName")
+	player2DisplayName$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player2DisplayName")
+	player2$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player2")
+	turn$ = Firebase GetDocumentString$(GAME_DOC_REF$, "turn")
+	gameEnded = Firebase GetDocumentValue(GAME_DOC_REF$, "gameEnded")
+	finished = Firebase GetDocumentValue(GAME_DOC_REF$, "finished")
+
+	UI TextBlock "lblPlayer1Name", content$ = player1DisplayName$
+	UI TextBlock "lblPlayer2Name", content$ = player2DisplayName$
+
+	UI Hide "lblTurn"
+	UI Hide "btnPlayAgain"
+
+	If finished = true
+		// Stop listening to the game document
+		Firebase DocumentDispose GAME_DOC_REF$
+
+		// Stop listening to the chatMessage query
+		Firebase QueryDispose CHAT_QUERY$
+
+		// Stop the game duration timer
+		Clear Interval GAME_TIMER
+
+		ShowDialog["Other player has left the game", "GAME_ENDED_COMPLETED"]
+
+		Pop Proc
+	End If
+
+	// Update the game board UI
+	Dim gameState$(9)
+
+	For i = 0 To 8
+		gameState$(i) = Firebase GetDocumentString$(GAME_DOC_REF$, "gameState" + Trim$(Str$(i)))
+		If gameState$(i) = player1$
+			UI Button Trim$(Str$(i)), iconClass$="bi bi-x-lg"
+			// Add an overlay over this button so it can not be clicked
+			UI Show "lblButton" + Trim$(Str$(i))
+		End If
+
+		If gameState$(i) = player2$
+			UI Button Trim$(Str$(i)), iconClass$="bi bi-circle"
+			// Add an overlay over this button so it can not be clicked
+			UI Show "lblButton" + Trim$(Str$(i))
+		End If
+
+		If gameState$(i) = ""
+			// Remove the overlay for this button so it can be clicked
+			UI Hide "lblButton" + Trim$(Str$(i))
+			UI Button Trim$(Str$(i)), iconClass$=""
+		End If
+
+		If gameEnded = false
+			// Set the default button style
+			UI Button Trim$(Str$(i)), class$="btn btn-outline-info"
+		End If
+	Next i
+
+	UI Value "lblGameResult", ""
+	gameWon = false
+
+	// Check for each possible win condition
+	a$ = "": b$ = "": c$ = ""
+
+	For i = 0 To 7
+		// The gameState$ (game board) array holds the Firebase UserID
+		a$ = gameState$(WIN_CONDITIONS(i, 1))
+		b$ = gameState$(WIN_CONDITIONS(i, 2))
+		c$ = gameState$(WIN_CONDITIONS(i, 3))
+
+		// Check for a win
+		If (a$ = b$ And b$ = c$) And a$ <> ""
+			// Add an overlay over all buttons so they can not be clicked
+			UI Show "lblButtonDisable"
+
+			gameWon = true
+
+			// Show the winning line
+			class$ = UI Class$(Trim$(Str$(WIN_CONDITIONS(i, 1))))
+
+			// a$, b$ and c$ = the Firebase UserID of the winner
+			If a$ = FirebaseAuth UserID$()
+				class$ = class$ + " bg-success text-light"
+			Else
+				class$ = class$ + " bg-danger text-light"
+			End If
+
+			// Show the winning line on the game board
+			UI Button Trim$(Str$(WIN_CONDITIONS(i, 1))), class$=class$
+			UI Button Trim$(Str$(WIN_CONDITIONS(i, 2))), class$=class$
+			UI Button Trim$(Str$(WIN_CONDITIONS(i, 3))), class$=class$
+
+			Exit
+		End If
+	Next i
+
+	// Show game result as draw as default
+	If gameEnded = true
+		UI Value "lblGameResult", "Draw"
+	End if
+
+	// Display the name of the player that won the game
+	If gameWon = true And a$ = FirebaseAuth UserID$()
+		UI Value "lblGameResult", "You Win"
+	End if
+
+	If gameWon = true And a$ <> FirebaseAuth UserID$()
+		UI Value "lblGameResult", "You Lose"
+	End if
+
+	// Setup UI when game has ended
+	If gameEnded = True
+		player1Score$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player1Score")
+		player2Score$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player2Score")
+		player1Class$ = "text-light rounded text-center bg-dark layer2"
+		player2Class$ = "text-light rounded text-center bg-dark layer2"
+
+		If Val(player1Score$) > Val(player2Score$)
+			player1Class$ = "text-light rounded text-center bg-success layer2"
+		Else
+			If Val(player1Score$) < Val(player2Score$)
+				player2Class$ = "text-light rounded text-center bg-success layer2"
+			End If
+		End If
+
+		UI TextBlock "lblPlayer1Score", content$ = Trim$(Str$(Val(player1Score$))), class$=player1Class$
+		UI TextBlock "lblPlayer2Score", content$ = Trim$(Str$(Val(player2Score$))), class$=player2Class$
+
+		// Add an overlay over all buttons so they can not be clicked
+		UI Show "lblButtonDisable"
+
+		// Show the play again button
+		UI Show "btnPlayAgain"
+
+		// Exit the proc here as the game has ended
+		Pop Proc
+	End If
+
+	Play Audio "click"
+
+	// only player1 is resposible for updating the game state when a game is won
+	If gameWon = true And player1$ = FirebaseAuth UserID$()
+
+		// Update player stats
+		If a$ = player1$
+			docRef$ = Firebase NewDocument$()
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "gamesWon", value = 1
+			Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player1$
+			Firebase DocumentDispose docRef$
+
+			docRef$ = Firebase NewDocument$()
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "gamesLost", value = 1
+			Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player2$
+			Firebase DocumentDispose docRef$
+		Else
+			docRef$ = Firebase NewDocument$()
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "gamesLost", value = 1
+			Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player1$
+			Firebase DocumentDispose docRef$
+
+			docRef$ = Firebase NewDocument$()
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "gamesWon", value = 1
+			Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player2$
+			Firebase DocumentDispose docRef$
+		End If
+
+		// Update the game document
+		docRef$ = Firebase NewDocument$()
+
+		// Increase the score for the winning player
+		If a$ = player1$
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "player1Score", value = 1
+		Else
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "player2Score", value = 1
+		End If
+
+		Firebase SetDocumentValue docRef$ = docRef$, field$ = "gameEnded", value = true
+
+		// The winner will go first if play again button pressed
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "turn", value$ = a$
+		Firebase DocumentUpdate collection$ = "games", docRef$ = docRef$, docId$ = GAME_ID$
+		Firebase DocumentDispose docRef$
+
+		Pop Proc
+	End If
+
+	// Check for a draw
+	If gameWon = false and gameState$(0) <> "" and gameState$(1) <> "" and gameState$(2) <> "" and gameState$(3) <> "" and gameState$(4) <> "" and gameState$(5) <> "" and gameState$(6) <> "" and gameState$(7) <> "" and gameState$(8) <> ""
+		// only player1 is resposible for updating the game state when a game is a draw
+		If player1$ = FirebaseAuth UserID$()
+
+			// Update player stats
+			docRef$ = Firebase NewDocument$()
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "gamesDrawn", value = 1
+			Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player1$
+			Firebase DocumentDispose docRef$
+
+			docRef$ = Firebase NewDocument$()
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "gamesDrawn", value = 1
+			Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player2$
+			Firebase DocumentDispose docRef$
+
+			// Update game document
+			docRef$ = Firebase NewDocument$()
+			Firebase SetDocumentValue docRef$ = docRef$, field$ = "gameEnded", value = true
+			Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "drawCount", value = 1
+			Firebase DocumentUpdate collection$ = "games", docRef$ = docRef$, docId$ = GAME_ID$
+			Firebase DocumentDispose docRef$
+		End If
+		Pop Proc
+	End If
+
+	// If we get here, the game is still in progress
+
+	// Hide the overlay (empty text block) that covers the buttons so they can not be clicked
+	UI Hide "lblButtonDisable"
+
+	// Update the UI for players next move
+	If turn$ = player1$
+		If player1$ = FirebaseAuth UserID$()
+			UI TextBlock "lblTurn", x=620, content$="Your Turn", class$="rounded-pill bg-danger text-center text-light"
+		Else
+			UI TextBlock "lblTurn", x=1180, content$="Waiting", class$="rounded-pill bg-success text-center text-light"
+			// Show an overlay (empty text block) over all buttons so they can not be clicked
+			UI Show "lblButtonDisable"
+		End If
+	Else
+		If turn$ = player2$
+			If player2$ = FirebaseAuth UserID$()
+				UI TextBlock "lblTurn", x=1180, content$="Your Turn", class$="rounded-pill bg-danger text-center text-light"
+			Else
+				UI TextBlock "lblTurn", x=620, content$="Waiting", class$="rounded-pill bg-success text-center text-light"
+				// Show an overlay (empty text block) over all buttons so they can not be clicked
+				UI Show "lblButtonDisable"
+			End If
+		End If
+	End If
+
+	UI Show "lblTurn"
+
+	// Computer AI
+	If turn$ = "AI"
+		AI_MOVE = -1
+
+		// Check for win move
+		For i = 0 To 7
+			a$ = gameState$(WIN_CONDITIONS(i, 1))
+			b$ = gameState$(WIN_CONDITIONS(i, 2))
+			c$ = gameState$(WIN_CONDITIONS(i, 3))
+
+			If (a$ = b$ and c$ = "") And a$ = "AI"
+				AI_MOVE = WIN_CONDITIONS(i, 3)
+				Exit
+			End If
+
+			If (a$ = c$ and b$ = "") And a$ = "AI"
+				AI_MOVE = WIN_CONDITIONS(i, 2)
+				Exit
+			End If
+
+			If (b$ = c$ and a$ = "") And b$ = "AI"
+				AI_MOVE = WIN_CONDITIONS(i, 1)
+				Exit
+			End If
+		Next i
+
+		// Check for a blocking move
+		If AI_MOVE = -1
+			For i = 0 To 7
+				a$ = gameState$(WIN_CONDITIONS(i, 1))
+				b$ = gameState$(WIN_CONDITIONS(i, 2))
+				c$ = gameState$(WIN_CONDITIONS(i, 3))
+
+				If (a$ = b$ and c$ = "") And a$ = player1$
+					AI_MOVE = WIN_CONDITIONS(i, 3)
+					Exit
+				End If
+
+				If (a$ = c$ and b$ = "") And a$ = player1$
+					AI_MOVE = WIN_CONDITIONS(i, 2)
+					Exit
+				End If
+
+				If (b$ = c$ and a$ = "") And b$ = player1$
+					AI_MOVE = WIN_CONDITIONS(i, 1)
+					Exit
+				End If
+			Next i
+		End If
+
+		// No block or win move so use random
+		If AI_MOVE = -1
+			AI_MOVE = Rnd(9)
+			While gameState$(AI_MOVE) <> ""
+				AI_MOVE = Rnd(9)
+			Wend
+		End If
+
+		// Add a random delay for the AI move
+		id = Set Interval((200 + Rnd(1500)), "AI_TIMER_ON_INTERVAL")
+
+	End If
+End Proc
+
+Procedure AI_TIMER_ON_INTERVAL[ID]
+	Clear Interval ID
+	// Update the game document
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "turn", value$ = FirebaseAuth UserID$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState" + Trim$(Str$(AI_MOVE)), value$ = "AI"
+	Firebase DocumentUpdate collection$ = "games", docRef$ = docRef$, docId$ = GAME_ID$
+	Firebase DocumentDispose docRef$
+End Proc
+
+Procedure ON_PLAYER_MOVE_CLICK[ID$]
+	// Show an overlay (empty text block) over all buttons so they can not be clicked
+	UI Show "lblButtonDisable"
+
+	player1$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player1")
+	player2$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player2")
+	turn$ = Firebase GetDocumentString$(GAME_DOC_REF$, "turn")
+
+	// Set which player has the next move
+	If turn$ = player1$
+		turn$ = player2$
+	Else
+		If turn$ = player2$
+			turn$ = player1$
+		End If
+	End If
+
+	// Update the game document
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "turn", value$ = turn$
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState" + ID$, value$ = FirebaseAuth UserID$()
+	Firebase DocumentUpdate collection$ = "games", docRef$ = docRef$, docId$ = GAME_ID$
+	Firebase DocumentDispose docRef$
+End Proc
+
+Procedure ON_CREATE_GAME_CLICK[ID$]
+	// Create a new game
+    docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "finished", value = false
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "player1Score", value = 0
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "player2Score", value = 0
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "finished", value = false
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "displayName", value$ = FirebaseAuth UserDisplayName$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "photoUrl", value$ = FirebaseAuth UserPhotoUrl$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "player1", value$ = FirebaseAuth UserID$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "player2", value$ = ""
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "participants", value = 1
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "drawCount", value = 0
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "gameEnded", value = false
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+	Firebase DocumentAdd collection$ = "games", docRef$ = docRef$
+End Proc
+
+Procedure GetLobbyData
+	// Get the top 10 latest games, would need to add paging if lots of players were expected :-)
+	// ** index required for this query
+	LOBBY_QUERY$ = Firebase NewQuery$ (collection$ = "games", onData$="ON_LOBBY_DATA")
+	Firebase QueryAddOrderBy queryRef$ = LOBBY_QUERY$, field$ = "finished", direction$ = "asc"
+	Firebase QueryAddOrderBy queryRef$ = LOBBY_QUERY$, field$ = "participants", direction$ = "asc"
+	Firebase QueryAddOrderBy queryRef$ = LOBBY_QUERY$, field$ = "created", direction$ = "desc"
+	Firebase QuerySubscribe queryRef$ = LOBBY_QUERY$, limit = 10
+End Proc
+
+Procedure ON_LOBBY_DATA[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	// Procedure is called when changes are detected in the collection query
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		UI Cls group$="lobby_items"
+		UI Show "btnCreateMatch"
+		game_waiting = false
+
+		If DOCUMENT_COUNT > 0
+
+			yOffset = 0
+
+			For row = 0 To DOCUMENT_COUNT -1
+				docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+				player1$ = Firebase QueryGetString$(QUERY_REF$, docId$, "player1")
+				player2$ = Firebase QueryGetString$(QUERY_REF$, docId$, "player2")
+				finished = Firebase QueryGetValue(QUERY_REF$, docId$, "finished")
+				participants = Firebase QueryGetValue(QUERY_REF$, docId$, "participants")
+				player1Score = Firebase QueryGetValue(QUERY_REF$, docId$, "player1Score")
+				player2Score = Firebase QueryGetValue(QUERY_REF$, docId$, "player2Score")
+
+				// Get the display names and photoUrl from the "Users" query
+				displayName$ = Firebase QueryGetString$(USERS_QUERY$, player1$, "displayName")
+				photoUrl$ = Firebase QueryGetString$(USERS_QUERY$, player1$, "photoUrl")
+				player2DisplayName$ = ""
+
+				If player2$ <> ""
+					player2DisplayName$ = Firebase QueryGetString$(USERS_QUERY$, player2$, "displayName")
+				End If
+
+				If photoUrl$ = "" Then photoUrl$ = DEFAULT_PROFILE_IMAGE$
+
+				UI Image player1$ + "_photoUrl" + Trim$(Str$(row)), x=420, y=300 + yOffset * 75, width=50, height=50, src$=photoUrl$, class$="user-image user", group$="lobby_items", onClick$="ON_USER_IMAGE_CLICK"
+				UI TextBlock "lblPlayerName" + docId$, x=500, y=300 + yOffset * 75, width=600, height=50, fontSize=25, content$=displayName$, fontName$="roboto mono", class$="text-light", group$="lobby_items"
+
+				If finished = false And participants = 1
+					UI TextBlock "lblStatus" + docId$, x=1150, y=305 + yOffset * 75, width=250, content$="Waiting", fontName$="roboto mono", class$="rounded-pill text-light bg-warining", group$="lobby_items"
+				End If
+
+				// Check for game in progress/started
+				If finished = false And participants = 2
+					If player1$ = FirebaseAuth UserID$() or player2$ = FirebaseAuth UserID$()
+						// The signed in user is in a game so stop the query listener
+						Firebase QueryDispose LOBBY_QUERY$
+						// Store the game Document ID in a global variable
+						GAME_ID$ = docId$
+						// Set the trigger to jump out of the main loop into the game play loop
+						START_GAME_TRIGGER = 1
+						Pop Proc
+					Else
+						// Show the status for this game as "playing" for all other users
+						UI TextBlock "lblStatus" + docId$, x=1300, y=305 + yOffset * 75, width=250, content$="Playing", fontName$="roboto mono", class$="rounded-pill text-light bg-warining", group$="lobby_items"
+						UI TextBlock "lblPlayerName" + docId$, x=500, y=300 + yOffset * 75, width=600, height=50, fontSize=25, content$=displayName$ + " <span class='text-muted'>vs</span> " + player2DisplayName$, fontName$="roboto mono", class$="text-light", group$="lobby_items"
+					End If
+				End If
+
+				// Show the join button
+				If player1$ <> FirebaseAuth UserID$() And finished = false And participants = 1
+					game_waiting = true
+					UI Button docId$, x=1470, y=300 + yOffset * 75, width=100, content$="Join", class$="btn btn-outline-success", group$="lobby_items", onClick$="ON_JOIN_GAME_CLICK"
+				End If
+
+				// Show the delete game button
+				If player1$ = FirebaseAuth UserID$() and finished = false And participants = 1
+					UI Button docId$, x=1470, y=300 + yOffset * 75, width=100, content$="Delete", class$="btn btn-outline-danger", group$="lobby_items", onClick$="ON_DELETE_GAME_CLICK"
+					UI Button docId$ + "_PlayAI", x=1300, y=300 + yOffset * 75, width=160, content$="Play Computer", class$="btn btn-outline-success", group$="lobby_items", onClick$="ON_JOIN_AI_GAME_CLICK"
+					UI Hide "btnCreateMatch"
+				End If
+
+				// If game finished, show the player scores
+				If finished = true
+					If player1Score > player2Score
+						UI TextBlock "lblPlayerName" + docId$, x=500, y=300 + yOffset * 75, width=600, height=50, fontSize=25, content$="<span class='text-success fw-bold'>" + displayName$ + "</span><span class='text-white-50'> vs </span><span class='text-danger fw-bold'>" + player2DisplayName$ + "</span>", fontName$="roboto mono", class$="text-light", group$="lobby_items"
+						UI TextBlock "lblPlayerScore1" + docId$, x=1300, y=300 + yOffset * 75, width=60, height=50, fontSize=25, content$=Trim$(Str$(player1Score)), fontName$="roboto mono", class$="text-light text-center rounded bg-success", group$="lobby_items"
+						UI TextBlock "lblPlayerScore2" + docId$, x=1380, y=300 + yOffset * 75, width=60, height=50, fontSize=25, content$=Trim$(Str$(player2Score)), fontName$="roboto mono", class$="text-light text-center rounded bg-danger", group$="lobby_items"
+					Else If player2Score > player1Score
+						UI TextBlock "lblPlayerName" + docId$, x=500, y=300 + yOffset * 75, width=600, height=50, fontSize=25, content$="<span class='text-danger fw-bold'>" + displayName$ + "</span><span class='text-white-50'> vs </span><span class='text-success fw-bold'>" + player2DisplayName$ + "</span>", fontName$="roboto mono", class$="text-light", group$="lobby_items"
+						UI TextBlock "lblPlayerScore1" + docId$, x=1300, y=300 + yOffset * 75, width=60, height=50, fontSize=25, content$=Trim$(Str$(player1Score)), fontName$="roboto mono", class$="text-light text-center rounded bg-danger", group$="lobby_items"
+						UI TextBlock "lblPlayerScore2" + docId$, x=1380, y=300 + yOffset * 75, width=60, height=50, fontSize=25, content$=Trim$(Str$(player2Score)), fontName$="roboto mono", class$="text-light text-center rounded bg-success", group$="lobby_items"
+					Else
+						UI TextBlock "lblPlayerName" + docId$, x=500, y=300 + yOffset * 75, width=600, height=50, fontSize=25, content$="<span class='text-muted'>" + displayName$ + "</span><span class='text-white-50'> vs </span><span class='text-muted'>" + player2DisplayName$ + "</span>", fontName$="roboto mono", class$="text-light", group$="lobby_items"
+						UI TextBlock "lblPlayerScore1" + docId$, x=1300, y=300 + yOffset * 75, width=60, height=50, fontSize=25, content$=Trim$(Str$(player1Score)), fontName$="roboto mono", class$="text-light text-center rounded bg-secondary", group$="lobby_items"
+						UI TextBlock "lblPlayerScore2" + docId$, x=1380, y=300 + yOffset * 75, width=60, height=50, fontSize=25, content$=Trim$(Str$(player2Score)), fontName$="roboto mono", class$="text-light text-center rounded bg-secondary", group$="lobby_items"
+					End If
+				End If
+
+				Add yOffset, 1
+
+			Next row
+
+			If game_waiting = true
+				Play Audio "new_game"
+			End If
+
+		End If
+
+	End If
+End Proc
+
+Procedure ON_JOIN_AI_GAME_CLICK[ID$]
+	ID$ =  Mid$(ID$, 0, Instr(ID$, "_"))
+	Firebase DocumentGet collection$="games", docId$=ID$, onData$="ON_GOT_AI_GAME_TO_JOIN"
+End Proc
+
+Procedure ON_GOT_AI_GAME_TO_JOIN[ERROR$, EXISTS, DOCUMENT_ID$, DOCUMENT_REF$]
+
+	participants = Firebase GetDocumentValue(docRef$ = DOCUMENT_REF$, field$="participants")
+	player1$ = Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="player1")
+
+	If participants = 1
+		// Update the game document
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "player2", value$ = "AI"
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "player2DisplayName", value$ = "Computer Player"
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "player2PhotoUrl", value$ = DEFAULT_PROFILE_IMAGE$
+		Firebase SetDocumentValue docRef$ = docRef$, field$ = "participants", value = 2
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "turn", value$ = player1$
+		Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "started"
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState0", value$ = ""
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState1", value$ = ""
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState2", value$ = ""
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState3", value$ = ""
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState4", value$ = ""
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState5", value$ = ""
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState6", value$ = ""
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState7", value$ = ""
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState8", value$ = ""
+		Firebase DocumentUpdate collection$ = "games", docRef$ = docRef$, docId$ = DOCUMENT_ID$
+
+		// Document no longer needed so release resources
+		Firebase DocumentDispose docRef$
+
+	Else
+		UI Popup "ErrorPopup", content$="Game has already started", placement$="top-center", delay=3000, class$="text-white bg-danger"
+	End If
+
+	// Document no longer needed so release resources
+	Firebase DocumentDispose DOCUMENT_REF$
+
+End Proc
+
+Procedure ON_JOIN_GAME_CLICK[ID$]
+	// Get the game document for the selected game
+	Firebase DocumentGet collection$="games", docId$=ID$, onData$="ON_GOT_GAME_TO_JOIN"
+End Proc
+
+Procedure ON_GOT_GAME_TO_JOIN[ERROR$, EXISTS, DOCUMENT_ID$, DOCUMENT_REF$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		// Check the game still exists
+		If EXISTS = False
+			UI Popup "ErrorPopup", content$="Game has been deleted", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		Else
+			participants = Firebase GetDocumentValue(docRef$ = DOCUMENT_REF$, field$="participants")
+			player1$ = Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="player1")
+
+			If participants = 1
+				// Delete any "waiting" games for the signed in user
+				DeleteGameForUser[FirebaseAuth UserID$()]
+
+				// Update the game document - this update will trigger both players to jump out of
+				// the main loop and goto the game play loop
+				docRef$ = Firebase NewDocument$()
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "player2", value$ = FirebaseAuth UserID$()
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "player2DisplayName", value$ = FirebaseAuth UserDisplayName$()
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "player2PhotoUrl", value$ = FirebaseAuth UserPhotoUrl$()
+				Firebase SetDocumentValue docRef$ = docRef$, field$ = "participants", value = 2
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "turn", value$ = player1$
+				Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "started"
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState0", value$ = ""
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState1", value$ = ""
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState2", value$ = ""
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState3", value$ = ""
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState4", value$ = ""
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState5", value$ = ""
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState6", value$ = ""
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState7", value$ = ""
+				Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState8", value$ = ""
+				Firebase DocumentUpdate collection$ = "games", docRef$ = docRef$, docId$ = DOCUMENT_ID$
+
+				// Document no longer needed so release resources
+				Firebase DocumentDispose docRef$
+
+			Else
+				UI Popup "ErrorPopup", content$="Game has already started", placement$="top-center", delay=3000, class$="text-white bg-danger"
+			End If
+
+		End If
+
+		// Document no longer needed so release resources
+		Firebase DocumentDispose DOCUMENT_REF$
+	End If
+End Proc
+
+Procedure ON_PLAY_AGAIN_CLICK[ID$]
+	// Reset the game board data
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState0", value$ = ""
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState1", value$ = ""
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState2", value$ = ""
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState3", value$ = ""
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState4", value$ = ""
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState5", value$ = ""
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState6", value$ = ""
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState7", value$ = ""
+	Firebase SetDocumentString docRef$ = docRef$, field$ = "gameState8", value$ = ""
+
+	// Setting gameEnded to false will force a new game to begin
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "gameEnded", value = false
+	Firebase DocumentUpdate collection$ = "games", docRef$ = docRef$, docId$ = GAME_ID$
+
+	// Reset the game board button styles
+	For i = 0 To 8
+		UI Button Trim$(Str$(i)), content$="", class$="btn btn-outline-info", iconClass$=""
+	Next i
+End Proc
+
+Procedure ON_END_GAME_CLICK[ID$]
+	ShowConfirmDialog["End Game", "CONFIRM_END_GAME"]
+End Proc
+
+Procedure CONFIRM_END_GAME
+	// Get the player scores
+	player1Score = Firebase GetDocumentValue(GAME_DOC_REF$, "player1Score")
+	player2Score = Firebase GetDocumentValue(GAME_DOC_REF$, "player2Score")
+	player1$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player1")
+	player2$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player2")
+
+	// Stop listening to the game document
+	Firebase DocumentDispose GAME_DOC_REF$
+
+	// Stop listening to the chatMessage query
+	Firebase QueryDispose CHAT_QUERY$
+
+	// Stop the game duration timer
+	Clear Interval GAME_TIMER
+
+	// Update player match stats
+	If player1Score > player2Score
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "matchWon", value = 1
+		Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player1$
+		Firebase DocumentDispose docRef$
+
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "matchLost", value = 1
+		Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player2$
+		Firebase DocumentDispose docRef$
+	End If
+
+	If player2Score > player1Score
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "matchLost", value = 1
+		Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player1$
+		Firebase DocumentDispose docRef$
+
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "matchWon", value = 1
+		Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player2$
+		Firebase DocumentDispose docRef$
+	End If
+
+	If player2Score = player1Score
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "matchDrawn", value = 1
+		Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player1$
+		Firebase DocumentDispose docRef$
+
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "matchDrawn", value = 1
+		Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player2$
+		Firebase DocumentDispose docRef$
+	End If
+
+	// Update the game document, this will inform the 2nd player that the other player has left the game
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "finished", value = true
+	Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "finishedDate"
+	Firebase DocumentUpdate collection$ = "games", docRef$ = docRef$, docId$ = GAME_ID$, onCompleted$="GAME_ENDED_COMPLETED"
+End Proc
+
+Procedure GAME_ENDED_COMPLETED
+	Firebase DocumentGet collection$="games", docId$=GAME_ID$, onData$="ON_GOT_GAME_TO_END"
+End Proc
+
+Procedure ON_GOT_GAME_TO_END[ERROR$, EXISTS, DOCUMENT_ID$, DOCUMENT_REF$]
+	participants = Firebase GetDocumentValue(docRef$ = DOCUMENT_REF$, field$="participants")
+	player1$ = Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="player1")
+	player2$ = Firebase GetDocumentString$(docRef$ = DOCUMENT_REF$, field$="player2")
+	finishedDate$ = Firebase GetDocumentDate$(docRef$ = DOCUMENT_REF$, "finishedDate")
+	startedDate$ = Firebase GetDocumentDate$(docRef$ = DOCUMENT_REF$, "started")
+
+	duration = Firebase DateDiff(startedDate$, finishedDate$, "seconds")
+
+	// Update the playDuration player stats
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "playDuration", value = duration
+	Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player1$
+	Firebase DocumentDispose docRef$
+
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentIncrement docRef$ = docRef$, field$ = "playDuration", value = duration
+	Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = player2$
+	Firebase DocumentDispose docRef$
+
+	// Forces the player out of the game play loop and back to the main loop
+	GAME_FINISHED = 1
+End Proc
+
+Procedure ON_DELETE_GAME_CLICK[ID$]
+	// Store the game Document ID so we can delete from Firebase if user confirms
+	GAME_ID$ = ID$
+	ShowConfirmDialog["Delete Game", "CONFIRM_DELETE_GAME"]
+End Proc
+
+Procedure CONFIRM_DELETE_GAME
+	UI Cls "confirm_dialog"
+	Firebase DocumentDelete collection$ = "games", docId$ = GAME_ID$
+End Proc
+
+Procedure DeleteGameForUser[userId$]
+	// Get any waiting games for the provided UserID
+	queryRef$ = Firebase NewQuery$ (collection$ = "games", onData$="ON_LOBBY_DATA_FOR_DELETE")
+	Firebase QueryAddWhere queryRef$ = queryRef$, field$ = "player1", operator$ = "=", value$ = userId$
+	Firebase QueryAddWhereValue queryRef$ = queryRef$, field$ = "finished", operator$ = "=", value = false
+	Firebase QueryAddWhereValue queryRef$ = queryRef$, field$ = "participants", operator$ = "=", value = 1
+	Firebase QueryGet queryRef$ = queryRef$, limit = 1
+End Proc
+
+Procedure ON_LOBBY_DATA_FOR_DELETE[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		If DOCUMENT_COUNT > 0
+			// Delete the game
+			docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, 0)
+			Firebase DocumentDelete collection$ = "games", docId$ = docId$
+		End If
+	End If
+
+	// Query no longer needed so release resources
+	Firebase QueryDispose QUERY_REF$
+End Proc
+
+Procedure ON_CHAT_TEXT_KEY_DOWN[KEYCODE]
+	// [Enter] key pressed
+	If KEYCODE = 13
+
+		// Create a new Firebase document (held in memory) and return a reference to it, this can then be used to access the document fields
+		docRef$ = Firebase NewDocument$()
+
+		// Set the document field values
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "gameId", value$ = GAME_ID$
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "userId", value$ = FirebaseAuth UserID$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "message", value$ = UI Value$("txtChatMessage")
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "displayName", value$ = FirebaseAuth UserDisplayName$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "photoUrl", value$ = FirebaseAuth UserPhotoUrl$()
+		Firebase SetDocumentServerTimestamp docRef$ = docRef$, field$ = "created"
+
+		// Add the document to the Firebase 'chatMessage' collection, the collection is created if it doesnt already exist
+		Firebase DocumentAdd collection$ = "chatMessage", docRef$ = docRef$
+
+		// Remove the document from memory
+		Firebase DocumentDispose docRef$
+
+		UI Value "txtChatMessage", ""
+	End If
+End Proc
+
+Procedure ON_CHAT_DATA_RECEIVED[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+
+	// Hid eth chat if playing computer AI
+	player2$ = Firebase GetDocumentString$(GAME_DOC_REF$, "player2")
+	If player2$ = "AI"
+		UI Cls "chat_ui"
+		Pop Proc
+	End If
+
+	// Procedure is called when changes are detected in the collection query
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		messages$ = ""
+		UI Focus "txtChatMessage"
+
+		If DOCUMENT_COUNT > 0
+			For row = DOCUMENT_COUNT -1 to 0 Step -1
+				// Get the Firebase document ID for a specific row in the query results
+				// We then use the document ID to access the document fields
+				docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, row)
+
+				// Read the document fields using the Firebase document ID as a reference
+				displayName$ = Firebase QueryGetString$(QUERY_REF$, docId$, "displayName")
+				userId$ = Firebase QueryGetString$(QUERY_REF$, docId$, "userId")
+				message$ = Firebase QueryGetString$(QUERY_REF$, docId$, "message")
+
+				messages$ = messages$ + "<div>" + displayName$ + " : <span class='text-chat'>" + message$ + "</span></div>"
+			Next row
+		End If
+
+		UI Value "lblChatMessages", messages$
+
+		// Scroll to bottom of messages
+		{
+			var el = document.getElementById("lblChatMessages");
+			el.scrollTop = el.scrollHeight;
+		}
+
+		// Play sound for the message receiver
+		If messages$ <> "" and userId$ <> FirebaseAuth UserID$()
+			Play Audio "keystroke"
+		End If
+
+	End If
+End Proc
+
+Procedure ON_SIGN_OUT_CLICK[ID$]
+	ShowConfirmDialog["Sign Out", "ON_SIGN_OUT_CONFIRM"]
+End Proc
+
+Procedure ON_SIGN_OUT_CONFIRM
+	// Get any waiting game for the signed in user, so we can delete them
+	queryRef$ = Firebase NewQuery$ (collection$ = "games", onData$="ON_LOBBY_DATA_FOR_SIGN_OUT")
+	Firebase QueryAddWhere queryRef$ = queryRef$, field$ = "player1", operator$ = "=", value$ = FirebaseAuth UserID$()
+	Firebase QueryAddWhereValue queryRef$ = queryRef$, field$ = "finished", operator$ = "=", value = false
+	Firebase QueryAddWhereValue queryRef$ = queryRef$, field$ = "participants", operator$ = "=", value = 1
+	Firebase QueryGet queryRef$ = queryRef$, limit = 1
+End Proc
+
+Procedure ON_LOBBY_DATA_FOR_SIGN_OUT[DOCUMENT_COUNT, QUERY_REF$, ERROR$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		If DOCUMENT_COUNT > 0
+			// Delete the game
+			docId$ = Firebase QueryGetDocumentID$(QUERY_REF$, 0)
+			Firebase DocumentDelete collection$ = "games", docId$ = docId$, onCompleted$ = "ON_SIGN_OUT_COMPLETED"
+		Else
+			SignOut
+		End If
+	End If
+
+	// Query no longer needed so release resources
+	Firebase QueryDispose QUERY_REF$
+End Proc
+
+Procedure ON_SIGN_OUT_COMPLETED[ERROR$, DOCUMENT_ID$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=5000, class$="text-white bg-danger"
+	Else
+		SignOut
+	End If
+End Proc
+
+Procedure SignOut
+	// Stop updating the user lastHeartBeat
+	Clear Interval USER_TIMER
+
+	// Stop retrieving the users
+	Clear Interval GET_USER_TIMER
+
+	// Update the user document, set as not signed in
+	docRef$ = Firebase NewDocument$()
+	Firebase SetDocumentValue docRef$ = docRef$, field$ = "signedIn", value = false
+	Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = FirebaseAuth UserID$(), onCompleted$="ON_SIGNED_OUT"
+	Firebase DocumentDispose docRef$
+End Proc
+
+Procedure ON_SIGNED_OUT
+	// Sign out of Firebase authentication
+	// All query and document listeners are disposed when signing out
+	FirebaseAuth SignOut
+End Proc
+
+Procedure ShowDialog[content$, event$]
+	DialogUI
+	UI Value "lblDialogContent", content$
+	UI Button "btnDialogOKButton", onClick$=event$
+End Proc
+
+Procedure ShowConfirmDialog[content$, onConfirm$]
+	ConfirmDialogUI
+	UI Value "lblDialogContent", content$
+	UI Button "btnDialogConfirm", onClick$ = onConfirm$
+End Proc
+
+Procedure ON_CONFIRM_DIALOG_CANCEL[ID$]
+    UI Cls "confirm_dialog"
+End Proc
+
+Procedure ON_SETTINGS_CLICK[ID$]
+	SettingsUI
+	HideSettingsBusy
+	UI Value "txtSettingsDisplayName", FirebaseAuth UserDisplayName$()
+	profileUrl$ = FirebaseAuth UserPhotoUrl$()
+	If profileUrl$ = "" Then profileUrl$ = DEFAULT_PROFILE_IMAGE$
+	UI Image "imgUserProfileImage", src$ = profileUrl$
+End Proc
+
+Procedure ON_SETTINGS_CLOSE_CLICK[ID$]
+    UI Cls "settings_ui"
+End Proc
+
+Procedure ShowSettingsBusy
+	UI Show "lblBusyBackground"
+	UI Show "imgBusy"
+End Proc
+
+Procedure HideSettingsBusy
+	UI Hide "lblBusyBackground"
+	UI Hide "imgBusy"
+End Proc
+
+Procedure ON_SAVE_DISPLAY_NAME_CLICK[ID$]
+	If UI Value$("txtSettingsDisplayName") = ""
+		UI Popup "ErrorPopup", content$="Please enter your display name", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtDisplayName"
+		Pop Proc
+	End If
+
+	ShowSettingsBusy
+	FirebaseAuth UpdateDisplayName displayName$ = UI Value$("txtSettingsDisplayName"), onCompleted$ = "ON_UPDATE_DISPLAY_NAME_COMPLETED"
+End Proc
+
+Procedure ON_UPDATE_DISPLAY_NAME_COMPLETED[ERROR$, ERROR_CODE]
+	HideSettingsBusy
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Value "lblSignedInUser", FirebaseAuth UserDisplayName$()
+
+		// Update the user document
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "displayName", value$ = FirebaseAuth UserDisplayName$()
+		Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = FirebaseAuth UserID$(), onCompleted$="UPDATE_USER_COMPLETED"
+		Firebase DocumentDispose docRef$
+	End If
+End Proc
+
+Procedure ON_UPLOAD_PROFILE_IMAGE_CLICK[ID$]
+	// Opens a file selector
+    Firebase SelectFile onSelected$ = "FILE_SELECTED"
+End Proc
+
+Procedure FILE_SELECTED[FILE_REF$, NAME$, SIZE, TYPE$]
+	// Check the selected file is an image
+	If Instr(TYPE$, "image") >= 0
+
+		// Check the selected file size is not greater than 10Mb
+		If SIZE >= 10485760
+			UI Popup "ErrorPopup", content$="File too large, must be 10Mb or less", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		Else
+			ShowSettingsBusy
+			// Set the Firebase storage path
+			storagePath$ = "ProfileImages/" + FirebaseAuth UserID$() + "_" + NAME$
+
+			// Upload the file to Firebase storage
+			Firebase UploadFile fileRef$ = FILE_REF$, storagePath$ = storagePath$, onCompleted$ = "ON_FILE_UPLOADED"
+		End If
+
+	Else
+		UI Popup "ErrorPopup", content$="Not a valid image file", placement$="top-center", delay=3000, class$="text-white bg-danger"
+	End If
+End Proc
+
+Procedure ON_FILE_UPLOADED[ERROR$, FILE_REF$, DOWNLOAD_URL$, STORAGE_PATH$, SIZE, TYPE$, NAME$]
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+		HideSettingsBusy
+	Else
+		FirebaseAuth UpdatePhotoUrl photoUrl$ = DOWNLOAD_URL$, onCompleted$ = "ON_UPDATE_PHOTO_COMPLETED"
+	End If
+End Proc
+
+Procedure ON_UPDATE_PHOTO_COMPLETED[ERROR$, DOCUMENT_ID$]
+	HideSettingsBusy
+	If ERROR$ <> ""
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Image "imgUserProfileImage", src$ = FirebaseAuth UserPhotoUrl$()
+
+		// Update the user document
+		docRef$ = Firebase NewDocument$()
+		Firebase SetDocumentString docRef$ = docRef$, field$ = "photoUrl", value$ = FirebaseAuth UserPhotoUrl$()
+		Firebase DocumentUpdate collection$ = "users", docRef$ = docRef$, docId$ = FirebaseAuth UserID$(), onCompleted$="GetUsers"
+		Firebase DocumentDispose docRef$
+	End If
+End Proc
+
+Procedure ShowSignInUI
+	SignInUI
+	// Add keydown event so we can react when the [enter] key is pressed
+	HTML Element "txtEmail", OnKeyDown$ = "ON_SIGN_IN_KEY_DOWN"
+	HTML Element "txtPassword", OnKeyDown$ = "ON_SIGN_IN_KEY_DOWN"
+	UI Focus "txtEmail"
+End Proc
+
+Procedure ON_SIGN_IN_KEY_DOWN[KEYCODE]
+	// [Enter] key pressed
+	If KEYCODE = 13
+		ON_SIGN_IN_CLICK
+	End If
+End Proc
+
+Procedure ON_SIGN_IN_CLICK[ID$]
+	If UI Value$("txtEmail") = ""
+		UI Popup "ErrorPopup", content$="Please enter your email", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtEmail"
+		Pop Proc
+	End If
+
+	If UI Value$("txtPassword") = ""
+		UI Popup "ErrorPopup", content$="Please enter your password", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtPassword"
+		Pop Proc
+	End If
+
+	// Sign in using the provided email and password
+	BusyUI
+	FirebaseAuth SignIn email$ = UI Value$("txtEmail"), password$ = UI Value$("txtPassword"), onCompleted$="ON_SIGN_IN_COMPLETED"
+End Proc
+
+Procedure ON_SIGN_IN_COMPLETED[ERROR$, ERROR_CODE]
+	UI Cls "busy_ui"
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	End If
+End Proc
+
+Procedure ON_REGISTER_CLICK[ID$]
+    UI Cls
+	RegisterUI
+	// Add keydown event so we can react when the [enter] key is pressed
+	HTML Element "txtFullname", OnKeyDown$ = "ON_REGISTER_KEY_DOWN"
+	HTML Element "txtEmail", OnKeyDown$ = "ON_REGISTER_KEY_DOWN"
+	HTML Element "txtPassword", OnKeyDown$ = "ON_REGISTER_KEY_DOWN"
+	UI Focus "txtFullname"
+End Proc
+
+Procedure ON_REGISTER_KEY_DOWN[KEYCODE]
+	// [Enter] key pressed
+	If KEYCODE = 13
+		ON_DO_REGISTER_CLICK
+	End If
+End Proc
+
+Procedure ON_FORGOT_PASSWORD_CLICK[ID$]
+    UI Cls
+	ForgotPasswordUI
+	// Add keydown event so we can react when the [enter] key is pressed
+	HTML Element "txtEmail", OnKeyDown$ = "ON_FORGOT_PASSWORD_KEY_DOWN"
+	UI Focus "txtEmail"
+End Proc
+
+Procedure ON_FORGOT_PASSWORD_KEY_DOWN[KEYCODE]
+	// [Enter] key pressed
+	If KEYCODE = 13
+		ON_SEND_PASSWORD_EMAIL
+	End If
+End Proc
+
+Procedure ON_SIGN_IN_GOOGLE_CLICK[ID$]
+    FirebaseAuth SignInWithGoogle
+End Proc
+
+Procedure ON_SIGN_IN_GIT_CLICK[ID$]
+    FirebaseAuth SignInWithGitHub
+End Proc
+
+Procedure ON_DO_REGISTER_CLICK[ID$]
+	If UI Value$("txtFullname") = ""
+		UI Popup "ErrorPopup", content$="Please enter your display name", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtFullname"
+		Pop Proc
+	End If
+
+	If UI Value$("txtEmail") = ""
+		UI Popup "ErrorPopup", content$="Please enter your email", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtEmail"
+		Pop Proc
+	End If
+
+	If UI Value$("txtPassword") = ""
+		UI Popup "ErrorPopup", content$="Please enter your password", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtPassword"
+		Pop Proc
+	End If
+
+	BusyUI
+	FirebaseAuth CreateUser displayName$ = UI Value$("txtFullname"), email$ = UI Value$("txtEmail"), password$ = UI Value$("txtPassword"), onCompleted$="ON_CREATE_USER_COMPLETED"
+End Proc
+
+Procedure ON_CREATE_USER_COMPLETED[ERROR$, ERROR_CODE]
+	UI Cls "busy_ui"
+
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UpdateUser
+		GetUsers
+	End If
+End Proc
+
+Procedure ON_BACK_TO_SIGNIN_CLICK[ID$]
+    UI Cls
+	ShowSignInUI
+	UI Focus "txtEmail"
+End Proc
+
+Procedure ON_SEND_PASSWORD_EMAIL[ID$]
+	If UI Value$("txtEmail") = ""
+		UI Popup "ErrorPopup", content$="Please enter your email", placement$="top-center", delay=3000, class$="text-white bg-danger"
+		UI Focus "txtEmail"
+		Pop Proc
+	End If
+	BusyUI
+	FirebaseAuth SendPasswordResetEmail email$ = UI Value$("txtEmail"), onCompleted$="ON_SEND_PASSWORD_EMAIL_COMPLETED"
+End Proc
+
+Procedure ON_SEND_PASSWORD_EMAIL_COMPLETED[ERROR$, ERROR_CODE]
+	UI Cls "busy_ui"
+	If ERROR_CODE <> 0
+		UI Popup "ErrorPopup", content$=ERROR$, placement$="top-center", delay=3000, class$="text-white bg-danger"
+	Else
+		UI Popup "SuccessPopup", content$="Password recovery email has been sent", placement$="top-center", delay=3000, class$="text-white bg-success"
+	End If
+End Proc
+
+Procedure ON_CLOSE_PLAYER_STATS_CLICK[ID$]
+    UI Cls "player_stats_dialog"
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure PlayerStatsUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "lblDialogOverlay", x=0, y=0, width=1920, height=1080, content$="", class$="layer2 overlay", group$="player_stats_dialog"
+UI TextBlock "lblDialogContainer", x=763, y=280, width=431, height=488, content$="", class$="text-light layer3 border rounded border-info bg-dark", group$="player_stats_dialog"
+UI Button "btnDialogCancelButton", x=1080, y=700, width=80, height=50, content$="Close", class$="layer3 btn btn-outline-light", onClick$="ON_CLOSE_PLAYER_STATS_CLICK", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsPlayerName", x=775, y=284, width=408, height=63, fontSize=30, content$="#", fontName$="roboto mono", class$="layer4 text-center text-warning", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsGameTitle", x=840, y=540, width=277, height=35, fontSize=16, content$="Game Stats", fontName$="roboto mono", class$="text-light rounded-top bg-secondary text-center layer4", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsGameContainer", x=840, y=574, width=277, height=90, content$="", fontName$="roboto mono", class$="rounded-bottom layer4 border-secondary border", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStats1", x=840, y=420, width=68, fontSize=16, content$="Won", fontName$="roboto mono", class$="layer5 text-center text-warning", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStats2", x=940, y=420, width=68, fontSize=16, content$="Lost", fontName$="roboto mono", class$="layer5 text-center text-warning", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStats3", x=1040, y=420, width=68, fontSize=16, content$="Draw", fontName$="roboto mono", class$="layer5 text-center text-warning", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStats4", x=840, y=580, width=68, fontSize=16, content$="Won", fontName$="roboto mono", class$="layer5 text-center text-warning", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStats5", x=940, y=580, width=68, fontSize=16, content$="Lost", fontName$="roboto mono", class$="layer5 text-center text-warning", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStats6", x=1040, y=580, width=68, fontSize=16, content$="Draw", fontName$="roboto mono", class$="layer5 text-center text-warning", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsMatchWon", x=840, y=460, width=68, fontSize=16, content$="0", fontName$="roboto mono", class$="text-light layer5 text-center", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsMatchLost", x=940, y=460, width=68, fontSize=16, content$="0", fontName$="roboto mono", class$="text-light layer5 text-center", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsMatchDrawn", x=1040, y=460, width=68, fontSize=16, content$="0", fontName$="roboto mono", class$="text-light layer5 text-center", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsGamesWon", x=840, y=620, width=68, fontSize=16, content$="0", fontName$="roboto mono", class$="text-light layer5 text-center", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsGamesLost", x=940, y=620, width=68, fontSize=16, content$="0", fontName$="roboto mono", class$="text-light layer5 text-center", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsGamesDrawn", x=1040, y=620, width=68, fontSize=16, content$="0", fontName$="roboto mono", class$="text-light layer5 text-center", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsMatchTitle", x=840, y=380, width=277, height=35, fontSize=16, content$="Match Stats", fontName$="roboto mono", class$="text-light rounded-top bg-secondary text-center layer4", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsMatchContainer", x=840, y=414, width=277, height=90, content$="", fontName$="roboto mono", class$="rounded-bottom layer4 border-secondary border", group$="player_stats_dialog"
+UI TextBlock "lblPlayerStatsPlayDuration", x=775, y=340, width=408, height=35, fontSize=16, content$="#", fontName$="roboto mono", class$="text-light layer4 text-center", group$="player_stats_dialog"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure ForgotPasswordUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtEmail", x=880, y=380, width=370, class$="form-control layer2"
+UI Button "btnSignIn", x=700, y=460, width=222, height=50, content$="Sign In", class$="layer2 btn btn-link text-start text-warning", onClick$="ON_BACK_TO_SIGNIN_CLICK"
+UI Button "btnSendEmail", x=1140, y=460, width=113, height=45, content$="Send", class$="btn layer2 btn-outline-success", onClick$="ON_SEND_PASSWORD_EMAIL"
+UI TextBlock "txtMainTitle", x=0, y=10, width=1920, height=100, fontSize=60, content$="Tic Tac Toe", class$="text-center text-warning"
+UI TextBlock "txtMainSubTitle", x=680, y=300, width=600, height=63, content$="Forgot Password", fontName$="roboto mono", class$="border-top border-end rounded-top text-center bg-secondary border-secondary border-start text-light"
+UI TextBlock "lblMainContainer", x=680, y=340, width=600, height=190, content$="", class$="text-lightborder bg-dark border-bottom rounded-bottom border-start border-end border-secondary"
+UI TextBlock "lblEmail", x=700, y=380, width=93, content$="Email", fontName$="roboto mono", class$="text-light layer2"
+UI TextBlock "lblSignInSubTitle", x=720, y=920, width=500, height=75, content$="Multiplayer turn-based game demo created with <a href='https://aoz.studio/' target='_blank'><span class='aoz-text me-1'></span>AOZ Studio</a> and <a href='https://firebase.google.com/' target='_blank'><span class='aoz-text me-1'></span>Firebase</a>", fontName$="roboto mono", class$="text-light layer2 text-center"
+UI TextBlock "lblFooter", x=680, y=1000, width=596, height=43, content$="Designed and developed by Phil Bell May 2022", fontName$="roboto mono", class$="layer2 text-center text-light"
+End Proc
+
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure RegisterUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtFullname", x=880, y=380, width=370, class$="form-control layer2"
+UI TextBox "txtEmail", x=880, y=440, width=370, class$="form-control layer2"
+UI TextBox "txtPassword", x=880, y=500, width=370, type$="password", class$="form-control layer2"
+UI Button "btnRegister", x=700, y=600, width=86, height=50, content$="Sign In", class$="layer2 btn btn-link text-start text-warning", onClick$="ON_BACK_TO_SIGNIN_CLICK"
+UI Button "btnSignIn", x=1140, y=600, width=113, height=45, content$="Create", class$="btn layer2 btn-outline-success", onClick$="ON_DO_REGISTER_CLICK"
+UI TextBlock "txtMainTitle", x=0, y=10, width=1920, height=100, fontSize=60, content$="Tic Tac Toe", class$="text-center text-warning"
+UI TextBlock "txtMainSubTitle", x=680, y=300, width=600, height=63, content$="Create Account", fontName$="roboto mono", class$="border-top border-start border-end rounded-top text-center border-secondary bg-secondary text-light"
+UI TextBlock "lblMainContainer", x=680, y=340, width=600, height=330, content$="", class$="text-lightborder bg-dark border-bottom rounded-bottom border-start border-end border-secondary"
+UI TextBlock "lblEmail", x=700, y=440, width=93, content$="Email", fontName$="roboto mono", class$="text-light layer2"
+UI TextBlock "lblPassword", x=700, y=500, width=109, content$="Password", fontName$="roboto mono", class$="text-light layer2"
+UI TextBlock "lblDisplayName", x=700, y=380, width=169, content$="Display Name", fontName$="roboto mono", class$="text-light layer2"
+UI TextBlock "lblSignInSubTitle", x=720, y=920, width=500, height=75, content$="Multiplayer turn-based game demo created with <a href='https://aoz.studio/' target='_blank'><span class='aoz-text me-1'></span>AOZ Studio</a> and <a href='https://firebase.google.com/' target='_blank'><span class='aoz-text me-1'></span>Firebase</a>", fontName$="roboto mono", class$="text-light layer2 text-center"
+UI TextBlock "lblFooter", x=680, y=1000, width=596, height=43, content$="Designed and developed by Phil Bell May 2022", fontName$="roboto mono", class$="layer2 text-center text-light"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure SignInUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBox "txtEmail", x=880, y=380, width=370, class$="form-control layer2"
+UI TextBox "txtPassword", x=880, y=460, width=370, type$="password", class$="form-control layer2"
+UI Button "btnRegister", x=700, y=520, width=151, height=50, content$="Create Account", class$="layer2 btn btn-link text-start text-warning", onClick$="ON_REGISTER_CLICK"
+UI Button "btnForgotPassword", x=880, y=520, width=165, height=50, content$="Forgot Password", class$="layer2 btn btn-link text-start  text-warning", onClick$="ON_FORGOT_PASSWORD_CLICK"
+UI Button "btnSignIn", x=1137, y=527, width=113, height=45, content$="Sign In", class$="btn layer2 btn-outline-success", onClick$="ON_SIGN_IN_CLICK"
+UI Button "btnGoogleSignIn", x=720, y=660, width=515, height=50, content$="Google Sign In", iconClass$="bi bi-google", class$="btn layer2 btn-outline-secondary text-light", onClick$="ON_SIGN_IN_GOOGLE_CLICK"
+UI Button "btnGitSignIn", x=720, y=740, width=515, height=50, content$="Git Hub Sign In", iconClass$="bi bi-github", class$="btn layer2 btn-outline-secondary text-light", onClick$="ON_SIGN_IN_GIT_CLICK"
+UI TextBlock "txtMainTitle", x=0, y=10, width=1920, height=100, fontSize=60, content$="Tic Tac Toe", class$="text-center text-warning"
+UI TextBlock "txtMainSubTitle", x=680, y=300, width=600, height=63, content$="Sign In To Play", fontName$="roboto mono", class$="border-top border-start border-end rounded-top text-center border-secondary bg-secondary text-light"
+UI TextBlock "lblMainContainer", x=680, y=340, width=600, height=472, content$="", class$="text-lightborder bg-dark border-bottom rounded-bottom border-start border-end border-secondary"
+UI TextBlock "lblEmail", x=700, y=380, width=93, content$="Email", fontName$="roboto mono", class$="text-light layer2"
+UI TextBlock "lblPassword", x=700, y=460, width=109, content$="Password", fontName$="roboto mono", class$="text-light layer2"
+UI TextBlock "UITextBlock11", x=720, y=600, width=235, height=10, content$="", class$="layer2 border-bottom border-secondary"
+UI TextBlock "UITextBlock0", x=1000, y=600, width=234, height=10, content$="", class$="layer2 border-bottom border-secondary"
+UI TextBlock "UITextBlock1", x=960, y=588, width=31, height=47, content$="or", class$="text-light layer2"
+UI TextBlock "lblSignInSubTitle", x=720, y=920, width=500, height=75, content$="Multiplayer turn-based game demo created with <a href='https://aoz.studio/' target='_blank'><span class='aoz-text me-1'></span>AOZ Studio</a> and <a href='https://firebase.google.com/' target='_blank'><span class='aoz-text me-1'></span>Firebase</a>", fontName$="roboto mono", class$="text-light layer2 text-center"
+UI TextBlock "lblFooter", x=680, y=1000, width=596, height=43, content$="Designed and developed by Phil Bell May 2022", fontName$="roboto mono", class$="layer2 text-center text-light"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure LobbyUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtMainTitle", x=0, y=10, width=1920, height=100, fontSize=60, content$="Tic Tac Toe", class$="text-center text-warning"
+UI TextBlock "txtLobbyTitle", x=660, y=120, width=596, height=75, content$="Create a match and wait for a player to join, or play against the computer", fontName$="roboto mono", class$="text-light text-center"
+UI Button "btnSignOut", x=1840, y=100, width=45, height=45, padding=0, fontSize=29, content$="", tooltipPlacement$="auto", iconClass$="bi bi-box-arrow-right", class$="btn text-light", onClick$="ON_SIGN_OUT_CLICK"
+UI Button "btnCreateMatch", x=880, y=220, width=166, height=50, content$="Create Match", class$="btn btn-outline-success", onClick$="ON_CREATE_GAME_CLICK"
+UI TextBlock "lblSignedInUser", x=1500, y=60, width=382, content$="#", fontName$="roboto mono", class$="text-light text-end"
+UI TextBlock "lblUsers", x=1600, y=334, width=300, height=697, content$="TextBlock Content", fontName$="roboto mono", class$="bg-dark rounded-bottom"
+UI TextBlock "lblUsersTitle", x=1600, y=300, width=300, height=35, fontSize=16, content$="Players (Click For Stats)", fontName$="roboto mono", class$="text-light rounded-top bg-secondary text-center layer2"
+UI Button "btnSettings", x=1780, y=100, width=45, height=45, padding=0, fontSize=29, content$="", iconClass$="bi bi-gear", class$="btn text-info", onClick$="ON_SETTINGS_CLICK"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure GamePlayUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "txtMainTitle", x=0, y=10, width=1920, height=100, fontSize=60, content$="Tic Tac Toe", class$="text-center text-warning"
+UI Image "imgPlayer1", x=580, y=200, width=60, height=60, src$="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAIAAABZ+cloAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVJaROwg4pChdrIgKuIoVSyChdJWaNXB5NIvaGJIUlwcBdeCgx+LVQcXZ10dXAVB8APEzc1J0UVK/F9SaBHjwXE/3t173L0DhGaNqWbPOKBqlpFJJsR8YUUMvCKIAYQRRUxipp7KLuTgOb7u4ePrXZxneZ/7c4SVoskAn0g8y3TDIl4nnt60dM77xBFWkRTic+Ixgy5I/Mh12eU3zmWHBZ4ZMXKZOeIIsVjuYrmLWcVQiaeIo4qqUb6Qd1nhvMVZrdVZ+578haGitpzlOs0RJLGIFNIQIaOOKmqwEKdVI8VEhvYTHv5hx58ml0yuKhg55rEBFZLjB/+D392apckJNymUAHpfbPtjFAjsAq2GbX8f23brBPA/A1dax7/RBGY+SW90tOgR0L8NXFx3NHkPuNwBhp50yZAcyU9TKJWA9zP6pgIweAsEV93e2vs4fQBy1NXSDXBwCMTKlL3m8e6+7t7+PdPu7wepk3K9I4Jo0QAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+UKEQ0nD2rqNG0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAACb0lEQVRIx8VWS08TURQ+d1oBUyIJDWLsQly4cMESN0bjwrgyDdHEpb/CH6CufSXVFRijiWKMRBKND2RhKIJ9maG2hVb6fsgwnc7Q18x0Zu51ISW19HFN2nhWc+/Md7+cc75vzkWX7dPT9ksnJ04AAAABQPWHFoEASZLU7m1T8LzwYm7BfP7s1LWrdkoMABTEAiGUHyPd0Bmb7Rj96f8YZGzMykB/A/WbAP4fAepRY8wt9qrbTGKe43MDxy+OnLpQF26PMkBEZ7Yeo2qYqPxu5Hl1O9zjEhG1hGrc/lIR4z0mQIcshLHsLwcs4/SKpMvANEAmrgNzGAANjZ8btk1S+AnWk7kbbz7dXXQWZbV7k8noaTxy26qppsFhGqMkBfHeVy8G4GRlKRC5MjXZXabENGgaOkJzelFWHctuXF8u/IznS5WeGU0z8JMVD6eoDdWCxWCksR+dCPJV5cEqO+sJqrrRsqvv2JCHLzTtfoilOanUnSApFm85fV5h98t2/tWPMGm2C3yPp+fD0ZbS+RgIk3oSTEtVsLmdm6usWNP3ABl+JZ5p5MiIxUcuFrWR5lIqmy1IrQkwoM9biTu+kIZJo8JnAtGosIcpK7WHy64axh3K+96/SQ4SaBi/ZDeebiYPugYDOLwhUVYNQp6teTNVuXP/nTkuxYt/+aCs6TOegE/YbYcRatqsL3hUk9d+5Wk09ta/cWbEYv6jLb4iO1z+eEXpjFkXS2I2TSnib1we5QUzAIoJ0n1PUNJ0qj8OoR0UCMCdypndae418RukT3MfmGgsYRDcp4kPpbIZuB3scqFRKy2K48DQaW46jKyQdPY3y604RoGcD/YAAAAASUVORK5CYII=", class$="user-image layer2"
+UI Image "imgPlayer2", x=1140, y=200, width=60, height=60, src$="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAIAAABZ+cloAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVJaROwg4pChdrIgKuIoVSyChdJWaNXB5NIvaGJIUlwcBdeCgx+LVQcXZ10dXAVB8APEzc1J0UVK/F9SaBHjwXE/3t173L0DhGaNqWbPOKBqlpFJJsR8YUUMvCKIAYQRRUxipp7KLuTgOb7u4ePrXZxneZ/7c4SVoskAn0g8y3TDIl4nnt60dM77xBFWkRTic+Ixgy5I/Mh12eU3zmWHBZ4ZMXKZOeIIsVjuYrmLWcVQiaeIo4qqUb6Qd1nhvMVZrdVZ+578haGitpzlOs0RJLGIFNIQIaOOKmqwEKdVI8VEhvYTHv5hx58ml0yuKhg55rEBFZLjB/+D392apckJNymUAHpfbPtjFAjsAq2GbX8f23brBPA/A1dax7/RBGY+SW90tOgR0L8NXFx3NHkPuNwBhp50yZAcyU9TKJWA9zP6pgIweAsEV93e2vs4fQBy1NXSDXBwCMTKlL3m8e6+7t7+PdPu7wepk3K9I4Jo0QAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+UKEQ0nD2rqNG0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAACb0lEQVRIx8VWS08TURQ+d1oBUyIJDWLsQly4cMESN0bjwrgyDdHEpb/CH6CufSXVFRijiWKMRBKND2RhKIJ9maG2hVb6fsgwnc7Q18x0Zu51ISW19HFN2nhWc+/Md7+cc75vzkWX7dPT9ksnJ04AAAABQPWHFoEASZLU7m1T8LzwYm7BfP7s1LWrdkoMABTEAiGUHyPd0Bmb7Rj96f8YZGzMykB/A/WbAP4fAepRY8wt9qrbTGKe43MDxy+OnLpQF26PMkBEZ7Yeo2qYqPxu5Hl1O9zjEhG1hGrc/lIR4z0mQIcshLHsLwcs4/SKpMvANEAmrgNzGAANjZ8btk1S+AnWk7kbbz7dXXQWZbV7k8noaTxy26qppsFhGqMkBfHeVy8G4GRlKRC5MjXZXabENGgaOkJzelFWHctuXF8u/IznS5WeGU0z8JMVD6eoDdWCxWCksR+dCPJV5cEqO+sJqrrRsqvv2JCHLzTtfoilOanUnSApFm85fV5h98t2/tWPMGm2C3yPp+fD0ZbS+RgIk3oSTEtVsLmdm6usWNP3ABl+JZ5p5MiIxUcuFrWR5lIqmy1IrQkwoM9biTu+kIZJo8JnAtGosIcpK7WHy64axh3K+96/SQ4SaBi/ZDeebiYPugYDOLwhUVYNQp6teTNVuXP/nTkuxYt/+aCs6TOegE/YbYcRatqsL3hUk9d+5Wk09ta/cWbEYv6jLb4iO1z+eEXpjFkXS2I2TSnib1we5QUzAIoJ0n1PUNJ0qj8OoR0UCMCdypndae418RukT3MfmGgsYRDcp4kPpbIZuB3scqFRKy2K48DQaW46jKyQdPY3y604RoGcD/YAAAAASUVORK5CYII=", class$="user-image layer2"
+UI TextBlock "lblVs", x=891, y=140, width=142, height=56, fontSize=30, content$="vs", class$="text-center text-info"
+UI TextBlock "lblPlayer1Name", x=560, y=140, width=250, height=45, content$="#", fontName$="roboto mono", class$="text-light layer2 bg-secondary rounded-top text-center"
+UI TextBlock "lblPlayer2Name", x=1120, y=140, width=250, content$="#", fontName$="roboto mono", class$="text-light layer2 bg-secondary rounded-top text-center"
+UI TextBlock "lblTurn", x=620, y=280, width=129, content$="Your Turn", class$="rounded-pill bg-success text-center text-light layer2"
+UI Button "0", x=700, y=380, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI Button "1", x=880, y=380, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI Button "2", x=1060, y=380, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI Button "3", x=700, y=560, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI Button "4", x=880, y=560, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI Button "5", x=1060, y=560, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI Button "6", x=700, y=740, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI Button "7", x=880, y=740, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI Button "8", x=1060, y=740, width=150, height=150, fontSize=90, content$="", class$="btn btn-outline-info", onClick$="ON_PLAYER_MOVE_CLICK"
+UI TextBlock "lblButtonDisable", x=680, y=360, width=548, height=550, content$="", class$="text-light layer3"
+UI TextBlock "lblButton0", x=700, y=380, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblButton1", x=880, y=380, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblButton2", x=1060, y=380, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblButton3", x=700, y=560, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblButton4", x=880, y=560, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblButton5", x=1060, y=560, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblButton6", x=700, y=740, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblButton7", x=880, y=740, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblButton8", x=1060, y=740, width=149, height=148, content$="", class$="text-light", group$="layer2"
+UI TextBlock "lblPlayer1Score", x=700, y=200, width=80, height=56, fontSize=30, content$="#", fontName$="roboto mono", class$="text-light rounded text-center bg-primary layer2"
+UI TextBlock "lblPlayer2Score", x=1260, y=200, width=80, height=56, fontSize=30, content$="#", fontName$="roboto mono", class$="text-light rounded text-center bg-primary layer2"
+UI Button "btnPlayAgain", x=880, y=960, width=150, height=50, content$="Play Again", class$="btn btn-success", onClick$="ON_PLAY_AGAIN_CLICK"
+UI Button "btnEndGame", x=1060, y=960, width=150, height=50, content$="End Game", class$="btn btn-outline-danger", onClick$="ON_END_GAME_CLICK"
+UI TextBlock "lblGameResult", x=800, y=302, width=318, height=64, padding=0, fontSize=40, content$="#", class$="text-center text-info fw-bold"
+UI TextBlock "lblChatMessages", x=1360, y=420, width=536, height=381, content$="", class$="text-light bg-dark rounded-bottom", group$="chat_ui"
+UI TextBox "txtChatMessage", x=1380, y=820, width=496, placeHolder$="Message....", class$="form-control layer2", group$="chat_ui"
+UI TextBlock "UITextBlock0", x=1360, y=799, width=536, height=87, content$="", class$="text-light bg-dark rounded-bottom", group$="chat_ui"
+UI TextBlock "lblChatTitle", x=1360, y=380, width=536, height=45, content$="Chat Box", fontName$="roboto mono", class$="text-light layer2 bg-secondary rounded-top", group$="chat_ui"
+UI TextBlock "lblPlayer1Container", x=560, y=180, width=250, height=88, content$="", class$="text-light bg-dark rounded-bottom"
+UI TextBlock "lblPlayer2Container", x=1120, y=180, width=250, height=88, content$="", class$="text-light bg-dark rounded-bottom"
+UI TextBlock "lblGameTime", x=840, y=220, width=249, content$="#", fontName$="roboto mono", class$="text-light text-center"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure DialogUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "lblDialogOverlay", x=0, y=0, width=1920, height=1080, content$="", class$="layer2 overlay"
+UI TextBlock "lblDialogContainer", x=760, y=340, width=459, height=252, content$="", class$="text-light layer3 border rounded border-info bg-dark"
+UI Button "btnDialogOKButton", x=920, y=520, width=150, height=50, content$="Ok", class$="layer3 btn btn-outline-success text-light"
+UI TextBlock "lblDialogContent", x=780, y=360, width=417, height=135, content$="#", fontName$="roboto mono", class$="text-light layer3 text-center"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure ConfirmDialogUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "lblDialogOverlay", x=0, y=0, width=1920, height=1080, content$="", class$="layer2 overlay", group$="confirm_dialog"
+UI TextBlock "lblDialogContainer", x=760, y=340, width=459, height=252, content$="", class$="text-light layer3 border rounded border-info bg-dark", group$="confirm_dialog"
+UI Button "btnDialogCancelButton", x=1131, y=520, width=80, height=50, content$="No", class$="layer3 btn btn-outline-light", onClick$="ON_CONFIRM_DIALOG_CANCEL", group$="confirm_dialog"
+UI TextBlock "lblDialogContent", x=780, y=360, width=417, height=75, content$="#", fontName$="roboto mono", class$="text-light layer3", group$="confirm_dialog"
+UI Button "btnDialogConfirm", x=1040, y=520, width=80, height=50, content$="Yes", class$="layer3 btn btn-outline-success text-light", group$="confirm_dialog"
+UI TextBlock "lblDialogConfirmLabel", x=780, y=448, width=417, height=47, content$="Are you sure?", fontName$="roboto mono", class$="text-light layer3", group$="confirm_dialog"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure SettingsUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI TextBlock "lblDialogOverlay", x=0, y=0, width=1920, height=1080, content$="", class$="layer2 overlay", group$="settings_ui"
+UI TextBlock "lblDialogContainer", x=674, y=220, width=665, height=398, content$="", class$="text-light layer3 border rounded border-info bg-dark", group$="settings_ui"
+UI Button "btnDialogOKButton", x=1220, y=540, width=100, height=50, content$="Close", class$="layer3 btn btn-outline-light", onClick$="ON_SETTINGS_CLOSE_CLICK", group$="settings_ui"
+UI TextBlock "lblDialogContent", x=700, y=240, width=616, content$="Settings", fontName$="roboto mono", class$="text-light layer3 text-center", group$="settings_ui"
+UI TextBlock "UITextBlock4", x=700, y=440, width=187, content$="Display Name", fontName$="roboto mono", class$="text-light layer3", group$="settings_ui"
+UI TextBox "txtSettingsDisplayName", x=900, y=440, width=301, class$="layer3 form-control", group$="settings_ui"
+UI Button "btnSaveDisplayName", x=1220, y=440, width=100, height=45, content$="Save", class$="layer3 btn btn-outline-success", onClick$="ON_SAVE_DISPLAY_NAME_CLICK", group$="settings_ui"
+UI Image "imgUserProfileImage", x=700, y=300, width=100, height=100, src$="none", class$="layer3 user-image", group$="settings_ui"
+UI Button "btnUploadProfileImage", x=900, y=360, width=150, height=45, content$="Upload", class$="btn layer3 btn-outline-primary", onClick$="ON_UPLOAD_PROFILE_IMAGE_CLICK", group$="settings_ui"
+UI TextBlock "lblBusyBackground", x=687, y=230, width=639, height=377, content$="", class$="text-light layer4 rounded", group$="settings_ui"
+UI Image "imgBusy", x=1250, y=240, width=70, height=70, src$="resources/assets/loading.gif", class$="layer4"
+End Proc
+// ##*AOZUIDesignerGeneratedCode*##
+Procedure BusyUI
+// ********************************************************************************
+// The contents of this procedure is generated by the UI Designer.
+// Do not modify the contents of this procedure with the code editor.
+// ********************************************************************************
+UI Image "imgBusy", x=1239, y=300, width=40, height=40, src$="resources/assets/loading.gif", class$="layer4", group$="busy_ui"
+UI TextBlock "lblBusyOverlay", x=680, y=300, width=600, height=511, content$="", class$="layer3", group$="busy_ui"
+End Proc

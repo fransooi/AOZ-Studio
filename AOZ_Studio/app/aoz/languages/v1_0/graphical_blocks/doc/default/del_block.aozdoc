@@ -1,0 +1,7 @@
+<i>Del Block</i>
+<b>Del Block</b> xxxxxxx
+=
+To delete all new screen Blocks, the DEL BLOCK command is used. The memory these Blocks used is returned to
+the main program automatically. If you only want to get rid of a single Block, follow the command with that Block's
+identification number.
+

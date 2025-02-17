@@ -1,0 +1,24 @@
+<i>Tile String$</i>
+<b>Tile String$</b> xxxxxxx
+=
+Sometimes you need to keep data associated with a specific tile, like for example a door, if it is open or closed.
+
+AOZ allows you to store data in the form of a string of character in each tile of the map and recover it later...
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Store data
+Do
+I = Tile Test( "MapView", X Mouse, Y Mouse )
+If I >= 0
+If Mouse Click Then Set Tile String "MapView", I, "hello AOZ!"
+Print "String "; Tile String( "MapView", I )
+End If
+Redraw View "MapView"
+Wait Vbl
+Loop
+@code
+

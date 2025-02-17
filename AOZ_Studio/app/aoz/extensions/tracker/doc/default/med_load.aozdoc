@@ -1,0 +1,14 @@
+<i>Med Load</i>
+<b>Med Load</b> xxxxxxx
+=
+The MED LOAD instruction loads the specified module in memory, and re-locates it to the specified reserved bank
+in Chip memory. This bank is not a data bank, and will not be saved along with your program, so Med modules
+must be loaded anew each time that the program is run.
+
+This command will open the "Medplayer.library" file, and you may be asked to insert your System disc into the
+drive if this file is not available on the current disc.
+
+As with BassoonTracker modules, AOZ Studio sound samples can be played while Med modules are active. When a
+sound effect is triggered, any Med music will be stopped on all four voices, and will start again as soon as the
+sample has been played.
+

@@ -1,0 +1,16 @@
+<i>Player ErrorMessage$</i>
+<b>Player ErrorMessage$</b> xxxxxxx
+=
+After each Player command you can check to see if an error occured.
+
+The error message provides details of the problem that was encountered.
+
+Example:
+@code
+Player Initialise Engine$="local", Key$="PlayerHelpDocExample"
+If Player ErrorCode() <> 0
+Print Player ErrorCode()
+Print Player ErrorMessage$()
+End If
+@code
+

@@ -1,0 +1,17 @@
+<i>Cls</i>
+<b>Cls</b> xxxxxxx
+=
+The CLS command erases.all or part of the current screen. Used on its own, the contents of the current screen are deleted and replaced by the current paper colour. Any windows that may have been set up will also be cleared in this way.
+
+It can be used without any parameter, in this case the whole screen will be erased with the color of the Ink 0.
+
+By specifying the index number of a particular colour after the CLS command, the clearing operation will be carried out using that colour.
+
+A rectangular part of the current screen can also be cleared, leaving the rest of the screen intact. This is achieved by adding the coordinates of the block to be filed with the specified colour, from the top left-hand corner, to the bottom right.
+
+For example:
+@code
+Cls: Circle 100,98,98: Cls 0,50,50 To 150,150
+@code
+
+

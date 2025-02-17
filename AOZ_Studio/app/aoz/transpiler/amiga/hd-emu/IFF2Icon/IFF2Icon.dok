@@ -1,0 +1,109 @@
+
+   ›42m ### ##### #####   ###   ###                   ›0m
+   ›42m  #  #     #      #   #   #                    ›0m (Version 1.0b)
+   ›42m  #  #     #          #   #   ###   ###  ####  ›0m
+   ›42m  #  ####  ####    ###    #  #   # #   # #   # ›0m
+   ›42m  #  #     #      #       #  #     #   # #   # ›0m
+   ›42m  #  #     #      #       #  #   # #   # #   # ›0m
+   ›42m ### #     #      #####  ###  ###   ###  #   # ›0m
+
+Das ›1mTropicDesign›0m Produkt ›1mIFF2Icon›0m erzeugt aus einem IFF-File ein Icon oder ver-
+wendet optional das DefaultIcon. OS2.04 wird benötigt.
+
+›42m-- Inhaltsverzeichnis ---------------------------------------------------- 1 --›0m
+
+Abschnitt 1..................Inhaltsverzeichnis
+          2..................Copyright
+          3..................Über das Programm
+          4..................Technisches
+          5..................Schlußworte
+
+›42m-- Copyright ------------------------------------------------------------- 2 --›0m
+
+Die Copyrights  an diesem Freeware-Programm  und dem Sourcecode liegen bei mir,
+dem Autor Hanns Holger Rutz, für den Vertrieb gelten folgende Bedingungen:
+- für's Kopieren dürfen keine Preise über 3 DM (inklusive Disk, exklusive Porto
+  +Verpackung) erhoben werden.
+- folgende Files müssen zusammen in einem Directory kopiert werden:
+      ›3m IFF2Icon              ›0m(das Executable)
+      ›3m IFF2Icon.dok          ›0m(Doc-File)
+  oder›3m IFF2Icon.doc          ›0m(Doc-File in englisch)
+      ›3m IFF2Icon.asm          ›0m(optional kann dieser Source mitkopiert werden)
+  Alle Files müssen unverändert kopieren werden, unter diese Einschränkung fal-
+  len die Filenotes, die Datumsangaben und die Protection-Bits nicht :-)
+
+Für jegliche eventuell durch die oben aufgelisteten Files entstandene Datenver-
+luste oder Schäden (ob am Compi oder User...) ›4mhaftet allein der User›0m (immer her
+mit Bugreports  und ähnlichem!).  Der Sourcecode darf nur für persönliche Lern-
+zwecke  verwendet werden.
+
+›42m-- Über das Programm ----------------------------------------------------- 3 --›0m
+
+Jeder kennt  das  dämlich  in  den  Ausmaßen  der Icons  beschränkte  IconEdit.
+›1mIFF2Icon›0m wird im Gegensatz dazu über die Shell gestartet und konvertiert belie-
+big große IFF-Graphiken in Icons - ich male sowieso die Icons immer mit DPaint.
+Ja, ich weiß, es gibt solche Programme schon (hallo Eric, hi André!),  aber ich
+hatte halt Bock, selbst eins zu schreiben, zumal bei mir gerade keins rumflog.
+So, die Shell-Syntax:
+
+›3mIFF2Icon [<IFFFile>] [To <IconFile>] [<IconType>] [<HighlightType>]
+
+<IFFFile>         ›0mder Name der IFF-Graphik  (bzw. des Brushes);  wird kein Name
+                  angegeben, so wird das DefaultIcon für den jeweiligen IconTyp
+                  geladen;
+›3m<IconFile>        ›0mName des zu erzeugendes Icons;  ".info" muß nicht drangehängt
+                  werden, ebenso auch das "disk.info" nicht, der Name des Devi-
+                  ces alleine reicht;  wenn schon ein Icon existierst, wird der
+                  alte Typ übernommen, ansonsten kann er mit ›3m<IconType> ›0mfestge-
+                  legt werden;  tut man dies nicht,  so versucht  das Programm,
+                  anhand des  zum Icon gehörenden Files zu ermitteln,  worum es
+                  sich handelt,  ›3mGarbage ›0m(Trashcan)  kann nicht erkannt werden;
+                  gibt man überhaupt keinen Namen an,  wird die IFF-Graphik als
+                  DefaultIcon gespeichert;
+›3m<IconType>        ›0mTyp  des Icons:  ›3mDisk,  Drawer,  Tool,  Project  ›0moder ›3mGarbage
+                  ›0m(Trashcan);
+›3m<HighlightType>   ›0mdie  Art und Weise,  wie  das Icon  auf  Anklicken  reagiert:
+                  ›3mComplement  ›0mist voreingestellt,  die Graphik wird einfach in-
+                  vertiert; ›3mBackFill ›0mverhält sich ähnlich, allerdings werden an
+                  den Rand  des Icons stoßende Graphikbereich  mit  der Hinter-
+                  grundfarbe nicht invertiert  (ausprobieren!);  ›3mImage ›0mschließ-
+                  lich bewirkt,  daß der IFF-Brush in der vertikalen Mitte hal-
+                  biert wird  - die untere Hälfte wird beim Anklicken des Icons
+                  dargestellt  (ein Beispiel  für ein Icon  mit zwei Images ist
+                  der normale Trashcan);
+
+Außerdem bricht das Programm ab,  wenn weder ›3m<IconFile> ›0mnoch ›3m<IconType> ›0mangege-
+ben wurden, da es so ja nicht weiß, welches DefaultIcon erzeugt werden soll. Da
+die Icons verständlicherweise über die ›3micon.library ›0merzeugt werden,  werden Än-
+derungen auf der Workbench sofort sichtbar.  So,  das war's schon,  zwei kleine
+Bugs möchte ich aber nicht verschweigen:
+- seltsamerweise 'schluckt' das Programm jedesmal ein paar Kilobytes,  ich weiß
+  nicht,  warum;  an  die Programmierer:  das passiert  immer  beim Aufruf  von
+  ›3mPutDiskObject()  ›0m(nein,  das liegt  nicht daran,  daß  meine Ram-Disk  voller
+  wird :-)
+- wenn  das Programm selbstständig rausfinden soll,  was für ein  IconTyp ange-
+  bracht ist, behandelt es SoftLinks immer wie Directorys, aber was solls...
+
+Na dann malt mal alle schön!  Ein Tip aber noch zum Schluß: Komischerweise wird
+die Icongraphik in dem 3D-Rahmen so dargestellt,  daß oben zwischen Rahmen  und
+Graphik 2 Pixel frei sind, während es unten nur einer ist. Den Schönheitsfehler
+der Workbench behebt man,  idem man beim Abspeichern des IFF-Brushes am unteren
+Rand eine Leerzeile freiläßt  (beim Image-Modus natürlich auch eine in der Mit-
+te); unser IconEdit macht das übrigens auch.
+
+›42m-- Technisches ----------------------------------------------------------- 4 --›0m
+
+Leute, schaut Euch den Source an...  Stackgröße ist 4K, feste Positionen werden
+nicht definiert,  die Windowgröße entspricht der  des DefaultIcons  von OS2.04,
+DefaultTool und ToolTypes werden nicht festgelegt,  läuft auch auf 600ern,  die
+Banane ist krumm, es ist jetzt 0:08 Uhr...
+
+›42m-- Schlußworte ----------------------------------------------------------- 5 --›0m
+
+Jo,  folx.  Short proggy  -  short comments.  Schick alles,  was Du  nicht mehr
+brauchst, an folgende Adresse:
+
+        ›1mTropicDesign›0m
+   c/o Hanns Holger Rutz
+Auf dem Godenstedter Berg 17
+    W-2730 (27404) Zeven

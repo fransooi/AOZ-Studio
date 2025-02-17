@@ -1,0 +1,31 @@
+<i>UI TextBox</i>
+<b>UI TextBox</b> xxxxxxx
+=
+The UI TextBox can be used to collect information from a user such as a login form.
+@code
+// Display a default text box
+UI TextBox "MyTextBox"
+
+// To get the input text you can use the UI Value$ function
+Print UI Value$("MyTextBox")
+
+// You can set the input text value by setting its value$ parameter
+UI TextBox "MyTextBox", value$="TextBox Contents.."
+
+// You can also use the UI Value command
+UI Value "MyTextBox", value$="TextBox Contents.."
+
+// Display a password type TextBox with placeholder text
+UI TextBox "MyTextBox", placeHolder$="Password....", type$="password"
+
+// A date TextBox
+UI TextBox "MyTextBox", type$="date"
+
+// A time TextBox
+UI TextBox "txtUITextBox6", type$="time"
+
+// Text box using a google font
+#googleFont:"baloo"
+UI TextBox "MyTextBox", placeHolder$="Google Font Baloo...", class$="form-control", fontName$="baloo", fontSize=40, width=600
+@code
+

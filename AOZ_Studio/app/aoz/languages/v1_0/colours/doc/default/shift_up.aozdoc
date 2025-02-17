@@ -1,0 +1,15 @@
+<i>Shift Up</i>
+<b>Shift Up</b> xxxxxxx
+=
+This command takes the values held in the colour registers and shunts them forwards. The delay between colour shifts is set in 50ths of a second, similarly to the FADE command
+
+Next the values of the colours to be affected are set, from the first colour to the last colour in the sequence.
+The first colour in the list will be copied to the second, the second to the third, and so on until the last colour in the series is reached.
+
+Finally, a flag is set to either 0 or 1. When this flag is set to zero, the last colour is discarded, and the rotation will cycle for the number of times it takes to replace all colours with the first colour in the list.
+
+Alternatively, if the flag is set to one, the last colour index in the list is copied into the first, causing the colours to rotate continuously on screen.
+
+Each of your screens can have its own set of animated colour rotations, and because they are executed in the background they will not affect the running of your programs...
+
+

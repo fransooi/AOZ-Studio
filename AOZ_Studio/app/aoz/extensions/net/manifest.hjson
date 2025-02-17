@@ -1,0 +1,65 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ 
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ 
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Instructions Module Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"					// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "Network Instructions"
+		author: "By Baptiste Bideaux"
+		version: "Version 0.99"
+		date: "20/03/2020"
+		copyright: "(c) AOZ Studio 2019-2020"
+		start: "net.aoz"
+		name: "net"
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+				"url_missing:								<url> argument not defined",
+				"args_missing:								<args> argument not defined",
+				"incomplete_args:						    Incomplete arguments",
+				"wrong_method:								Wrong method to send the request",
+				"wrong_response_type:						Incorrect response type waiting",
+				"procedure_success_missing:					Success procedure name missing",
+				"success_procedure_not_exists:			    Success procedure not found",
+				"procedure_error_missing:					Error procedure name missing",
+				"error_procedure_not_exists:			    Error procedure not found",
+				"request_failed:             			    The request has failed, status: %1 (more info in browser console)",
+			]
+			fr:
+			[
+				"url_missing:								Argument <url> non défini",
+				"args_missing:								Argument <args> non défini",
+				"incomplete_args:						    Arguments incomplets",
+				"wrong_method:								Mauvaise méthode d'envoi de la requête",
+				"wrong_response_type:						Type de response incorrect",
+				"procedure_success_missing:					Nom de la procédure de réception des données non définie",
+				"success_procedure_not_exists:			    Procédure de réception des données introuvable",
+				"procedure_error_missing:					Nom de la procédure en cas d'erreur non définie",
+				"error_procedure_not_exists:			    Procédure en cas d'erreur introuvable",
+				"request_failed:             			    La requête a échoué, status: %1 (plus d'information dans la console du navigateur)",
+			]
+		}	
+	}
+}

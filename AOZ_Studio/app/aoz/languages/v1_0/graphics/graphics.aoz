@@ -1,0 +1,2789 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ Graphical Instruction Set
+ * By Francois Lionet
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @authors Francois Lionet & Dave Baldwin
+ * @date first pushed on 12/04/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+/**doc
+@name:Graphic Basics
+@description:Instructions and functions to draw graphics in AOZ screens
+@author:Francois Lionet
+doc*/
+
+//
+// Initialization
+//
+{
+}
+
+/**api
+@name:Cls
+@description:Clear an area of the current screen
+@param:ink:integer:The index of the color in the palette to clear with
+@param:x1:integer:The horizontal coordinate of the top-left pixel of the rectangle to clear
+@param:y2:integer:The vertical coordinate of the top-left pixel of the rectangle to clear
+@param:x2:integer:The horizontal coordinate of the bottom-right pixel of the rectangle to clear
+@param:y2:integer:The vertical coordinate of the bottom-right pixel of the rectangle to clear
+@examples:instructions:i_39
+@compatible: aoz, stos, amos
+@content:
+The CLS command erases.all or part of the current screen. Used on its own, the contents of the current screen are deleted and replaced by the current paper colour. Any windows that may have been set up will also be cleared in this way.
+
+It can be used without any parameter, in this case the whole screen will be erased with the color of the Ink 0.
+
+By specifying the index number of a particular colour after the CLS command, the clearing operation will be carried out using that colour.
+
+A rectangular part of the current screen can also be cleared, leaving the rest of the screen intact. This is achieved by adding the coordinates of the block to be filed with the specified colour, from the top left-hand corner, to the bottom right.
+
+For example:
+~~~
+Cls: Circle 100,98,98: Cls 0,50,50 To 150,150
+~~~
+
+api*/
+Instruction Cls, ink, x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.cls(%ink,{x:%x1,y:%y1},{x2:%x2,y2:%y2});
+}
+End Instruction
+
+Instruction Cls, ink, x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.cls(%ink,{x:%x1,y:%y1,width:%width,height:%height});
+}
+End Instruction
+
+Instruction Cls, ink
+{
+	#errors
+	aoz.currentScreen.cls(%ink);
+}
+End Instruction
+
+
+/**api
+@name:Plot
+@description:Draw a pixel in the current screen
+@param:x:integer:The horizontal coordinate of the point to draw
+@param:y:integer:The vertical coordinate of the point to draw
+@param:ink:integer:The index of the color in the screen palette (optional, will use the latest Ink value if ommited)
+@compatible: aoz, stos, amos
+@examples:instructions:i_6
+@content:
+This is the simplest drawing command of all, and plots a single pixel of ink colour between graphic coordinates 0,0
+and 319,199. When followed by specific x,y-coordinates, the current ink colour will be plotted at this new position.
+You are allowed to omit either the x or the y- coordinate, provided the comma is left in the correct position. If an
+optional colour index number is added the new colour will be used for this and all subsequent drawing operations.
+For example:
+~~~
+Cls: Curs Off
+Do
+	Plot Rnd(1920),Rnd(1080),Rnd(15)
+	Wait vbl
+Loop
+~~~
+
+api*/
+Instruction Plot, x, y, ink
+{
+	#errors
+	aoz.currentScreen.plot({x:%x,y:%y},%ink);
+}
+End Instruction
+
+/**api
+@name:Point
+@description:Return the palette index of a point within the current screen (warning: may return wrong result in PC modedue to anti-aliasing)
+@param:x:integer:The horizontal coordinate of the point to test
+@param:y:integer:The vertical coordinate of the point to test
+@return:ink:integer:The index of the color in the screen palette
+@examples:instructions:i_6
+@compatible: aoz, stos, amos
+@content:
+Use this function to find the index number of the colour occupying your chosen coordinates, like this:
+~~~
+Cls : Plot 160,100
+Print "The colour is ";Point(160,100)
+~~~
+
+api*/
+Function Point, x, y
+{
+	#errors
+}
+End Function( {aoz.currentScreen.point({x:%x,y:%y})} )
+/**api
+@name:Point RGB
+@description:Return the true colour RGB value of a point within the current screen
+@param:x:integer:The horizontal coordinate of the point to test
+@param:y:integer:The vertical coordinate of the point to test
+@return:ink:integer:The index of the color in the screen palette
+@examples:
+@compatible: aoz, stos, amos
+@content:
+Use this function to find the RGB value of the colour occupying your chosen coordinates, like this:
+~~~
+Cls : Plot 160,100
+Print "The colour is ";Point RGB(160,100)
+~~~
+
+api*/
+Function Point RGB, x, y
+{
+	#errors
+}
+End Function( {aoz.currentScreen.point({x:%x,y:%y},1)} )
+/**api
+@name:Point RGBA
+@description:Return the true colour RGBA value of a point within the current screen
+@param:x:integer:The horizontal coordinate of the point to test
+@param:y:integer:The vertical coordinate of the point to test
+@return:ink:integer:The index of the color in the screen palette
+@examples:
+@compatible: aoz, stos, amos
+@content:
+Use this function to find the RGB value of the colour occupying your chosen coordinates, like this:
+~~~
+Cls : Plot 160,100
+Print "The colour is ";Point RGBA(160,100)
+~~~
+
+api*/
+Function Point RGBA, x, y
+{
+	#errors
+}
+End Function( {aoz.currentScreen.point({x:%x,y:%y},2)} )
+/**api
+@name:Line Width
+@description:Set the width of the lines used in line drawing operations
+@param:width:integer:The width or thickness of the line in pixels
+@compatible: aoz
+@content: This command sets the width of all lines that are subsequently drawn. The line width can be set to any value above 0. The following example draws circles using a line widths from 1 to 10 pixels wide.
+
+~~~
+Ink 1
+For f=1 to 10
+	Line Width f
+	Circle f*150,540,60
+Next f
+~~~
+
+The line width can also be set to less than 1. The next example shows what the circles will look like with line widths from 0.1 to 1.0.
+ You will see that for very thin lines, they appear much fainter.
+
+~~~
+Ink 1
+For f=1 to 10
+	Line Width f/10
+	Circle f*150,540,60
+Next f
+~~~
+api*/
+Instruction Line Width, width
+{
+	#errors
+	aoz.currentScreen.setLineWidth(%width);
+}
+End Instruction
+/**api
+@name:Line Width
+@description:Returns the Line Width setting for the current screen.
+@compatible: aoz
+@content: This funtion returns the line width setting for the current screen. Useful when multiple line widths are being used. For example
+~~~
+Line Width 10
+L = Line Width
+Print L
+~~~
+api*/
+Function Line Width
+{
+	#errors
+}
+End Function ({aoz.currentScreen.lineWidth})
+/**api
+@name:Line Cap
+@description:Sets the 'capping' style of lines drawn using Draw, Draw To, Arc, Ellipse Arc and Polyline
+@Param:cap$:string:The capping style. Can be "round", "square" or "butt". Optional. Omitting this parameter will restore the setting to the default "square".
+@compatible: aoz
+@content:
+This command sets the capping style of all lines that are subsequently drawn. The different styles only become apparent on thicker lines.
+
+butt - ends the line squarely at the limits
+
+round - ends the line with a semi-circle of radius half of line width
+
+square - ends the line with a square end, extending the line by half the line width (default)
+
+eg:
+~~~
+Ink 1
+// Draw Vertical White lines at limits
+Draw 50,200 to 50,800
+Draw 900,200 to 900,800
+Line Width 50
+Ink 4
+Line Cap "butt"
+Draw 50,400 to 900,400
+Line Cap "round"
+Draw 50,500 to 900,500
+Line Cap "square"
+Draw 50,600 to 900,600
+~~~
+api*/
+Instruction Line Cap, cap$
+{
+	#errors
+	aoz.currentScreen.setLineCap(%cap$);
+}
+End Instruction
+/**api
+@name:Line Join
+@description:Sets the 'join' style of lines drawn using Draw, Draw To, Arc, Ellipse Arc, Polyline and all the lines that make up polygonal shapes.
+@Param:join$:string:The line Joining style. Can be "round", "miter" or "bevel". Optional. Omitting this parameter will restore the setting to the default "miter".
+@compatible: aoz
+@content:
+This command sets the joining style of all lines that are subsequently drawn.
+
+bevel - joins lines at angles to each other with a bevelled corner
+
+miter - joins lines at angles to each other with a pointed corner (default)
+
+round - joins lines at angles to each other with a rounded corner
+
+eg:
+~~~
+Line Width 30
+Ink 4
+Line Join "miter"
+Shape 200,200,150,150,3
+Line Join "bevel"
+Shape 500,500,150,150,3
+Line Join "round"
+Shape 800,800,150,150,3
+~~~
+api*/
+Instruction Line Join, join$
+{
+	#errors
+	aoz.currentScreen.setLineJoin(%join$);
+}
+End Instruction
+/**api
+@name:Border First
+@description:Draw the border first on outlined shapes or text
+@param:onOff:boolean:True to draw border first, false to draw shape or text first, then add border. False by default.
+@compatible: aoz, stos, amos
+@content:
+Border First changes the way bordered shapes and text are drawn. Normally, the shape is drawn first, then the border is drawn on top.
+ In this example, three circles are drawn. The first has a plain 30 pixel wide border. The second one has a blur filter applied to the border, which
+ allows you to see the edge of the circle which is covered by the border. The third circle has the border drawn first, so it covers the inner part of
+ the blurred border.
+~~~
+Ink 6,,1
+Line Width 30
+Border On
+Disc 300,540,250
+Border filter "blur",20
+Disc 960,540,250
+Border First
+Disc 1620,540,250
+~~~
+You will notice that when Border First is used, only half of the 30 pixel wide line is visible. This is because the line drawn centred on the perimeter of the disc, so half
+ of it extends beyond the radius of the disc, and half of it under the disc.
+api*/
+Instruction Border First
+{
+	#errors
+	aoz.currentScreen.setBorderFirst(1);
+}
+End Instruction
+/**api
+@name:Border After
+@description:Draw the border after on outlined shapes or text (default method).
+@compatible: aoz, stos, amos
+@content:
+Border After changes the way bordered shapes and text are drawn. As Border After is the default setting, normally, the shape is drawn first, then the border is drawn on top.
+ If Border First is used, the border is drawn first.
+~~~
+Ink 6,,1
+Line Width 30
+Border On
+Border First
+Disc 300,540,250
+Border After
+Disc 960,540,250
+~~~
+api*/
+Instruction Border After
+{
+	#errors
+	aoz.currentScreen.setBorderFirst(0);
+}
+End Instruction
+/**api
+@name:Draw
+@description:Draw a line with the current Ink from the last graphical position
+@param:x:integer:The horizontal coordinate of the point to test
+@param:y:integer:The vertical coordinate of the point to test
+@examples:instructions:i_7
+@compatible: aoz, stos, amos
+@content:
+Line drawing is extremely simple. Pick two sets of graphic coordinates, and draw your line from one to the other. To
+draw a line from the current position of the graphics cursor, use DRAW TO followed by a single set of coordinates.
+For example:
+~~~
+Cls: Ink 2
+Draw 50,50 To 250,150
+Draw To 275,175
+~~~
+api*/
+Instruction Draw To, x, y
+{
+	#errors
+	aoz.currentScreen.draw({x2:%x,y2:%y});
+}
+End Instruction
+
+Instruction Draw, x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.draw({x1:%x1,y1:%y1,x2:%x2,y2:%y2});
+}
+End Instruction
+
+Instruction Draw, x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.draw({x1:%x1,y1:%y1,x2:(%x1)+(%width),y2:(%y1)+(%height)});
+}
+End Instruction
+
+/**api
+@name:Curve
+@description:Draw a curved line from one pair of coordinates to another using control points.
+@param:x1:The x coordinate of the start position of the curve.
+@param:y1:The y coordinate of the start position of the curve.
+@param:cpx1:The x coordinate of the first control point of the curve.
+@param:cpy1:The y coordinate of the first control point of the curve.
+@param:cpx2:The x coordinate of the second control point of the curve.
+@param:cpy2:The y coordinate of the second control point of the curve.
+@param:x2:The x coordinate of the end position of the curve.
+@param:y2:The y coordinate of the end position of the curve.
+@param:radius:The radius of the curve ( used only in Curve To cpx1, cpy1, cpx2, cpy2, radius )
+@examples:
+@compatible: AOZ
+@content: Curve is a versatile instruction that can draw several different types of curves. The three basic types are Arc To Line, Quadratic Bezier Curve (with one control point) and Bezier Curve (with two control points).
+ Each type can use a 'From' syntax, where start coordinates are specified, or 'To' syntax, where the curve will be draw from the current graphic cursor position.
+ See Below for the full list of syntax options.
+
+~~~
+//  Arc To Line cx1,cy1,cx2,cy2 (the arc will join the line in the direction it is drawn)
+Curve To cx1, cy1, cx2, cy2, radius
+
+//  Quadratic Curve To x,y with control point cx,cy
+Curve To x, y, cx, cy
+
+// Bezier Curve To x,y through control points
+Curve To x, y, cx1, cy1, cx2, cy2
+
+// Arc from x, y to line cx1,cy1, cx2, cy2
+Curve x, y, cx1, cy1, cx2, cy2, radius
+
+// Quadratic Curve from x1,y1 to x2,y2 via control point cx,cy
+Curve x1, y1, cx, cy, x2, y2
+
+// Bezier Curve from x1,y1 to x2,y2 via control points cx1,cy1 and cx2,cy2
+Curve x1, y1, cx1, cy1, cx2, cy2, x2, y2
+~~~
+
+api*/
+Instruction Curve To,  x, y, cpx1, cpy1
+{
+	#errors
+	aoz.currentScreen.curve({x2:%x,y2:%y},{px1:%cpx1, py1:%cpy1});
+}
+End Instruction
+Instruction Curve To, cpx1, cpy1, cpx2, cpy2, radius
+{
+	#errors
+	aoz.currentScreen.curve({},{px1:%cpx1, py1:%cpy1, px2:%cpx2, py2:%cpy2}, %radius);
+}
+End Instruction
+Instruction Curve To, x, y, cpx1, cpy1, cpx2, cpy2
+{
+	#errors
+	aoz.currentScreen.curve({x2:%x,y2:%y},{px1:%cpx1, py1:%cpy1, px2:%cpx2, py2:%cpy2});
+}
+End Instruction
+Instruction Curve, x1, y1, cpx1, cpy1, x2, y2
+{
+	#errors
+	aoz.currentScreen.curve({x1:%x1,y1:%y1,x2:%x2,y2:%y2},{px1:%cpx1, py1:%cpy1});
+}
+End Instruction
+Instruction Curve, x, y, cpx1, cpy1, cpx2, cpy2, radius
+{
+	#errors
+	aoz.currentScreen.curve({x1:%x,y1:%y},{px1:%cpx1, py1:%cpy1, px2:%cpx2, py2:%cpy2}, %radius);
+}
+End Instruction
+Instruction Curve, x1, y1, cpx1, cpy1, cpx2, cpy2, x2, y2
+{
+	#errors
+	aoz.currentScreen.curve({x1:%x1,y1:%y1,x2:%x2,y2:%y2},{px1:%cpx1, py1:%cpy1, px2:%cpx2, py2:%cpy2});
+}
+End Instruction
+
+Instruction Triangle, x1, y1, x2, y2, x3, y3, rotation, fill
+{
+	#errors
+	aoz.currentScreen.triangle({x1:%x1,y1:%y1,x2:%x2,y2:%y2,x3:%x3,y3:%y3}, (%rotation)*aoz.degreeRadian, %fill );
+}
+End Instruction
+Instruction Filled Triangle, x1, y1, x2, y2, x3, y3, rotation
+{
+	#errors
+	aoz.currentScreen.triangle({x1:%x1,y1:%y1,x2:%x2,y2:%y2,x3:%x3,y3:%y3}, (%rotation)*aoz.degreeRadian, true );
+}
+End Instruction
+
+/**api
+@name:Ellipse
+@description:Draw an ellipse with the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the ellipse
+@param:y:integer:The vertical coordinate of the centre of the ellipse
+@param:xRadius:integer:The horizontal radius in pixels
+@param:yradius:integer:The vertical radius in pixels
+@param:rotation:float:The angle of rotation
+@param:fill:boolean:True to fill the ellipse with the current ink colour or pattern
+@examples:instructions:i_7
+@compatible: aoz
+@content:
+An ellipse is drawn in a similar way. After the x,y-coordinates have set the centre location, two radii must be given,
+one to set the horizontal width and the second to set the height of the ellipse. Coordinates may be omitted as usual,
+providing the commas remain in place. For example:
+~~~
+Degree
+Ellipse 960,540,200,100
+Ellipse 960,540,200,100,90
+Ellipse ,,200,100
+~~~
+
+api*/
+Instruction Ellipse, x, y, xRadius, yRadius, rotation, fill
+{
+	#errors
+	aoz.currentScreen.ellipse({x:%x,y:%y,width:%xRadius,height:%yRadius},'NaN','NaN',(%rotation)*aoz.degreeRadian,false,%fill);
+}
+End Instruction
+
+/**api
+@name:Filled Ellipse
+@description:Draw an filled ellipse with the current Ink and pattern definitions in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the ellipse
+@param:y:integer:The vertical coordinate of the centre of the ellipse
+@param:xRadius:integer:The horizontal radius in pixels
+@param:yradius:integer:The vertical radius in pixels
+@param:rotation:integer:The angle of rotation of the ellipse
+@param:fill:boolean:Set to true to fill the ellipse.
+@compatible: aoz
+@content:
+After the x,y-coordinates have set the centre location, two radii must be given,
+one to set the horizontal width and the second to set the height of the ellipse. Coordinates may be omitted as usual,
+providing the commas remain in place. For example:
+~~~
+Filled Ellipse 100,100,50,20
+Filled Ellipse ,,20,50
+~~~
+
+api*/
+Instruction Filled Ellipse, x, y, xRadius, yRadius, rotation
+{
+	#errors
+	aoz.currentScreen.ellipse({x:%x,y:%y,width:%xRadius,height:%yRadius},'NaN','NaN',(%rotation)*aoz.degreeRadian,false,true);
+}
+End Instruction
+
+/**api
+@name:Circle
+@description:Draw a circle with the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the circle
+@param:y:integer:The vertical coordinate of the centre of the circle
+@param:radius:integer:The radius of the circle in pixels
+@examples:instructions:i_7
+@compatible: aoz, stos, amos
+@content:
+To draw circles, a pair of coordinates sets the position of the centre point around which the shape is to be drawn,
+followed by the radius of the circle (the distance between the centre point and the circumference or rim of the
+circle.) If the x,y-coordinates are omitted, the circle will be drawn from the current graphic cursor position.For example:
+~~~
+Cls : Curs Off : Ink 3
+Gr Locate 160,100
+Circle ,,45 : Wait 100: Flash Off
+Do
+	Ink Rnd(15) : X=Rnd(250) : Y=Rnd(150) : R=Rnd(90)+1
+	Circle X,Y,R
+Loop
+~~~
+
+api*/
+Instruction Circle, x, y, radius, fill
+{
+	#errors
+	aoz.currentScreen.circle({x:%x,y:%y,width:%radius,height:%radius}, %fill);
+}
+End Instruction
+
+/**api
+@name:Shape
+@description:Draw a regular polygon with a specified number of sides using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the shape
+@param:y:integer:The vertical coordinate of the centre of the shape
+@param:radius1:integer:The x radius of the shape in pixels
+@param:radius2:integer:The y radius of the shape in pixels
+@param:sides:integer:The number of sides.
+@param:rotation:integer:Angle of rotation of the shape.
+@param:fill:boolean:Set to true to fill the shape.
+
+@compatible: aoz
+@content: Shape x, y, radius1, radius2, sides, rotation, fill
+api*/
+Instruction Shape, x, y, radius1, radius2, sides, rotation, fill
+{
+	#errors
+	aoz.currentScreen.shape({x:%x,y:%y,width:%radius1,height:%radius2},%sides,(%rotation)*aoz.degreeRadian,%fill);
+}
+End Instruction
+/**api
+@name:Filled Shape
+@description:Draw a filled regular polygon with a specified number of sides using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the shape
+@param:y:integer:The vertical coordinate of the centre of the shape
+@param:radius1:integer:The x radius of the shape in pixels
+@param:radius2:integer:The y radius of the shape in pixels
+@param:sides:integer:The number of sides.
+@param:rotation:integer:Angle of rotation of the shape.
+
+@compatible: aoz
+@content: Filled Shape x, y, radius1, radius2, sides, rotation
+api*/
+Instruction Filled Shape, x, y, radius1, radius2, sides, rotation
+{
+	#errors
+	aoz.currentScreen.shape({x:%x,y:%y,width:%radius1,height:%radius2},%sides,(%rotation)*aoz.degreeRadian,true);
+}
+End Instruction
+/**api
+@name:Star
+@description:Draw a star shape with a specified number of points using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the star
+@param:y:integer:The vertical coordinate of the centre of the star
+@param:radius1:integer:The radius of the outer points of the star
+@param:radius2:integer:The radius of the inner points of the star
+@param:rotation:integer:Angle of rotation of the star
+@param:fill:boolean:Set to true to fill the star
+
+@compatible: aoz
+@content: Star x, y, radius1, radius2, sides, rotation, fill
+api*/
+Instruction Star, x, y, radius1, radius2, points, rotation, fill
+{
+	#errors
+	aoz.currentScreen.star({x:%x,y:%y,width:%radius1,height:%radius2},%points,(%rotation)*aoz.degreeRadian,%fill);
+}
+End Instruction
+/**api
+@name:Filled Star
+@description:Draw a filled star shape with a specified number of points using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the star
+@param:y:integer:The vertical coordinate of the centre of the star
+@param:radius1:integer:The radius of the outer points of the star
+@param:radius2:integer:The radius of the inner points of the star
+@param:rotation:integer:Angle of rotation of the shape.
+
+@compatible: aoz
+@content: Filled Star x, y, radius1, radius2, sides, rotation
+api*/
+Instruction Filled Star, x, y, radius1, radius2, points, rotation
+{
+	#errors
+	aoz.currentScreen.star({x:%x,y:%y,width:%radius1,height:%radius2},%points,(%rotation)*aoz.degreeRadian,true);
+}
+End Instruction
+/**api
+@name:Arc
+@description:Draw an arc of a circle between 2 angles using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the arc
+@param:y:integer:The vertical coordinate of the centre of the arc
+@param:radius1:integer:The radius of the arc
+@param:angle1:integer:The angle from which the arc is drawn from
+@param:angle2:integer:The angle to which the arc will be drawn to
+@param:rotation:integer:Angle of rotation of the arc
+@param:fill:boolean:Set to true to fill the arc
+@param:counterclockwise:boolean:direction the arc will be drawn from angle1 - Optional
+
+@compatible: aoz
+@content: Arc x, y, radius, angle1, angle2, rotation, fill, counterclockwise
+api*/
+Instruction Arc, x, y, radius, angle1, angle2, rotation, fill, counterclockwise
+{
+	#errors
+	aoz.currentScreen.ellipse({x:%x,y:%y,width:%radius,height:%radius},(%angle1)*aoz.degreeRadian,(%angle2)*aoz.degreeRadian,(%rotation)*aoz.degreeRadian,%counterclockwise,%fill);
+}
+End Instruction
+/**api
+@name:Ellipse Arc x, y, radius1, radius2, angle1, angle2, rotation, fill, counterclockwise
+@description:Draw an arc of an ellipse between 2 angles using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the arc
+@param:y:integer:The vertical coordinate of the centre of the arc
+@param:radius1:integer:The horizontal radius of the arc
+@param:radius2:integer:The vertical radius of the arc
+@param:angle1:integer:The angle from which the arc is drawn from
+@param:angle2:integer:The angle to which the arc will be drawn to
+@param:rotation:integer:Angle of rotation of the arc
+@param:fill:boolean:Set to true to fill the arc. The arc will be closed in a straight line from on end to the other.
+@param:counterclockwise:boolean:Set to true to draw the arc in a counterclockwise direction.
+
+@compatible: aoz
+@content:
+Ellipse Arc will draw the Arc of an ellipse between the two provided angles. The arc can be drawn in either clockwise or counterclockwise direction
+The following example draws 10 Arcs of the Ellipse in different colours
+~~~
+Line Width 30
+Line Cap "round"
+Degree
+for f=0 to 9
+	ink 3*(f+1)
+	ellipse arc 960,540,400,250,f*36,f*36+28
+	wait vbl
+next f
+~~~
+api*/
+Instruction Ellipse Arc, x, y, radius1, radius2, angle1, angle2, rotation, fill, counterclockwise
+{
+	#errors
+	aoz.currentScreen.ellipse({x:%x,y:%y,width:%radius1,height:%radius2},(%angle1)*aoz.degreeRadian,(%angle2)*aoz.degreeRadian,(%rotation)*aoz.degreeRadian,%counterclockwise,%fill);
+}
+End Instruction
+/**api
+@name:Segment x, y, radius1, radius2, radius3, angle1, angle2, rotation, fill, counterclockwise
+@description:Draw a segment of a cricle or ellipse between 2 angles using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the arc
+@param:y:integer:The vertical coordinate of the centre of the arc
+@param:radius1:integer:The horizontal radius of the circle or ellipse
+@param:radius2:integer:The vertical radius of the circle or ellipse
+@param:radius3:integer:The start radius of the segment from the centre point. eg. 0 will draw a full 'pie slice'
+@param:angle1:integer:The angle from which the segment is drawn from
+@param:angle2:integer:The angle to which the segment will be drawn to
+@param:rotation:integer:Angle of rotation of the segment
+@param:fill:boolean:Set to true to fill the segment
+@param:counterclockwise:boolean:direction the segment will be drawn from angle1 - Optional
+
+@compatible: aoz
+@content: Segment x, y, radius1, radius2, radius3, angle1, angle2, rotation, fill, counterclockwise
+api*/
+Instruction Segment, x, y, radius1, radius2, radius3, angle1, angle2, rotation, fill, counterclockwise
+{
+	#errors
+	aoz.currentScreen.segment({x:%x,y:%y,width:%radius1,height:%radius2},%radius3,(%angle1)*aoz.degreeRadian,(%angle2)*aoz.degreeRadian,(%rotation)*aoz.degreeRadian,%counterclockwise,%fill);
+}
+End Instruction
+/**api
+@name:Filled Segment
+@description:Draw a segment of a cricle or ellipse between 2 angles using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the arc
+@param:y:integer:The vertical coordinate of the centre of the arc
+@param:radius1:integer:The horizontal radius of the circle or ellipse
+@param:radius2:integer:The vertical radius of the circle or ellipse
+@param:radius3:integer:The start radius of the segment from the centre point. eg. 0 will draw a full 'pie slice'
+@param:angle1:integer:The angle from which the segment is drawn from
+@param:angle2:integer:The angle to which the segment will be drawn to
+@param:rotation:integer:Angle of rotation of the segment
+@param:counterclockwise:boolean:direction the segment will be drawn from angle1 - Optional
+
+@compatible: aoz
+@content: Filled Segment x, y, radius1, radius2, radius3, angle1, angle2, rotation, counterclockwise
+api*/
+Instruction Filled Segment, x, y, radius1, radius2, radius3, angle1, angle2, rotation, counterclockwise
+{
+	#errors
+	aoz.currentScreen.segment({x:%x,y:%y,width:%radius1,height:%radius2},%radius3,(%angle1)*aoz.degreeRadian,(%angle2)*aoz.degreeRadian,(%rotation)*aoz.degreeRadian,%counterclockwise,true);
+}
+End Instruction
+/**api
+@name:Filled Arc
+@description:Draw an arc of a circle between 2 angles using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the arc
+@param:y:integer:The vertical coordinate of the centre of the arc
+@param:radius1:integer:The radius of the arc
+@param:angle1:integer:The angle from which the arc is drawn from
+@param:angle2:integer:The angle to which the arc will be drawn to
+@param:rotation:integer:Angle of rotation of the arc
+@param:counterclockwise:boolean:direction the arc will be drawn from angle1 - Optional
+
+@compatible: aoz
+@content: Filled Arc x, y, radius, angle1, angle2, rotation, counterclockwise
+api*/
+Instruction Filled Arc, x, y, radius, angle1, angle2, rotation, counterclockwise
+{
+	#errors
+	aoz.currentScreen.ellipse({x:%x,y:%y,width:%radius,height:%radius},(%angle1)*aoz.degreeRadian,(%angle2)*aoz.degreeRadian,(%rotation)*aoz.degreeRadian,%counterclockwise,true);
+}
+End Instruction
+/**api
+@name:Filled Ellipse Arc
+@description:Draw a filled arc of an ellipse between 2 angles using the current Ink in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the arc
+@param:y:integer:The vertical coordinate of the centre of the arc
+@param:radius1:integer:The horizontal radius of the arc
+@param:radius2:integer:The vertical radius of the arc
+@param:angle1:integer:The angle from which the arc is drawn from
+@param:angle2:integer:The angle to which the arc will be drawn to
+@param:rotation:integer:Angle of rotation of the arc
+@param:counterclockwise:boolean:direction the arc will be drawn from angle1 - Optional
+
+@compatible: aoz
+@content: Filled Ellipse Arc x, y, radius1, radius2, angle1, angle2, rotation, counterclockwise
+api*/
+Instruction Filled Ellipse Arc, x, y, radius1, radius2, angle1, angle2, rotation, counterclockwise
+{
+	#errors
+	aoz.currentScreen.ellipse({x:%x,y:%y,width:%radius1,height:%radius2},(%angle1)*aoz.degreeRadian,(%angle2)*aoz.degreeRadian,(%rotation)*aoz.degreeRadian,%counterclockwise,true);
+}
+End Instruction
+
+/**api
+@name:Disc
+@alias:Filled Circle
+@description:Draw a filled circle with the current Ink and Pattern definitions in the current screen
+@param:x:integer:The horizontal coordinate of the centre of the circle
+@param:y:integer:The vertical coordinate of the centre of the circle
+@param:radius:integer:The radius of the circle in pixels
+@compatible: aoz
+@content:
+To draw discs, a pair of coordinates sets the position of the centre point around which the shape is to be drawn,
+followed by the radius of the circle (the distance between the centre point and the circumference or rim of the
+circle.) If the x,y-coordinates are omitted, the circle will be drawn from the current graphic cursor position.For example:
+~~~
+Cls : Curs Off : Ink 3, 0 : Set Paint True
+Gr Locate 160,100
+Disc ,,45 : Wait 100: Flash Off
+Do
+	Ink Rnd(15) : X=Rnd(250) : Y=Rnd(150) : R=Rnd(90)+1
+	Disc X,Y,R
+Loop
+~~~
+
+api*/
+Instruction Disc, x, y, radius
+{
+	#errors
+	aoz.currentScreen.disc({x:%x,y:%y,width:%radius,height:%radius});
+}
+End Instruction
+Instruction Filled Circle, x, y, radius
+{
+	#errors
+	aoz.currentScreen.disc({x:%x,y:%y,width:%radius,height:%radius});
+}
+End Instruction
+
+/**api
+@name:Bar
+@alias:Filled Box
+@description:Draw a filled rectangle with the current Ink, Pattern in the current screen
+@param:x1:integer:The horizontal coordinate of the top-left corner of the rectangle
+@param:y1:integer:The vertical coordinate of the top-left corner of the rectangle
+@param:x2:integer:The horizontal coordinate of the bottom-right corner of the rectangle
+@param:y2:integer:The vertical coordinate of the bottom-right corner of the rectangle
+@examples:instructions:i_8
+@compatible: aoz, stos, amos
+@content:
+This is used to draw solid bars of colour by the familiar method of setting the top left-hand and bottom right-hand graphic coordinates.
+
+api*/
+Instruction Bar, x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.box({x:%x1,y:%y1},true,{x2:%x2,y2:%y2});
+}
+End Instruction
+
+Instruction Bar, x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.box({x:%x1,y:%y1,width:%width,height:%height},true);
+}
+End Instruction
+Instruction Filled Box, x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.box({x:%x1,y:%y1},true,{x2:%x2,y2:%y2});
+}
+End Instruction
+
+Instruction Filled Box, x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.box({x:%x1,y:%y1,width:%width,height:%height},true);
+}
+End Instruction
+/**api
+@name:Filled Squircle x1, y1 to x2, y2, radius
+@name:Filled Squircle x1, y1, width, height, radius
+@description:Draw a filled rectangle with rounded corners using the current Ink, fill Pattern and Border settings (if applicable) on the current screen.
+@param:x1:integer:The horizontal coordinate of the top-left corner of the rectangle (before radius is applied)
+@param:y1:integer:The vertical coordinate of the top-left corner of the rectangle (before radius is applied)
+@param:x2:integer:The horizontal coordinate of the bottom-right corner of the rectangle (before radius is applied)
+@param:y2:integer:The vertical coordinate of the bottom-right corner of the rectangle (before radius is applied)
+@param:width:integer:The width of the shape in pixels
+@param:height:integer:The height of the shape in pixels
+@param:radius:integer:The radius of rounded corners.
+@compatible: aoz
+@content:
+A box with rounded corners is commonly known as a 'Squircle'. This instruction draws squircles using the current Ink, fill Patterns and Border settings if
+ defined. This example draws three different Squircles:
+~~~
+Ink 12
+Filled squircle 100,100 to 1900,400,20
+Border On
+Border Ink 1
+Ink 6
+Line Width  20
+Filled Squircle 100,500,500,500,50
+Ink 27
+Line Width 10
+Filled Squircle 650,500,1250,500,250
+~~~
+api*/
+Instruction Filled Squircle, x1, y1 to x2, y2, radius, corners
+{
+	#errors
+	aoz.currentScreen.squircle({x:%x1,y:%y1},%radius,true,{x2:%x2,y2:%y2},%corners);
+}
+End Instruction
+Instruction Filled Squircle, x1, y1, width, height, radius, corners
+{
+	#errors
+	aoz.currentScreen.squircle({x:%x1,y:%y1,width:%width,height:%height},%radius,true,undefined,%corners);
+}
+End Instruction
+/**api
+@name:Box
+@description:Draw an empty rectangle with the current Ink, Line width and Line Pattern in the current screen
+@param:x1:integer:The horizontal coordinate of the top-left corner of the rectangle
+@param:y1:integer:The vertical coordinate of the top-left corner of the rectangle
+@param:x2:integer:The horizontal coordinate of the bottom-right corner of the rectangle
+@param:y2:integer:The vertical coordinate of the bottom-right corner of the rectangle
+@examples:instructions:i_7
+@compatible: aoz, stos, amos
+@content:
+Boxed outlines are drawn at settings determined by the top left-hand and bottom right-hand coordinates, as in the last example.
+
+api*/
+Instruction Box, x1, y1, width, height, fill
+{
+	#errors
+	aoz.currentScreen.box({x:%x1,y:%y1,width:%width,height:%height},%fill);
+}
+End Instruction
+
+Instruction Box, x1, y1 To x2, y2, fill
+{
+	#errors
+	aoz.currentScreen.box({x:%x1,y:%y1},%fill,{x2:%x2,y2:%y2});
+}
+End Instruction
+
+
+/**api
+@name:Squircle x1, y1 to x2, y2, radius, fill
+@name:Squircle x1, y1, width, height, radius, fill
+@description:Draw a rectangle with rounded corners using the current Ink, fill Pattern and Border settings (if applicable) on the current screen.
+@param:x1:integer:The horizontal coordinate of the top-left corner of the rectangle (before radius is applied)
+@param:y1:integer:The vertical coordinate of the top-left corner of the rectangle (before radius is applied)
+@param:x2:integer:The horizontal coordinate of the bottom-right corner of the rectangle (before radius is applied)
+@param:y2:integer:The vertical coordinate of the bottom-right corner of the rectangle (before radius is applied)
+@param:width:integer:The width of the shape in pixels
+@param:height:integer:The height of the shape in pixels
+@param:radius:integer:The radius of rounded corners.
+@param:fill:boolean:Set to true to fill the squircle.
+@compatible: aoz
+@content:
+A box with rounded corners is commonly known as a 'Squircle'. This instruction draws squircles using the current Ink, fill Patterns and Border settings if
+ defined. This example draws three different Squircles:
+~~~
+Ink 12
+Line width 3
+Squircle 100,100 to 1900,400,20
+Ink 6
+Line Width  20
+Squircle 100,500,500,500,50,true
+Ink 27
+Line Width 10
+Squircle 650,500,1250,500,250
+~~~
+api*/
+Instruction Squircle, x1, y1 to x2, y2, radius, corners, fill
+{
+	#errors
+	aoz.currentScreen.squircle({x:%x1,y:%y1},%radius,%fill,{x2:%x2,y2:%y2},%corners);
+}
+End Instruction
+Instruction Squircle, x1, y1, width, height, radius, corners, fill
+{
+	#errors
+	aoz.currentScreen.squircle({x:%x1,y:%y1,width:%width,height:%height},%radius,%fill,undefined,%corners);
+}
+End Instruction
+
+/**api
+@name:Paint
+@description:Performs a flood-paint of a closed area in the current screen
+@param:x:integer:The horizontal coordinate where to start the paint process
+@param:y:integer:The horizontal coordinate where to start the paint process
+@param:color:integer:The screen palette index of the paint color (optional, will use the current Ink index if ommited)
+@param:border:integer:The screen palette index of the border colour that outlines the shape you are painting.
+@param:mode:integer:The optional mode setting, can be 0 or 1. Mode is zero by default if omitted.
+@examples:instructions:i_8
+@compatible: aoz
+@content:
+The PAINT command allows you to fill any section of your screen with a solid block of colour. You may also fill
+areas with various patterns previously selected with the SET PATTERN command, which is explained later. Decide
+which area is to be filled, and follow the PAINT command by a set of coordinates located anywhere inside the
+section of screen you want to paint with the current ink colour. Try this, which if all goes well should result in the
+Japanese national flag:
+~~~
+Palette 0,$F00
+Circle 160,100,50
+Paint 50,50
+~~~
+AOZ has a new syntax for this instruction which automatically uses mode 1 and allows you to apply a border colour, like this:-
+~~~
+Cls 1 : ink 0
+Line Width 4 // using a minimum line width of 4 guarantees a continuous boundary of the correct colour
+Star 960,540,400,150,5,54
+Locate 28,1 : print "Press Any Key to Paint" : wait key
+Paint 960,540,6 to 0 // fills with colour 6 up to the edge of any pixels that are colour 0
+~~~
+The optional mode setting can be set to either zero or one. A value of 0 ends your PAINT operation at the first pixel
+encountered of the current border colour. A mode of 1 stops the painting operation at any colour which is different
+from the existing ink colour. If there are any gaps in the boundaries of the sections you wish to fill, colour will leak
+out and stain the adjoining area.
+
+
+
+api*/
+Instruction Paint, x, y, color, mode
+{
+	#errors
+	aoz.currentScreen.paint( { x: %x, y: %y }, %mode, %color );
+}
+End Instruction
+Instruction Paint, x, y, color to border
+{
+	#errors
+	aoz.currentScreen.paint( { x: %x, y: %y }, 1, %color, %border );
+}
+End Instruction
+/**api
+@name:Polyline
+@description:Draw a closed empty shape using the current Ink and line parameters for the outline adn the current fill parameters for the inside. The last point is joined to the first point of the list
+@param:x1:integer:Horizontal coordinate of the first point
+@param:y1:integer:Vertical coordinate of the first point
+@param:x2:integer:Horizontal coordinate of the second point
+@param:y2:integer:Vertical coordinate of the second point
+@param:x3:integer:Horizontal coordinate of the third point, etc.
+@param:y3:integer:Vertical coordinate of the third point, etc.
+@examples:instructions:i_7
+@compatible: aoz, stos, amos
+@content:
+The POLYLINE is identical to DRAW except that it accepts multiple coordinate settings at the same time. In this
+way, complex many-sided outlines can be drawn with a single statement. In its POLYLINE TO form, drawing
+begins at the current graphic cursor position. For example:
+~~~
+Circle 160,100,95
+Polyline 160,6 To 100,173 To 250,69 To 71,69 To 222,173 To 160,6
+~~~
+
+api*/
+
+/**api
+@name:Polygon
+@description:Draw a closed empty shape using the current Ink and line parameters for the outline and the current fill parameters for the inside. The last point is joined to the first point of the list
+@param:x1:integer:Horizontal coordinate of the first point
+@param:y1:integer:Vertical coordinate of the first point
+@param:x2:integer:Horizontal coordinate of the second point
+@param:y2:integer:Vertical coordinate of the second point
+@param:x3:integer:Horizontal coordinate of the third point, etc.
+@param:y3:integer:Vertical coordinate of the third point, etc.
+@examples:instructions:i_8
+@compatible: aoz, stos, amos
+@content:
+This can be regarded as creating a solid version of the POLYLINE command, and your shape will begin at the
+current graphic coordinates if you commence the command in its POLYGON TO form. Provided that your single
+statement does not exceed the maximum allowed line length of 255 characters, there is no limit to the number of
+pairs of coordinates you can use. Try this example:
+~~~
+Do
+	Ink Rnd(15)
+	X1=Rnd(250) : Y1=Rnd(150) : H=Rnd(200) : W=Rnd(150)
+	Polygon X1,Y1 To X1+W,Y1 To X1+W/2,Y1+H To X1,Y1
+Loop
+~~~
+
+api*/
+
+/**api
+@name:Gr Locate
+@description:Position the graphical cursor in the current screen. Next instructions like "Draw To" (or any graphical instruction wheree the X and Y coordinates are ommited) will starrt from this position
+@param:x:integer:The horizontal coordinate in pixels
+@param:y:integer:The horizontal coordinate in pixels
+@examples:instructions:i_6
+@content:
+The graphics cursor sets the starting point for most drawing operations. To establish this point, use GR LOCATE to
+position the graphics cursor at your chosen coordinates.
+
+For example:
+Note that the coordinate parameters are omitted from the Circle instruction
+~~~
+Cls 1
+X=960 : Y=10
+For R=10 To 490 Step 20
+	Gr Locate X,Y+R
+	Circle ,,R
+Next R
+~~~
+
+api*/
+Instruction Gr Locate, x, y
+{
+	#errors
+	aoz.currentScreen.grLocate({x:%x,y:%y});
+}
+End Instruction
+
+/**api
+@name:Text Length
+@description:Calculate the width in pixels of a string when draw inthe current screen with the current selected font and font size
+@param:text$:string:The text to evaluate the width from
+@return:integer:The width in pixels of the text on screen using the current font and font-size
+@compatible: aoz, stos, amos
+@examples:instructions:i_79
+@content:
+This function returns the number of pixels that make up the width of the characters in the current font, in a given
+string. This can vary for the same string, depending on the font in use. Furthermore, there are special fonts which
+assign different widths for each character in the same character set, known as "proportional" fonts. Here is a simple
+example:
+~~~
+TS="Centred Text"
+L=Text Length(T$)
+Text 160-L/2,100,T$
+~~~
+
+api*/
+Function Text Length, text$
+{
+	#errors
+}
+End Function( {aoz.currentScreen.textLength(%text$)} )
+
+/**api
+@name:Text Height
+@author: Brian Flanagan
+@description:Return the height of the current graphical font on the current screen
+@return:integer:The current font's height
+@compatible: aoz, stos, amos
+@content:
+This function is used to get the current graphical font's height in pixels.
+api*/
+
+Function Text Height
+{
+	#errors
+}
+End Function( {aoz.currentScreen.fontHeight} )
+
+/**api
+@name:Text Base
+@description:Return the position of the base line of a graphical text displayed on the current screen with the current font attributes name and size
+@return:integer:The position of the base line of the text calculated from the top of the characters
+@compatible: aoz, stos, amos
+@examples:instructions:i_79
+@content:
+This function is used to get the reference position of the current font's baseline, given as the number of pixels
+between the top of the character, and the point that it will be printed on the screen. It is similar to the hot-spot of an
+Object.
+
+api*/
+Function Text Base
+{
+	#errors
+}
+End Function( {aoz.currentScreen.textBase()} )
+
+/**api
+@name:Text
+@description:Draw a graphical text on the current screen using the current font and font size
+@param:x:integer:The horizontal position of the text in pixels
+@param:y:integer:The vertical position of the text in pixels
+@param:text$:string:The text to draw
+@param:tags$:string:A string containing tags facilitating the display of the text.
+@param:maxwidth:Optional, the maximum length of the displayed text$ in pixels. If this is less than the text length at the current font size, the text width will be reduced accordingly while the height will be unaffected.
+@compatible: aoz, stos, amos
+@examples:instructions:i_79
+@content:
+This command is used to print text at the specified graphical coordinates.
+
+Tags can be any logical combination of the following tags and have the same meaning as their Javascript equivalents:
+- '#left', '#center', '#right',  '#start' or '#end' to position the text horizontally
+-  '#top', '#hanging', '#middle', '#alphabetic', '#ideographic' or '#bottom' for vertical alignement
+- '#ltr', '#rtl' or '#inherit' for drawing direction
+
+The next example demonstrates how text can be placed at any pixel position on the
+screen:
+~~~
+Do
+	Ink Rnd(15)+1,Rnd(15) : Text Rnd(320)+1, Rnd(198)+1, "AOZ", "#center #middle"
+Loop
+~~~
+
+api*/
+
+Instruction Text, x, y, text$, tags$, maxwidth
+{
+	#errors
+	aoz.currentScreen.text({x:%x,y:%y},%text$,%tags$, %maxwidth);
+}
+End Instruction
+
+/**api
+@name:Centre Text
+@author: Brian Flanagan
+@description: Centers graphical text on the current screen using the current font and font size
+@param:how:integer:A binary number indicating how to center the text.  bit 0 = horizontal, bit 1 = vertical
+@compatible: aoz, stos, amos
+@content:
+This command is used to centre graphical text on the current screen using the current font and font size.
+
+The how parameter is a binary number indicating how to center the text.
+
+ how
+Value  Binary  Meaning
+  0     %00     No centering.  Use current graphic cursor.  (Works like Text ,,Text$)
+  1     %01     Center horizontally (also default if how parameter is omitted)
+  2     %10     Center vertically
+  3     %11     Center both horizontally and vertically
+
+For example:
+~~~
+#googleFont: "Baloo"
+Set Font "Baloo",36 : Gr Locate 0,40
+
+Centre Text "Horizontally Centered",1 : Text
+Centre Text "Vertically Centered",2
+Gr Locate ,300 : Centre Text "Horizontally at y=300"
+Centre Text "Centered Both Ways",3
+Gr Locate 1300,0 : Centre Text "Vertically at x=1300",2
+Gr Locate 300,800 : Centre Text "No centering.",0
+~~~
+api*/
+Instruction Centre Text, text$, how
+{
+	var hw=1;
+	if ( %how != undefined ) { hw = %how }
+ // center horizontally
+	if ((hw & 1)==1)	{ newX= aoz.currentScreen.dimension.width/2-aoz.currentScreen.textLength(%text$)/2 }
+	else				{ newX= aoz.currentScreen.grPosition.x }
+ // center vertically
+	if ((hw & 2)==2)	{ newY= aoz.currentScreen.dimension.height/2+aoz.currentScreen.fontHeight/2-aoz.currentScreen.textBase()/2}
+	else				{ newY= aoz.currentScreen.grPosition.y }
+ //	HeightDiff=aoz.currentScreen.fontHeight-aoz.currentScreen.textBase();
+	aoz.currentScreen.text({x:newX,y:newY},%text$);
+}
+End Instruction
+
+/**api
+@name:Text
+@author: Brian Flanagan
+@description: Text (with NO parameters) performs the equivalent of CR LF for Text
+@compatible: aoz
+@content:
+This instruction is used to set the graphical x coordinate to 0,
+and set the graphical y coordinate to itself + the current font height.
+
+This example demonstrates how to print a series of lines of graphical text with the Text command:
+~~~
+Text ,,"This is" : Text
+Text ,,"a test." : Text
+Text ,,"Third line." Text
+
+Centre Text "Centered Text" : Text
+Centre Text "More centered text." : Text
+~~~
+api*/
+
+/**api
+@name:Text Shadow
+@description:Display a shadow beneath any graphical text characters.
+@param:offsetX:float:A float specifying the distance that shadows will be offset horizontally. Positive values are to the right, and negative to the left.
+@param:offsetY:float:A float specifying the distance that shadows will be offset vertically. Positive values are down, and negative up from the image.
+@param:blur:float:A non-negative float specifying the level of shadow blur, where 0 represents no blur and larger numbers represent increasingly more blur. This value doesn't correspond to a number of pixels,
+@param:rgba:The RGBA colour value for the shadow. eg: $33333377 would be dark grey with 50% opacity.
+@compatible: aoz
+@content:
+This instruction allows you to add a shadow to any graphical text using the current font. With a bit of imagination, shadow can be used to create other effects, such as add a glow to an image, or an outline. See second example below.
+Once the shadow is set, it will be used for all subsequent text operations until it is turned off, either by using 'Text Shadow Off', or by setting both the offsetX and offsetY to zero.
+Also, once set, individual elements of the shadow definition can be changed, such as the blur in the examples below.
+
+This example shows you how to add a basic shadow to your text.
+
+~~~
+//	BASIC SHADOWS
+Curs Off : Cls 1						// Set up screen, white background
+Set Transparent 0						// Set background colour to transparent
+Set font 0,180							// Set then font size
+Text Shadow 10,20,0,$333333ff			// Set the 'Text Shadow'to offsetX=10, offsetY=20, blur=8, and $rgba to a dark grey with full alpha level
+For f=1 to 5							// Define loop
+	Ink f*5+1							// Choose colour from palette
+	Text 100+f*70,f*200,"Text Shadow"	// Draw Text
+	Text Shadow ,,f*3					// Gradually increase the blur
+	wait 0.4							// Wait for 0.4 seconds
+Next f									// Repeat loop
+End
+~~~
+
+This example shows you how to make your text 'GLOW'!
+
+~~~
+//	GLOWING TEXT
+Curs Off : Cls 0						// Set up screen, white background
+Set Transparent 0						// Set background colour to transparent
+Set font 0,180							// Set then font size
+Text Shadow 0,0.1,4,$00ff00ff			// Set the 'Text Shadow'to offsetX=0, offsetY=0.1, blur=4, and $rgba to green with full alpha level
+										// The 0.1 Y offset basically puts the shadow directly below the image
+Ink 5 : colour 5,$000000				// Set ink to 5 and change it to Black
+For f=1 to 5							// Define loop
+	Text 100+f*70,f*200,"Glowing Text"	// Draw Text
+	Text Shadow ,,(f+1)*4				// Gradually increase the blur to make it 'Glow' more
+	wait 0.4							// Wait for 0.4 seconds
+Next f									// Repeat loop
+End
+~~~
+api*/
+Instruction Text Shadow, offsetX#, offsetY#, blur#, rgba
+{
+	#errors
+	aoz.currentScreen.textShadow({x:%offsetX#,y:%offsetY#,blur:%blur#,color:%rgba});
+}
+End Instruction
+/**api
+@name:Text Shadow Off
+@description:Turns off the Text Shadow effect.
+@compatible: aoz
+@content:
+This command switches off the Text Shadow effect by re-setting all the parameters to zero.
+api*/
+Instruction Text Shadow Off
+{
+	#errors
+	aoz.currentScreen.textShadow({x:0,y:0,blur:0,color:0});
+}
+End Instruction
+/**api
+@name:Draw Shadow
+@description:Display a shadow beneath any graphics drawn with Plot, Draw, Circle, Ellipse, Shape, Box, Star etc.
+@param:offsetX:float:A float specifying the distance that shadows will be offset horizontally. Positive values are to the right, and negative to the left.
+@param:offsetY:float:A float specifying the distance that shadows will be offset vertically. Positive values are down, and negative up from the image.
+@param:blur:float:A non-negative float specifying the level of shadow blur, where 0 represents no blur and larger numbers represent increasingly more blur. This value doesn't correspond to a number of pixels,
+@param:rgba:The RGBA colour value for the shadow. eg: $33333377 would be dark grey with 50% opacity.
+@compatible: aoz
+@content:
+This instruction allows you to add a shadow to any graphics with AOZ's graphics drawing instructions. With a bit of imagination, shadow can be used to create other effects, such as add a glow to an image.
+Once the shadow is set, it will be used for all subsequent text operations until it is turned off, by using 'Draw Shadow Off'.
+Also, once set, individual elements of the shadow definition can be changed, such as the blur.
+
+
+api*/
+Instruction Draw Shadow, offsetX#, offsetY#, blur#, rgba
+{
+	#errors
+	aoz.currentScreen.drawShadow({x:%offsetX#,y:%offsetY#,blur:%blur#,color:%rgba});
+}
+End Instruction
+/**api
+@name:Draw Shadow Off
+@description:Turns off the Draw Shadow effect.
+@compatible: aoz
+@content:
+This command switches off the Draw Shadow effect by re-setting all the parameters to zero.
+api*/
+Instruction Draw Shadow Off
+{
+	#errors
+	aoz.currentScreen.drawShadow({x:0,y:0,blur:0,color:0});
+}
+End Instruction
+/**api
+@name:Text Mode
+@parameter:Mode$:string:The Text drawing mode, can be either "fill", "outline" or "border". If this parameter is omitted, the mode will defalt to 'fill'.
+@description:Sets the Text drawing mode to draw either solid colour text, outline text or bordered text. Text Mode is "fill" by default.
+@compatible: aoz
+@content:
+'fill' or 'outline' uses the current Ink colour.
+To use 'border', the border ink colour has to be set using the Border Ink instruction as shown in the second example below.
+
+This example draws a text phrase several times with the font outlined in different colours.
+
+~~~
+//	OUTLINE TEXT
+#googleFont:"mystery quest"				// Choose a Google Font
+Curs Off : Cls 1						// Set up screen, white background
+Set Transparent 0						// Set background colour to transparent
+Set font 0,180							// Set then font size
+Line Width 4						// Set the line width
+Text Mode "outline"						// Set the 'Text Mode'to 'outline'
+For f=1 to 5							// Define loop
+	Ink f*5+1							// Choose colour from palette
+	If f>2 then Text Shadow 10,20,f*3,$333333ff // Apply a shadow to the last 3
+	Text 100+f*70,f*200,"Outline Text"	// Draw Text
+	wait 0.4							// Wait for 0.4 seconds
+Next f									// Repeat loop
+End
+~~~
+
+This example draws a text phrase several times in different colours with the font outlined in black
+~~~
+#googleFont:"mystery quest"				// Choose a Google Font
+Curs Off : Cls 1						// Set up screen, white background
+Set Transparent 0						// Set background colour to transparent
+Set font 1,180							// Set then font size
+Text Mode "border"						// Set the Text Mode
+colour 2,$000000						// Define colour number 2 as black
+For f=1 to 5							// Define loop
+	Line Width f					// Set the line width
+	Ink f*5+1							// Set the ink colour.
+	Border Ink 2						// Set the border ink colour.
+	if f>2 then Text Shadow 10,20,f*3,$333333ff // Draw a shadow beneath last 3
+	Text 100+f*70,f*200,"Border Text!"	// Draw Text
+										// Choose colour from palette
+	wait 0.4							// Wait for 0.4 seconds
+Next f									// Repeat loop
+End
+~~~
+api*/
+Instruction Text Mode, mode$
+{
+	#errors
+	aoz.currentScreen.setTextMode( %mode$ );
+}
+End Instruction
+/**api
+@name:Format Text
+@description:Draw a graphical text within a given area of the screen
+@param:text$:string:The text to draw.
+@param:x:integer:The horizontal position of the top-left corner of the draw area
+@param:y:integer:The vertical position of the top-left corner of the draw area
+@param:width:integer:The width in pixels of the draw area
+@param:*height:integer:The height in pixels of the draw area. If undefined and Format Text is used as a function, it indicates not to draw anything on screen and just do the calculation.
+@param:tags$:string:A string containing tags facilitating the display of the text. Tags can be any logical combination of the following tags and have the same meaning as their Javascritp equivalents: '#left', '#center', '#right', '#start' or '#end' for horizontal alignement, '#top', '#hanging', '#middle', '#alphabetic', '#ideographic' or '#bottom' for vertical alignement, '#ltr', '#rtl' or '#inherit' for drawing direction
+@compatible: aoz
+@content:
+The Format Text is a very powerful instruction and function that allow you to display any formatted text withing a given rectangle.
+
+The format of the text can be:
+- Native AOZ text, containing commands like =Ink$(), =Zone$(), =Url$() etc.
+- Markdown UTF-8 text, with support of all the tags including table, code, links and images.
+- Simple HTML tags, like <bold></bold>, <link></link> etc.
+- Break lines are supported with "\r" or "<br>"
+
+It can be used either as a function or an instruction.
+
+If you use it as a function, the "height" parameter has a special role...
+- if you do NOT define it, nothing will be printed ont he screen and and Format Text will return the height of the displayed text, allowing you to prepare the display
+- if you DO define the height parameter, then the output will be visible, and it will still return the height of the text on screen.
+
+The instruction also supports tags to indicate the format:
+- '#left', '#center', '#right', '#start', '#end' : horizontal align
+- '#html' : indicates a text formatted in HTML
+- '#md' : indicates a markdown text
+- '#nozones' : will ignore the =Zone$() AOZ commands
+- '#animate' : will render the links and images displayed on screen to be active, by starting a mouse-detection background process
+
+This instruction also has this unique of drawing such a text inside of a Javascript canvas that you can grab later as a bob or a texture.
+
+A good example of the use of this instruction is the documentation application that you will find ion the aoz/help folder: all texts and info are displayed using Markdown and Format Text.
+api*/
+Instruction Format Text, text$, x, y, width, height, tags$="", fontIndex = (index), fontHeight
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.currentScreen,callFunction:"formatText",waitFunction:"formatTextWait",args:[ { text: %text$, x: %x, y: %y, width: %width, height: %height, tags: %tags$ + ' #waiting', codeFont: %fontIndex, codeFontHeight: %fontHeight } ] };
+}
+End Instruction
+
+Function Format Text, text$, x, y, width, height, tags$="", fontIndex = (index), fontHeight
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.currentScreen,callFunction:"formatText",waitFunction:"formatTextWait",args:[ { text: %text$, x: %x, y: %y, width: %width, height: %height, tags: %tags$ + ' #waiting', codeFont: %fontIndex, codeFontHeight: %fontHeight } ] };
+}
+End Function( {aoz.currentScreen.formatTextResult} )
+
+Instruction Format Text, text$, x1, y1 To x2, y2, tags$="", fontIndex = (index), fontHeight
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.currentScreen,callFunction:"formatText",waitFunction:"formatTextWait",args:[ { text: %text$, x: %x1, y: %y1, width: (%x2)-(%x1)+1, height: (%y2)-(%y1)+1, tags: %tags$ + ' #waiting', codeFont: %fontIndex, codeFontHeight: %fontHeight } ] };
+}
+End Instruction
+
+Function Format Text, text$, x1, y1 To x2, y2, tags$="", fontIndex = (index), fontHeight
+{
+	#errors
+	#waiting
+	return{type:12,waitThis:aoz.currentScreen,callFunction:"formatText",waitFunction:"formatTextWait",args:[ { text: %text$, x: %x1, y: %y1, width: (%x2)-(%x1)+1, height: (%y2)-(%y1)+1, tags: %tags$ + ' #waiting', codeFont: %fontIndex, codeFontHeight: %fontHeight } ] };
+}
+End Function( {aoz.currentScreen.formatTextResult} )
+
+/**api
+@name:Get Text Height
+@description:Returns the computed height of the text box
+@param:text$:string:The text of the text box.
+@param:width:string:Width of the text box.
+@compatible: aoz
+@content:
+This command is used to get the height of a text box.
+~~~
+TXT$ = "Silent, Silent Night : <br> Silent, silent Night <br> Quench the holy light <br> Of thy torches bright. <br> <br> For possess'd of Day <br> Thousand spirits stray <br> That sweet joys betray. <br> <br> Why should joys be sweet <br> Used with deceit <br> Nor with sorrows meet? <br> <br> But an honest joy <br> Does itself destroy <br> For a harlot coy. <br> <br> William Black."
+
+Rem Get the Height of the text box for the text and a width of 300 pixels
+H = Get Text Height( TXT$, 300 )
+
+Rem Draw the text box
+Format Text Text$ = TXT$, X = 0, Y = 0, Width = 300, Height = H
+~~~
+api*/
+Function Get Text Height, text$, width
+{
+	#errors
+}
+End Function( { aoz.currentScreen.getTextHeight( %text$, %width ) } )
+
+/**api
+@name:Animate Text
+@description:Handle click on links in formatted text
+@param:*onClick$:string:The name of a procedure to call when the user clicks on a link. It receives as parameter LINK$ the address of the link, and LINKNAME$ the text of the link.
+@param:*windowName$:string:"_blank" (default) to open links in a new browser window, "_parent" to load the url in the parent frame, "_self" to replace the current page, or the name of the window.
+@compatible: aoz
+@content:
+This instruction only works after you have displayed a text on screen with the "Format Text" instruction, and if it contains active zones.
+
+It starts a background process to test the mouse over the active zones, and reacts when you click.
+
+If no procedure is defined, then a link will open a new browser tab, or open the browser itself if the application was a stand-alone.
+
+If you specify the name of a procedure, then this procedure is called instead.
+
+api*/
+Instruction Animate Text, onClick$, windowName$
+{
+	#errors
+	aoz.currentScreen.animateText(%onClick$,%windowName$);
+}
+End Instruction
+
+/**api
+@name:Animate Text On
+@description:Restart animated text
+@compatible: aoz
+@content:
+This commands restart the background process that checks the mouse over links if it was stopped or paused.
+api*/
+Instruction Animate Text On
+{
+	#errors
+	aoz.currentScreen.setAnimateTextState('on');
+}
+End Instruction
+
+/**api
+@name:Animate Text Pause
+@description:Pauses animated text
+@compatible: aoz
+@content:
+This commands pauses the animated text background process, after it, links will no longer react. You can restart the process with Animate Text On.
+api*/
+Instruction Animate Text Pause
+{
+	#errors
+	aoz.currentScreen.setAnimateTextState( 'pause' );
+}
+End Instruction
+
+/**api
+@name:Animate Text Off
+@description:Stops animated text
+@compatible: aoz
+@content:
+This commands deletes the animated text process and data. It cannot be restarted.
+api*/
+Instruction Animate Text Off
+{
+	#errors
+	aoz.currentScreen.setAnimateTextState( 'stop' );
+}
+End Instruction
+
+/**api
+@name:Set Paint
+@description:Set the painting mode for filled drawing forms like "Polygon" and "Bar"
+@param:onOff:boolean:True to fill the area with the current paitn pattern and inks, False to leave them empty and only draw the borders
+@compatible: aoz, stos, amos
+@examples:instructions:i_8
+@content:
+This is a simple command that toggles outlines off and on for any shapes drawn using the POLYGON and BAR
+instructions. Follow SET PAINT with a mode value of 1, and borders will appear in the previous ink colour. If the
+mode is set by a zero, the default setting applies, with no borders shown. For example:
+~~~
+Ink 0,1,2 : Set Paint 1
+Bar 5,5 To 200,100
+Set paint 0: Bar 210,75 To 310,190
+~~~
+In the last example, the INK command carried additional parameters. These optional settings follow the usual colour
+number, and are used to determine paper and border colours. In other words, they can set the colours to be used for
+fill patterns and outlines of bars and polygons. Remember to include any commas for unused options, as follows:
+~~~
+Ink 3: Rem Set ink colour
+Ink ,,5: Rem Set border outline only
+Ink 0,8,2: Rem Set ink, fill colour and border
+Ink 6,13: Rem Set ink and background fill colour
+~~~
+
+api*/
+Instruction Set Paint, style
+{
+	#errors
+	aoz.currentScreen.setPaint(%style);
+}
+End Instruction
+/**api
+@name:Border On
+@description:Activate the drawing of borders around shapes.
+@compatible:aoz
+@content:
+When Border On is used, all subsequent shapes drawn will have a outline border, drawn in the current Border Ink colour, Border Pattern or Border Fill Image.
+ The outline border will be drawn to the width of the current Line Width, and use the current Line Join and Line Cap and Line Dash settings. The following example
+ draws the same square 6 times, changing something each time.
+~~~
+Ink 6
+Border Ink 1
+Bar 100,100 to 300,300
+Border On
+Line Width 30
+Bar 400,100 to 600,300
+Line Join "round"
+Bar 700,100 to 900,300
+Line Cap "round"
+Line Dash 0,40
+Bar 1000,100 to 1200,300
+Border First
+Bar 1300,100 to 1500,300
+Line Dash
+Border Pattern 4
+Bar 1600,100 to 1800,300
+~~~
+api*/
+Instruction Border On
+{
+	#errors
+	aoz.currentScreen.setPaint(1);
+}
+End Instruction
+/**api
+@name:Border Off
+@description:De-Activate the drawing of borders around shapes.
+@compatible:aoz
+@content:
+When Border Off is used, all subsequent shapes drawn will not have a outline border,
+~~~
+Ink 6
+Border Ink 1
+Bar 100,100 to 300,300
+Border On
+Line Width 30
+Bar 400,100 to 600,300
+Line Join "round"
+Bar 700,100 to 900,300
+Line Cap "round"
+Line Dash 0,40
+Bar 1000,100 to 1200,300
+Border First
+Bar 1300,100 to 1500,300
+Line Dash
+Border Off
+Bar 1600,100 to 1800,300
+~~~
+api*/
+Instruction Border Off
+{
+	#errors
+	aoz.currentScreen.setPaint(0);
+}
+End Instruction
+
+/**api
+@name:Set Pattern
+@alias:Fill Pattern
+@description:Set the filled area painting pattern
+@param:pattern:integer:If positive, a number from 0 to 34 indicate the default pattern to use, if negative, the inverse value represents the index of an image in the Images bank to use as drwaing pattern
+@compatible: aoz, stos, amos
+@examples:instructions:i_8
+@content:
+Use this command to select from a range of pattern styles. The default status fills shapes with the current ink colour,
+and is set with a zero, like this:
+~~~
+Set Pattern 0
+~~~
+If SET PATTERN is followed by a positive number from 1 to 34, shapes are filled from a ready- made selection of
+patterns.View them now, by running this routine:
+~~~
+Do
+	For N=0 To 34
+		Set Pattern N
+		Ink 0,1,2: Set Paint 1
+		Bar 50,50 To 150,150
+		Locate 0,0: Print N ;" "
+		Wait 50
+	Next N
+Loop
+~~~
+If SET PATTERN is followed by a negative number, shapes will be filled with a pattern grabbed from a Sprite or
+Bob image, taken from the Image Bank (memory bank 1). Because these patterns can be very complex, AOZ Studio will simplify them automatically, as follows.
+
+The width of the image is clipped to 16 pixels, and the height is rounded to the nearest power of two (2, 4, 8, 16, 32
+and so on.)
+
+The original colours of the image are discarded, and the pattern is drawn using the current ink and paper colours.
+Two-colour patterns are drawn as monochrome images.
+
+If multi-coloured images are required using the original Object colours, the INK must first be set up, as follows:
+~~~
+Ink 15,0
+Set Pattern -1
+Paint 100,100
+~~~
+That example fills the screen area around the given coordinates with any of the Object colours, except the
+transparent colour zero. The colour index number 15 acts as a mask, defining which colours are to be used, and sets
+the range from 1 to 15. If the INK command is changed to the following line, the Object will be drawn with the
+normally transparent colour filled by colour 1:
+~~~
+Ink 15,1
+~~~
+Before making use of sprite images as fill patterns, remember to use GET SPRITE PALETTE to avoid messy
+displays. Here is an example:
+~~~
+Flash Off : Cls 0
+Load "AMOSPro_Tutorial:Objects/Pattern.Abk"
+Get Sprite Palette
+Box 1,1 To 319,199
+Ink 15,0
+Set Pattern -1
+Paint 102,102
+~~~
+
+api*/
+Instruction Set Pattern, pattern, scale
+{
+	#errors
+	aoz.currentScreen.setPattern( %pattern, %scale, 1 );
+}
+End Instruction
+Instruction Fill Pattern, pattern, scale
+{
+	#errors
+	aoz.currentScreen.setPattern( %pattern, %scale, 1 );
+}
+End Instruction
+/**api
+@name:Border Pattern
+@description:Select an pattern number to use as a fill image in graphical drawings.
+@param:image:integer or string:The image index number or name.
+api*/
+Instruction Border Pattern, pattern, scale
+{
+	#errors
+	aoz.currentScreen.setBorderPattern( %pattern, %scale, 1 );
+}
+End Instruction
+/**api
+@name:Fill Image
+@description:Select an image from the Image Bank to use as a fill image in graphical drawings.
+@param:image:integer or string:The image index number or name.
+@param:scale:integer:The scale factor to be applied to the fill image.
+@compatible: aoz
+@content:
+Use this instruction to  create a tiled fill pattern from any image stored in the Image Bank to use in shapes and text.
+Set Fill Image to 0 to turn off image fill.
+api*/
+Instruction Fill Image, image = (index), scale
+{
+	#errors
+	aoz.currentScreen.setPattern( aoz.checkIndex(%image), %scale, -1 );
+}
+End Instruction
+/**api
+@name:Border Fill Image
+@description:Select an image from the Image Bank to use as a border fill image in graphical drawings.
+@param:image:integer or string:The image index number or name.
+@param:scale:integer:The scale factor to be applied to the fill image.
+@compatible: aoz
+@content:
+Use this instruction to  create a tiled fill pattern from any image stored in the Image Bank to use in borders around shapes.
+Set Border Fill Image to 0 to turn off border image fill.
+api*/
+Instruction Border Fill Image, image = (index), scale
+{
+	#errors
+	aoz.currentScreen.setBorderPattern( aoz.checkIndex(%image), %scale, -1 );
+}
+End Instruction
+
+/**api
+@name:Linear Gradient
+@description:Define a linear gradient that will be used as a fill pattern.
+@param:x1:integer:The horizontal coordinate of the start of the gradient line.
+@param:y1:integer:The vertical coordinate of the start of the gradient line.
+@param:x2:integer:The horizontal coordinate of the end of the gradient line.
+@param:y2:integer:The vertical coordinate of the end of the gradient line.
+@param:color$:string:The colour stop definition string. Each colour stops consists of a number which represents a point along the gradient
+ given as a percentage and a colour, which can be either a standard Javascript colour name, or an RGB or RGBA number in the in AOZ format or
+ Javascript format (see example below)
+@compatible: aoz, stos, amos
+
+@content:
+Use this command to create a colour gradient that can be used as a fill pattern for Drawing and Text instructions. The gradient shading will begin
+ at the start point of the gradient line, and shade from one colour to the next in the direction of the end point of the line.
+@content:
+In the example below, you will see that the first gradient starts at 0,0 and ends at 1920,0, so the gradient line moves horizontally from left to right.
+ The color string has only two stops, one Red at 30% of the way along the line and the other Blue at 70%. In this case, the first 30% of the gradient will
+ be a solid red color and the last 30% will be a solid blue. The middle 40% will shade gradually from Red to Blue. This can be seen when the three Discs are
+ drawn.
+@content:
+The second gradient starts at 0,350 and ends at 0,700, so follows a vertical line from top to bottom. In this gradient, there are 5 colour stops and the three
+ different acceptable colour formats are shown. Note that the third and fourth colours also contain an Alpha value of '55' on the end, so these colours will be
+ semi-transparent. If you look closely at the text, you will see that the mid-section of the letters is a bit transparent and some of the colour of the Discs
+ comes through.
+@content:
+It is important to note that the complete gradient fill pattern is like a hidden screen, and will be the same size as the current screen, the fill on the
+ screen will take place using the colour pattern from the corresponding position on the fill 'screen'.
+~~~
+#googleFont: "henny penny"
+Set Transparent 0
+Line Width 3
+Text Mode "border"
+Ink 4,,2
+Linear Gradient 0,0,1920,0,"30,red,70,blue"
+Disc 300,540,200
+Disc 1620,540,200
+Disc 960,540,400
+Set Font 1,280
+Linear Gradient 0,350,0,700,"0,$0000ff,40,lightblue,45,#ffd70055,50,$a52a2a55,60,yellow"
+Text 960,630,"Gradient Fill","#center"
+~~~
+Try adding these lines to the above program for a demonstration of an Alpha gradient over-lay. Run it again, then press any key
+~~~
+Wait Key
+Linear Gradient 0,0,1920,0,"0,$00000000,100,$000000ff"
+Bar 0,0,1920,1080
+~~~
+If you just want a simple gradient background, use something like this
+~~~
+Linear Gradient 0,0,0,1080,"0,$000000,100,$000099"
+Bar 0,0,1920,1080
+~~~
+api*/
+Instruction Linear Gradient, x1, y1, x2, y2, color$
+{
+	#errors
+	aoz.currentScreen.setGradient({x1:%x1,y1:%y1,x2:%x2,y2:%y2},%color$,0);
+}
+End Instruction
+/**api
+@name:Conic Gradient
+@description:Define a conic gradient that will be used as a fill pattern.
+@param:x:integer:The horizontal coordinate of the centre of the gradient.
+@param:y:integer:The vertical coordinate of the centre of the gradient.
+@param:angle:The start angle of the gradient in degrees. 0 degrees is right-horizontal from the centre position.
+@param:color$:string:The colour stop definition string. Each colour stops consists of a number which represents a point along the gradient
+ given as a percentage and a colour, which can be either a standard Javascript colour name, or an RGB or RGBA number in the in AOZ format or
+ Javascript format (see example below)
+@compatible: aoz, stos, amos
+@content
+Use this command to create a colour gradient that can be used as a fill pattern for Drawing and Text instructions. The gradient shading will begin
+ at the line radiating out from the centre point at the specified angle, and shade from one colour to the next in a clockwise direction around the centre
+ until the start angle is reached again.
+@content:
+In the example below, you will see that the centre point of the gradient starts at 960,540, which is the centre of the screen, and radiates out at an angle of 0°.
+ The color string has five stops, starting at red at 0% shading green to yellow to blue and back to red at 100%. Ending the colour string with the same colour as
+ it started will ensure a smooth transition between the end and start colours once the gradient has rotated through a full 360°.
+@content:
+It is important to note that the complete gradient fill pattern is like a hidden screen, and will be the same size as the current screen, the fill on the
+ screen will take place using the colour pattern from the corresponding position on the fill 'screen'.
+~~~
+// A Simple Conic Gradient
+Conic Gradient 960,540,0,"0,red,25,green,50,yellow,75,blue,100,red"
+Filled Star 960,540,540,180,5,54
+~~~
+Because conic gradients are based around a single point, it's very easy to animate them. Try this
+~~~
+a=0  // variable for the start angle
+do
+	Conic Gradient 960,540,a,"0,red,25,green,50,yellow,75,blue,100,red"  //
+	Filled Star 960,540,540,180,5,54
+	Wait Vbl
+	Add a,1,0 to 360
+loop
+~~~
+api*/
+Instruction Conic Gradient, x, y, angle, color$
+{
+	#errors
+	aoz.currentScreen.setGradient({x1:%x,y1:%y,angle:(%angle)*aoz.degreeRadian},%color$,0);
+}
+End Instruction
+/**api
+@name:Radial Gradient
+@description:Define a radial gradient between a start circle and an end circle that will be used as a fill pattern.
+@param:x1:integer:The horizontal coordinate of the centre of the start circle.
+@param:y1:integer:The vertical coordinate of the centre of the start circle.
+@param:r1:integer:The radius of the start circle. Must be non-negative and finite.
+@param:x2:integer:The horizontal coordinate of the centre of the end circle.
+@param:y2:integer:The vertical coordinate of the centre of the end circle.
+@param:r2:integer:The radius of the end circle. Must be non-negative and finite.
+@param:color$:string:The colour stop definition string. Each colour stops consists of a number which represents a point along the gradient
+ given as a percentage and a colour, which can be either a standard Javascript colour name, or an RGB or RGBA number in the in AOZ format or
+ Javascript format (see example below)
+@compatible: aoz, stos, amos
+@content
+Use this command to create a colour gradient that can be used as a fill pattern for Drawing and Text instructions. The gradient shading will begin
+ at the radius of the start circle, and shade from one colour to the next radially towards the radius of the end circle. The area of the pattern between the
+ centre point of the start circle and it's radius will be coloured with the first colour in the colour string, and the area outside of the end circle radius
+ will be coloured with the last colour in the colour string.
+@content:
+In the example below, you will see that both the start circle and end circle have the same centre point, at 960,540, but the radii are different. The start
+ radius is 300 and the end radius is 500. The colour string starts at black, shades to purple at 50% and then back to black at 100%. Can you guess what will
+ be drawn? Radial gradients are quite complex, so it's a good idea to play around with the numbers to help understand how they work.
+@content:
+It is important to note that the complete gradient fill pattern is like a hidden screen, and will be the same size as the current screen, the fill on the
+ screen will take place using the colour pattern from the corresponding position on the fill 'screen'.
+~~~
+// A Simple Radial Gradient
+Radial Gradient 960,540,300,960,540,500,"0,black,50,purple,100,black"
+Bar 0,0,1920,1080 // Draw a bar that completely fills the screen
+~~~
+Here's another example of how to use a Radial Gradient to apply '3D' style shading to a ball.
+~~~
+Radial Gradient 760,340,0,960,540,400,"0,white,5,aqua,100,blue"
+Disc 960,540,400
+~~~
+Because radial gradients are based around centre points, it's very easy to animate them. Try this
+~~~
+look=0
+distance=0
+do
+	Radial Gradient 960+cos(look)*Min(200,distance),540+sin(look)*Min(200,distance),200,960,540,500,"0,black,50,aqua,99,black,100,white"
+	Bar 0,0,1920,1080 // Draw a bar that completely fills the screen
+	look=get angle(960,540,x mouse, y mouse)
+	distance=get distance(960,540,x mouse, y mouse)
+	Wait Vbl
+	Add a,1,0 to 360
+loop
+~~~
+api*/
+Instruction Radial Gradient, x1, y1, r1, x2, y2, r2, color$
+{
+	#errors
+	aoz.currentScreen.setGradient({x1:%x1,y1:%y1,r1:%r1,x2:%x2,y2:%y2,r2:%r2},%color$,0);
+}
+End Instruction
+/**api
+@name:Conic Border Gradient
+@description:Define a conic gradient that will be used as a fill pattern in any borders drawn around shapes or text.
+@param:x:integer:The horizontal coordinate of the centre of the gradient.
+@param:y:integer:The vertical coordinate of the centre of the gradient.
+@param:angle:The start angle of the gradient in degrees. 0 degrees is right-horizontal from the centre position.
+@param:color$:string:The colour stop definition string. Each colour stops consists of a number which represents a point along the gradient
+ given as a percentage and a colour, which can be either a standard Javascript colour name, or an RGB or RGBA number in the in AOZ format or
+ Javascript format (see example below)
+@compatible: aoz, stos, amos
+@content
+Use this command to create a colour gradient that can be used as a fill pattern for borders around drawn shapes and texts. The gradient shading will begin
+ at the line radiating out from the centre point at the specified angle, and shade from one colour to the next in a clockwise direction around the centre
+ until the start angle is reached again.
+@content:
+In the example below, you will see that the centre point of the gradient starts at 960,540, which is the centre of the screen, and radiates out at an angle of 0°.
+ The color string has five stops, starting at red at 0% shading green to yellow to blue and back to red at 100%. Ending the colour string with the same colour as
+ it started will ensure a transition between the end and start colours once the gradient has gone through a full 360°.
+@content:
+It is important to note that the complete gradient fill pattern is like a hidden screen, and will be the same size as th.e current screen, the fill on the
+ screen will take place using the colour pattern from the corresponding position on the fill 'screen'.
+~~~
+// A Simple Conic Border Gradient
+ink 8,,1
+Line Width 40
+Conic Border Gradient 960,540,0,"0,red,25,green,50,yellow,75,blue,100,red"
+Filled Star 960,540,540,180,5,54
+~~~
+Because conic gradients are based around a single point, it's very easy to animate them. Try this
+~~~
+a=0  // variable for the start angle
+ink 8,,1
+Line Width 40
+Border On true
+do
+	Conic Border Gradient 960,540,a,"0,red,25,green,50,yellow,75,blue,100,red"
+	Filled Star 960,540,450,150,5,54
+	Wait Vbl
+	Add a,1,0 to 360
+loop
+~~~
+api*/
+Instruction Conic Border Gradient, x, y, angle, color$
+{
+	#errors
+	aoz.currentScreen.setGradient({x1:%x,y1:%y,angle:(%angle)*aoz.degreeRadian},%color$,1);
+}
+End Instruction
+/**api
+@name:Linear Border Gradient
+@description:Define a linear gradient that will be used as a fill pattern in any borders drawn around shapes or text.
+@param:x1:integer:The horizontal coordinate of the start of the gradient line.
+@param:y1:integer:The vertical coordinate of the start of the gradient line.
+@param:x2:integer:The horizontal coordinate of the end of the gradient line.
+@param:y2:integer:The vertical coordinate of the end of the gradient line.
+@param:color$:string:The colour stop definition string. Each colour stops consists of a number which represents a point along the gradient
+ given as a percentage and a colour, which can be either a standard Javascript colour name, or an RGB or RGBA number in the in AOZ format or
+ Javascript format (see example below)
+@compatible: aoz, stos, amos
+
+@content:
+Use this command to create a colour gradient that can be used as a fill pattern for borders around drawn shapes and text. The gradient shading will begin
+ at the start point of the gradient line, and shade from one colour to the next in the direction of the end point of the line.
+
+@content:
+It is important to note that the complete gradient fill pattern is like a hidden screen, and will be the same size as the current screen, the fill on the
+ screen will take place using the colour pattern from the corresponding position on the fill 'screen'.
+@content:
+This example has a linear border gradient that runs horizontally from left to right across the border aound the square.
+ ~~~
+ Ink 6,,1
+ Border On true
+ Line Width 50
+ Linear Border Gradient 660,0,1260,0,240,850,"0,white,25,green,50,aqua,75,yellow,100,blue"
+ Bar 660,240,600,600
+ ~~~
+api*/
+Instruction Linear Border Gradient, x1, y1, x2, y2, color$
+{
+	#errors
+	aoz.currentScreen.setGradient({x1:%x1,y1:%y1,x2:%x2,y2:%y2},%color$,1);
+}
+End Instruction
+/**api
+@name:Radial Border Gradient
+@description:Define a radial gradient between a start circle and an end circle that will be used as a fill pattern in any borders drawn around shapes or text.
+@param:x1:integer:The horizontal coordinate of the centre of the start circle.
+@param:y1:integer:The vertical coordinate of the centre of the start circle.
+@param:r1:integer:The radius of the start circle. Must be non-negative and finite.
+@param:x2:integer:The horizontal coordinate of the centre of the end circle.
+@param:y2:integer:The vertical coordinate of the centre of the end circle.
+@param:r2:integer:The radius of the end circle. Must be non-negative and finite.
+@param:color$:string:The colour stop definition string. Each colour stops consists of a number which represents a point along the gradient
+ given as a percentage and a colour, which can be either a standard Javascript colour name, or an RGB or RGBA number in the in AOZ format or
+ Javascript format (see example below)
+@compatible: aoz, stos, amos
+@content
+Use this command to create a colour gradient that can be used as a fill pattern for borders around drawn shapes and text. The gradient shading will begin
+ at the radius of the start circle, and shade from one colour to the next radially towards the radius of the end circle. The area of the pattern between the
+ centre point of the start circle and it's radius will be coloured with the first colour in the colour string, and the area outside of the end circle radius
+ will be coloured with the last colour in the colour string.
+@content:
+In the example below, you will see that both the start circle and end circle have the same centre point, at 960,540, but the radii are different. The start
+ radius is 300 and the end radius is 500. The colour string starts at black, shades to purple at 50% and then back to black at 100%. Can you guess what will
+ be drawn? Radial gradients are quite complex, so it's a good idea to play around with the numbers to help understand how they work.
+@content:
+It is important to note that the complete gradient fill pattern is like a hidden screen, and will be the same size as the current screen, the fill on the
+ screen will take place using the colour pattern from the corresponding position on the fill 'screen'.
+@content:
+Here's some examples. This one has a radial gradient that starts at the top left of the square and finishes at the bottom right corner.
+~~~
+Ink 6,,1
+Border On true
+Line Width 50
+Radial Border Gradient 660,240,0,660,240,850,"0,white,50,aqua,100,blue"
+Bar 660,240,600,600
+~~~
+And this one has a radial gradient that starts in the centre of the circle, radiating outwards to create a shaded border.
+~~~
+Ink 6,,1
+Border On true
+Line Width 60
+Radial Border Gradient 960,540,0,960,540,300,"80,white,100,blue"
+Disc 960,540,270
+~~~
+api*/
+Instruction Radial Border Gradient, x1, y1, r1, x2, y2, r2, color$
+{
+	#errors
+	aoz.currentScreen.setGradient({x1:%x1,y1:%y1,r1:%r1,x2:%x2,y2:%y2,r2:%r2},%color$,1);
+}
+End Instruction
+/**api
+@name:Gradient Off
+@description:Turns off gradient fill and removes the pattern.
+@compatible: aoz, stos, amos
+@content:
+~~~
+Ink 1 // white
+Linear Gradient 0,0,1920,0,"0,red,50,yellow,100,blue"
+Disc 300,540,200 // Ink colour is ignored
+Disc 1620,540,200
+Gradient Off // Switch off gradient fill
+Disc 960,540,400 // Ink colour is used for fill
+~~~
+
+api*/
+Instruction Gradient Off
+{
+	#errors
+	aoz.currentScreen.Gradient = null;
+	aoz.currentScreen.pattern = 0;
+}
+End Instruction
+/**api
+@name:Border Gradient Off
+@description:Turns off border gradient fill.
+@compatible: aoz, stos, amos
+@content:Turns off the border gradient fill pattern and uses the border ink colour, as can be seen in this example.
+~~~
+#googleFont: "henny penny"
+Set Font 1,200
+Ink 3,,1
+Line Width 5
+Text Mode "Border"
+Linear Border Gradient 0,0,1920,0,"0,red,50,yellow,100,blue"
+Text 960,400,"Border Gradient","Centre"
+Border Gradient Off
+Text 960,800,"Border Gradient Off","Centre"
+~~~
+api*/
+Instruction Border Gradient Off
+{
+	#errors
+	aoz.currentScreen.borderGradient = null;
+}
+End Instruction
+/**api
+@name:Set Line
+@description:Set the patterm of the future lines drawn by the "Draw", "Draw To", "Box" etc. and any Borders around Shapes or Text instructions
+@param:pattern:integer:A binary mask of bits where each bit set to one will be visible and invisible if zero, repeated along the line
+@compatible: aoz, stos, amos
+@examples:instructions:i_8
+@content:Please note this instruction is based accurately on the AMOS version and because of it's limitations, is not ideally suited to high resolution displays. Use Line Dash as an alternative.
+This command sets the style of all straight lines that are subsequently drawn. Theoretically, the 16-bit mask can
+generate values for different patterns between 0 and 65535, but here is a more practical example:
+~~~
+Cls : Ink 2
+Set Line $F0F0
+Box 50,100 To 150,140
+Set Line %1100110011001100
+Box 60,110 To 160,160
+~~~
+
+api*/
+Instruction Set Line, pattern
+{
+	#errors
+	aoz.currentScreen.setLine(%pattern);
+}
+End Instruction
+/**api
+@name:Line Dash
+@description:Set the patterm of the future lines drawn by the "Draw", "Draw To", "Box" etc. and any Borders around Shapes or Text instructions
+@param:dash1:integer:The length of the first, drawn section of line in pixels.
+@param:space1:integer:The length of the second, blank section of line in pixels.
+@param:dash2:integer:The length of the third, drawn section of line in pixels.
+@param:space2:integer:The length of the fourth, blank section of line in pixels.
+@param:dash3:integer:The length of the fifth, drawn section of line in pixels.
+@param:space3:integer:The length of the sixth, blank section of line in pixels.
+@param:dash4:integer:The length of the seventh, drawn section of line in pixels.
+@param:space4:integer:The length of the eighth, blank section of line in pixels.
+@param:dash5:integer:The length of the ninth, drawn section of line in pixels.
+@param:space5:integer:The length of the tenth, blank section of line in pixels.
+@compatible: aoz, stos, amos
+@content:
+This command sets the style of all lines that are subsequently drawn. Here is a simple example, which draws a dashed circle. The line is made up
+ from a 50 pixel line, a 50 pixel space, a 20 pixel line and a 20 pixel space repeated.
+~~~
+Ink 1
+Line Width 20
+Line Dash 50,50,20,20
+Circle 960,540,500
+~~~
+Line Dash is compatible with Line Cap, so when using thicker lines, you can have nice rounded ends on you dashes, like this.
+~~~
+Ink 1
+Line Width 20
+Line Cap "round"
+Line Dash 50,50,20,20
+Circle 960,540,500
+~~~
+Remember if you change the line cap to "round" or "square", your line dashes become longer because the cap over-hangs the end of the line.
+ This can be used to your advantage to create a cool dotted line made from circles, like this.
+~~~
+Ink 1
+Line Width 20
+Line Cap "round"
+Line Dash 0,24 // the line length of 0 will still have a round cap at each end, which makes a circle!
+Circle 960,540,500
+~~~
+One final note. Line Dash accepts up to 10 parameters, but if you give it an odd number to work with, such as 3, the sequence will be
+ increased automatically by adding the sequence to itself, for example
+~~~
+Ink 1
+Line Width 20
+Line Dash 10,20,30   // Will become Line Dash 10,20,30,10,20,30
+Circle 960,540,500
+~~~
+api*/
+Instruction Line Dash, dash1, space1, dash2, space2, dash3, space3, dash4, space4, dash5, space5
+{
+	#errors
+	aoz.currentScreen.setLineDash([%dash1,%space1,%dash2,%space2,%dash3,%space3,%dash4,%space4,%dash5,%space5]);
+}
+End Instruction
+/**api
+@name:Line Dash Offset
+@description:Applies an offset to the start position of your dashed line.
+@param:offset:integer:Offset value in pixels
+@compatible: aoz, stos, amos
+@content:
+This command sets offset value for drawing dashed lines, for example
+~~~
+Ink 1
+Line Width 20
+Line Dash 30,20
+Draw 100,400,1720,400
+Line Dash Offset 20
+Draw 100,500,1720,500
+~~~
+This feature can be used to create animated borders, for example
+~~~
+Ink 1,4
+Line Cap "butt"
+Line Width 20
+Line Dash 30,20   // Total length 50 pixels, so there is the original position + 49 potential offsets.
+x=0
+do
+	Draw 100,400,1720,400
+	Line Dash Offset x
+	add x,1,0 to 49   // 49 ensures a smooth change. ( 50 - 1 )
+	wait vbl
+	cls
+loop
+api*/
+Instruction Line Dash Offset, offset
+{
+	#errors
+	aoz.currentScreen.lineDashOffset( %offset);
+}
+End Instruction
+/**api
+@name:Ink
+@description:Set the index of the colour from the palette of the current screen to use in all future graphical operations
+@param:index:integer:The index of the colour in the palette to use
+@param:pattern:integer:An optional pattern to use
+@compatible: aoz, stos, amos
+@examples:instructions:i_5
+@content:
+used to specify which colour is to be used for subsequent drawing, and the number of the colour register is set like
+this:
+~~~
+Cls: Ink 5
+Draw To 319,199
+~~~
+The INK instruction can also be used to set patterns for filling shapes, as well as colours for borders around shapes,
+and this will be explained later.
+
+api*/
+Instruction Ink, index, background, border
+{
+	#errors
+	aoz.currentScreen.setInk(%index,%background,%border);
+}
+End Instruction
+/**api
+@name:Border Ink
+@description:Define the colour of plain borders used in graphical operations.
+@param:index:integer:The index of the colour in the palette to use
+@compatible: aoz, stos, amos
+@content:
+Used to specify which colour is to be used for subsequent drawing of borders around shapes and text. For example,
+~~~
+Ink 5
+Border Ink 1
+Border On
+Line Width 20
+Disc 960,540,300
+~~~
+api*/
+Instruction Border Ink, index
+{
+	#errors
+	aoz.currentScreen.setInk(undefined,undefined,%index);
+}
+End Instruction
+/**api
+@name: Ink
+@author: Brian Flanagan
+@description: Function that returns the graphic ink color index.
+@returns: Integer index for current graphic Ink color.
+@compatible: aoz
+api*/
+Function Ink
+{
+}
+End Function( { aoz.currentScreen.ink } )
+
+/**api
+@name: Ink$
+@author: Francois Lionet
+@description: Returns a string to use in Text and Format Text instructions to change the color of the ink
+@param:color:integer:The index of the color in the palette for paletted screens, or the RGB value if not paletted
+@returns: A string with some magic code in it
+@compatible: aoz
+@content:
+api*/
+Function Ink$, color
+{
+}
+End Function( { aoz.currentScreen.ink$(%color) } )
+
+/**api
+@name: Set Font$
+@author: Francois Lionet
+@description: Returns a string to use in Text and Format Text instructions to change the name of the font. Warning, for this instruction to work all fonts must have been previously loaded with a "Set Font" instruction.
+@param:font$:any:The name or number of the font.
+@returns: A string with some magic code in it
+@compatible: aoz
+@content:
+api*/
+Function Set Font$, font=(any)
+{
+}
+End Function( { aoz.currentScreen.setFont$(%font) } )
+
+/**api
+@name: Set Font Size$
+@author: Francois Lionet
+@description: Returns a string to use in Text and Format Text instructions to change the height of the font.
+@param:height:integer:The new height
+@returns: A string with some magic code in it
+@compatible: aoz
+@content:
+api*/
+Function Set Font Size$, height
+{
+}
+End Function( { aoz.currentScreen.setFontSize$(%height) } )
+
+/**api
+@name: Italic$
+@author: Francois Lionet
+@description: Returns a string to use in Text and Format Text instructions to set the font to italic
+@param:onOff:boolean:True to set the font to italic, False to revert it to normal
+@returns: A string with some magic code in it
+@compatible: aoz
+@content:
+api*/
+Function Italic$, onOff
+{
+}
+End Function( { aoz.currentScreen.setItalic$(%onOff) } )
+
+/**api
+@name: Bold$
+@author: Francois Lionet
+@description: Returns a string to use in Text and Format Text instructions to set the font to bold
+@param:onOff:boolean:True to set the font to bold, False to revert it to normal
+@returns: A string with some magic code in it
+@compatible: aoz
+@content:
+api*/
+Function Bold$, onOff
+{
+}
+End Function( { aoz.currentScreen.setBold$(%onOff) } )
+
+/**api
+@name:Gr Writing
+@description:Set all graphical operations drawing mode. Warning work in progress incomplete support TODO!
+@param:style:integer:A set of bits indicating the process. Bit 0 = 0 only draw graphics using the current ink colour, Bit 0 = 1 replace any existing graphics with new graphics (default condition), Bit 1 = 1 change old graphics that overlap with new graphics, using XOR, Bit 2 = 1 reverse ink and paper colours, creating inverse video effect
+@compatible: aoz, amos
+@examples:instructions:i_9
+@content:
+This command is used to set the various modes used for drawing lines, shapes, filled shapes and graphical text.
+Settings are made using a bit pattern, whose values give the following results:
+~~~
+Bit 0 = 0 only draw graphics using the current ink colour.
+Bit 0 = 1 replace any existing graphics with new graphics (default condition).
+Bit 1 = 1 change old graphics that overlap with new graphics, using XOR.
+Bit 2 = 1 reverse ink and paper colours, creating inverse video effect.
+~~~
+The normal drawing state is where new graphics overwrite old graphics, like this:
+~~~
+Ink 2,5 : Text 100,80, "NORMAL TEXT"
+Wait 100 : Gr Writing 1
+Text 10 ,80, "REPLACE"
+~~~
+Try the next example for some simple demonstrations of alternative settings:
+~~~
+Ink 2,5 : Text 100,80,"NORMAL TEXT"
+Wait 100 : Gr Writing 0
+Text 100,80, "MERGED"
+Wait 100 : Gr Writing 4
+Text 100,90, "STENCIL"
+Wait 100 : Gr Writing 5
+Text 100,100, "REVERSE"
+~~~
+
+api*/
+Instruction Gr Writing, style
+{
+	#errors
+	aoz.currentScreen.setWriting(%style);
+}
+End Instruction
+
+/**api
+@name:Clip
+@description:Clip all further graphical operations in the current screen to a rectangle
+@param:x1:integer:The horizontal coordinate of the top-left corner of the clipping rectangle
+@param:y1:integer:The vertical coordinate of the top-left corner of the clipping rectangle
+@param:x2:integer:The horizontal coordinate of the bottom-right corner of the clipping rectangle
+@param:y2:integer:The vertical coordinate of the bottom-right corner of the clipping rectangle
+@compatible: aoz, amos
+@examples:instructions:i_9
+@content:
+This command is used to set an invisible rectangular boundary on the screen, using the normal top left-hand corner
+to bottom right-hand corner coordinates. All subsequent drawing operations will be clipped off when they reach
+these boundaries. To toggle the command and restore the normal screen display area, use CLIP and omit the
+coordinates. Areas that are preserved outside of the clipped zone can be used for items such as borders and control
+panels. For example:
+~~~
+Clip 150,5 To 280,199
+For R=4 To 96 Step 4
+	Gr Locate 150,R+5
+	Ellipse ,,R+9,R
+Next R
+~~~
+api*/
+Instruction Clip, x1, y1 To x2, y2
+{
+	#errors
+	aoz.currentScreen.setClip({x:%x1,y:%y1},{x2:%x2,y2:%y2});
+}
+End Instruction
+
+Instruction Clip, x1, y1, width, height
+{
+	#errors
+	aoz.currentScreen.setClip({x:%x1,y:%y1,width:%width,height:%height});
+}
+End Instruction
+
+/**api
+@name:Clip
+@description:Removes the clipping rectangle and allow drawing on the whole surface of the screen
+@compatible: aoz, amos
+@examples:instructions:i_9
+@content:
+Used without parameters, the Clip command removes any clipping rectangle from the screen and restores the drawing area to the entire surface.
+api*/
+Instruction Clip
+{
+	#errors
+	aoz.currentScreen.clipOff();
+}
+End Instruction
+
+/**api
+@name:Set Text
+@description:Change the style used by Print, by selecting 0 or more of eight different styles (deprecated - use Set Print)
+@param:style:integer:A bit-map indicating the style used by Print.
+@examples:instructions:i_79
+@content:
+The SET TEXT command allows you to change the style used by Print, by selecting 0 or more of the eight different styles:
+
+~~~
+Bit 0 Underline
+Bit 1 Bold
+Bit 2 Italic
+Bit 3 Shade
+Bit 4 Inverse
+Bit 5 Shadow
+Bit 6 Outline
+Bit 7 [future]
+~~~
+NOTE:  The [future] style does nothing at this time.  It is reserved for future use.
+NOTE2: SET TEXT 0 sets Normal text.  (No special styles.)
+api*/
+Instruction Set Text, style
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setText(%style);
+}
+End Instruction
+
+/**api
+@name:Set Print
+@description:Change the style of a font used by Print instructions by selecting one of eight different styles
+@param:style:integer:A bit-map indicating the style used by Print.
+@examples:instructions:i_79
+@content:
+The SET PRINT command allows you to change the style used by Print, by selecting 0 or more of the eight different styles:
+
+~~~
+Bit 0 Underline
+Bit 1 Bold
+Bit 2 Italic
+Bit 3 Shade
+Bit 4 Inverse
+Bit 5 Shadow
+Bit 6 Outline
+Bit 7 [future]
+~~~
+NOTE:  The [future] style does nothing at this time.  It is reserved for future use.
+api*/
+Instruction Set Print, style
+{
+	#errors
+	aoz.currentScreen.currentTextWindow.setText(%style);
+}
+End Instruction
+
+/**api
+@name:Text Styles
+@description:Return the index reference of the text style you last selected using "Set Text"
+@return:integer:A bit-map in the same format as the one used in the "Set Text" command
+@examples:instructions:i_79
+@content:
+The SET TEXT command allows you to change the style of a font by selecting one of eight different styles that are
+produced by mixing the following three elements"
+~~~
+Bit 0 Underline
+Bit 1 Bold
+Bit 2 Italic
+Bit 3 Shade
+Bit 4 Inverse
+Bit 5 Shadow
+Bit 6 Outline
+~~~
+api*/
+Function Text Styles
+{
+	#errors
+}
+End Function( {aoz.currentScreen.currentTextWindow.getTextStyles()} ) // BJF Fix
+
+/**api
+@name:Paste Image
+@description:Draws an image from the image bank in the current screen
+@param:x:integer:Horizontal coordinate of the paste
+@param:y:integer:Vertical coordinate of the paste
+@param:image:integer:Index of the image in the "Images" bank
+@param:scaleX#:float:Horizontal scaling, identical to the bob Scale parameter
+@param:scaleY#:float:Horizontal scaling, identical to the bob Scale parameter
+@param:angle#:float:Angle of rotation of the image around it's hot-spot
+@param:skewX#:float:Horizontal skew, values should be experimented. 0 displays the bob in original proportions
+@param:skewY#:float:Vertical skew, values should be experimented. 0 displays the bob in original proportions
+@param:alpha#:float:Alpha value. 1 is fully opaque, 0 is fully transparent (invisible)
+@examples:instructions:i_29
+@content:
+PASTE IMAGE takes an image held in the Image Bank, and draws it straight onto the current screen.
+proceeding.
+
+It is important to note that the coordinates for the given image number are measured from the top left-hand corner of the image, and take no account of the current hot spot setting!"
+
+~~~
+Cls 0
+Rem The following Palette values go on one line
+For C=1 To 15
+    Ink C : Disc 16,16,15
+Next C
+Do
+    Rem Choose a random circle and choose its position
+    N=Rnd(14)+1 : X=Rnd(1280) : Y=Rnd(720)
+    Rem Paste image on screen at new coordinates
+    Paste Image X,Y,N
+Loop
+~~~
+
+api*/
+Instruction Paste Image, x, y, index = (index), scaleX# = 1, scaleY# = 1, angle# = 0, skewX# = 0, skewY# = 0, alpha# = 1, tags$
+{
+	#errors
+	aoz.currentScreen.pasteImage('images',%index,%x,%y,%scaleX#,%scaleY#,(%angle#)*aoz.degreeRadian,%skewX#,%skewY#,%alpha#,%tags$);
+}
+End Instruction
+
+// Draw Filters, thanks Dave! :)
+/**api
+@name:Draw Filter
+@description:Set or add a graphical filter to any drawing operations, including text.
+@param:filterName$:string:Name of the filter to use (see list)
+@param:value1#:number:First value to use, a percentage or a number of pixels, depending on the filter
+@param:value2#:number:Second value to use, a percentage or a number of pixels, , depending on the filter
+@param:value3#:number:Third value to use, a percentage or a number of pixels, , depending on the filter
+@param:value4#:number:Fourth value to use, a percentage or a number of pixels (or a color), depending on the filter
+@content:
+This instruction applies one of the filters offered by Javascript and Aoz to any drawing operations. All drawings and text
+ will see their display modified accordingly. The name, so the effect of the filter is specified in the first parameter,
+ filterName$, and can be one of the following list, allong with the first, second third
+ and fourth parameter, which value and type depend on the filter itself.
+
+- "blur": Applies a Gaussian blur to the drawing. The parameter defines the value of the standard deviation
+  to the Gaussian function, i.e., how many pixels on the screen blend into each other;
+  thus, a larger value will create more blur. A value of 0 leaves the input unchanged.
+
+- "brightness": Applies a linear multiplier to the drawing, making it appear brighter or darker.
+  A value under 100% darkens the image, while a value over 100% brightens it.
+  A value of 0% will create an image that is completely black, while a value of 100% leaves the input unchanged.
+
+- "contrast": Adjusts the contrast of the drawing. A value of 0% will create a drawing that is completely black.
+  A value of 100% leaves the drawing unchanged.
+
+- "grayscale": Converts the drawing to grayscale. A value of 100% is completely grayscale.
+  A value of 0% leaves the drawing unchanged.
+
+- "hue-rotate": Applies a hue rotation on the drawing. The value is expressed in degrees. 0 leaves the input unchanged.
+
+- "invert": Inverts the drawing. A value of 100% means complete inversion.
+  A value of 0% leaves the drawing unchanged.
+
+- "opacity": Applies transparency to the drawing. A value of 0% means completely transparent.
+  A value of 100% leaves the drawing unchanged.
+
+- "saturate": Saturates the drawing. A value of 0% means completely un-saturated.
+  A value of 100% leaves the drawing unchanged.
+
+- "sepia": Converts the drawing to sepia. A value of 100% means completely sepia.
+  A value of 0% leaves the drawing unchanged.
+
+Multiple filters can be used at the same time. For example, it is possible to display a blurred sepia version
+of a cicle, with two Set Filter commands in chain before the actual drawing. Use Filter Del to remove
+one or all filters. This example draws two red circles, the first without any filters, the second with both a blur and sepia filter applied.
+
+~~~
+Ink 6
+Disc 600,540,300
+Draw Filter "sepia",100
+Draw filter "blur",30
+Disc 1320,540,300
+~~~
+
+Please note that like every complex graphical operation, Filters will slow down the display or the drawing,
+specially complex filters like blur or drop-shadows. It is suggested to only use filters at key points, or
+key graphics of your application and not everywhere.
+
+api*/
+Instruction Draw Filter, name$='', param1#=0, param2#=0, param3#=0, param4#=0
+{
+	#errors
+	aoz.currentScreen.addDrawFilter({name:%name$,parameters:[%param1#, %param2#, %param3#, %param4#]});
+}
+End Instruction
+/**api
+@name:Draw Filter Del
+@description:Remove a specific or all filters applied to drawing operations.
+@param:filterName$:string:Name of the filter to be removed (see list in the Draw Filter instruction)
+@content:
+This instruction if used without parameters will restore all drawing operations to normal.
+If you specify the name of a filter, and if this filter is used, then it will be removed,
+leaving any other filters already in place.
+api*/
+Instruction Draw Filter Del, name$
+{
+	#errors
+	aoz.currentScreen.delDrawFilter({name:%name$});
+}
+End Instruction
+/**api
+@name:Draw Filter$
+@description:Returns the CSS string used by Javascript in the context.filter property.
+@return:string:The CSS string
+@content:
+This function is intended to be used by advanced developers, and returns the actual string
+to set in the Javascript context before drawing.
+api*/
+Function Draw Filter$
+{
+	#errors
+}
+End Function({aoz.currentScreen.getDrawFilterString()})
+/**api
+@name:Draw Filter
+@description:Return the current value of the given filter
+@param:name$:The name of the filter in question
+@return:number:The current value of the given filter
+api*/
+Function Draw Filter, name$
+{
+	#errors
+}
+End Function({aoz.currentScreen.getDrawFilter({name:%name$})})
+// Border Filters
+/**api
+@name:Border Filter
+@description:Set or add a graphical filter to any borders applied to either drawn shapes or text.
+@param:filterName$:string:Name of the filter to use (see list)
+@param:value1#:number:First value to use, a percentage or a number of pixels, depending on the filter
+@param:value2#:number:Second value to use, a percentage or a number of pixels, , depending on the filter
+@param:value3#:number:Third value to use, a percentage or a number of pixels, , depending on the filter
+@param:value4#:number:Fourth value to use, a percentage or a number of pixels (or a color), depending on the filter
+@content:
+This instruction applies one of the filters offered by Javascript and Aoz to any borders. All drawing or text boarders
+ will see their display modified accordingly. The name, so the effect of the filter is specified in the first parameter,
+ filterName$, and can be one of the following list, allong with the first, second third and fourth parameter, which
+ and type depend on the filter itself.
+
+- "blur": Applies a Gaussian blur to the border. The parameter defines the value of the standard deviation
+  to the Gaussian function, i.e., how many pixels on the screen blend into each other;
+  thus, a larger value will create more blur. A value of 0 leaves the input unchanged.
+
+- "brightness": Applies a linear multiplier to the border, making it appear brighter or darker.
+  A value under 100% darkens the image, while a value over 100% brightens it.
+  A value of 0% will create an image that is completely black, while a value of 100% leaves the input unchanged.
+
+- "contrast": Adjusts the contrast of the border. A value of 0% will create a drawing that is completely black.
+  A value of 100% leaves the drawing unchanged.
+
+- "grayscale": Converts the border to grayscale. A value of 100% is completely grayscale.
+  A value of 0% leaves the drawing unchanged.
+
+- "hue-rotate": Applies a hue rotation to the border. The value is expressed in degrees. 0 leaves the input unchanged.
+
+- "invert": Inverts the border. A value of 100% means complete inversion.
+  A value of 0% leaves the drawing unchanged.
+
+- "opacity": Applies transparency to the screen. A value of 0% means completely transparent.
+  A value of 100% leaves the drawing unchanged.
+
+- "saturate": Saturates the screen. A value of 0% means completely un-saturated.
+  A value of 100% leaves the drawing unchanged.
+
+- "sepia": Converts the border to sepia. A value of 100% means completely sepia.
+  A value of 0% leaves the drawing unchanged.
+
+Multiple filters can be used at the same time. For example, it is possible to display a blurred sepia version
+ of a cicle, with two Set Filter commands in chain before the actual drawing. Use Filter Del to remove
+ one or all filters. This example draws three red circles with white borders, the first without any filters, the second with a blur filter
+ applied, and the third with the blur filter and Border First turned on. Note the the blurring of the border doesn't cover the third circle.
+
+~~~
+Ink 6,,1
+Line Width 30
+Border On
+Disc 300,540,250
+Border filter "blur",20
+Disc 960,540,250
+Border First
+Disc 1620,540,250
+~~~
+
+Please note that like every complex graphical operation, Filters will slow down the display or the drawing,
+specially complex filters like blur or drop-shadows. It is suggested to only use filters at key points, or
+key graphics of your application and not everywhere.
+
+api*/
+Instruction Border Filter, name$='', param1#=0, param2#=0, param3#=0, param4#=0
+{
+	#errors
+	aoz.currentScreen.addBorderFilter({name:%name$,parameters:[%param1#, %param2#, %param3#, %param4#]});
+}
+End Instruction
+/**api
+@name:Border Filter Del
+@description:Remove a specific or all filters applied to drawing operations.
+@param:filterName$:string:Name of the filter to be removed (see list in the Draw Filter instruction)
+@content:
+This instruction if used without parameters will restore all drawing operations to normal.
+If you specify the name of a filter, and if this filter is used, then it will be removed,
+leaving any other filters already in place.
+api*/
+Instruction Border Filter Del, name$
+{
+	#errors
+	aoz.currentScreen.delBorderFilter({name:%name$});
+}
+End Instruction
+/**api
+@name:Border Filter$
+@description:Returns the CSS string used by Javascript in the context.filter property.
+@return:string:The CSS string
+@content:
+This function is intended to be used by advanced developers, and returns the actual string
+to set in the Javascript context before drawing.
+api*/
+Function Border Filter$
+{
+	#errors
+}
+End Function({aoz.currentScreen.getBorderFilterString()})
+/**api
+@name:Border Filter
+@description:Return the current value of the given filter
+@param:name$:The name of the filter in question
+@return:number:The current value of the given filter
+api*/
+Function Border Filter, name$
+{
+	#errors
+}
+End Function({aoz.currentScreen.getBorderFilter({name:%name$})})
+
+Instruction Particle, x, y, size, color, alpha
+{
+	#errors
+	aoz.currentScreen.particle({x:%x,y:%y,size:%size,color:%color, alpha:%alpha});
+}
+End Instruction

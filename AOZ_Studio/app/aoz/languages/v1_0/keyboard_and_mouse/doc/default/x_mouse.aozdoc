@@ -1,0 +1,24 @@
+<i>X Mouse</i>
+<b>X Mouse</b> xxxxxxx
+=
+X MOUSE reports the current location of the x-coordinate of the mouse pointer. Because movement is controlled by
+the mouse rather than by software, coordinates are given in hardware notation, which is demonstrated by the
+following example:
+@code
+Do
+Print X Mouse
+Loop
+@code
+This can also be used to set a new coordinate position for the mouse pointer and move it to a specific position on the
+screen. This is done by assigning a value to X MOUSE as if it was a Basic variable.
+
+For example:
+@code
+For N=200 To 350
+X Mouse = N
+Print X Mouse
+Next N
+@code
+
+Please note that changing the cursor location is usually seen as an unfriendly action ont he user's machine, and might be forbidden on specific machines.
+

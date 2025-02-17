@@ -1,0 +1,10 @@
+<i>MkDir</i>
+<b>MkDir</b> xxxxxxx
+=
+This makes a new folder on the current disc, and gives it the filename of your choice. For example:
+@code
+Mkdir "D:/Images/Marathonman"
+Dir "D:/Images/Marathonman"
+@code
+
+

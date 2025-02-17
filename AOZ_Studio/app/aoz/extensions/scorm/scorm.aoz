@@ -1,0 +1,787 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * SCORM 1.2/2004 API Instructions Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 01/07/2020
+ */
+#noWarning:"instruction_not_implemented"
+
+{
+    this.aoz.SCORM = this;
+	this.initialized = false;
+	this.debug = false;
+
+	this.API = null;
+	this.findAPITries = 0;
+	this.version = undefined;
+	this.load_done = true;
+
+	this.last_error = 0;
+	this.startTime = 0;
+
+	this.getAPI = function()
+	{
+		this.findAPITries = 0;
+		this.API = this.findAPI12( window );
+		if ( ( this.API == null) && ( window.opener != null ) && ( typeof( window.opener ) != "undefined" ) )
+		{
+		   this.API = this.findAPI12( window.opener );
+		}
+
+		if (this.API != null)
+		{
+			this.version = '1.x';
+			this.load_done = true;
+			return;
+		}
+
+		this.findAPITries = 0;
+		this.API = this.findAPI2004( window );
+		if( this.API == null )
+		{
+			if ( ( window.parent != null ) && ( window.parent != window ) )
+		    {
+		       this.API = this.findAPI2004( window.parent );
+		    }
+
+			if (( this.API == null ) && ( window.opener != null ) )
+		    {
+		       this.API = this.findAPI2004( window.opener );
+		    }
+		}
+
+		if( this.API != null )
+		{
+			this.version = '2004';
+			this.load_done = true;
+			return;
+		}
+
+		this.API = null;
+	};
+
+	this.findAPI12 = function( win )
+	{
+	   while ( ( win.API == null ) && ( win.parent != null ) && ( win.parent != win ) )
+	   {
+	      this.findAPITries++;
+
+	      if ( this.findAPITries > 500 )
+	      {
+	         return null;
+	      }
+
+	      win = win.parent;
+	   }
+	   return win.API;
+	};
+
+	this.findAPI2004 = function ( win )
+	{
+		while ( ( win.API_1484_11 == null ) && ( win.parent != null ) && ( win.parent != win ) )
+		{
+			this.findAPITries++;
+			if ( this.findAPITries > 500 )
+			{
+				return null;
+			}
+			win = win.parent;
+		}
+		return win.API_1484_11;
+	};
+
+	this.load_wait = function()
+	{
+		return this.load_done;
+	};
+
+	this.debugEnable = function( enable )
+	{
+		this.debug = enable;
+	};
+
+	this.initialize = function()
+	{
+		this.load_done = false;
+		if( this.initialized )
+		{
+			this.load_done = true;
+			throw 'scorm_already_initialized';
+			return;
+		}
+
+		this.getAPI();
+		if( this.API == null )
+		{
+			throw 'scorm_not_found';
+		}
+
+		if( this.version == '1.x' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 1.2: LMSInitialize' );
+			}
+
+			var result = this.API.LMSInitialize( '' );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 1.2: Error ' + this.API.LMSGetLastError() );
+			}
+		}
+
+		if( this.version == '2004' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 2004: Initialize' );
+			}
+
+			var result = this.API.Initialize( '' );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 2004: Error ' + this.API.GetLastError() );
+			}
+		}
+		this.startTime = new Date().getTime();
+		this.initialized = true;
+		this.load_done = true;
+	};
+
+	this.getValue = function( keyword )
+	{
+		if( keyword == undefined || !isNaN( keyword ) || keyword == '' )
+		{
+			throw 'invalid_argument_error'
+		}
+
+		if( this.API == null )
+		{
+			throw 'scorm_not_initialized';
+		}
+
+		if( !this.initialized )
+		{
+			throw 'scorm_not_initialized';
+			return;
+		}
+
+		var result = 'false';
+		if( this.version == '1.x' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 1.2: LMSGetValue( ' + keyword + ' )' );
+			}
+			result = this.API.LMSGetValue( keyword );
+
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 1.2: Error ' + this.API.LMSGetLastError() );
+				return;
+			}
+
+			if( result != 'false' && this.debug )
+			{
+				console.log( 'SCORM 1.2: Result -> ' + result );
+			}
+		}
+
+		if( this.version == '2004' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 2004: GetValue( ' + keyword + ' )' );
+			}
+
+			result = this.API.GetValue( keyword );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 2004: Error ' + this.API.GetLastError() );
+				return;
+			}
+
+			if( result != 'false' && this.debug )
+			{
+				console.log( 'SCORM 2004: Result -> ' + result );
+			}
+		}
+
+		return result;
+	};
+
+	this.setValue = function( keyword, value )
+	{
+		if( keyword == undefined || !isNaN( keyword ) || keyword == '' )
+		{
+			throw 'invalid_argument_error'
+		}
+
+		if( value == undefined || !isNaN( value ) || value == '' )
+		{
+			throw 'invalid_argument_error'
+		}
+
+		if( this.API == null )
+		{
+			throw 'scorm_not_initialized';
+		}
+
+		if( !this.initialized )
+		{
+			throw 'scorm_not_initialized';
+			return;
+		}
+
+		if( this.version == '1.x' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 1.2: LMSSetValue( ' + keyword + ', ' + value + ' )' );
+			}
+
+			var result = this.API.LMSSetValue( keyword, value );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 1.2: Error ' + this.API.LMSGetLastError() );
+				return;
+			}
+
+			if( result != 'false' && this.debug )
+			{
+				console.log( 'SCORM 1.2: Result -> ' + result );
+			}
+		}
+
+		if( this.version == '2004' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 2004: SetValue( ' + keyword + ', ' + value + ' )' );
+			}
+
+			var result = this.API.SetValue( keyword, value );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 2004: Error ' + this.API.GetLastError() );
+				return;
+			}
+
+			if( result != 'false' && this.debug )
+			{
+				console.log( 'SCORM 2004: Result -> ' + result );
+			}
+		}
+
+	};
+
+	this.getErrorCode = function()
+	{
+		if( this.API == null )
+		{
+			throw 'scorm_not_found';
+		}
+
+		var result = 'false';
+		if( this.version == '1.x' )
+		{
+			result = this.API.LMSGetLastError();
+		}
+
+		if( this.version == '2004' )
+		{
+			result = this.API.GetLastError();
+		}
+
+		return result;
+	};
+
+	this.getErrorString = function( codeError )
+	{
+		if( this.API == null )
+		{
+			throw 'scorm_not_found';
+		}
+
+		var result = 'false';
+		if( this.version == '1.x' )
+		{
+			result = this.API.LMSGetErrorString( codeError );
+		}
+
+		if( this.version == '2004' )
+		{
+			result = this.API.GetErrorString( codeError );
+		}
+
+		return result;
+	};
+
+	this.getDiagnostic = function( codeError )
+	{
+		if( this.API == null )
+		{
+			throw 'scorm_not_found';
+		}
+
+		var result = 'false';
+		if( this.version == '1.x' )
+		{
+			result = this.API.LMSGetDiagnostic( codeError );
+		}
+
+		if( this.version == '2004' )
+		{
+			result = this.API.GetDiagnostic( codeError );
+		}
+
+		return result;
+	};
+
+	this.commit = function()
+	{
+		if( this.API == null )
+		{
+			throw 'scorm_not_initialized';
+		}
+
+		if( !this.initialized )
+		{
+			throw 'scorm_not_initialized';
+			return;
+		}
+
+		if( this.version == '1.x' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 1.2: LMSCommit' );
+			}
+
+			var result = this.API.LMSCommit( '' );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 1.2: Error ' + this.API.LMSGetLastError() );
+				return;
+			}
+
+			if( result != 'false' && this.debug )
+			{
+				console.log( 'SCORM 1.2: Result -> ' + result );
+			}
+		}
+
+		if( this.version == '2004' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 2004: Commit' );
+			}
+
+			var result = this.API.Commit( '' );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 2004: Error ' + this.API.GetLastError() );
+				return;
+			}
+
+			if( result != 'false' && this.debug )
+			{
+				console.log( 'SCORM 2004: Result -> ' + result );
+			}
+		}
+	};
+
+	this.finish = function()
+	{
+		if( this.API == null )
+		{
+			throw 'scorm_not_initialized';
+		}
+
+		if( !this.initialized )
+		{
+			throw 'scorm_not_initialized';
+			return;
+		}
+
+		if( this.version == '1.x' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 1.2: LMSFinish' );
+			}
+
+			this.commitSessionTime();
+
+			var result = this.API.LMSFinish( '' );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 1.2: Error ' + this.API.LMSGetLastError() );
+				return;
+			}
+
+			if( result != 'false' && this.debug )
+			{
+				console.log( 'SCORM 1.2: Result -> ' + result );
+			}
+
+			this.initialized = false;
+			this.API = null;
+			this.version = null;
+		}
+
+		if( this.version == '2004' )
+		{
+			if( this.debug )
+			{
+				console.log( 'SCORM 2004: Terminate' );
+			}
+
+			this.commitSessionTime();
+
+			var result = this.API.Terminate( '' );
+			if( result == 'false' && this.debug )
+			{
+				console.error( 'SCORM 2004: Error ' + this.API.GetLastError() );
+				return;
+			}
+
+			if( result != 'false' && this.debug )
+			{
+				console.log( 'SCORM 2004: Result -> ' + result );
+			}
+			this.initialized = false;
+			this.API = null;
+			this.version = null;
+		}
+	};
+
+	this.commitSessionTime = function()
+	{
+		var elapsedTime = ( new Date().getTime() - this.startTime ) / 1000;
+		var formattedTime = '';
+
+		if( this.version == '1.x' )
+		{
+			formattedTime = this.computeTime12( elapsedTime );
+			this.setValue( 'cmi.core.session_time', formattedTime );
+		}
+
+		if( this.version == '2004' )
+		{
+			formattedTime = this.computeTime2004( elapsedTime );
+			this.setValue( 'cmi.session_time', formattedTime );
+		}
+
+		this.commit();
+	};
+
+	this.computeTime12 = function( ts )
+	{
+		var sec = ( ts % 60 );
+		ts -= sec;
+		var tmp = ( ts % 3600 );
+		ts -= tmp;
+		sec = Math.round( sec * 100 ) / 100;
+
+		var strSec = new String( sec );
+		var strWholeSec = strSec;
+		var strFractionSec = "";
+
+		if( strSec.indexOf( "." ) != -1 )
+		{
+			strWholeSec = strSec.substring( 0, strSec.indexOf( "." ) );
+			strFractionSec = strSec.substring( strSec.indexOf( "." ) + 1, strSec.length );
+		}
+
+		if( strWholeSec.length < 2 )
+		{
+			strWholeSec = "0" + strWholeSec;
+		}
+		strSec = strWholeSec;
+
+		if( strFractionSec.length )
+		{
+			strSec = strSec+ "." + strFractionSec;
+		}
+
+
+		if( ( ts % 3600 ) != 0 )
+		{
+			var hour = 0;
+		}
+		else
+		{
+			var hour = ( ts / 3600 );
+		}
+
+		if( ( tmp % 60 ) != 0 )
+		{
+			var min = 0;
+		}
+		else
+		{
+			var min = ( tmp / 60 );
+		}
+
+		if( ( new String( hour ) ).length < 2 )
+		{
+			hour = "0" + hour;
+		}
+
+		if( ( new String( min ) ).length < 2 )
+		{
+			min = "0" + min;
+		}
+
+		var rtnVal = hour + ":" + min + ":" + strSec;
+		return rtnVal;
+	};
+
+	this.computeTime2004 = function( intTotalMilliseconds )
+	{
+		var ScormTime = "";
+
+		var HundredthsOfASecond;
+
+		var Seconds;
+		var Minutes;
+		var Hours;
+		var Days;
+		var Months;
+		var Years;
+
+		var HUNDREDTHS_PER_SECOND = 100;
+		var HUNDREDTHS_PER_MINUTE = HUNDREDTHS_PER_SECOND * 60;
+		var HUNDREDTHS_PER_HOUR   = HUNDREDTHS_PER_MINUTE * 60;
+		var HUNDREDTHS_PER_DAY    = HUNDREDTHS_PER_HOUR * 24;
+		var HUNDREDTHS_PER_MONTH  = HUNDREDTHS_PER_DAY * (((365 * 4) + 1) / 48);
+		var HUNDREDTHS_PER_YEAR   = HUNDREDTHS_PER_MONTH * 12;
+
+		HundredthsOfASecond = Math.floor( intTotalMilliseconds / 10 );
+
+		Years = Math.floor( HundredthsOfASecond / HUNDREDTHS_PER_YEAR );
+		HundredthsOfASecond -= ( Years * HUNDREDTHS_PER_YEAR );
+
+		Months = Math.floor( HundredthsOfASecond / HUNDREDTHS_PER_MONTH );
+		HundredthsOfASecond -= ( Months * HUNDREDTHS_PER_MONTH );
+
+		Days = Math.floor( HundredthsOfASecond / HUNDREDTHS_PER_DAY );
+		HundredthsOfASecond -= ( Days * HUNDREDTHS_PER_DAY );
+
+		Hours = Math.floor( HundredthsOfASecond / HUNDREDTHS_PER_HOUR );
+		HundredthsOfASecond -= ( Hours * HUNDREDTHS_PER_HOUR );
+
+		Minutes = Math.floor( HundredthsOfASecond / HUNDREDTHS_PER_MINUTE );
+		HundredthsOfASecond -= ( Minutes * HUNDREDTHS_PER_MINUTE );
+
+		Seconds = Math.floor( HundredthsOfASecond / HUNDREDTHS_PER_SECOND );
+		HundredthsOfASecond -= ( Seconds * HUNDREDTHS_PER_SECOND );
+
+		if( Years > 0 )
+		{
+			ScormTime += Years + "Y";
+		}
+
+		if( Months > 0 )
+		{
+			ScormTime += Months + "M";
+		}
+
+		if( Days > 0 )
+		{
+			ScormTime += Days + "D";
+		}
+
+		if( ( HundredthsOfASecond + Seconds + Minutes + Hours ) > 0 )
+		{
+			ScormTime += "T";
+
+			if( Hours > 0 )
+			{
+				ScormTime += Hours + "H";
+			}
+
+			if( Minutes > 0 )
+			{
+				ScormTime += Minutes + "M";
+			}
+
+			if( ( HundredthsOfASecond + Seconds ) > 0 )
+			{
+				ScormTime += Seconds;
+
+				if( HundredthsOfASecond > 0 )
+				{
+					ScormTime += "." + HundredthsOfASecond;
+				}
+
+				ScormTime += "S";
+			}
+		}
+
+		if ( ScormTime == "" )
+		{
+			ScormTime = "0S";
+		}
+		ScormTime = "P" + ScormTime;
+
+		return ScormTime;
+	};
+}
+
+/**doc
+@name:E-learning and SCORM API
+@description:Connect your AOZ program to your Learning System Management (LMS).
+@description:These commands are compatible with SCORM 1.2 and 2004.
+@author:Baptiste Bideaux
+doc*/
+
+/**api
+@name:LMS Debug On
+@description:Turn On the SCORM debugger.
+@compatible: aoz
+api*/
+Instruction LMS Debug On
+	{
+        #errors
+		aoz.SCORM.debugEnable( true );
+	}
+End Instruction
+
+/**api
+@name:LMS Debug Off
+@description:Turn Off the SCORM debugger.
+@compatible: aoz
+api*/
+Instruction LMS Debug Off
+	{
+        #errors
+		aoz.SCORM.debugEnable( false );
+	}
+End Instruction
+
+/**api
+@name:LMS Initialize
+@description:Find and start the SCORM API and initialize the tracking.
+@compatible: aoz
+api*/
+Instruction LMS Initialize
+	{
+        #errors
+        #waiting
+        return{type: 12, waitThis: aoz.SCORM, callFunction: "initialize", waitFunction: "load_wait" };
+	}
+End Instruction
+
+/**api
+@name:LMS Value$
+@description:Return the value of a SCORM variable from the API.
+@param:keyword$:string:Name of the variable to find.
+@return:string:Value of the variable
+@compatible: aoz
+api*/
+Function LMS Value$, keyword$
+	{
+		#errors
+	}
+End Function( { aoz.SCORM.getValue( %keyword$ ) } )
+
+/**api
+@name:LMS Value
+@description:Set the value of a SCORM variable.
+@param:keyword$:string:Name of the variable to set.
+@param:value$:string:Value of this variable.
+@compatible: aoz
+api*/
+Instruction LMS Value, keyword$, value$
+	{
+        #errors
+        aoz.SCORM.setValue( %keyword$, %value$ );
+	}
+End Instruction
+
+/**api
+@name:LMS Error$
+@description:Get the code of the last error of SCORM from the API.
+@return:string:Code of error ( '0' = no error )
+@compatible: aoz
+api*/
+Function LMS Error$
+	{
+		#errors
+	}
+End Function( { aoz.SCORM.getLastError() } )
+
+/**api
+@name:LMS Error Text$
+@description:Get the text of an error from this code.
+@param:code$:string:Code of the error
+@return:string:The text of the error
+@compatible: aoz
+api*/
+Function LMS Error Text$, code$
+	{
+		#errors
+	}
+End Function( { aoz.SCORM.getErrorString( %code$ ) } )
+
+/**api
+@name:LMS Diagnostic$
+@description:Get the text of the diagnostic for an error.
+@param:code$:string:Code of the error
+@return:string:The text of the diagnostic
+@compatible: aoz
+api*/
+Function LMS Diagnostic$, code$
+	{
+		#errors
+	}
+End Function( { aoz.SCORM.getDiagnostic( %code$ ) } )
+
+/**api
+@name:LMS Commit
+@description:Commit all the SCORM variables on the Learning System.
+@compatible: aoz
+api*/
+Instruction LMS Commit
+	{
+        #errors
+        aoz.SCORM.commit();
+	}
+End Instruction
+
+/**api
+@name:LMS Finish
+@description:Stop all communication with the SCORM API and the Learning System.
+@compatible: aoz
+api*/
+Instruction LMS Finish
+	{
+        #errors
+        aoz.SCORM.finish();
+	}
+End Instruction

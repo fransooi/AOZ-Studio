@@ -1,0 +1,9 @@
+<i>Set Double Precision</i>
+<b>Set Double Precision</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+Double precision should be set at the start of your program, and all floating point calculations will be performed
+using the more accurate mode. Because the two modes are completely separate, single precision and double
+precision modes cannot be mixed in the same program.
+

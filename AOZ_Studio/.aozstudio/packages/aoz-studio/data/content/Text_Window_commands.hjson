@@ -1,0 +1,835 @@
+{
+    text_window_commands:
+    { 
+        name: ""
+        intro: ""
+        conclusion: ""
+        commands:
+        {
+
+            "print":
+            [
+                Items are printed on the screen, starting from the current cursor position, and they may include the characters in any
+                group of variables or constants, up to the maximum line length of 255 characters. The PRINT command is also used
+                to display graphics and information on screen, as is demonstrated throughout this User Guide. This Chapter will deal
+                with printing text only.
+                ""
+                Print statements can occupy their own lines, but if more than one element to be printed is written as a single line of
+                your program, each element must be separated from the next by either a semi-colon character or a comma. An
+                element to be printed can be a string, a variable or a constant, and is placed inside a pair of quotation marks.
+                ""
+                A semi-colon is used to print elements immediately after one another, like this:
+                '''
+                ~~~                
+                Print "Follow";"on"
+                ~~~
+                '''
+                A comma moves the cursor to the next "Tab" position on the screen, as follows:
+                '''
+                ~~~                
+                Print "Next","Tab"
+                ~~~
+                '''
+                A Tab is an automatic marker that sets up a location for printing, and is often used to lay out columns of figures, or
+                to make indentations in text, and setting Tab positions is explained later.
+                ""
+                Normally, the cursor is advanced downwards by one line after every PRINT command, but by using the semi-colon
+                or comma, the rule can be changed. Here is an example:
+                '''
+                ~~~                
+                Print "AMOS"
+                Print "Professional"
+                Print "AM";
+                Print "OS",
+                Print "Professional"
+                ~~~
+                '''
+            ]
+            "wind_open":
+            [
+                The window opened by this instruction will be displayed on screen and used for all subsequent text operation until
+you command otherwise. WIND OPEN must be qualified by a window number (don't forget that zero has already
+been allocated to the current screen), followed by the x,y graphic coordinates setting the top left-hand corner of the
+new window, followed by the width and height of the new window in the number of characters needed. You may
+also specify an optional border style, with values ranging from 1 to 16.
+                ""
+Because the Amiga employs its blitter to draw windows, they must always lie on a 16-pixel boundary. AMOS
+Professional automatically rounds your x-coordinates to the nearest multiple of 16. Additionally, if you have
+specified a border for your window, the x and y-coordinates will be incremented by an additional 8 pixels. In this
+way, you can be sure that your windows always start at the correct screen boundary. There are no boundary
+restrictions on the y- coordinates. Titles can also be included in window borders, which will be dealt with a little
+later. Try this example:
+                '''
+                ~~~                
+		   For W=1 To 3
+		   	Wind Open W,(W-1)*96,50,10,15,W
+		   	Paper W+3 : Pen W+6 : Clw
+		  	Print "Window";W
+		   Next W
+                ~~~
+                '''
+            ]
+            "wind_close":
+            [
+                Wind Close
+The WIND CLOSE command deletes the current window. If the WIND SAVE command has been activated, the
+deleted window will be replaced by the saved graphics, otherwise the area will be totally erased from the screen.
+Here is an example:
+                '''
+                ~~~                
+		   Wind Open 1,1,8,35,18,1 : Print "Press a key to close this window"
+		   Wait Key
+		   Wind Close
+                ~~~
+                '''
+            ]
+            "wind_save":
+            [
+                This command is extremely valuable for the AOZ Studio programmer. Once activated, the WIND SAVE
+feature allows you to move your windows anywhere on screen without corrupting the existing display, by the
+following method. The contents of the current window is saved as soon as the command is used, and then every
+time a new window is opened, the contents of the windows underneath get saved automatically. The screen is then
+re-drawn whenever a window is moved to a new position or closed.
+                ""
+As you begin a new program, the current window (the default screen) consumes 32k of valuable memory, and this
+would be wasted if you were to save it as background beneath a small dialogue box. To solve this problem, create a
+dummy window of the size you need, and place it over the zone you want to save. Now execute your WIND SAVE
+command and continue with your program. When this dialogue box is called up, the area beneath it will be saved as
+part of your dummy window, so it will automatically be restored after your box has been removed.
+            ]
+            "wind_move":
+            [
+                The current window can 'be moved to any acceptable graphic coordinates. Give the new x,y- coordinates after the
+WIND MOVE command, and the x-coordinate will be rounded to the nearest 16-pixel boundary automatically. Here
+is an example:
+                '''
+                ~~~                
+		   Wind Save : Wind Open 1,0,2,30,10,1 : Wind Save
+		   For M=1 To 100
+			Pen Rnd(15) : Paper Rnd(15) : Print : Centre "Making Movies"
+			Wind Move Rnd(30)+1,Rnd(100)+1
+			Wait VbI
+		   Next
+                ~~~
+                '''
+            ]
+            "wind_size":
+            [
+                To change the size of the current window, specify the new width and new height in terms of the number of
+characters. If WIND SAVE has been activated, the original contents of the window will be re-drawn by this
+instruction. If the new window size is smaller than the original, any parts of the original image that lie outside of the
+new window boundaries will be lost. Alternatively, if the new window is larger, the space around the saved area will
+be filled with the current paper colour. Please note that the text cursor is always re-set to coordinates 0,0. For
+example:
+                '''
+                ~~~                
+		   Wind Open 1,16,16,22,10,2
+		   Print "I want to be wider!"
+		   Wind Save
+		   Wait 50
+		   Wind Size 30,10
+                ~~~
+                '''
+            ]
+            "window":
+            [
+                This command sets the window number specified as the active window, to be used for all future text operations.
+There is an automatic saving system for re-drawing the contents of windows, which is explained below.For now, run the last example from Direct mode and enter the following statements:
+                '''
+                ~~~                
+		   Window 1: Print "AMOS"
+		   Window 3: Print "open windows on the world"
+		   Window 2: "lets me"
+                ~~~
+                '''
+
+The active window is host to the flashing text cursor, unless it has been made invisible with a CURS OFF command.
+            ]
+            "windon":
+            [
+                Before using windows in your programs, you will need to refer to their identification numbers. This function returns
+the value of the current window. For example:
+                '''
+                ~~~                
+		   Do
+			   Cls : Wind Open Rnd(99)+1,1,1,25,5,1
+			Print "Window number ";Windon : Wait Key
+		   Loop
+                ~~~
+                '''
+            ]
+            "locate":
+            [
+                The LOcate embedded command moves the graphics cursor to coordinates x,y measured relative to the top left-hand
+corner of the 'menu line. Please note that after this command, the graphics cursor will always be positioned at the
+bottom right of the object which has just be drawn. These coordinates will also be used to determine the location of
+any further items in your menu. For example:
+
+                '''
+                ~~~                
+		   Menu$(1)="Example " : Menu$(1,1)="Locate (LO 50,50) in action"
+		   Menu$(1,2)="Please guess my coords"
+		   Menu On : Wait Key
+                ~~~
+                '''
+            ]
+            "clw":
+            [
+                This simple command erases the contents of the current window and replaces it with a block of the current PAPER
+colour. Like this:
+                '''
+                ~~~                
+		   Cls: Paper 4 : Wind Open 1,1,1,12,5,1
+		   Window 1: Print "Clear Off" : Wait 75
+		   Paper 9 : Clw
+                ~~~
+                '''
+            ]
+            "home":
+            [
+                Whenever you need to move the text cursor back to the top left-hand corner of the screen in a hurry, simply tell it to
+go HOME and it will automatically be relocated to coordinates 0,0 like this:
+                '''
+                ~~~                
+		   Cls: Locate 10,10: Print "I am going"
+		   Wait 100: Home : Print "Home!"
+                ~~~
+                '''
+            ]
+            "curs_pen":
+            [
+                As a default, whenever your screen mode provides four or more colours the text cursor is set to index number 3,
+which is endowed with a built-in flash. The flashing can be turned off and back on again at any time using the
+FLASH OFF and FLASH commands, but as soon as you select another colour for your text cursor, the automatic
+flash will not apply. To change colours, use the CURS PEN command, followed by the index number of your
+choice. For example:
+                '''
+                ~~~                
+		   Curs Pen 2
+                ~~~
+                '''
+                Note that the new colour only effects the text cursor in the current open window, and has no influence over other
+cursors used by any other windows. If you want to introduce a flash to that last example, you could add this line
+before the CURS PEN command:
+                '''
+                ~~~                
+		   Flash 2,"(FFF,15)(000,15)"
+                ~~~
+                '''
+            ]
+            "pen$":
+            [
+                This function returns a special control sequence that changes the pen colour inside a string. This means that
+whenever the string is printed on the screen, the pre-set pen colour is automatically assigned to it. The format of the
+string returned by PEN$ is: Chr$(27)+"Pen"+Chr$(48+number). Here is an example:
+                '''
+                ~~~                
+		   P$=Pen$(2)+"Well all WHITE, "+Pen$(6)+" I still got the BLUES"
+		   Print P$
+		   Pen 4
+		   Print "In the RED"
+                ~~~
+                '''
+            ]
+            "paper$":
+            [
+                Similarly to the PEN$ function, PAPER$ returns a character string that automatically sets the background colour
+when the string is printed on the screen. For example:
+                '''
+                ~~~                
+		   Pen 1
+		   B$=Paper$(3)+"Flash Harry"+Paper$(1)+"The Invisible Man"
+		   Print B$
+                ~~~
+                '''
+            ]
+            "at":
+            [
+                You may also change the position of the text cursor directly from inside a character string. This is ideal for
+positioning text once and for all on screen, no matter what happens in the program, because the text cursor can be set
+during the program's initialisation phase. The string that is returned takes the following format:
+                '''
+                ~~~                
+Chr$(27)+"X"+Chr$(48+X)+Chr$(27)+"Y"+Chr$(48
+                ~~~
+                '''
+                So whenever this string is printed, the text cursor will be moved to the text coordinates held by X and Y. For
+example:
+                '''
+                ~~~                
+		   A$="A"+At(10,10)+"Of"+At(2,4)+"String"+At(20,20)+"Pearls"
+		   Print A$
+                ~~~
+                '''
+                Imagine a Hi-Score table positioned like this:
+                '''
+                ~~~                
+		   SCORE=999
+		   Locate 12,10: Print "Hi Score ";SCORE
+                ~~~
+                '''
+                By using the AT function, the same table can be moved by editing a single string, no matter how many times it is
+used in the program, like this:
+                '''
+                ~~~                
+		   HI_SCORES=At(12,10)+"Hi Score"
+		   SCORE=999
+		   Print HI_SCORE$;SCORE
+                ~~~
+                '''
+            ]
+            "pen":
+            [
+                This command sets the colour of the text displayed in the current window, when followed by the colour index
+number of your choice. The default setting of the pen colour is index number 2, which is white, and alternative
+colours may be selected from one of up to 64 choices, depending on the current graphics mode. For example:
+                '''
+                ~~~                
+		   For INDEX=0 To 15
+		   	Pen INDEX
+			Print "Pen number ";INDEX
+		   Next IND
+                ~~~
+                '''
+            ]
+            "paper":
+            [
+                To select a background colour on which your text is to be printed, the PAPER command is followed by a colour
+index number between 0 and 63, depending on the graphics mode in use, in exactly the same way as PEN. The
+normal default colour index number is 1, giving an orange background colour, with other possibilities listed under
+the SCREEN OPEN command in this User Guide. Run the following simple example:
+                '''
+                ~~~                
+		   Pen 2: For INDEX=0 To 15
+			Paper INDEX: Print "Paper number ";INDEX;Space$(23)
+		   Next INDE
+                ~~~
+                '''
+            ]
+            "centre":
+            [
+                Programmers often need to position text in the centre of the screen, and to save you the effort of calculating the text
+coordinates in order to achieve this, the CENTRE command takes a string of characters and prints it in the middle of
+the line currently occupied by the cursor. For example:
+                '''
+                ~~~                
+		   Locate 0,1
+		   Centre "ABOVE"
+		   Cmove ,3
+		   Centre "suspicion"
+                ~~~
+                '''
+            ]
+            "border":
+            [
+                This works in much the same way as ZONES, by returning a string of characters that create a border around the
+required string of text. The AOZ Studio programmer can use it with ZONES to set up special "buttons" for
+alert windows and control consoles.
+                ""
+In this case, the text held in the string will start at the current text cursor position. Border numbers can range from 1
+to 16, for example:
+
+                '''
+                ~~~                
+		   Locate 1,1: Print Border$("AOZ Studio",
+                ~~~
+                '''
+                The control sequence returned by BORDER has the following format:
+                '''
+                ~~~ 
+		Chr$(27)+"E0"+A$+Chr$(27)+"R"+Chr$(48+n)            
+
+                ~~~
+                '''
+            ]
+            "writing":
+            [
+                The WRITING command is used to control how the subsequent text interacts with what is already on the screen,
+and it can be followed by either one or two values.The first value selects one of five writing modes:
+                '''
+                ~~~                
+		Value 	Mode 		Effect
+		0 	REPLACE 	New text replaces any existing screen data
+		1 	OR 		Merge new text with screen data, using logical OR
+		2 	XOR 		Combine new text with screen data, using OR
+		3 	AND 		Combine new text and screen data, using logical AND
+		4 	IGNORE 		Ignore all subsequent printing instructi
+                ~~~
+                '''
+A number set as the optional second value selects which parts of the text are to be printed on the screen, as follows:
+                '''
+                ~~~                
+		Value 	Mode		Effect
+		0 	Normal 		Print text and background together
+		1 	Paper 		Only the background to be drawn on screen
+		2 	Pen 		Ignore paper colour and print text on background colour zero
+                ~~~
+                '''
+The default value for both of the WRITING parameters is zero, giving normal printed output.
+            ]
+            "title_top":
+            [
+                Use this command to set a border title at the top of the current window to your chosen title string. This facility will
+only operate with bordered windows, as follows:
+                '''
+                ~~~                
+		   Cls: Wind Open 4,1,1,20,10,1
+		   Title Top "Top of the morning"
+                ~~~
+                '''
+            ]
+            "title_bottom":
+            [
+                Similarly, this instruction assigns a string to the bottom title of the current window, like this:
+                '''
+                ~~~                
+		   Cls : Wind Open 5,75,50,24,15
+		   Border 5,6,
+		   Title Bottom "Bottom of the barrel"
+                ~~~
+                '''
+            ]
+            "curs_off": //Same txt as ON TODO
+            [
+                This pair of commands is use to hide and reveal the text cursor in the current window. It has no effect at all on any
+cursors used in other windows.
+
+            ]
+            "curs_on": //Same txt as OFF TODO
+            [
+                This pair of commands is use to hide and reveal the text cursor in the current window. It has no effect at all on any
+cursors used in other windows. 
+
+            ]
+            "inverse_on": //Same txt as OFF TODO
+            [
+                The INVERSE instruction swaps over the text and background colours already selected by the PEN and PAPER
+commands, and so sets up an inverse mode for printing. For example:
+                '''
+                ~~~                
+		   Pen 2 : Paper 4: Print "I appear normal"
+		   Inverse On : Print "Poetry inverse"
+		   Inverse Off : Print "Don't be so negative"
+                ~~~
+                '''
+            ]
+            "inverse_off": //Same txt as ON TODO
+            [
+                The INVERSE instruction swaps over the text and background colours already selected by the PEN and PAPER
+commands, and so sets up an inverse mode for printing. For example:
+                '''
+                ~~~                
+		   Pen 2 : Paper 4: Print "I appear normal"
+		   Inverse On : Print "Poetry inverse"
+		   Inverse Off : Print "Don't be so negative"
+                ~~~
+                '''
+            ]
+            "under_on": //Same txt as OFF TODO
+            [
+                To underline text when printed on screen like this, use the UNDER instructions, as follows:
+                '''
+                ~~~                
+		   Under On : Print "This is where we draw the line"
+		   Under Off: "That is groundle
+                ~~~
+                '''
+                In Section 11.1 there is a full explanation of how to take advantage of any number of different type faces or fonts, by
+making use of what is known as "graphic text". For the time being, try the next example:
+                '''
+                ~~~                
+		   Cls: For S=0 To 7: Set Text S
+		   Text 100,S*20+20,AOZ Studio" : Next
+                ~~~
+                '''
+            ]
+            "under_off": //Same txt as ON TODO
+            [
+                To underline text when printed on screen like this, use the UNDER instructions, as follows:
+                '''
+                ~~~                
+		   Under On : Print "This is where we draw the line"
+		   Under Off: "That is groundle
+                ~~~
+                '''
+                In Section 11.1 there is a full explanation of how to take advantage of any number of different type faces or fonts, by
+making use of what is known as "graphic text". For the time being, try the next example:
+                '''
+                ~~~                
+		   Cls: For S=0 To 7: Set Text S
+		   Text 100,S*20+20,AOZ Studio" : Next
+                ~~~
+                '''
+            ]
+            "shade_on": //Same txt as OFF TODO
+            [
+                The appearance of your text can be changed more subtly by introducing a mask pattern that reduces the brightness of
+the characters when printed. To make use of this shading facility, simply turn it on and off like this:
+                '''
+                ~~~                
+		   Shade On :Print "Shady Lady"
+		   Shade Off:Print "Norman Normal"
+                ~~~
+                '''
+            ]
+            "shade_off": //Same txt as ON TODO
+            [
+                The appearance of your text can be changed more subtly by introducing a mask pattern that reduces the brightness of
+the characters when printed. To make use of this shading facility, simply turn it on and off like this:
+                '''
+                ~~~                
+		   Shade On :Print "Shady Lady"
+		   Shade Off:Print "Norman Normal"
+                ~~~
+                '''
+            ]
+            "scroll_on"://Same txt as OFF TODO
+            [
+                The SCROLL commands are used to control the scrolling of the current window. SCROLL OFF turns off the
+scrolling, and whenever the cursor passes beyond the bottom of the window it will reappear from the top. SCROLL
+ON starts the scrolling process again, so that a new line is inserted when the cursor tries to pass beyond the bottom
+of the window.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "scroll_off": //Same txt as ON TODO
+            [
+                The SCROLL commands are used to control the scrolling of the current window. SCROLL OFF turns off the
+scrolling, and whenever the cursor passes beyond the bottom of the window it will reappear from the top. SCROLL
+ON starts the scrolling process again, so that a new line is inserted when the cursor tries to pass beyond the bottom
+of the window.
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "cup$": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "cleft$": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "cright$": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "cdown$": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "cup": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "cleft": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "cright": //TODO
+            [
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "cdown": //TODO
+            [ 
+                
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "memorize":
+            [
+                The MEMORIZE commands store the current position of the x or y text cursor, so that you can print any text on the
+screen without destroying the original cursor coordinates. These may be reloaded using the REMEMBER
+commands"
+
+            ]
+            "remember":
+            [
+                Use REMEMBER to position the text cursor at the coordinates saved by a previous MEMORIZE command. If
+MEMORIZE has not been used, the relevant coordinate will automatically be set to zero. There is a ready-made
+example demonstrating these commands to be found under the SET CURS command"
+
+            ]
+            "cmove$":
+            [
+                Characters can be printed relative to the current cursor position by setting up a string using the CMOVE$ function.
+The following example prints a string at coordinates 10,10 from the current text cursor:
+                '''
+                ~~~                
+		   A$=Cmove$(10,10)
+		   A$=A$+"AOZ Studio"
+		   Print A$
+                ~~~
+                '''
+            ]
+            "cline":
+            [
+                This command is used to clear the line currently occupied by the text cursor. If CLINE is qualified by a number,
+then that number of characters get cleared, starting from the current cursor position and leaving the cursor exactly
+where it is. For example:
+                '''
+                ~~~                
+		   Print "Testing Testing Testing";
+		   Cmove -7,
+		   Cline 7
+		   Wait Key
+		   Cline
+                ~~~
+                '''
+            ]
+            "hscroll":
+            [
+                This command scrolls all text in the current open window horizontally, by a single character position. The following
+numbers can be used:
+                '''
+                ~~~                
+Number 	Effect
+1 	Scroll current line to the left
+2 	Scroll entire screen to the left
+3 	Scroll current line to the right
+4 	Scroll entire screen to the right
+                ~~~
+                '''
+            ]
+            "vscroll":
+            [
+                Similarly to HSCROLL, the values given to this command result in different vertical scrolling effects, one character
+at a time.
+                '''
+                ~~~                
+Number 	Effect
+1 	Scroll down text on and below current cursor Line
+2 	Scroll down text from top of screen to current cursor line only
+3 	Scroll up text from top of screen to current cursor line only
+4 	Scroll up text on or below current cursor line
+                ~~~
+                '''
+Note that blank lines are inserted to fill any gaps left by these scrolling operations.
+            ]
+            set_tab:
+            [
+                This simple command specifies the number of characters that the text cursor will move to the right when the next
+TAB$ is printed. For example:
+                '''
+                ~~~                
+		   Cls : Print "Home"
+		   Print Tab$;"And"
+		   Set Tab 10 : Print Tab$;"Away"
+                ~~~
+                '''
+            ]
+            "set_curs":
+            [
+                To customise the text cursor into something a little more personalised, you can change its shape into anything you
+like, providing you limit yourself to the eight lines of eight bits each that represent its appearance. Lines are
+numbered one to eight from top to bottom, and every bit set to 1 results in a pixel drawn in the current cursor pen
+colour, whereas a zero displays the current paper colour. To familiarise yourself with the technique, try the next
+example, which changes the text cursor into a Hallowe'en mask:
+                '''
+                ~~~                
+		   L1=%00111100
+		   L2=%01111110
+		   L3=%01011010
+		   L4=%11100111
+		   L5=%10111101
+		   L6=%01011010
+	   	   L7=%00100100
+	   	   L8=%00011000
+		   Set Curs L1 L2 , L3 L4 L5, L6 , L7, L8
+                ~~~
+                '''
+Your routine will appear slightly different from that, because the system automatically strips away any leading zeros
+in binary listings.
+            ]
+            "xcurs": //same txt as Y TODO
+            [
+                In this way, a variable is created that holds the relevant coordinate of the cursor, in text format, and these two
+functions may be used independently or together. For example:
+                '''
+                ~~~                
+		   Locate 5,10: Print Xcurs; : Print Ycurs
+                ~~~
+                '''
+            ]
+            "ycurs": //same txt as Y TODO
+            [
+                In this way, a variable is created that holds the relevant coordinate of the cursor, in text format, and these two
+functions may be used independently or together. For example:
+                '''
+                ~~~                
+		   Locate 5,10: Print Xcurs; : Print Ycurs
+                ~~~
+                '''
+            ]
+            "xgraphic": // same txt as Y. Should it be ?x_graphic? TODO
+            [
+                This pair of functions performs the conversion of text format coordinates to graphic format coordinates, and can be
+used to position text over an area of graphics on the screen.
+
+            ]
+            "ygraphic": // same txt as X. Should it be ?y_graphic? TODO
+            [
+                This pair of functions performs the conversion of text format coordinates to graphic format coordinates, and can be
+used to position text over an area of graphics on the screen.
+ 
+            ]
+            "border$":
+            [
+                This works in much the same way as ZONES, by returning a string of characters that create a border around the
+required string of text. The AOZ Studio programmer can use it with ZONES to set up special "buttons" for
+alert windows and control consoles. In this case, the text held in the string will start at the current text cursor position. Border numbers can range from 1
+to 16, for example:
+                '''
+                ~~~                
+		   Locate 1,1: Print Border$("AOZ Studio",2)
+                ~~~
+                '''
+                The control sequence returned by BORDER has the following"
+                '''
+                ~~~                
+		Chr$(27)+"E0"+A$+Chr$(27)+"R"+Chr$(48+n)
+                ~~~
+                '''
+
+            ]
+            "xtext": //same as Y. Should it be x_text? TODO
+            [
+                
+                '''
+                ~~~                
+These self-explanatory functions convert coordinates from the standard graphical screen coordinates that use pixels,
+to text coordinates, that are given in character lines and column spacings. The resulting text coordinates are relative
+to the current window, and if the screen coordinate lies outside of this window, a negative value will be returned.
+                ~~~
+                '''
+            ]
+            "ytext": //same as X. Should it be y_text? TODO
+            [
+                
+                '''
+                ~~~                
+These self-explanatory functions convert coordinates from the standard graphical screen coordinates that use pixels,
+to text coordinates, that are given in character lines and column spacings. The resulting text coordinates are relative
+to the current window, and if the screen coordinate lies outside of this window, a negative value will be returned.
+                ~~~
+                '''
+            ]
+            "set_text":
+            [
+                The SET TEXT command allows you to change the style of a font by selecting one of eight different styles that are
+produced by mixing the following three elements"
+                '''
+                ~~~                
+		Bit 0 Underline
+		Bit 1 Bold
+		Bit 2 Italic
+                ~~~
+                '''
+Set the appropriate bits in the form of a style number from 0 to 7, as in the last example.
+            ]
+            "hslider":
+            [
+                Horizontal slider bars are set up by giving the HSLIDER command, qualified by the following parameters: the x,ycoordinates
+of the top left-hand corner of the bar in pixels followed by the x,y-coordinates of the bottom right-hand
+corner, then the number of individual units that the slider is divided into. Next, you must specify the position of the
+active slider box or control button from the left-hand end of the slider, measured in the same sized units as the slider
+divisions. Finally, give the length of the slider control box in these units. The size of each unit is calculated with this
+formula:
+                '''
+		~~~                
+		(x2-x1)/number of units
+                ~~~
+                '''
+                Here is an example:
+                '''
+                ~~~                
+		   Hslider 10,10 To 100,20,100,20,5
+		   Hslider 10,50 To 150,100,25,10,10
+                ~~~
+                '''
+            ]
+            "vslider":
+            [
+                This works in the same way as Hslider, and sets up vertical slider bars. For a working demonstration, examine the
+vertical slider in the Editor window, where the number of units into which the slider is divided is set to the number
+of lines in the current program.
+                ""
+Here is a simpler example:
+                '''
+                ~~~                
+		   Vslider 10,10 To 20,100,100,20,5
+		   Vslider 250,0 To 319,199,10,2,6
+                ~~~
+                '''
+            ]
+            "set_slider":
+            [
+                SET SLIDER is used to set up the colours and patterns used for your slider bars and their control boxes.
+                ""
+Simply give the index numbers of the ink, paper, outline and pattern to be used for the slider bar, followed by the
+ink paper, outline and pattern to be used by the slider control box. If negative values are used for either pattern, a
+sprite image will be commandeered from the sprite bank, allowing even more spectacular effects. Try this example:
+
+                '''
+                ~~~                
+		   Centre "<Press a key>" : Curs Off
+		   Do
+			A1=Rnd(15) : B1=Rnd(15) : C1=Rnd(15) : D1=Rnd(24)
+			A2=Rnd(15) : B2=Rnd(15) : C2=Rnd(15) : D2=Rnd(24)
+			Set Slider Al ,B1,C1,D1,A2,B2,C2,D2
+			Hslider 10,10 To 300,60,100,20,25
+			Vslider 10,60 To 20,190,100,20,25
+			Wait Key
+		   Loop
+                ~~~
+                '''
+Having set up your slider bars, you will want to activate them using the mouse. A simple routine to create working
+slider bars needs to be included in your main program. As always, remember to test out the ready-made example
+programs, for a working guide.
+            ]
+        }
+    }
+}

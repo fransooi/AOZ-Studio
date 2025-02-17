@@ -1,0 +1,9 @@
+<i>Screen Mode</i>
+<b>Screen Mode</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+This simple function is used to report the mode of the current screen. If the screen is LACED, 4 or $8004 will be
+returned. If the screen is LOWRES, a value of $0 is given. For a HIRES screen, $8000 will be returned.
+
+

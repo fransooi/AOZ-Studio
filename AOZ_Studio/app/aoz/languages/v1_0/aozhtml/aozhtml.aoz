@@ -1,0 +1,284 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * The AOZ HTML Elements Instruction Set
+ * By Baptiste Bideaux
+ *
+ * Using the new modular language syntax system
+ * Program the language with the language.
+ *
+ * @author BB
+ * @date first pushed on 12/10/2020
+ */
+
+#need_javascript_file:"aozjs/aozhtml/aozhtml.api.js"
+#need_javascript_file:"aozjs/aozhtml/aozhtml.back.js"
+
+#need_module: "assets"
+#need_module: "banks"
+
+#noWarning:"instruction_not_implemented"
+{
+	aozhtml_initialize( this );
+}
+
+/**doc
+@name:HTML content manipulation with AOZ
+@description:AOZ Studio allows you to load and display web content in HTML format, for the creation of your websites.
+@description:The HTML content is loaded with the Load Asset statement, and is stored in memory as a reusable template.
+@description:It is possible to insert the value of one or more AOZ variables into the HTML content. Here is an example:
+@content:
+home.html file in the resources/assets folder:
+~~~
+	<div>%FNAME$%</div>
+	<div>%LNAME$%</div>
+~~~
+
+AOZ code:
+~~~
+	// Load and store as template the home.html content
+	Load Asset "home.html", "home"
+	
+	// Set 2 variables
+	FNAME$ = "Bobby" : LNAME$ = "Ewing"
+	
+	// Show the HTML code of home.html
+	Show HTML "home"
+
+	// The tags "%FNAME$%" & "%LNAME$" have been replaced by the variables values.
+~~~
+
+doc*/
+
+
+/**api
+@name:Show HTML
+@description:Displays the HTML content loaded with the Load Asset statement.  
+@param:Index:index:The number or name of the asset containing the loaded HTML code
+@param:*InsertImages:bool:It True all references "images:<image>" will be replaced by the base64 image data. true by default.
+@param:*Args$:string:Values separated by commat that will be inserted into the HTML Code.
+@syntax:Show HTML number or ou Name of the asset
+@content:
+
+~~~
+Load Asset "resources/assets/home.html", "home"
+Show HTML "home"
+~~~
+api*/
+Instruction Show HTML, Index=(index), InsertImages = True, Args$=""
+{
+	#errors
+	Show_HTML( %Index, %InsertImages, %Args$ );
+}
+End Instruction
+
+/**api
+@name:HTML Element
+@description:Manipulation of a component of the HTML page
+@param:index:index:Index of the HTML component to manipulate. Must exist in the current page.
+@param:*ClassName$:string:Names of CSS rules to use for this component
+@param:*Content$:string:Content of the component. If the component is a container, then Content$ will be the HTML code of its content.
+@param:*Style$:string:Definition of the component styles.
+@param:*Focus:bool:If True, the component takes over. The value is True by default.
+@param:*Visible:bool:If False, the component will not be displayed on the screen. The default value is True.
+@param:*Enable:bool:If False, the component is disabled. No event or action can be performed on this component. The default value is True.
+@param:*Checked:bool:Indicates if the component should be in a "checked" state or not. False by default. 
+@param:*Value$:string:Defines the value carried by the component, if the component is of type "input", "select" or "textarea".
+@param:*Source$:string:Defines the source used by the component,.
+@param:*OnFocus$:string:Name of the AOZ procedure called when the component takes over ( focus ).
+@param:*OnBlur$:string:Name of the AOZ procedure called when the component loses the hand( blur ).
+@param:*OnClick$:string:Name of the AOZ procedure called when the component is clicked.
+@param:*OnDoubleClick$:string:Name of the AOZ procedure called when the component is double-clicked.
+@param:*OnMouseDown$:string:Name of the AOZ procedure called when the mouse pointer is on the component and one of the buttons is pressed.
+@param:*OnMouseUp$:string:Name of the AOZ procedure called when the mouse pointer is on the component and one of the buttons is raised.
+@param:*OnMouseMove$:string:Name of the AOZ procedure called when the mouse pointer moves over the component.
+@param:*OnMouseOver$:string:Name of the AOZ procedure called when the mouse pointer is on the component.
+@param:*OnMouseEnter$:string:Name of the AOZ procedure called when the mouse pointer contacts the component.
+@param:*OnMouseOut$:string:Name of the AOZ procedure called when the mouse pointer leaves the component.
+@param:*OnKeyPress$:string:Name of the AOZ procedure called when a key on the keyboard is pressed and raised.
+@param:*OnKeyDown$:string:Name of the AOZ procedure called when a key on the keyboard is pressed.
+@param:*OnKeyUp$:string:Name of the AOZ procedure called when a key is raised.
+@param:*Position$:string:Set the Position style attribute. Must be a CSS reference like "absolute", "inherit",...
+@param:*Left:integer:Set the Left position style attribute in pixels.
+@param:*Right:integer:Set the Right position style attribute in pixels.
+@param:*Top:integer:Set the Top position style attribute in pixels.
+@param:*Bottom:integer:Set the Bottom position style attribute in pixels.
+@param:*zIndex:integer:Set the zIndex position style attribute.
+@param:*Width:integer:Set the Width style attribute in pixels.
+@param:*Height:integer:Set the Height style attribute in pixels.
+@param:*StartX:integer:Defines the starting X position of the movement (in pixels) 
+@param:*EndX:integer:Defines the ending X position of the movement (in pixels) 
+@param:*StartY:integer:Defines the starting Y position of the movement (in pixels) 
+@param:*EndY:integer:Defines the ending Y position of the movement (in pixels) 
+@param:*Duration:Movement time in milliseconds 
+@compatible: aoz
+@content:
+A few examples:
+~~~
+~~~
+api*/
+Instruction HTML Element, Index = (index), ClassName$ = "", Content$ = "", Style$ = "", Focus = True, Visible = True, Enable = True, Value$ = "", Source$ = "", Checked = -255, OnFocus$ = "", OnBlur$ = "", OnClick$ = "", OnDoubleClick$ = "", OnMouseDown$ = "", OnMouseUp$ = "", OnMouseMove$ = "", OnMouseEnter$ = "", OnMouseOver$ = "", OnMouseOut$ = "", OnKeyPress$ = "", OnKeyDown$ = "", OnKeyUp$ = "", Position$ = "", Left = -100101, Top = -100101, Right = -100101, Bottom = -100101, zIndex = -1, Width = -1, Height = -1, StartX=-100101, EndX=-100101, StartY=-100101, EndY=-100101, Duration=1000
+{
+	#errors
+	HTML_Element(
+	{
+		index: %Index,
+		className: %ClassName$,
+		content: %Content$,
+		style: %Style$,
+		focus: %Focus,
+		visible: %Visible,
+		enable: %Enable,
+		value: %Value$,
+		source: %Source$,
+		checked: %Checked,
+		onFocus: %OnFocus$,
+		onBlur: %OnBlur$,
+		onClick: %OnClick$,
+		onDoubleClick: %OnDoubleClick$,
+		onMouseDown: %OnMouseDown$,
+		onMouseUp: %OnMouseUp$,
+		onMouseMove: %OnMouseMove$,
+		onMouseEnter: %OnMouseEnter$,
+		onMouseOver: %OnMouseOver$,
+		onMouseOut: %OnMouseOut$,
+		onKeyPress: %OnKeyPress$,
+		onKeyDown: %OnKeyDown$,
+		onKeyUp: %OnKeyUp$,
+		position: %Position$,
+		left: %Left,
+		right: %Right,
+		top: %Top,
+		bottom: %Bottom,
+		zIndex: %zIndex,
+		width: %Width,
+		height: %Height,
+		startX: %StartX,
+		startY: %StartY,
+		endX: %EndX,
+		endY: %EndY,
+		duration: %Duration
+	} );
+}
+End Instruction
+
+/**api
+@name:HTML Code$
+@description: returns the HTML code of an element
+@syntax:=HTML Code$( ID of the element, Insert images, Arguments list )
+@param:Index:index:Id of the element
+@param:*InsertImages:bool:It True all references "images:<image>" will be replaced by the base64 image data. True by default.
+@param:*Args$:string:Values separated by commat that will be inserted into the HTML Code.
+@content:
+~~~
+Load Asset "resources/assets/home.html", "home"
+Show HTML "home"
+
+Print HTML Code$( "contact_list" )
+~~~
+@return:string:The HTML code of the element
+api*/
+Function HTML Code$, Index=(index), InsertImages = True, Args$ = ""
+{
+	#errors
+}
+End Function( { HTML_Code( %Index, %InsertImages, %Args$ ) } )
+
+/**api
+@name:HTML Element Attribute
+@description: returns the attribute value of a HTML element
+@syntax:=HTML Element Attribute( ID of the element, Name of the attribute )
+@param:Index:index:Id of the element
+@param:ATTRIBUTE$:string:Name of the attribute
+@content:
+~~~
+Load Asset "resources/assets/home.html", "home"
+Show HTML "home"
+
+A = HTML Element Attribute( "contact_list", AttributeName$ = "value" )
+~~~
+@return:int:The attribute value of the element
+api*/
+Function HTML Element Attribute, Index=(index), AttributeName$ = ""
+{
+	#errors
+}
+End Function( { HTML_Element_Attribute( %Index, %AttributeName$, 'int' ) } )
+
+/**api
+@name:HTML Element Attribute#
+@description: returns the attribute value of a HTML element
+@syntax:=HTML Element Attribute( ID of the element, Name of the attribute )
+@param:Index:index:Id of the element
+@param:ATTRIBUTE$:string:Name of the attribute
+@content:
+~~~
+Load Asset "resources/assets/home.html", "home"
+Show HTML "home"
+
+A = HTML Element Attribute#( "contact_list", AttributeName$ = "value" )
+~~~
+@return:float:The attribute value of the element
+api*/
+Function HTML Element Attribute#, Index=(index), AttributeName$ = ""
+{
+	#errors
+}
+End Function( { HTML_Element_Attribute( %Index, %AttributeName$, 'float' ) } )
+
+/**api
+@name:HTML Element Attribute$
+@description: returns the attribute value of a HTML element
+@syntax:=HTML Element Attribute$( ID of the element, Name of the attribute )
+@param:Index:index:Id of the element
+@param:ATTRIBUTE$:string:Name of the attribute
+@content:
+~~~
+Load Asset "resources/assets/home.html", "home"
+Show HTML "home"
+
+FNAME$ = HTML Element Attribute$( "firstname", AttributeName$ = "value" )
+~~~
+@return:int:The attribute value of the element
+api*/
+Function HTML Element Attribute$, Index=(index), AttributeName$=""
+{
+	#errors
+}
+End Function( { HTML_Element_Attribute( %Index, %AttributeName$, 'string' ) } )
+
+
+/**api
+@name:JS Execute
+@description:Executes the Javascript code defined in the parameter string..
+@param:javascript$:string:Content of the Javascript code.
+@compatible: aoz
+@content:
+This instruction uses the Javascript Eval function to run the code contained in the string.
+
+Here is an example of use:
+~~~
+Rem Creation of the "helloWorld" JS function
+CODE$ = "function helloWorld(){ this.application.vars.A$ = 'Hello world!'; }"
+
+JS Execute( CODE$ ) // Adds the JS function to the AOZ program
+JS Execute( "helloWorld();" ) // Calls the JS function
+ 
+Pen 2 : Print A$ // Display of the variable A$ created by the "helloWorld" JS function
+~~~
+api*/
+Instruction JS Execute, javascript$
+{
+	#errors
+	JS_Execute( %javascript$ );
+}
+End Instruction

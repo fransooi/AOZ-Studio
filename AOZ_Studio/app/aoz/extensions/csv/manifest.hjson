@@ -1,0 +1,55 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Extensions Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"				// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "The CSV Extension"
+		author: "By Francois Lionet"
+		version: "Version 1"
+		date: "20/03/2020"
+		copyright: "(c) AOZ Studio 2020 - Open Source - licence to come ;)"
+		start: "csv.aoz"
+		name: "csv"
+	}
+	compilation:
+	{
+		noWarning: []
+		errors:
+		{
+			en:
+			[
+				"csv_not_defined:				CSV not opened",
+				"csv_already_exists:			CSV already exists",
+				"missing_parameters:			Missing parameters",
+				"parameters_out_of_bounds:		Parameters out of bounds",
+				"illegal_csv_file:				Illegal CSV file"
+			]
+			fr:
+			[
+				"csv_not_defined:				CSV non ouvert",
+				"csv_already_exists:			Le CSV existe deja",
+				"missing_parameters:			Parametres manquant",
+				"parameters_out_of_bounds:		Parametres en dehors des limites",
+				"illegal_csv_file:				Fichier CSV non conforme"
+			]
+		}
+	}
+}

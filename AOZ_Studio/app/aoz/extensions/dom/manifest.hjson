@@ -1,0 +1,86 @@
+/*@****************************************************************************
+*
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ 
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ 
+*
+****************************************************************************@*/
+/** @file
+ *
+ * AOZ Instructions Module Manifest
+ *
+ */
+{
+	// Version of the manifest
+	version: "9"						// Will only work after applications compiled with manifest 7 and above.
+	versionExtension: "1"					// Indicates an extension and the version of this manifest
+
+	// Informations about the application
+	infos:
+	{
+		applicationName: "The File System Instructions"
+		author: "By Francois Lionet"
+		version: "Version 0.99"
+		date: "13/12/2019"
+		copyright: "(c) AOZ Studio 2019"
+		start: "dom.aoz"
+		name: "dom"
+	}
+	compilation:
+	{
+		noWarning: []
+	}
+
+	errors:
+	{
+		en:
+		[
+			"type_missing:						        <type> argument not defined",
+			"id_missing:						        <id> argument not defined",
+			"attribute_missing:					        <attribute> argument not defined",
+			"value_missing:					        	<value> argument not defined",
+			"parentid_missing:					        <parentId> argument not defined",
+			"childid_missing:					        <childId> argument not defined",
+			"html_missing:					        	<html> argument not defined",
+			"classname_missing:					        <className> argument not defined",
+			"aozobj_missing:							<aozObject> argument not defined",
+			"action_missing:							<action> argument not defined",
+			"procname_missing:							<procName> argument not defined",
+			"url_missing:								<url> argument not defined",
+			"visible_missing:							<visible> argument not defined",
+			"x_missing:									<x> argument not defined",
+			"y_missing:									<y> argument not defined",
+			"width_missing:								<width> argument not defined",
+			"height_missing:							<height> argument not defined",
+			"enabled_missing:							<enabled> argument not defined",
+			"element_not_found:							Element not found",
+			"element_already_exists:				    Element already exists with this ID"
+		]
+		fr:
+		[
+			"type_missing:						        Argument <type> non défini",
+			"id_missing:						        Argument <id> non défini",
+			"attribute_missing:					        Argument <attribute> non défini",
+			"value_missing:					        	Argument <value> non défini",
+			"parentid_missing:					        Argument <parentId> non défini",
+			"childid_missing:					        Argument <childId> non défini",
+			"html_missing:					        	Argument <html> non défini",
+			"classname_missing:					        Argument <className> non défini",
+			"aozobj_missing:							Argument <aozObject> non défini",
+			"action_missing:							Argument <action> non défini",
+			"procname_missing:							Argument <procName> non défini",
+			"url_missing:								Argument <url> non défini",
+			"visible_missing:							Argument <visible> non défini",
+			"x_missing:									Argument <x> non défini",
+			"y_missing:									Argument <y> non défini",
+			"width_missing:								Argument <width> non défini",
+			"height_missing:							Argument <height> non défini",
+			"enabled_missing:							Argument <enabled> non défini",
+			"element_not_found:							Elément introuvable",
+			"element_already_exists:				    Un élément existe déjà avec cet ID"
+		]
+	}	
+}

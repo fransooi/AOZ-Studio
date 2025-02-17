@@ -1,0 +1,17 @@
+<i>ScanCode</i>
+<b>ScanCode</b> xxxxxxx
+=
+SCANCODE returns the internal scan code of a key that has already been entered using the INKEY$ function.
+The next example may be tested by pressing the function keys, [Del] and [Help]. To interrupt the example, press [Ctrl]+[C].
+@code
+Do
+While K$= ""
+K$=Inkey$
+Wend
+If Asc(K$)=0 Then Print "No Ascii Code"
+Print "The Scan Code is ";Scancode
+End If
+Loop
+@code
+
+

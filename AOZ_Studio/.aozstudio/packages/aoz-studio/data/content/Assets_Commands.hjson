@@ -1,0 +1,47 @@
+{
+    assets_commands: //TODO
+    { 
+        name: "" 
+        intro:""
+        conclusion:""
+        commands:
+        {
+            "load_asset":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "del_asset":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "json_asset_property":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+            "json_asset_property$":
+            [
+                ""
+                '''
+                ~~~                
+
+                ~~~
+                '''
+            ]
+        }
+    }
+}

@@ -1,0 +1,5 @@
+<i>CRight</i>
+<b>CRight</b> xxxxxxx
+=
+Cursor will wrap to the left and down if it was located at the rightmost position, and eventual generate a scrolling up of the content of the window if scrolling is enabled.
+

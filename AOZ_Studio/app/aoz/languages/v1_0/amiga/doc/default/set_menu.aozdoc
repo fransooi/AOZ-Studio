@@ -1,0 +1,9 @@
+<i>Set Menu</i>
+<b>Set Menu</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+SET MENU sets the screen position of the top left-hand corner of the menu item whose parameters are given in brackets. These coordinates are measured relative to the previous level, so the starting point for the entire menu can be set by the MENU BASE command. All levels of the menu below this single item will also be moved by your SET MENU command. The coordinates can be negative as well as positive, so you are free to position items
+anywhere on screen.
+
+

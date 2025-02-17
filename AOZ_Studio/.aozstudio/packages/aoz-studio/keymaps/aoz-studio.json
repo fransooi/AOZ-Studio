@@ -1,0 +1,12 @@
+{
+  "atom-workspace": {
+      "ctrl-alt-a": "aoz-studio:toggle",
+	  "f1": "aoz-studio:run-browser",
+	  "f2": "aoz-studio:run-atom",
+	  "shift-f2": "aoz-studio:run-tv",
+	  "ctrl-f2": "aoz-studio:test",
+	  "f4": "aoz-studio:next-error",
+      "shift-f4": "aoz-studio:previous-error",
+      "f5": "aoz-studio:help-instruction"
+  }
+}

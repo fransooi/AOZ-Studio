@@ -1,0 +1,33 @@
+<i>Player Initialise</i>
+<b>Player Initialise</b> xxxxxxx
+=
+This command must be used before using any of the other player commands.
+
+The browser application storage is first checked for a stored player, if a stored player is found it is used to log in to the engine. Otherwise a new guest player is created and used to log in.
+
+There are currently 2 engines available, "local" and "playfab". The local engine uses the browser application storage to store the player and leaderboard data offline. This engine is great to use during development and demo projects.
+
+The "playfab" engine refers to the Microsoft PlayFab Platform (https://playfab.com/). The player accounts and leaderboards are stored and managed online in the PlayFab Developer Console. Please see the "Player Demo" in the AOZ Store which includes instructions on how to configure PlayFab.
+@code
+// Local example
+// The key$ can be any string value such as the name of your game/project. It is used as a unique identifier to store the player and leaderboard data.
+Player Initialise Key$="PlayerHelpDocExample"
+
+// Micorosft PlayFab example (onError$ is optional)
+// The Key$="51D14" refers to the TitleID of your project which can be found in the Microsoft PlayFab Developer Console.
+Player Initialise Engine$="playfab", Key$="51D14", onError$="ON_PLAYER_ERROR"
+
+// Check if an error occured
+If Player ErrorCode() <> 0
+Print "A error occured during Player Initialise"
+Print Player ErrorCode()
+Print Player ErrorMessage$()
+Else
+Print "Player Initialise Successfull"
+End If
+
+Procedure ON_PLAYER_ERROR[CODE, MESSAGE$]
+// Optionally add code to handle errors that may occur from any of the Player instructions
+End Proc
+@code
+

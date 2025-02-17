@@ -1,0 +1,142 @@
+Load Asset "libs/editor-sdk/js/filesystem.js", "sdk-fs"
+Dim _FS_NAME$( 10 ), _FS_TYPE( 10 ), _FS_PATH$( 10 )
+Global _FS_NAME$(), _FS_TYPE(), _FS_PATH$()
+
+/**
+Reads a file and store its content in the FS_BUFFER$ AOZ variable
+PATH$ if the path of the file to read
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _READ_FILE[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.readFile( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Writes a file
+PATH$ is the path of the file to write
+CONTENT$ is the datas to write
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _WRITE_FILE[ PATH$, CONTENT$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.writeFile( '" + PATH$ + "', '" + CONTENT$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Removes a file
+PATH$ is the path of the file to remove
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _REMOVE_FILE[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.removeFile( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Renames a file
+PATH$ is the path of the file to rename
+NEWNAME$ is the new name of the file
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _RENAME_FILE[ PATH$, NEWNAME$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.renameFile( '" + PATH$ + "', '" + NEWNAME$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Copies a file
+SOURCE$ is the path of the file to copy
+TARGET_PATH$ is the path of the destination
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _COPY_FILE[ SOURCE$, TARGET_PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.copyFile( '" + SOURCE$ + "', '" + TARGET_PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Checks if a file exists and store True or False in the FS_EXISTS AOZ variable
+PATH$ is the path of the file to rename
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _EXISTS_FILE[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.existsFile( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Checks if a file exists and store True or False in the FS_EXISTS AOZ variable
+PATH$ is the path of the file to rename
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _EXTNAME[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.extname( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Check if a file is readable and store True or False in the FS_CANREAD AOZ variable
+PATH$ is the path of the file to rename
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _CAN_READ_FILE[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.canRead( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Alias of CAN_READ_FILE
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _IS_READABLE[ PATH$, PROCNAME$ ]
+    _CAN_READ_FILE[ PATH$, PROCNAME$ ]
+End Proc
+
+/**
+Check if a file is writable and store True or False in the FS_CANREAD AOZ variable
+PATH$ is the path of the file to rename
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _CAN_WRITE_FILE[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.canWrite( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+    Alias of CAN_WRITE_FILE
+*/
+Procedure _IS_WRITABLE[ PATH$, PROCNAME$ ]
+    _CAN_WRITE_FILE[ PATH$, PROCNAME$ ]
+End Proc
+
+/**
+List All the elements of the directory given
+PATH$ is the path of the directory
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _GET_DIRECTORY[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.getDirectory( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc
+
+/**
+Create a new directory
+PATH$ is the path of the new directory
+PROCNAME$ is the name of the AOZ procedure called after the process
+*/
+Procedure _MAKE_DIR[ PATH$, PROCNAME$ ]
+	JS Execute "application.editorSDK.filesystem.makeDir( '" + PATH$ + "', '" + PROCNAME$ + "' );"
+	While SDK_BUSY
+	Wend
+End Proc

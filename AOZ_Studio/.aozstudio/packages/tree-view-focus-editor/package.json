@@ -1,0 +1,49 @@
+{
+  "_from": "https://www.atom.io/api/packages/tree-view-focus-editor/versions/0.2.0/tarball",
+  "_id": "tree-view-focus-editor@0.2.0",
+  "_inBundle": false,
+  "_integrity": "sha512-WiHHuCNr4i+0UzBUOaZWonrTEhA3kATd1VHC0bvGz1CFjieN/2yC/3GMC+dVnazGSLmjGjtIMzdQeO4LnTSVVw==",
+  "_location": "/tree-view-focus-editor",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "remote",
+    "raw": "https://www.atom.io/api/packages/tree-view-focus-editor/versions/0.2.0/tarball",
+    "rawSpec": "https://www.atom.io/api/packages/tree-view-focus-editor/versions/0.2.0/tarball",
+    "saveSpec": "https://www.atom.io/api/packages/tree-view-focus-editor/versions/0.2.0/tarball",
+    "fetchSpec": "https://www.atom.io/api/packages/tree-view-focus-editor/versions/0.2.0/tarball"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://www.atom.io/api/packages/tree-view-focus-editor/versions/0.2.0/tarball",
+  "_shasum": "a0cb888ce5cbc6a2ce74b197267edbcdc777c6b6",
+  "_spec": "https://www.atom.io/api/packages/tree-view-focus-editor/versions/0.2.0/tarball",
+  "_where": "C:\\Users\\jeglo\\AppData\\Local\\Temp\\apm-install-dir-12045-13120-u54yiq.18bxm",
+  "activationCommands": {},
+  "bugs": {
+    "url": "https://github.com/srids/tree-view-focus-editor/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {},
+  "deprecated": false,
+  "description": "Single click on a file in Tree View will preview/open the file and focus on it in the editor.",
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "homepage": "https://github.com/srids/tree-view-focus-editor#readme",
+  "keywords": [
+    "tree-view",
+    "single click",
+    "click",
+    "file"
+  ],
+  "license": "Apache 2.0",
+  "main": "./lib/tree-view-focus-editor",
+  "name": "tree-view-focus-editor",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srids/tree-view-focus-editor.git"
+  },
+  "version": "0.2.0"
+}

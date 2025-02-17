@@ -1,0 +1,8 @@
+<i>Exp</i>
+<b>Exp</b> xxxxxxx
+=
+Use the EXP function to return the exponential of a specified value. For example:
+@code
+Print Exp(1)
+@code
+

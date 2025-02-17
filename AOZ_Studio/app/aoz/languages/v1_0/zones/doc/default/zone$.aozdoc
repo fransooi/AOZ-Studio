@@ -1,0 +1,15 @@
+<i>Zone$</i>
+<b>Zone$</b> xxxxxxx
+=
+The AOZ Studio programmer is allowed to create powerful dialogue boxes and on- screen control panels
+without the need to employ complex programming. The ZONES function surrounds a section of text with its own
+screen zone, so that the presence of the mouse pointer can be detected using the ZONE function. Simply supply the
+two parameters in brackets, which are the string of text for one of your control "buttons", followed by the number of
+the screen zone to be defined.
+
+The maximum number of zones will be limited by the value specified in a previous RESERVE ZONE command.
+The format for the control string is as follows (please notice that the string is different than the one used in AMOS):
+@code
+Chr$(27)+"Z1" + index + '\r' + A$ + Chr$(27) + "Z2\r"
+@code
+

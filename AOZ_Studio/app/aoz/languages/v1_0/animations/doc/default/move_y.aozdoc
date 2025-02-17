@@ -1,0 +1,18 @@
+<i>Move Y</i>
+<b>Move Y</b> xxxxxxx
+=
+This command operates in the same way as "MOVE X", and controls vertical movement. First the number of an
+animation sequence is given, ranging from 0 to 15, and this sequence must be Already allocated using the
+CHANNEL command. Then the movement string is given, as explained above. Positive values for the step
+parameter control downward movements, and a negative value will result in an upward movement.
+
+Here is an example:
+@code
+Load "AMOSPro_Tutorial:Objects/Sprites.abk"
+Channel 1 To Sprite 1: Sprite 1,228,50,1: Wait Vbl
+Move Y 1,"(1,1,180)(1,-1,180)L" : Rem Loop Sprite
+Channel 2 To Screen Display 0: Rem Assign screen position
+Move Y 2,"(1,4,25)(1,-4,25)" : Rem Bounce screen up and down
+Move On : Wait Key
+@code
+

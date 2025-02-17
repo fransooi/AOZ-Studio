@@ -1,0 +1,22 @@
+<i>Set Tile Value</i>
+<b>Set Tile Value</b> xxxxxxx
+=
+You can modify the aspect of your map in real time with this function.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+
+// Change the image of the tile the user is clicking on
+Do
+If Mouse Click
+I = Tile Test( "MapView", X Mouse, Y Mouse )
+If I >= 0 Then Set Tile Value "MapView", I, 10
+End If
+Redraw View "MapView"
+Wait Vbl
+Loop
+@code
+
+

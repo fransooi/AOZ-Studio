@@ -1,0 +1,21 @@
+<i>Draw</i>
+<b>Draw</b> xxxxxxx
+=
+Line drawing is extremely simple. Pick two sets of graphic coordinates, and draw your line from one to the other. To
+draw a line from the current position of the graphics cursor, use DRAW TO followed by a single set of coordinates.
+For example:
+@code
+Cls: Ink 2
+Draw 50,50 To 250,150
+Draw To 275,175
+@code
+Line styles
+Changing the appearance of straight lines is very simple with AOZ. Each line pattern is held in the
+form of a binary number made up of 16 bits, with zeros setting blank spaces in the current background colour, and
+ones setting the solid parts of the pattern in the current ink colour. So a normal solid line can be imagined as having
+all its bits set to one, like this:
+@code
+%1111111111111111
+@code
+
+

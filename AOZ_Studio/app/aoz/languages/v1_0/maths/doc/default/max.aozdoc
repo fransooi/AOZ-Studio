@@ -1,0 +1,12 @@
+<i>Max</i>
+<b>Max</b> xxxxxxx
+=
+MAX compares two expressions and returns the largest. Different types of expressions cannot be compared in one
+instruction, so they must not be mixed.
+
+Here are some examples:
+@code
+Print Max(99,1)
+Print Max("AOZ","AOZ")
+@code
+

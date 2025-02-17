@@ -1,0 +1,8 @@
+<i>AMOS Lock</i>
+<b>AMOS Lock</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+The AMOS LOCK command disables the facility to toggle between AMOS and the Workbench by
+pressing [Amiga]+[A]. This can be used to prevent other users from discovering how your program was written!
+

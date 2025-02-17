@@ -1,0 +1,15 @@
+<i>Sprite Update</i>
+<b>Sprite Update</b> xxxxxxx
+=
+SPRITE UPDATE performs all Bob movements in a single, mighty burst, so all objects are moved at the same instant in your program.
+
+The resulting movement effects are now incredibly smooth, even with dozens of objects on screen at once. SPRITE UPDATE is extremely easy to use, as the following technique explains.
+- First, turn off the automatic system with SPRITE UPDATE OFF
+- Execute your main loop as normal.
+- Now call a SPRITE UPDATE command at the point when objects are to be moved and drawn on screen.
+- Finally, wait for the updates to be completed, by using WAIT VBL.
+
+SPRITE UPDATE is used as the standard technique in the vast majority of AOZ arcade games.
+
+If you need to restore the re-drawing system to its default status, SPRITE UPDATE ON sets the situation back to normal.
+

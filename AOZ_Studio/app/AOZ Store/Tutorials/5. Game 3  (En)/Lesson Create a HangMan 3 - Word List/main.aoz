@@ -1,0 +1,462 @@
+#splashScreen:false
+// ............................................................................................................
+//
+//      ___   ____  _____      _____ __            ___          __
+//     /   | / __ \/__  /     / ___// /___  ______/ (_)___     / /   ___  ______________  ____  _____
+//    / /| |/ / / /  / /      \__ \/ __/ / / / __  / / __ \   / /   / _ \/ ___/ ___/ __ \/ __ \/ ___/
+//   / ___ / /_/ /  / /__    ___/ / /_/ /_/ / /_/ / / /_/ /  / /___/  __(__  |__  ) /_/ / / / (__  )
+//  /_/  |_\____/  /____/   /____/\__/\__,_/\__,_/_/\____/  /_____/\___/____/____/\____/_/ /_/____/
+//
+// ............................................................................................................
+//
+// Welcome to your AOZ Studio Lesson Create a HangMan 3 - Adding a word list - Neil Ives
+
+
+// In this tutorial we will learn or refresh our knowledge of:
+// For/Next loops
+// Locate
+// Print
+// Using Data to access an embedded list of words
+// Restore
+// Read
+// Labels
+// String Arrays
+// Left$()
+// Mid$()
+// Boolean variables
+// Inc(rement)
+// GoTo
+
+
+/////////////////////////////////////////////
+// Using a Data list of words for the game //
+/////////////////////////////////////////////
+
+// We now have a list of words at the bottom of the program, formatted as number lines of data.
+
+////////////
+// PART 1 //
+////////////
+
+///////////////////
+// Using Restore //
+///////////////////
+// In Lesson 2 we saw Data lists being accessed by using 'Restore'
+// Here we are using a suitable random number range to point to a word in the embedded data list of words at the bottom of this program.
+Restore Rnd(179)+1 // Set read point randomly in the list of words. The list has 180 words.
+// Note: Random numbers Rnd(x) range from zero to x, so adding a 1 gives 1 to 180.
+
+//////////
+// Read //
+//////////
+// We already saw Data being accessed with 'Read'
+Read HIDDENWORD$ // Read the word at the point set by 'Restore'
+
+Locate 1,1: Pen 5: Print "The next Guess word is '" + HIDDENWORD$ + "' Press f5 to refresh"
+
+////////////////////////////////////////////////////////////////
+// PLEASE NOTE:                                               //
+// The code to this point is for demonstration purposes only. //
+// When the 'End' statement on the next line is Rem'd (//) or //
+// deleted the code will progress to part 2                   //
+////////////////////////////////////////////////////////////////
+
+End // Please Rem (//) or delete 'End' to allow the next part of the code to run.
+
+Cls // Clear the previous display
+
+////////////
+// PART 2 //
+////////////
+
+///////////////////////////////////////////////////////////
+// Set up an array to hold the word that must be guessed //
+///////////////////////////////////////////////////////////
+// In Lesson 1 we saw how to dimension and use Arrays
+// (Dim)ension a String array with 20 elements. It's not anticipated that any guess-word will be longer than 20 characters.
+Dim MYWORD$(20) //This array will hold only strings so requires the dollar sign after its name.
+
+////////////
+// Labels //
+////////////
+PLAYAGAIN:// This is a label. Afer the game is won or lost the code returns to this label using the 'GoTo' instruction so the game can be played again.
+// NOTE: Labels must have a colon, (:) after their name
+
+// Clear variables for the next round
+WRONG_GUESSES$=""
+WRONG_GUESS_COUNT=0
+
+CLS // Clear the screen after the previous PART
+
+/////////////
+// Restore //
+/////////////
+Restore Rnd(179)+1
+
+//////////
+// Read //
+//////////
+Read HIDDENWORD$ // Read the word at the point set by 'Restore'
+
+////////////
+// Upper$ //
+////////////
+HIDDENWORD$=Upper$(HIDDENWORD$) // Convert to upper case.
+// NOTE: The computer distinguishes between upper and lower case letters; "G" is not the same thing as "g"
+// If the user inputs an upper-case letter but the letter in the hidden word is in lower-case the program will not recognise it.
+// Use Upper$() to avoid that problem
+
+//////////////
+// Len(gth) //
+//////////////
+LETTERCOUNT=Len(HIDDENWORD$) // LETTERCOUNT is a numeric variable representing the length of the hidden word string.
+// LETTERCOUNT will be used to set For/Next loops that are the same length of HIDDENWORD$
+// NOTE: Use Len() to get the number of letters in a string
+
+////////////////////////
+// Pre-load the array //
+////////////////////////
+// Load the array, MYWORD$ with dummy characters, (dashes in this example) to simulate the length of HIDDENWORD$.
+// The updated contents of the array wil be shown to the player as the game proceeds.
+For n = 1 to LETTERCOUNT
+    MYWORD$(n)="-"// Here we are loading the array with dashes in each slot,(called elements) to represent the
+    // letters of the variable HIDDENWORD$.
+    Locate ,5:Pen 5: Print MYWORD$(n); // See note below
+    Pen 1
+next
+// Note: After adding a dash to each element we are printing the array contents to the screen.
+// By using the For/Next loop the incrementing value of n causes the printing of the array elements in sequence.
+// The Semi-colon causes the printing to be all on one line, so the output appears as a single string
+
+Locate 1,1: Print "Here we see the contents of the array MYWORD$ printed in one line."
+Locate 1,2: Print "At this stage the array has only dashes to represent the length of HIDDENWORD$"
+Locate 1,7: Print "Press f5 to refresh"
+
+End // Please Rem, (//) or delete 'End' to allow the next part of the code to run.
+
+Cls
+
+////////////
+// PART 3 //
+////////////
+
+///////////////
+// Main loop //
+///////////////
+
+Do // Loop back to here after each try until game is won or lost
+
+    Locate 1,1: Input "Enter a guess: ";MYGUESS$ // User 'Inputs' a guess
+
+    MYGUESS$=Left$(MYGUESS$,1) // Take only the first letter of MYGUESS$.
+    // NOTE: To make sure a clean single letter is entered we are using Left$().
+    // Left$("xxx",n) reads a number, (defined by n) of characters from the left of the string, "xxx".
+    // NOTE: AOZ also has Right$("",n) and MID$("",n,n).
+    // Examples: Right$("FRANCOIS",3) would give "OIS".
+    // Mid$("FRANCOIS",3,2)// would give "AN". See later.
+
+    MYGUESS$=Upper$(MYGUESS$) // Convert to upper case. This is because we do not know if the player is entering capitals or lower case
+
+    Locate 1,10: Print "Here we see the users input."
+    Locate 1,11: Print "Test that Len$() is working by entering more than one letter."
+    Locate 1,12: Print "Notice that the letter has been capitalised."
+    Locate 1,15: Pen 5: Print MYGUESS$: Pen 1
+
+    End // Please Rem (//) or delete 'End' to allow the next part of the code to run.
+
+    Cls
+
+    ////////////
+    // PART 4 //
+    ////////////
+
+    MYTEST=false // Use this boolean variable to decide what action to take after each guess. See later.
+    // NOTE: Boolean variables only have one of two values, eg., True/False
+
+    For n = 1 to LETTERCOUNT // Set the For/Next loop to the character count of HIDDENWORD$.
+
+        If MYGUESS$=Mid$(HIDDENWORD$,n,1) // If the guess character is found in the hidden word.
+        // NOTE: Mid$ is using the values of n to search for 1 character. If MYGUESS$ is matched in HIDDENWORD$
+        // the following code is executed
+
+            MYTEST=True // Guess was correct - Boolean variable MYTEST was set to true.
+
+            MYWORD$(n) = MYGUESS$ // Replace the dash in the array with the correctly guessed character at the
+            // same position that it occurs in the guess-word.
+
+        End if
+    Next
+
+    Locate 1,1: Print "Here is the current value of the Boolean variable MYTEST."
+
+    Locate 1,5: Pen 5: Print MYTEST: Pen 1
+
+    Locate 1,7:Print "True means the guessed letter was correct"
+    Locate 1,8:Print "False means the guessed letter was wrong"
+    Locate 1,10: Print "MYTEST will be used to trigger graphical elements when they are added."
+    Locate 1,12: Print "MYTEST also triggers a counter of wrong tries that will be used"
+    Locate 1,14: Print "to end the game after a set number of failed attempts"
+    Locate 1,16: Print "Press f5 to refresh. (May have to be re-started from the editor)."
+
+    End // Please Rem, (//) or delete 'End' to allow the next part of the code to run.
+    Cls
+
+    ////////////
+    // PART 5 //
+    ////////////
+
+    // Use the state of the Boolean variable MYTEST to decide next steps
+
+    If MYTEST = True // The guess was correct
+        // Do something to change graphics, when they exist
+    Else
+        Inc WRONG_GUESS_COUNT // Inc(rement) WRONG_GUESS_COUNT, (add 1)
+
+        If WRONG_GUESS_COUNT > 9 then GoTo JMP // The player has lost this round. Jump to the label JMP to show a suitable message.
+
+        ////////////////////////////////////////////////////
+        // Create and display a list of incorrect letters //
+        ////////////////////////////////////////////////////
+
+        // WRONG_GUESSES$ is a new string that will be appended with the incorrect letters entered by the player
+        WRONG_GUESSES$=WRONG_GUESSES$ + MYGUESS$ +"," // Create a string that consists of the incorrect letters each followed by a comma.
+
+
+        // Do something to change graphics, when they exist
+
+    End if
+
+        If WRONG_GUESS_COUNT > 0 then Locate ,8:Print Str$(WRONG_GUESS_COUNT) + " out of 10 incorrect guesses:"
+
+        // Label for the next part
+        Locate ,10:Pen 5: Print WRONG_GUESSES$:Pen 1 // Display the string
+
+
+
+    CORRECT$="" //Clear before each new attempt. See note below:
+
+    ////////////////////////////////////////////////////
+    // Build a string from the current array elements //
+    ////////////////////////////////////////////////////
+
+    // This is neccessary so that a comparison can be made between CORRECT$ and HIDDENWORD$
+
+     For n = 1 to LETTERCOUNT
+        CORRECT$=CORRECT$+MYWORD$(n)
+        //To begin with CORRECT$ is empty. It then has the first value in the array MYWORD$ appended to it...
+        //Now CORRECT$ has a string value. the next value in the array is appended to it. This continues until the For/Next loop finishes.
+    Next
+
+        // Display the new string
+        Locate ,5: Print CORRECT$ // This new string is used to display the current state of play and decide if the game has been won
+
+        ////////////////////
+        // Test for a win //
+        ////////////////////
+        If CORRECT$=HIDDENWORD$ //If the word created from the array is equal to the hidden word the player has won!
+        CLS
+        // Print a suitable message
+        Locate ,5: Print "Well done! The word was " + CORRECT$
+        Wait 3
+        Goto PLAYAGAIN // Play again
+    End If
+
+Loop
+
+JMP:
+
+// After 10 unsuccessful attempts the code jumps to the label JMP:
+
+Cls // Clear the screen
+
+Locate ,5: Print "The word was " + HIDDENWORD$ + ". Try another word"
+
+Wait 3 // Pause
+
+Goto PLAYAGAIN // Play again
+
+
+/////////////////////////////////////////////////
+// 180 words embeded as data with line numbers //
+/////////////////////////////////////////////////
+
+1 Data "ABLE"
+2 Data "ACCUSE"
+3 Data "ADVANCE"
+4 Data "AFTER"
+5 Data "AIRPLANE"
+6 Data "ALSO"
+7 Data "ANNOY"
+8 Data "APPLY"
+9 Data "ARROW"
+10 Data "ASSOCIATION"
+11 Data "AVENUE"
+12 Data "BAD"
+13 Data "BARREL"
+14 Data "BEAN"
+15 Data "BEG"
+16 Data "BEND"
+17 Data "BIND"
+18 Data "BLIND"
+19 Data "BONE"
+20 Data "BOW"
+21 Data "BREATHE"
+22 Data "BRUSH"
+23 Data "BUT"
+24 Data "CAMERA"
+25 Data "CARRY"
+26 Data "CENT"
+27 Data "CHARM"
+28 Data "CHIEF"
+29 Data "CLASS"
+30 Data "CLOTH"
+31 Data "COLLECT"
+32 Data "COMMITTEE"
+33 Data "CONCERN"
+34 Data "CONSCIOUS"
+35 Data "CORNER"
+36 Data "COURSE"
+37 Data "CRITIC"
+38 Data "CUPBOARD"
+39 Data "DAMP"
+40 Data "DEAF"
+41 Data "DEER"
+42 Data "DEMAND"
+43 Data "DETAIL"
+44 Data "DIFFICULT"
+45 Data "DISGUST"
+46 Data "DO"
+47 Data "DRAG"
+48 Data "DRUM"
+49 Data "EARTH"
+50 Data "EITHER"
+51 Data "END"
+52 Data "ENVY"
+53 Data "EXAMINATION"
+54 Data "EXPECT"
+55 Data "EYE"
+56 Data "FALL"
+57 Data "FEAR"
+58 Data "FIERCE"
+59 Data "FIRM"
+60 Data "FLESH"
+61 Data "FOND"
+62 Data "FORMER"
+63 Data "FRIGHT"
+64 Data "FURTHER"
+65 Data "FUTURE"
+66 Data "GAY"
+67 Data "GOD"
+68 Data "GRATEFUL"
+69 Data "GUARD"
+70 Data "HAMMER"
+71 Data "HASTE"
+72 Data "HEAR"
+73 Data "HIGH"
+74 Data "HOLLOW"
+75 Data "HOT"
+76 Data "HURRAH"
+77 Data "IMMEDIATE"
+78 Data "INDOORS"
+79 Data "INSTRUMENT"
+80 Data "INTRODUCE"
+81 Data "JOIN"
+82 Data "KEY"
+83 Data "LACK"
+84 Data "LATTER"
+85 Data "LEAVE"
+86 Data "LIBERTY"
+87 Data "LIP"
+88 Data "LOCAL"
+89 Data "LOUD"
+90 Data "MAIL"
+91 Data "MASS"
+92 Data "MEASURE"
+93 Data "MERE"
+94 Data "MILL"
+95 Data "MISFIT"
+96 Data "MISUSE"
+97 Data "MORE"
+98 Data "MOVE"
+99 Data "NARROW"
+100 Data "NECK"
+101 Data "NEXT"
+102 Data "NOR"
+103 Data "NURSE"
+104 Data "OFF "
+105 Data "OPERATION"
+106 Data "ORNAMENT"
+107 Data "OWN"
+108 Data "PAN"
+109 Data "PATH"
+110 Data "PECULIAR"
+111 Data "PERSUADE"
+112 Data "PINCH"
+113 Data "PLAY"
+114 Data "POLISH"
+115 Data "POT"
+116 Data "PRECIOUS"
+117 Data "PRICE"
+118 Data "PRODUCT"
+119 Data "PROVIDE"
+120 Data "PUSH"
+121 Data "QUIET"
+122 Data "RAKE"
+123 Data "REAL"
+124 Data "REFLECT"
+125 Data "REMAIN"
+126 Data "REPORT"
+127 Data "RESPONSIBLE"
+128 Data "RICE"
+129 Data "RIVAL"
+130 Data "ROOM"
+131 Data "RUDE"
+132 Data "SAD"
+133 Data "SAW"
+134 Data "SCOLD"
+135 Data "SECRETARY"
+136 Data "SENTENCE"
+137 Data "SHALL"
+138 Data "SHE"
+139 Data "SHOE"
+140 Data "SHUT"
+141 Data "SINCE"
+142 Data "SKILL"
+143 Data "SMALL"
+144 Data "SOCKS"
+145 Data "SORROW"
+146 Data "SPACE"
+147 Data "SPLENDID"
+148 Data "SQUARE"
+149 Data "STAY"
+150 Data "STIFF"
+151 Data "STORY"
+152 Data "STRICT"
+153 Data "SUCCEED"
+154 Data "SUPPER"
+155 Data "SWEAT"
+156 Data "TAIL"
+157 Data "TEACH"
+158 Data "TENT"
+159 Data "THEM"
+160 Data "THINK"
+161 Data "THUMB"
+162 Data "TIN"
+163 Data "TONIGHT"
+164 Data "TOWEL"
+165 Data "TREAT"
+166 Data "TRUTH"
+167 Data "UNION"
+168 Data "UPWARDS"
+169 Data "VERSE"
+170 Data "VOTE"
+171 Data "WAR"
+172 Data "WE"
+173 Data "WELL"
+174 Data "WHILE"
+175 Data "WILL"
+176 Data "WISH"
+177 Data "WORM"
+178 Data "WRECK"
+179 Data "YOUNG"
+180 Data "ZOO"

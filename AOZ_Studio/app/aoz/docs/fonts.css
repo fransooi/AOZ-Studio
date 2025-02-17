@@ -1,0 +1,52 @@
+@font-face {
+    font-family: 'AvenirNext LT Pro';
+    src: url('assets/fonts/avenir/AvenirNextLTPro-Regular.eot');
+    src: url('assets/fonts/avenir/AvenirNextLTPro-Regular.eot?#iefix') format('embedded-opentype'),
+        url('assets/fonts/avenir/AvenirNextLTPro-Regular.woff2') format('woff2'),
+        url('assets/fonts/avenir/AvenirNextLTPro-Regular.woff') format('woff'),
+        url('assets/fonts/avenir/AvenirNextLTPro-Regular.ttf') format('truetype'),
+        url('assets/fonts/avenir/AvenirNextLTPro-Regular.svg#AvenirNextLTPro-Regular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'AvenirNext LT Pro It';
+    src: url('assets/fonts/avenir/AvenirNextLTPro-It.eot');
+    src: url('assets/fonts/avenir/AvenirNextLTPro-It.eot?#iefix') format('embedded-opentype'),
+        url('assets/fonts/avenir/AvenirNextLTPro-It.woff2') format('woff2'),
+        url('assets/fonts/avenir/AvenirNextLTPro-It.woff') format('woff'),
+        url('assets/fonts/avenir/AvenirNextLTPro-It.ttf') format('truetype'),
+        url('assets/fonts/avenir/AvenirNextLTPro-It.svg#AvenirNextLTPro-It') format('svg');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Brandon Grotesque';
+    src: url('assets/fonts/brandon/BrandonGrotesque-Black.eot');
+    src: url('assets/fonts/brandon/BrandonGrotesque-Black.eot?#iefix') format('embedded-opentype'),
+        url('assets/fonts/brandon/BrandonGrotesque-Black.woff2') format('woff2'),
+        url('assets/fonts/brandon/BrandonGrotesque-Black.woff') format('woff'),
+        url('assets/fonts/brandon/BrandonGrotesque-Black.ttf') format('truetype'),
+        url('assets/fonts/brandon/BrandonGrotesque-Black.svg#BrandonGrotesque-Black') format('svg');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Brandon Grotesque LT';
+    src: url('assets/fonts/brandon/BrandonGrotesque-Light.eot');
+    src: url('assets/fonts/brandon/BrandonGrotesque-Light.eot?#iefix') format('embedded-opentype'),
+        url('assets/fonts/brandon/BrandonGrotesque-Light.woff2') format('woff2'),
+        url('assets/fonts/brandon/BrandonGrotesque-Light.woff') format('woff'),
+        url('assets/fonts/brandon/BrandonGrotesque-Light.ttf') format('truetype'),
+        url('assets/fonts/brandon/BrandonGrotesque-Light.svg#BrandonGrotesque-Light') format('svg');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+

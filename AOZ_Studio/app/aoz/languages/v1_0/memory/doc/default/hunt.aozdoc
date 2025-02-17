@@ -1,0 +1,10 @@
+<i>Hunt</i>
+<b>Hunt</b> xxxxxxx
+=
+As normal memory is unaccessible on modern machines, AOZ solves the address by using the "Start" function to get the address of a bank (magical number) and adding the offset.
+
+HUNT is really a low level version of the familiar INSTR$ command. It searches the memory area defined by the
+given start and finish addresses, looking for the first occurrence of the characters held in your specified string.
+If the search is successful, the position of the first character in memory is returned, otherwise a value of zero will be
+given. When using this function, take great care in selecting the start and finish points for the search.
+

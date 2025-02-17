@@ -1,0 +1,17 @@
+<i>Screen Display</i>
+<b>Screen Display</b> xxxxxxx
+=
+To position a screen, the SCREEN DISPLAY command is used, followed by these parameters:
+
+- Index refers to the index of the screen to be displayed. All or any of the other parameters can be omitted, but the relevant commas must be included.
+
+The x,y-coordinates refer to physical positions on the monitor, and might be different depending on the current platform emulation.
+In Amiga mode, the renderer simulates the display of a CRT monitor with empty gaps around the active drawing area, and are referred to as "Hardware Coordinates"...
+
+- Width sets the width of the screen in pixels. If this is different from the original setting, only a part of the image
+will be shown, starting from the top left-hand corner of the screen.
+
+- Height is used to set the height of the screen in exactly the same way as the width.
+
+If any of the optional parameters are left out, the default settings will be applied automatically.
+

@@ -1,0 +1,27 @@
+<i>Unpack</i>
+<b>Unpack</b> xxxxxxx
+=
+Note: this instruction will be implemented with ZIP compression in a near future.
+
+(extracted from the AMOSPro manual)
+
+As you might expect, this is used to unpack crunched images. Using double buffered screens will give smooth
+results, otherwise unpacking may get messy, and always make sure that the destination screen is in exactly the same
+format as the packed picture or an error will be generated.
+
+To unpack screen data at its original position, state which memory bank is to be unpacked, like this:
+@code
+Unpack 15
+@code
+To re-draw the packed image starting from new top left-hand corner coordinates, include them
+after the bank number. If the new image does not fit into the current screen, the appropriate error message will
+appear.
+
+The other form of the UNPACK command is open a screen and unpack the data held in the selected bank to that
+screen. For example:
+
+@code
+Unpack 15 To 1
+@code
+If the screen you select already exists, its image will be replaced by the newly unpacked picture within one second.
+

@@ -1,0 +1,8 @@
+<i>Key Name$</i>
+<b>Key Name$</b> xxxxxxx
+=
+This function has been added to AOZ to provide a simple way to know on which key the user has pressed.
+The value returned are platform independant, ensuring your application will work on every machine.
+
+You can find the list of Javascript key name [here](http://javascriptkeycode.com/).
+

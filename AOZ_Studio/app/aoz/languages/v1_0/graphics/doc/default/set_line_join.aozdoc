@@ -1,0 +1,23 @@
+<i>Set Line Join</i>
+<b>Set Line Join</b> xxxxxxx
+=
+This command sets the joining style of all lines that are subsequently drawn.
+
+bevel - joins lines at angles to each other with a bevelled corner
+
+miter - joins lines at angles to each other with a pointed corner (default)
+
+round - joins lines at angles to each other with a rounded corner
+
+eg:
+@code
+Set Line Width 30
+Ink 4
+Set Line Join "miter"
+Shape 200,200,150,150,3
+Set Line Join "bevel"
+Shape 500,500,150,150,3
+Set Line Join "round"
+Shape 800,800,150,150,3
+@code
+

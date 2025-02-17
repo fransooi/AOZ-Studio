@@ -1,0 +1,10 @@
+<i>Update</i>
+<b>Update</b> xxxxxxx
+=
+The UPDATE commands are a combination of the BOB UPDATE and SPRITE UPDATE families, and they are
+used to re-draw all objects on the screen in a single operation.
+
+UPDATE displays any objects which have moved since the last update. You are recommended to add a WAIT VBL
+instruction to ensure a smooth effect.
+
+

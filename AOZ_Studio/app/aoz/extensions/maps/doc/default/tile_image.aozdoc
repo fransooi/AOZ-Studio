@@ -1,0 +1,24 @@
+<i>Tile Image</i>
+<b>Tile Image</b> xxxxxxx
+=
+When you load a map and open a view, there is a direct reference between the *value* of the tile and the image taken out of the image bank and displayed.
+If you use this function immediately after loading the map and opening the view, it will return the value of the tile as it will also be the index of the image used.
+
+The return value will change after a Set Tile Image instruction.
+
+This example display the index of the image of the tile under the mouse.
+@code
+Load Map "mymap.json"
+Load Tileset "tileset.json", 1000
+Open View "MapView", "mymap", "tileset", 0	// Open view on layer 0 of map
+Display View "MapView", 0, 0, 1280, 704		// Set the map display
+Redraw View "MapView"
+Do
+I = Tile Test( "MapView", X Mouse, Y Mouse )
+If I >= 0
+Print "Image "; Tile Image( "MapView", I )
+End If
+Wait Vbl
+Loop
+@code
+

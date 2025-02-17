@@ -1,0 +1,289 @@
+/*@*****************************************************************************
+*                                                                              *
+*   █████╗  ██████╗ ███████╗    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗  *
+*  ██╔══██╗██╔═══██╗╚══███╔╝    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗ *
+*  ███████║██║   ██║  ███╔╝     ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██╔══██║██║   ██║ ███╔╝      ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║ *
+*  ██║  ██║╚██████╔╝███████╗    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝ *
+*  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝  *
+*                                                                              *
+* This file is part of AOZ Studio.                                             *
+* Copyright (c) AOZ Studio. All rights reserved.                               *
+*                                                                              *
+* Licensed under the GNU General Public License v3.0.                          *
+* More info at: https://choosealicense.com/licenses/gpl-3.0/                   *
+* And in the file AOZ_StudioCodeLicense.pdf.                                   *
+*                                                                              *
+*****************************************************************************@*/
+/** @file
+ *
+ * The AOZ HELP extension
+ * By Baptiste Bideaux
+ *
+ * @author BB
+ * @date first pushed on 20/03/2020
+ *
+ */
+#basicRemarks:false
+
+//
+// Initialization
+//
+{
+    this.aoz.help = this;
+	this.context = new AOZContext( this.aoz, this.aoz.currentContextName, { sorted: false } );
+	this.load_done = true;
+	
+	this.arrChapters = new Array();
+	
+	this.getChaptersList = function()
+	{
+		if( guideMap )
+		{
+			if( guideMap.chapters && guideMap.chapters.length > 0 )
+			{
+				
+				this.load_done = false;
+				this.arrChapters = new Array();
+				console.log( guideMap );
+				for( c = 0; c < guideMap.chapters.length; c++)
+				{
+					var chapter = guideMap.chapters[ c ];
+					if( chapter && chapter.name )
+					{
+						this.arrChapters.push( chapter );
+					}
+				}
+				console.log( this.arrChapters );
+				this.load_done = true;
+			}
+			else
+			{
+				throw 'no_chapters_found';
+			}
+			
+		}else{
+			throw 'guidemap_not_loaded';
+		}
+	};
+	
+	this.getChapterName = function( index )
+	{
+	
+		if( this.arrChapters && this.arrChapters[ index ] && this.arrChapters[ index ].name && this.arrChapters[ index ].name != "" )
+		{
+			return this.arrChapters[ index ].name;
+		}
+		return '';
+	};
+	
+	this.getChapterDescription = function( index )
+	{
+	
+		description = '';
+		if( this.arrChapters && this.arrChapters[ index ] && this.arrChapters[ index ].descriptions && this.arrChapters[ index ].descriptions.length > 0 )
+		{
+			for( d = 0; d < this.arrChapters[ index ].descriptions.length; d++ )
+			{
+				var descr = this.arrChapters[ index ].descriptions[ d ];
+				description = description + descr.text;
+			}
+		}
+		return description;
+	};
+	
+	this.apiCount = function( chapIndex )
+	{
+		if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages )
+		{
+			return this.arrChapters[ chapIndex ].pages.length;
+		}
+		return 0;
+	};
+	
+	this.getAPIName = function( chapIndex, apiIndex, withParams )
+	{
+		var name = '';
+		if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages && this.arrChapters[ chapIndex ].pages[ apiIndex ] && this.arrChapters[ chapIndex ].pages[ apiIndex ].name )
+		{
+			name = this.arrChapters[ chapIndex ].pages[ apiIndex ].name;
+		}
+		
+		if( withParams ){
+			if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages && this.arrChapters[ chapIndex ].pages[ apiIndex ] && this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters )
+			{
+				for( p = 0; p < this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters.length; p++ )
+				{
+					var param = this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters[ p ];
+					if( p > 0 )
+					{
+						name = name + ",";
+					}
+					
+					name = name + " " + param.name;
+				}
+			}
+		}
+		
+		return name;
+	};
+	
+	this.getAPIDescription = function( chapIndex, index )
+	{
+	
+		description = '';
+		if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages && this.arrChapters[ chapIndex ].pages[ index ] && this.arrChapters[ chapIndex ].pages[ index ].descriptions )
+		{
+			for( d = 0; d < this.arrChapters[ chapIndex ].pages[ index ].descriptions.length; d++ )
+			{
+				var descr = this.arrChapters[ chapIndex ].pages[ index ].descriptions[ d ];
+				description = description + descr.text;
+			}
+		}
+		return description;
+	};	
+
+	this.getAPIReturn = function( chapIndex, index )
+	{
+	
+		description = '';
+		if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages && this.arrChapters[ chapIndex ].pages[ index ] && this.arrChapters[ chapIndex ].pages[ index ].return )
+		{
+			return this.arrChapters[ chapIndex ].pages[ index ].return[ 0 ].text;
+		}
+		return description;
+	};
+	
+	this.getAPIParamsCount = function( chapIndex, apiIndex )
+	{
+		if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages && this.arrChapters[ chapIndex ].pages[ apiIndex ] && this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters )
+		{
+			return this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters.length;
+		}
+		return 0;
+	};
+
+	this.getAPIParamName = function( chapIndex, apiIndex, index)
+	{
+		name = "";
+		if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages && this.arrChapters[ chapIndex ].pages[ apiIndex ] && this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters )
+		{
+			name = this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters[ index ].name;
+		}
+		return name;
+	};
+
+	this.getAPIParamType = function( chapIndex, apiIndex, index)
+	{
+		type = "";
+		if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages && this.arrChapters[ chapIndex ].pages[ apiIndex ] && this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters )
+		{
+			console.log( this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters[ index ] );
+			type = this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters[ index ].type;
+		}
+		return type;
+	};
+
+	this.getAPIParamText = function( chapIndex, apiIndex, index)
+	{
+		type = "";
+		if( this.arrChapters && this.arrChapters[ chapIndex ] && this.arrChapters[ chapIndex ].pages && this.arrChapters[ chapIndex ].pages[ apiIndex ] && this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters )
+		{
+			type = this.arrChapters[ chapIndex ].pages[ apiIndex ].parameters[ index ].text;
+		}
+		return type;
+	};
+
+   	this.wait = function()
+	{
+		if ( this.load_done )
+		{
+            if ( this.error )
+                throw this.error;
+			return true;
+		}
+	};
+
+}
+
+Instruction Chapters List
+	{
+		#waiting
+		#errors
+		return{type:12,waitThis:aoz.help,callFunction:"getChaptersList", waitFunction:"load_wait", args:[]};		
+	}
+End Instruction
+
+Function Chapters Count
+	{
+		#errors
+	}
+End Function( { aoz.help.arrChapters.length } )
+
+Function Chapter Name$, index
+	{
+		#errors
+	}
+End Function( { aoz.help.getChapterName( %index ) } )
+
+Function Chapter Description$, index
+	{
+		#errors
+	}
+End Function( { aoz.help.getChapterDescription( %index ) } )
+
+Function API Count, chapIndex
+	{
+		#errors
+	}
+End Function( { aoz.help.apiCount( %chapIndex ) } )
+
+Function API Name$, chapIndex, index 
+	{
+		#errors
+	}
+End Function( { aoz.help.getAPIName( %chapIndex, %index, false ) } )
+
+Function API Name$, chapIndex, index, withParams 
+	{
+		#errors
+	}
+End Function( { aoz.help.getAPIName( %chapIndex, %index, %withParams ) } )
+
+Function API Description$, chapIndex, index 
+	{
+		#errors
+	}
+End Function( { aoz.help.getAPIDescription( %chapIndex, %index ) } )
+
+Function API Return$, chapIndex, index 
+	{
+		#errors
+	}
+End Function( { aoz.help.getAPIReturn( %chapIndex, %index ) } )
+
+Function API Parameters Count, chapIndex, index 
+	{
+		#errors
+	}
+End Function( { aoz.help.getAPIParamsCount( %chapIndex, %index ) } )
+
+
+Function API Parameter Name$, chapIndex, apiIndex, index  
+	{
+		#errors
+	}
+End Function( { aoz.help.getAPIParamName( %chapIndex, %apiIndex, %index ) } )
+
+Function API Parameter Type$, chapIndex, apiIndex, index  
+	{
+		#errors
+	}
+End Function( { aoz.help.getAPIParamType( %chapIndex, %apiIndex, %index ) } )
+
+Function API Parameter Description$, chapIndex, apiIndex, index  
+	{
+		#errors
+	}
+End Function( { aoz.help.getAPIParamText( %chapIndex, %apiIndex, %index ) } )
+

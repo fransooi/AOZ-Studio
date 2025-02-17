@@ -1,0 +1,11 @@
+<i>Menu Once</i>
+<b>Menu Once</b> xxxxxxx
+=
+(extracted from the AMOSPro manual)
+
+MENU ONCE turns off the automatic updating system instigated by MENU CALLED. After the command is given, each menu item will only be re-drawn once when the menu is called on the screen. It is used like this:
+@code
+Menu Once(1,1)
+@code
+
+

@@ -1,0 +1,100 @@
+
+   ›42m ### ##### #####   ###   ###                   ›0m
+   ›42m  #  #     #      #   #   #                    ›0m (Version 1.0b)
+   ›42m  #  #     #          #   #   ###   ###  ####  ›0m
+   ›42m  #  ####  ####    ###    #  #   # #   # #   # ›0m
+   ›42m  #  #     #      #       #  #     #   # #   # ›0m
+   ›42m  #  #     #      #       #  #   # #   # #   # ›0m
+   ›42m ### #     #      #####  ###  ###   ###  #   # ›0m
+
+The ›1mTropicDesign›0m product ›1mIFF2Icon›0m converts an IFF/ILBM-File into a Icon-File or
+optionally uses the default Icon. OS2.04 or better needed.
+
+›42m-- Table of contents ----------------------------------------------------- 1 --›0m
+
+Section 1..................Table of contents
+        2..................Copyright
+        3..................About the program / usage
+        4..................Technical stuff
+        5..................Concluding words
+
+›42m-- Copyright ------------------------------------------------------------- 2 --›0m
+
+The Copyrights  of this Freeware-program  and its  Sourcecode  are owned by the
+author Hanns Holger Rutz, follow this rules for (re)distribution:
+- you may not raise more than $3 for copying  (disk included,  postage and pak-
+  kage not).
+- the following files must be redistributed together in one directory:
+      ›3m IFF2Icon              ›0m(the executable)
+      ›3m IFF2Icon.dok          ›0m(German Doc-File)
+    or›3m IFF2Icon.doc          ›0m(English Doc-File)
+      ›3m IFF2Icon.asm          ›0m(optional Sourcecode)
+  All these files must stay unaltered - we're not talking filenotes,  dates and
+  protection-bits :-)
+
+›4mThe user him- or herself  is completely responseble›0m  for any damage  or loss of
+data (no matter,  if user or computer) caused by any of the files listed above!
+The Sourcecode may only be used for private learning reasons.
+
+›42m-- About the program / usage --------------------------------------------- 3 --›0m
+
+Everyone knows IconEdit  -  a nice proggy,  but you can only  create very small
+Icons. As opposed to this program, ›1mIFF2Icon›0m is used via Shell and converts IFF-
+pictures of any size into Icons  -  I myself prefer painting Icons with Deluxe-
+Paint, a great program. Ya I know, there are numerous of programs like dis, but
+I had to satify myself - and I couldn't find any similar program one day...
+the shell-usage:
+
+›3mIFF2Icon [<IFFFile>] [To <IconFile>] [<IconType>] [<HighlightType>]
+
+<IFFFile>         ›0mName of the IFF-graphic; if no name is given, my program will
+                  use the default Icon of the particular type;
+›3m<IconFile>        ›0mName of the Icon to be created;  ".info" needn't to be added,
+                  and "disk.info" either - the name of the device is enough; if
+                  there's already an Icon with the same name, the old Icon-type
+                  is used,  otherwise it can  be specified  via ›3m<IconType>;  ›0mif
+                  such a type is missing,  the program trys  to find out,  what
+                  kind of file you want  to create an Icon for;  ›3mGarbage ›0mcannot
+                  be recognized;  if you do not specify a name, the IFF-graphic
+                  is saved to the default Icon;
+›3m<IconType>        ›0mType of the Icon: ›3mDisk, Drawer, Tool, Project ›0mor ›3mGarbage;
+<HighlightType>   ›0mThis tells ›1mIFF2Icon›0m how the Icon should react  when selected:
+                  ›3mComplement ›0mis the default;  ›3mBackFill ›0macts similar,  but areas
+                  filled with the Background-color  (0)  that touch the borders
+                  of the Icon won't be inverted  (try it!);  ›3mImage ›0mmeans,  that
+                  you want  an alternative  image to  be displayed on selection
+                  - the program divides  the IFF-file into two vertical pieces:
+                  the upper  half is used  for the normal image,  the lower one
+                  for the alternative image;
+
+Besides this, the program breaks,  if you neither specify ›3m<IconFile> ›0mnor ›3m<Icon-
+Type>, ›0mbecause it simply doesn't know what kinda default Icon you want to have.
+Of course,  the program uses  the ›3micon.library,  ›0mso changes on the Icons become
+immediately visible if you're working with your WorkBench.  Well, that's almost
+all, but...
+- for sum strange reason,  the program sucks a few KiloBytes when run.  I don't
+  know why,  sorry;  for all  you  programmers:  this happens  everytime I call
+  ›3mPutDiskObject() ›0m(no, the reason is not, that my Ram-Disk gets more full :-)
+- when ›1mIFF2Icon›0m  trys to find  the Icon-Type  on its own,  SoftLinks are always
+  treated as Directories - who cares...
+
+So have fun with it! One last hint: For another strange reason the Icon-graphic
+on  your  workbench is  displayed in  the  3D-border  with margins  of 2 Pixels
+(above) and 1 (not 2!) Pixel (bottom) - to eliminate this cosmetic thing,  just
+save your  IFF-brushes  in a manner  that you  preserve  an empty  line  at the
+bottom; IconEdit does so, too, by the way.
+
+›42m-- Technical stuff ------------------------------------------------------- 4 --›0m
+
+Well, I'm too tired, just look at da Sourcecode...
+
+›42m-- Concluding words ------------------------------------------------------ 5 --›0m
+
+Jo,  folx.  Short proggy  - short comments.  Send everything you don't need any
+longer to this address:
+
+        ›1mTropicDesign›0m
+   c/o Hanns Holger Rutz
+Auf dem Godenstedter Berg 17
+       D-27404 Zeven
+          Germany

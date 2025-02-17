@@ -1,0 +1,7 @@
+<i>BChg</i>
+<b>BChg</b> xxxxxxx
+=
+This instruction flips a binary bit from 0 to 1, or from 1 to 0, as appropriate.
+
+If an expression is used instead of a variable, it will be treated as an address only if AOZ can detect the "magical number" that indicate a memory bank.
+

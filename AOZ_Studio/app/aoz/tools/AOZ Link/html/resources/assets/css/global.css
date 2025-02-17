@@ -1,0 +1,184 @@
+body
+{
+	font-family: 'Avenir Next LT Pro';
+	color: #b8b8b8;
+	font-size: 18px;
+	background-color: #202020;
+	margin: 0px;
+	padding: 0px;
+	overflow: hidden;
+}
+
+#mask
+{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0px;
+	left: 0px;
+	display: none;
+	z-index: 1000;
+	background-color: rgba( 0, 0, 0, 0.5 )
+}
+
+#content
+{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	left: 0px;
+	top: 0px;
+	background-color:#202020;
+}
+
+#download_anim
+{
+	position: absolute;
+	top: 15%;
+	left: 25%;
+	right: 25%;
+	bottom: 15%;
+	background-repeat: no-repeat;
+	background-image: url(download_anim.gif);
+	background-size: contain;
+}
+
+#qrcode
+{
+	position: absolute;
+	top: 25%;
+	left: 30%;
+	right: 30%;
+	bottom: 15%;
+	background-repeat: no-repeat;
+	background-size: contain;
+}
+
+#prepare_anim
+{
+	position: absolute;
+	top: 15%;
+	left: 25%;
+	right: 25%;
+	bottom: 15%;
+	background-repeat: no-repeat;
+	background-image: url(gear.svg);
+	background-size: contain;
+}
+
+#textPanel
+{
+	position: absolute;
+    display: block;
+    left: 16px;
+    top: 16px;
+    right: 16px;
+    overflow: hidden;
+    font-family: 'Avenir Next LT Pro';
+    font-weight: bold;
+    text-align: center;
+    color: var(--bs-warning);
+    font-size: 3.6vw;
+    padding: 16px;
+    z-index: 5000;
+	pointer-events: none;
+}
+
+#textPanel2
+{
+	position: absolute;
+    display: block;
+    left: 16px;
+    bottom: 16px;
+    right: 16px;
+    overflow: hidden;
+    font-family: 'Avenir Next LT Pro';
+    font-weight: bold;
+    text-align: center;
+    color: #FFFFFF;
+    font-size: 3.6vw;
+    padding: 16px;
+    z-index: 5000;
+}
+
+button
+{
+	cursor: pointer;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    width: 5vw;
+    height: 5vw;
+    color: #b8b8b8;
+    font-family: 'Brandon Grotesque';
+    font-size: 3vw;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: 2px #b0b0b0 solid;
+    box-shadow: none;
+    -webkit-box-shadow: one;
+}
+
+button:hover
+{
+	box-shadow: 1px 0px 27px 6px rgba(0, 255, 255, 0.44) inset;
+	-webkit-box-shadow: 1px 0px 27px 6px rgb(0 255 255 / 44%) inset;
+	-moz-box-shadow: 1px 0px 27px 6px rgba(0,255,255,0.44) inset;
+}
+
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+	background: #355470;
+	border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+	background: #FFFFFF;
+	border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+	background: #FFAB00;
+}
+
+label
+{
+	display: block;
+	color: #FFCC00;
+	font-size: 2vw;
+	padding-bottom: 4px;
+}
+
+input
+{
+	position: relative;
+	display: inline-block;
+	background-color: #ffffff;
+	border: 2px solid #AAAAAA;
+	font-size: 2vw;
+	border-radius: 6px;
+	padding: 4px;
+	width: calc(100% - 55px);
+	margin: 5px 0px 5px 0px;
+}
+
+input[type="checkbox"]
+{
+	padding: unset;
+	width: unset;
+}
+
+button.small
+{
+	width: 40px;
+	height: 40px;
+}
